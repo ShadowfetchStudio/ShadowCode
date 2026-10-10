@@ -1,0 +1,41 @@
+{
+  "app-id": "com.shadowfetch.shadowcode",
+  "runtime": "org.gnome.Platform",
+  "runtime-version": "50",
+  "sdk": "org.gnome.Sdk",
+  "sdk-extensions": [
+    "org.freedesktop.Sdk.Extension.rust-stable",
+    "org.freedesktop.Sdk.Extension.node24",
+    "org.freedesktop.Sdk.Extension.llvm21"
+  ],
+  "command": "shadowcode",
+  "finish-args": [
+    "--socket=wayland",
+    "--socket=fallback-x11",
+    "--share=ipc",
+    "--share=network",
+    "--socket=pulseaudio",
+    "--device=dri",
+    "--filesystem=host",
+    "--talk-name=org.freedesktop.Flatpak",
+    "--talk-name=org.freedesktop.Notifications",
+    "--talk-name=org.freedesktop.secrets"
+  ],
+  "build-options": {
+    "append-path": "/usr/lib/sdk/rust-stable/bin:/usr/lib/sdk/node24/bin",
+    "env": {
+      "CARGO_NET_OFFLINE": "true",
+      "LIBCLANG_PATH": "/usr/lib/sdk/llvm21/lib",
+      "CARGO_BUILD_JOBS": "4",
+      "SHADOWCODE_BUILD_JOBS": "4"
+    }
+  },
+  "modules": [
+    {
+      "name": "shadowcode",
+      "buildsystem": "simple",
+      "build-commands": ["bash packaging/flatpak/build-in-sdk.sh"],
+      "sources": []
+    }
+  ]
+}

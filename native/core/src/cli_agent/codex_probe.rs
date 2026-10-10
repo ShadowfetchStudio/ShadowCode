@@ -83,6 +83,9 @@ fn sanitized(binary: &Path, path_env: Option<&OsStr>) -> Command {
         "XDG_DATA_HOME",
         "XDG_STATE_HOME",
         "XDG_RUNTIME_DIR",
+        "DBUS_SESSION_BUS_ADDRESS",
+        "SHADOWCODE_HOST_PATH",
+        "SHADOWCODE_HOST_DBUS",
         "CODEX_HOME",
     ] {
         if let Some(value) = std::env::var_os(name) {

@@ -23,6 +23,7 @@ pub mod data;
 pub mod effort;
 pub mod engine;
 pub mod events;
+pub mod flatpak;
 pub mod gguf;
 pub mod git_guard;
 pub mod git_hooks;

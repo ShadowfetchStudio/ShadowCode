@@ -70,7 +70,11 @@ async function upstreamNotices() {
   return { vendor, files: manifest.files };
 }
 
-export async function glibBackportNotice(metadata, destination, checkout = root) {
+export async function glibBackportNotice(
+  metadata,
+  destination,
+  checkout = root,
+) {
   const pkg = requireGlibBackport(metadata, checkout);
   const verified = await verifyGlibBackport(checkout);
   const prefix = `rust/${pkg.name}-${pkg.version}`;
@@ -84,23 +88,45 @@ export async function glibBackportNotice(metadata, destination, checkout = root)
     sourceKind: "vendored-backport",
     localPath: GLIB_DIRECTORY,
     sourceTreeSha256: verified.sourceTreeSha256,
-    modifications: [{
-      advisory: verified.advisory,
-      upstreamCommit: verified.patchCommit,
-      source: `https://github.com/gtk-rs/gtk-rs-core/commit/${verified.patchCommit}`,
-      file: verified.patchedFile,
-      sha256: verified.patchedSha256,
-    }],
-    provenance: await copyNotice(path.join(checkout, GLIB_PROVENANCE), destination, `${prefix}/backport-provenance.json`),
+    modifications: [
+      {
+        advisory: verified.advisory,
+        upstreamCommit: verified.patchCommit,
+        source: `https://github.com/gtk-rs/gtk-rs-core/commit/${verified.patchCommit}`,
+        file: verified.patchedFile,
+        sha256: verified.patchedSha256,
+      },
+    ],
+    provenance: await copyNotice(
+      path.join(checkout, GLIB_PROVENANCE),
+      destination,
+      `${prefix}/backport-provenance.json`,
+    ),
     notices: [
-      await copyNotice(path.join(checkout, GLIB_DIRECTORY, "LICENSE"), destination, `${prefix}/LICENSE`),
-      await copyNotice(path.join(checkout, GLIB_DIRECTORY, "COPYRIGHT"), destination, `${prefix}/COPYRIGHT`),
-      await copyNotice(path.join(checkout, GLIB_README), destination, `${prefix}/BACKPORT.md`),
+      await copyNotice(
+        path.join(checkout, GLIB_DIRECTORY, "LICENSE"),
+        destination,
+        `${prefix}/LICENSE`,
+      ),
+      await copyNotice(
+        path.join(checkout, GLIB_DIRECTORY, "COPYRIGHT"),
+        destination,
+        `${prefix}/COPYRIGHT`,
+      ),
+      await copyNotice(
+        path.join(checkout, GLIB_README),
+        destination,
+        `${prefix}/BACKPORT.md`,
+      ),
     ],
   };
 }
 
-export async function applicationNotices(destination, managedRuntime = null) {
+export async function applicationNotices(
+  destination,
+  managedRuntime = null,
+  sdkStandardLibrary = null,
+) {
   const upstream = await upstreamNotices();
   const compiler = (await run("rustc", ["--version", "--verbose"], options))
     .stdout;
@@ -108,9 +134,10 @@ export async function applicationNotices(destination, managedRuntime = null) {
   const version = /^release: (.+)$/m.exec(compiler)?.[1];
   assert.ok(target && version, "Cannot identify the Rust toolchain");
   assert.ok(
-    upstream.files.some((f) =>
-      f.packages.includes(`rust-standard-library@${version}`),
-    ),
+    sdkStandardLibrary ||
+      upstream.files.some((f) =>
+        f.packages.includes(`rust-standard-library@${version}`),
+      ),
     `Add the standard-library notices before changing Rust ${version}`,
   );
   const metadata = JSON.parse(
@@ -145,9 +172,11 @@ export async function applicationNotices(destination, managedRuntime = null) {
 
   // Linux's GTK/WebKit graph requires this third-party path crate. Treat a
   // missing/replaced patch as an error, rather than dropping its MIT license.
-  if (target.includes("linux") || metadata.packages.some(
-    (pkg) => pkg.name === "glib" && resolved.has(pkg.id),
-  )) packages.push(await glibBackportNotice(metadata, destination));
+  if (
+    target.includes("linux") ||
+    metadata.packages.some((pkg) => pkg.name === "glib" && resolved.has(pkg.id))
+  )
+    packages.push(await glibBackportNotice(metadata, destination));
 
   for (const pkg of metadata.packages.filter(
     (pkg) => pkg.source && resolved.has(pkg.id),
@@ -246,8 +275,43 @@ export async function applicationNotices(destination, managedRuntime = null) {
   }
 
   const standardLibrary = [];
-  for (const file of upstream.files.filter((file) =>
-    file.packages.includes(`rust-standard-library@${version}`),
+  if (sdkStandardLibrary) {
+    // Flatpak's SDK has its own Rust release. Copy the license inventory
+    // actually distributed with that compiler, rather than attributing it
+    // to the host toolchain's pinned standard-library notices.
+    const sdkFiles = [];
+    for (const entry of await readdir(sdkStandardLibrary, {
+      withFileTypes: true,
+    })) {
+      if (entry.isDirectory() && entry.name === "licenses") {
+        sdkFiles.push(
+          ...(await walk(path.join(sdkStandardLibrary, entry.name))).map(
+            (file) => path.join(entry.name, file),
+          ),
+        );
+      } else if (entry.isFile() && noticeName.test(entry.name)) {
+        sdkFiles.push(entry.name);
+      }
+    }
+    for (const file of sdkFiles.sort()) {
+      standardLibrary.push({
+        ...(await copyNotice(
+          path.join(sdkStandardLibrary, file),
+          destination,
+          `sdk-rust/${file}`,
+        )),
+        origin: `org.freedesktop.Sdk.Extension.rust-stable (rustc ${version})`,
+      });
+    }
+    assert.ok(
+      standardLibrary.length,
+      "The SDK Rust license directory is empty",
+    );
+  }
+  for (const file of upstream.files.filter(
+    (file) =>
+      !sdkStandardLibrary &&
+      file.packages.includes(`rust-standard-library@${version}`),
   )) {
     standardLibrary.push({
       ...(await copyNotice(
@@ -376,11 +440,7 @@ export async function appdirNotices(appdir) {
     if (file === `usr/share/metainfo/${METAINFO_FILE}`) {
       assert.equal(
         sha256(await readFile(path.join(appdir, file))),
-        sha256(
-          await readFile(
-            path.join(root, "packaging", METAINFO_FILE),
-          ),
-        ),
+        sha256(await readFile(path.join(root, "packaging", METAINFO_FILE))),
         "Bundled AppStream metadata differs from the reviewed source",
       );
       continue;

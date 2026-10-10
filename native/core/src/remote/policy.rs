@@ -125,9 +125,8 @@ fn expand(text: &str) -> PathBuf {
     }
 }
 
-/// True when `candidate` is one of the profile's folders or inside one.
-/// Opening a folder that merely contains the profile (the home folder) is
-/// allowed; secret files there are still refused by name.
+/// True when a project overlaps a private profile folder. Ancestors must be
+/// refused too: the editor and database inspector can reach their descendants.
 pub fn inside_profile(candidate: &str, paths: &AppPaths) -> bool {
     if candidate.is_empty() {
         return false;
@@ -136,7 +135,10 @@ pub fn inside_profile(candidate: &str, paths: &AppPaths) -> bool {
     let candidate = resolve(&expand(candidate));
     [&paths.config, &paths.data, &paths.state]
         .into_iter()
-        .any(|root| candidate.starts_with(resolve(root)))
+        .any(|root| {
+            let root = resolve(root);
+            candidate.starts_with(&root) || root.starts_with(&candidate)
+        })
 }
 
 /// Every string field named `workspace` (the routes that switch projects),
@@ -239,6 +241,9 @@ pub fn check(path: &str, body: &Value, access: &Access, paths: &AppPaths) -> Res
     {
         return Err(Refusal(PROFILE_FOLDER));
     }
+    if query_value(path, "workspace").is_some_and(|p| inside_profile(&p, paths)) {
+        return Err(Refusal(PROFILE_FOLDER));
+    }
     Ok(())
 }
 
@@ -271,6 +276,21 @@ fn hide_secret_files(value: &mut Value) {
                     .iter()
                     .filter_map(|key| map.get(*key).and_then(Value::as_str))
                     .any(redaction::is_secret_path);
+            // Aggregate hunks have no file identity. Rebuild them from the
+            // filtered diff, rather than retaining a second copy of the
+            // secret lines after the displayed diff was blanked.
+            for (diff, hunks) in [("diff", "hunks"), ("staged", "staged_hunks")] {
+                if let Some(filtered) = map.get(diff).and_then(Value::as_str).and_then(filter_diff)
+                {
+                    if map.contains_key(hunks) {
+                        map.insert(
+                            hunks.to_owned(),
+                            serde_json::json!(crate::service::parse_hunks(&filtered)),
+                        );
+                    }
+                    map.insert(diff.to_owned(), Value::String(filtered));
+                }
+            }
             for (key, field) in map.iter_mut() {
                 if secret && CONTENT_FIELDS.contains(&key.as_str()) {
                     match field {
@@ -303,8 +323,10 @@ fn filter_diff(text: &str) -> Option<String> {
     let mut changed = false;
     for line in text.split_inclusive('\n') {
         if let Some(header) = line.strip_prefix("diff --git ") {
-            let target = header.trim_end().rsplit(" b/").next().unwrap_or("");
-            hiding = redaction::is_secret_path(target);
+            // Git still C-quotes tabs, newlines, quotes and backslashes
+            // with core.quotepath=false. A malformed header fails closed.
+            hiding = diff_paths(header.trim_end())
+                .is_none_or(|paths| paths.iter().any(|path| redaction::is_secret_path(path)));
             out.push_str(line);
             if hiding {
                 changed = true;
@@ -320,6 +342,74 @@ fn filter_diff(text: &str) -> Option<String> {
     changed.then_some(out)
 }
 
+/// Decode the two paths in a Git diff header, including octal byte escapes.
+/// Unquoted paths may contain spaces: the separator is the b/ prefix.
+fn diff_paths(header: &str) -> Option<Vec<String>> {
+    fn quoted(input: &str) -> Option<(String, &str)> {
+        let bytes = input.as_bytes();
+        if bytes.first() != Some(&b'"') {
+            return None;
+        }
+        let mut out = Vec::new();
+        let mut index = 1;
+        while index < bytes.len() {
+            let byte = bytes[index];
+            index += 1;
+            match byte {
+                b'"' => return Some((String::from_utf8(out).ok()?, &input[index..])),
+                b'\\' => {
+                    let escape = *bytes.get(index)?;
+                    index += 1;
+                    let decoded = match escape {
+                        b'a' => 7,
+                        b'b' => 8,
+                        b't' => 9,
+                        b'n' => 10,
+                        b'v' => 11,
+                        b'f' => 12,
+                        b'r' => 13,
+                        b'\\' => b'\\',
+                        b'"' => b'"',
+                        b'0'..=b'3' => {
+                            let second = *bytes.get(index)?;
+                            let third = *bytes.get(index + 1)?;
+                            if !(b'0'..=b'7').contains(&second) || !(b'0'..=b'7').contains(&third) {
+                                return None;
+                            }
+                            index += 2;
+                            (escape - b'0') * 64 + (second - b'0') * 8 + third - b'0'
+                        }
+                        _ => return None,
+                    };
+                    out.push(decoded);
+                }
+                _ => out.push(byte),
+            }
+        }
+        None
+    }
+    let (first, rest) = if header.starts_with('"') {
+        quoted(header)?
+    } else {
+        let separator = header.find(" b/").or_else(|| header.find(" \"b/"))?;
+        (header[..separator].to_owned(), &header[separator..])
+    };
+    let rest = rest.strip_prefix(' ')?;
+    let second = if rest.starts_with('"') {
+        let (path, trailing) = quoted(rest)?;
+        if !trailing.is_empty() {
+            return None;
+        }
+        path
+    } else {
+        rest.to_owned()
+    };
+    if !first.starts_with("a/") || !second.starts_with("b/") {
+        return None;
+    }
+    Some(vec![first, second])
+}
+
 /// Remove secret files' contents and recognizable credentials from a
 /// response a remote client will see.
 pub fn redact_response(value: &mut Value) {
@@ -331,6 +421,34 @@ pub fn redact_response(value: &mut Value) {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn quoted_diff_paths_and_aggregate_hunks_keep_public_changes_only() {
+        for name in [
+            r#"tab\tname"#,
+            r#"line\nname"#,
+            r#"quote\"name"#,
+            r#"back\\name"#,
+        ] {
+            let diff = format!("diff --git a/public.txt b/public.txt\n--- a/public.txt\n+++ b/public.txt\n@@ -1 +1 @@\n-old public\n+new public\ndiff --git \"a/{name}/.env\" \"b/{name}/.env\"\n--- \"a/{name}/.env\"\n+++ \"b/{name}/.env\"\n@@ -1 +1 @@\n-PASSWORD=old-fixture\n+PASSWORD=new-fixture\n");
+            let mut value =
+                json!({"path":"", "diff":diff, "hunks":crate::service::parse_hunks(&diff)});
+            redact_response(&mut value);
+            let serialized = value.to_string();
+            assert!(!serialized.contains("PASSWORD="), "{serialized}");
+            assert!(value["diff"].as_str().unwrap().contains("new public"));
+            assert!(value["hunks"].to_string().contains("new public"));
+        }
+        assert_eq!(
+            diff_paths(r#""a/\303\251/.env" "b/\303\251/.env""#),
+            Some(vec!["a/é/.env".into(), "b/é/.env".into()])
+        );
+        assert!(
+            filter_diff("diff --git malformed\n@@ -1 +1 @@\n+PASSWORD=fixture\n")
+                .unwrap()
+                .contains(HIDDEN_FILE)
+        );
+    }
 
     /// Every `/api/<family>` the engine dispatches, with the remote-access
     /// decision made for it. A family missing here fails
@@ -776,7 +894,13 @@ mod tests {
             ),
             Err(Refusal(PROFILE_FOLDER))
         );
-        assert!(check("/api/projects", &json!({"path": "/tmp"}), &access, &paths).is_ok());
+        assert!(check(
+            "/api/projects",
+            &json!({"path": "/remote-project"}),
+            &access,
+            &paths
+        )
+        .is_ok());
         assert_eq!(
             check(
                 "/api/workspace/instructions",

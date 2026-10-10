@@ -302,7 +302,7 @@ default).
   cannot manage remote access, terminals and direct commands are refused unless
   you allow them (this covers the `/run`, `/test <command>` and `/background`
   slash commands too), secret files are not shown (including through a symlink
-  or a normalizing spelling), the profile folders cannot be opened, and
+  or a normalizing spelling), the profile folders and their ancestors cannot be opened as remote projects, and
   recognizable credentials in answers are redacted. **Plain HTTP on a local
   network is not encrypted**: anyone on that network can read the traffic,
   including the access key. Use Tailscale (`tailscale serve` gives HTTPS).

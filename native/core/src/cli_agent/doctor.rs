@@ -68,6 +68,9 @@ fn sanitized_command(
         "XDG_DATA_HOME",
         "XDG_STATE_HOME",
         "XDG_RUNTIME_DIR",
+        "DBUS_SESSION_BUS_ADDRESS",
+        "SHADOWCODE_HOST_PATH",
+        "SHADOWCODE_HOST_DBUS",
         "CODEX_HOME",
         "CLAUDE_CONFIG_DIR",
     ] {

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.0.0: Flatpak and remote-access fixes
+
+- Build the native desktop and CPU/Vulkan llama.cpp runtime inside GNOME SDK 50 and export a single-file Flatpak. Host Git, terminals, and installed coding CLIs are reached through an explicit host bridge.
+- Prevent remote projects from overlapping private profile directories, including a parent folder or an inherited desktop conversation.
+- Remove secret-file contents from aggregate diff hunks and correctly decode Git-quoted filenames.
+- Update source-map-js to its patched version.
+- Flatpak uses its own application profile. Agent shell commands require host bubblewrap; host-name allow-list mode is refused in this package.
+- This is a local build; publication and Flathub submission are separate steps.
+
 ## 1.0.1: A window that fits
 
 - **The window no longer grows each time it opens.** On Wayland desktops

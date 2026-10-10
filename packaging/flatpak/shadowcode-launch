@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+# Flatpak versions which do not export XDG_STATE_HOME must not mix the new
+# profile's config/data with the host installation's SQLite state.
+export XDG_STATE_HOME="${XDG_CONFIG_HOME%/config}/state"
+# Cache and temporary paths are visible at the same absolute names on the
+# host. Bubblewrap can therefore use its mask files and temporary Git indexes.
+export TMPDIR="${XDG_CACHE_HOME:?}/tmp"
+mkdir -p "$TMPDIR"
+host_tools="$XDG_CACHE_HOME/host-tools"
+mkdir -p "$host_tools"
+export SHADOWCODE_HOST_PATH
+SHADOWCODE_HOST_PATH=$(/usr/bin/flatpak-spawn --host /bin/sh -c 'printf "%s" "$PATH"')
+export SHADOWCODE_HOST_DBUS
+SHADOWCODE_HOST_DBUS=$(/usr/bin/flatpak-spawn --host /bin/sh -c 'printf "%s" "$DBUS_SESSION_BUS_ADDRESS"')
+# Register only executables which actually exist on the host. Missing vendor
+# CLIs must stay missing in the picker, rather than appearing as fake installs.
+for tool in git bwrap rg node npm python3 codex claude cursor-agent cursor agy grok; do
+  executable=$(/usr/bin/flatpak-spawn --host /bin/sh -c 'command -v "$1"' sh "$tool" 2>/dev/null) || { rm -f "$host_tools/$tool"; continue; }
+  [[ "$executable" = /* && "$executable" != *$'\n'* ]] || continue
+  temporary="$host_tools/$tool.new.$BASHPID"
+  printf '#!/bin/bash\nexec /app/libexec/shadowcode-host %q "$@"\n' "$executable" > "$temporary"
+  chmod 700 "$temporary"
+  mv "$temporary" "$host_tools/$tool"
+done
+export PATH="$host_tools:$PATH"
+exec /app/bin/shadowcode-native "$@"

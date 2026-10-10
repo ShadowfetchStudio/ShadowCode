@@ -101,8 +101,8 @@ The same as the desktop window, with these exceptions:
   keys, and a restore or reset replaces everything.
 - **No secrets.** Secret files (`.env`, `secrets.env`, private keys,
   credential JSON), also when reached through a symlink or a spelling such as
-  `.env/`, are not shown or diffed, ShadowCode's own settings folder
-  cannot be opened as a project, and recognizable keys and tokens in any
+  `.env/`, are not shown or diffed, ShadowCode's own profile folders and their ancestors
+  (including a home folder containing them) cannot be opened as remote projects, and recognizable keys and tokens in any
   answer are replaced by `[redacted secret]`. Text containing a redacted
   value cannot be saved back from a remote device.
 - **Its own navigation.** Opening a project or conversation on the phone does

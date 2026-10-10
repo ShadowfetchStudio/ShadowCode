@@ -530,10 +530,21 @@ fn spawn(shell: &Path, login: bool, workspace: &Path, cols: u16, rows: u16) -> R
         .file_name()
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_else(|| "sh".into());
-    let mut command = std::process::Command::new(shell);
-    command
+    let host_terminal = crate::flatpak::host_bridge().is_some();
+    let mut command = if let Some(bridge) = crate::flatpak::host_bridge() {
+        let mut command = std::process::Command::new(bridge);
+        command.arg(shell);
+        if login {
+            command.arg("-l");
+        }
+        command
+    } else {
+        let mut command = std::process::Command::new(shell);
         // A leading dash asks the shell to start as a login shell.
-        .arg0(if login { format!("-{name}") } else { name })
+        command.arg0(if login { format!("-{name}") } else { name });
+        command
+    };
+    command
         .current_dir(workspace)
         .env_clear()
         .envs(user_environment())
@@ -543,11 +554,13 @@ fn spawn(shell: &Path, login: bool, workspace: &Path, cols: u16, rows: u16) -> R
         .stderr(slave);
     // SAFETY: only async-signal-safe calls between fork and exec.
     unsafe {
-        command.pre_exec(|| {
+        command.pre_exec(move || {
             if libc::setsid() < 0 {
                 return Err(std::io::Error::last_os_error());
             }
-            if libc::ioctl(0, libc::TIOCSCTTY, 0) < 0 {
+            // The host monitor gives the host shell its own session and
+            // controlling terminal. Claiming it here would prevent that.
+            if !host_terminal && libc::ioctl(0, libc::TIOCSCTTY, 0) < 0 {
                 return Err(std::io::Error::last_os_error());
             }
             Ok(())

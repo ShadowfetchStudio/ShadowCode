@@ -569,6 +569,9 @@ pub fn prepare_shell(
     command: &str,
     policy: &ShellPolicy,
 ) -> Result<PreparedShell> {
+    if crate::flatpak::host_bridge().is_some() && policy.network == ShellNetwork::Allowlist {
+        bail!("The command did not run: host-name network restrictions are unavailable for Flatpak host commands. Choose network off or on in Settings > Permissions & network.");
+    }
     let layout = HomeLayout::current(&policy.home_binds, workspace);
     match working_bwrap(workspace) {
         Ok(program) => {
@@ -626,6 +629,12 @@ pub fn prepare_shell(
             })
         }
         Err(error) => {
+            // Landlock applied to flatpak-spawn cannot confine the host
+            // process it asks a service to start. Require host bubblewrap
+            // rather than pretending that local fallback contains it.
+            if crate::flatpak::host_bridge().is_some() {
+                bail!("The command did not run: Flatpak agent shell commands require working bubblewrap on the host ({error:#}). Install bubblewrap on this computer.");
+            }
             if policy.require {
                 bail!(
                     "The command did not run: 'Require sandbox' is on and bubblewrap is unavailable ({error:#}). Install bubblewrap (for example: sudo apt install bubblewrap), or turn off 'Require sandbox' in Settings > Permissions & network."

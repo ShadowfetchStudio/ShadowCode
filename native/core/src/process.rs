@@ -31,9 +31,17 @@ pub struct ProcessSpec {
 }
 impl ProcessSpec {
     pub fn shell(command: &str, cwd: PathBuf, timeout: Duration) -> Self {
+        let bridge = crate::flatpak::host_bridge();
         Self {
-            program: "/bin/sh".into(),
-            args: vec!["-c".into(), command.into()],
+            program: bridge.as_ref().map_or_else(
+                || "/bin/sh".into(),
+                |path| path.to_string_lossy().into_owned(),
+            ),
+            args: if bridge.is_some() {
+                vec!["/bin/sh".into(), "-c".into(), command.into()]
+            } else {
+                vec!["-c".into(), command.into()]
+            },
             cwd,
             timeout,
             output_limit: 256_000,
@@ -236,6 +244,9 @@ async fn run_internal(
         "XDG_CONFIG_HOME",
         "XDG_DATA_HOME",
         "XDG_STATE_HOME",
+        "DBUS_SESSION_BUS_ADDRESS",
+        "SHADOWCODE_HOST_PATH",
+        "SHADOWCODE_HOST_DBUS",
     ] {
         if let Some(value) = std::env::var_os(name) {
             command.env(name, value);

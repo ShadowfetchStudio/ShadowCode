@@ -29,6 +29,9 @@
     <binary>shadowcode</binary>
   </provides>
   <releases>
+    <release version="2.0.0" date="2026-10-09">
+      <description><p>Flatpak distribution and corrected remote-access protection for private settings and secret-file diffs.</p></description>
+    </release>
     <release version="1.0.1" date="2026-10-01">
       <description>
         <p>The window no longer grows each time it opens on Wayland, and it fits small screens such as 1366x768, so the composer and status bar stay above the panel.</p>

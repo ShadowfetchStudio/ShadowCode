@@ -190,6 +190,7 @@ impl Service {
     /// Its requests must never activate a different project in the desktop.
     pub fn fork_selection(&self, workspace: PathBuf, session: Option<String>) -> Result<Self> {
         let workspace = Workspace::open(&workspace)?.path;
+        self.check_remote_workspace(&workspace)?;
         if let Some(id) = &session {
             ensure!(
                 self.engine
@@ -220,7 +221,7 @@ impl Service {
             #[cfg(unix)]
             remote: self.remote.clone(),
             engine_mode: self.engine_mode.clone(),
-            remote_device: false,
+            remote_device: self.remote_device,
         })
     }
     /// Record how the owning process runs (set once, by the control server
@@ -246,12 +247,27 @@ impl Service {
         self
     }
     pub fn workspace(&self) -> Result<PathBuf> {
-        Ok(self
+        let workspace = self
             .selection
             .read()
             .map_err(|_| anyhow::anyhow!("Project selection lock poisoned"))?
             .workspace
-            .clone())
+            .clone();
+        self.check_remote_workspace(&workspace)?;
+        Ok(workspace)
+    }
+    fn check_remote_workspace(&self, workspace: &Path) -> Result<()> {
+        #[cfg(unix)]
+        ensure!(
+            !self.remote_device
+                || !crate::remote::policy::inside_profile(
+                    &workspace.to_string_lossy(),
+                    self.engine.paths()
+                ),
+            "{}",
+            crate::remote::policy::PROFILE_FOLDER
+        );
+        Ok(())
     }
     fn config(&self) -> Result<Config> {
         let config = Config::load(self.engine.paths(), Some(&self.workspace()?))?;
@@ -272,6 +288,7 @@ impl Service {
     }
     fn select_if(&self, path: &Path, session: Option<String>, expected: Option<u64>) -> Result<()> {
         let workspace = Workspace::open(path)?.path;
+        self.check_remote_workspace(&workspace)?;
         let mut selection = self
             .selection
             .write()
@@ -323,6 +340,39 @@ impl Service {
     }
     pub async fn dispatch(&self, request: Request) -> Result<Value> {
         let call = Arc::new(Call::parse(request)?);
+        // Existing desktop conversations may name private folders without
+        // a workspace field in this request. Check their stored selection
+        // before activating a conversation or starting a task remotely.
+        if self.remote_device {
+            let parts = call.parts();
+            // Job and goal actions use saved selections too, and can start
+            // work before the route updates this view's selected project.
+            if let Some(id) = parts.get(2) {
+                let stored = match call.family() {
+                    "jobs" => self.engine.store().job(id)?,
+                    "goals" => Some(self.engine.store().goal(id)?),
+                    _ => None,
+                };
+                if let Some(workspace) = stored.as_ref().and_then(|v| v["workspace"].as_str()) {
+                    self.check_remote_workspace(Path::new(workspace))?;
+                }
+            }
+            let sid = if call.family() == "sessions" {
+                parts.get(2).copied()
+            } else {
+                call.body["session_id"].as_str()
+            };
+            if let Some(session) = sid
+                .filter(|sid| !sid.is_empty())
+                .map(|sid| self.engine.store().session(sid))
+                .transpose()?
+                .flatten()
+            {
+                if let Some(workspace) = session["workspace"].as_str() {
+                    self.check_remote_workspace(Path::new(workspace))?;
+                }
+            }
+        }
         self.check_worktree_project(&call)?;
         match call.family() {
             "compare" | "compares" => self.compare(&call).await,
