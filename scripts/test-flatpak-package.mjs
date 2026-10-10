@@ -97,6 +97,14 @@ try {
     });
   }
   const view = (await exchange("POST", "/api/views", null, null, true)).view;
+  const about = await exchange("GET", "/api/about", null, view);
+  assert.equal(about.version, "2.0.0"); assert.equal(about.publisher, "Shadowfetch");
+  assert.equal(about.install.kind, "flatpak");
+  assert.equal(about.links.website, "https://www.shadowfetchlinux.org/shadowcode");
+  assert.equal(about.links.publisher, "https://shadowfetch.com");
+  assert.equal(about.links.contributors, "https://github.com/Shadowfetchapps/ShadowCode/graphs/contributors");
+  assert.match(about.license.trademark_policy, /Based on ShadowCode by Shadowfetch/);
+  checks.push("About identity, official links, contributors, Flatpak classification and embedded trademark policy");
   const opened = await exchange("POST", "/api/terminals", { cols: 100, rows: 30 }, view);
   const id = opened.id;
   assert.ok(id, JSON.stringify(opened));
@@ -108,12 +116,26 @@ try {
   });
   assert.doesNotMatch(JSON.stringify(terminal), /no job control|cannot set terminal process group/);
   const terminalChild = Number(await until("terminal child PID", async () => { try { return (await readFile(path.join(project, "terminal-child.pid"), "utf8")).trim(); } catch { return null; } }));
+  await exchange("POST", `/api/terminals/${id}/resize`, { cols: 111, rows: 37 }, view);
+  await delay(150);
+  await exchange("POST", `/api/terminals/${id}/input`, { data: "stty size; printf 'SIZE_DONE\\n'; sleep 60\n" }, view);
+  await until("terminal resize", async () => {
+    const value = await exchange("GET", `/api/terminals/${id}/output`, null, view);
+    return Buffer.from(value.data, "base64").toString().includes("37 111");
+  });
+  await delay(150);
+  await exchange("POST", `/api/terminals/${id}/input`, { data: "\u0003" }, view);
+  await exchange("POST", `/api/terminals/${id}/input`, { data: "printf 'INTERRUPT_OK\\n'\n" }, view);
+  await until("terminal Ctrl-C", async () => {
+    const value = await exchange("GET", `/api/terminals/${id}/output`, null, view);
+    return /[\r\n]INTERRUPT_OK[\r\n]/.test(Buffer.from(value.data, "base64").toString());
+  }, 3000);
   await exchange("POST", `/api/terminals/${id}/close`, null, view);
   await until("terminal descendant cleanup", async () => {
     const result = await cli(["exec", `if kill -0 ${terminalChild} 2>/dev/null; then printf alive; else printf dead; fi`]);
     return result.stdout === "dead";
   }, 5000);
-  checks.push("persistent engine, attached view, real host PTY, shell job control, terminal close");
+  checks.push("persistent engine, attached view, real host PTY, shell job control, resize, Ctrl-C and descendant cleanup");
   await writeFile(path.join(output, "package-result.json"), JSON.stringify({ version: "2.0.0", profile, project, checks, terminal, terminal_child_pid: terminalChild, host_network: hostNetwork }, null, 2) + "\n");
   console.log(JSON.stringify(checks, null, 2));
 } finally {

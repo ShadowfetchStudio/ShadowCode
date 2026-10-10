@@ -2980,9 +2980,9 @@ Settings › About and the update notice (`native/core/src/updates.rs`,
 https://api.github.com/repos/Shadowfetchapps/ShadowCode/releases/latest`
 with `User-Agent: ShadowCode-update-check` and no identifiers.
 
-- `GET /api/about` → `{name, version, commit: string|null, install: {kind:
-  "appimage"|"deb"|"system"|"source"|"unknown", label}, license: {spdx,
-  name, holder, notice, third_party: string|null}, links: {repository,
+- `GET /api/about` → `{name, publisher, version, commit: string|null, install: {kind:
+  "appimage"|"deb"|"flatpak"|"system"|"source"|"unknown", label}, license: {spdx,
+  name, holder, notice, trademark_policy, third_party: string|null}, links: {website, publisher, contributors, trademarks, repository,
   release_notes, releases, license, notice, issues, user_guide}, updates:
   UpdateStatus}`. `commit` is recorded at build time; `notice` is the NOTICE
   text; `third_party` is the installed notices folder. No network access.

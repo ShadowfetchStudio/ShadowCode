@@ -61,10 +61,12 @@ const newer = {
 function about(status: UpdateStatus = updates()): AboutInfo {
   return {
     name: "ShadowCode",
+    publisher: "Shadowfetch",
     version: "0.33.1",
     commit: "e15c4480e65db5650af012bb2a9773dbe89acf84",
     install: status.install,
     license: {
+      trademark_policy: "Names and logos identify the official publisher.",
       spdx: "Apache-2.0",
       name: "Apache License 2.0",
       holder: "Shadowfetch",
@@ -73,6 +75,10 @@ function about(status: UpdateStatus = updates()): AboutInfo {
       third_party: "/usr/share/doc/shadowcode/notices",
     },
     links: {
+      website: "https://www.shadowfetchlinux.org/shadowcode",
+      publisher: "https://shadowfetch.com",
+      contributors: `${repo}/graphs/contributors`,
+      trademarks: `${repo}/blob/main/TRADEMARKS.md`,
       repository: repo,
       release_notes: `${repo}/releases/tag/v0.33.1`,
       releases: `${repo}/releases`,
@@ -97,6 +103,26 @@ it("shows version, commit, install type, license and links", async () => {
   );
   expect(screen.getByText("AppImage")).toBeTruthy();
   expect(screen.getByText("Apache License 2.0")).toBeTruthy();
+  expect(
+    screen.getByRole("link", { name: "Shadowfetch" }).getAttribute("href"),
+  ).toBe("https://shadowfetch.com");
+  expect(
+    screen
+      .getByRole("link", {
+        name: "https://www.shadowfetchlinux.org/shadowcode",
+      })
+      .getAttribute("href"),
+  ).toBe("https://www.shadowfetchlinux.org/shadowcode");
+  expect(
+    screen
+      .getByRole("link", { name: "Shadowfetchapps/ShadowCode" })
+      .getAttribute("href"),
+  ).toBe(repo);
+  expect(
+    screen
+      .getByRole("link", { name: "View contributors" })
+      .getAttribute("href"),
+  ).toBe(`${repo}/graphs/contributors`);
   expect(
     screen.getByText(/originally created by Shadowfetch\. If you share/),
   ).toBeTruthy();

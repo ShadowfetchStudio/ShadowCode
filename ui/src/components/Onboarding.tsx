@@ -124,6 +124,7 @@ export function Onboarding({
     >
       <img src="/icon-192.png" alt="" className="welcome-mark" />
       <h2 id="onboarding-title">Welcome to ShadowCode</h2>
+      <p className="hint">An open-source project by Shadowfetch</p>
       <p className="hint">
         Open a project to start. You choose a model for each conversation in the
         composer.

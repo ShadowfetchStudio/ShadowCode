@@ -40,6 +40,16 @@ test("no notice without a newer release; About shows the facts", async ({
   await expect(
     settings.getByRole("heading", { name: "About ShadowCode" }),
   ).toBeVisible();
+  await expect(
+    settings.getByRole("link", { name: "Shadowfetch", exact: true }),
+  ).toHaveAttribute("href", "https://shadowfetch.com");
+  await expect(
+    settings.getByRole("link", { name: "View contributors" }),
+  ).toHaveAttribute(
+    "href",
+    "https://github.com/Shadowfetchapps/ShadowCode/graphs/contributors",
+  );
+  await settings.getByText("Build information", { exact: true }).click();
   await expect(settings.getByText("e15c4480e65d")).toBeVisible();
   await expect(settings.getByText("Apache License 2.0")).toBeVisible();
   await expect(

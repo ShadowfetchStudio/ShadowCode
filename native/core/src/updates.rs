@@ -398,6 +398,7 @@ pub fn automatic(config: &Config, policy: &Policy) -> bool {
 pub enum InstallKind {
     Appimage,
     Deb,
+    Flatpak,
     /// Under /usr or /opt without the bundler's package marker: a
     /// distribution's own build or another package format.
     System,
@@ -411,6 +412,7 @@ impl InstallKind {
         match self {
             Self::Appimage => "AppImage",
             Self::Deb => "Debian package",
+            Self::Flatpak => "Flatpak",
             Self::System => "System package",
             Self::Source => "Built from source",
             Self::Unknown => "Unknown",
@@ -436,6 +438,9 @@ pub struct InstallProbe {
 }
 
 pub fn install_kind() -> InstallKind {
+    if crate::flatpak::host_bridge().is_some() {
+        return InstallKind::Flatpak;
+    }
     let var = |name| std::env::var_os(name).map(PathBuf::from);
     detect_install(&InstallProbe {
         bundle: BUNDLE.get().copied(),
@@ -699,6 +704,11 @@ pub fn next_step(install: InstallKind, policy: &Policy, release: Option<&Release
             "command": null,
             "link": readme("debian-package"),
         }),
+        InstallKind::Flatpak => json!({
+            "text": "Install the new Flatpak bundle from the official publisher, or update through the Flatpak remote you configured. Your settings and projects are preserved.",
+            "command": null,
+            "link": format!("{REPOSITORY_URL}/blob/main/docs/FLATPAK.md"),
+        }),
         InstallKind::System => json!({
             "text": "Update ShadowCode through your package manager or your distribution's software updates.",
             "command": null,
@@ -758,6 +768,7 @@ pub fn about(paths: &AppPaths, config: &Config) -> Value {
     });
     json!({
         "name": "ShadowCode",
+        "publisher": "Shadowfetch",
         "version": crate::VERSION,
         "commit": commit(),
         "install": {"kind": install, "label": install.label()},
@@ -766,10 +777,15 @@ pub fn about(paths: &AppPaths, config: &Config) -> Value {
             "name": "Apache License 2.0",
             "holder": "Shadowfetch",
             "notice": NOTICE,
+            "trademark_policy": include_str!("../../../TRADEMARKS.md"),
             "third_party": notices,
         },
         "links": {
             "repository": REPOSITORY_URL,
+            "website": "https://www.shadowfetchlinux.org/shadowcode",
+            "publisher": "https://shadowfetch.com",
+            "contributors": format!("{REPOSITORY_URL}/graphs/contributors"),
+            "trademarks": format!("{REPOSITORY_URL}/blob/main/TRADEMARKS.md"),
             "release_notes": format!("{RELEASES_URL}/tag/{tag}"),
             "releases": RELEASES_URL,
             "license": format!("{REPOSITORY_URL}/blob/{tag}/LICENSE"),
@@ -1096,6 +1112,10 @@ mod tests {
         assert!(refused["text"].as_str().unwrap().contains("will refuse it"));
         assert!(refused["command"].is_null());
 
+        let flatpak = next_step(InstallKind::Flatpak, &open, Some(&release));
+        assert!(flatpak["text"].as_str().unwrap().contains("Flatpak"));
+        assert!(flatpak["command"].is_null());
+        assert_eq!(InstallKind::Flatpak.label(), "Flatpak");
         let deb = next_step(InstallKind::Deb, &open, Some(&release));
         assert!(deb["text"]
             .as_str()

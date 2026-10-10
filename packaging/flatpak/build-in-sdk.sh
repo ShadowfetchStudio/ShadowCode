@@ -6,7 +6,7 @@ npm --prefix ui ci --offline --ignore-scripts --cache "$PWD/.npm-cache"
 npm --prefix ui run build
 # Source archives use canonical timestamps. Compare content before reusing
 # the application's crates; packaging-only retries retain their finished link.
-source_hash=$( { printf '%s\n' "${SHADOWCODE_COMMIT:-}"; find native/core/src src-tauri/src ui/dist Cargo.toml Cargo.lock native/core/Cargo.toml src-tauri/Cargo.toml src-tauri/build.rs src-tauri/tauri.conf.json -type f -print0 | sort -z | xargs -0 sha256sum; } | sha256sum | cut -d' ' -f1)
+source_hash=$( { printf '%s\n' "${SHADOWCODE_COMMIT:-}"; find native/core/src src-tauri/src ui/dist NOTICE TRADEMARKS.md Cargo.toml Cargo.lock native/core/Cargo.toml src-tauri/Cargo.toml src-tauri/build.rs src-tauri/tauri.conf.json -type f -print0 | sort -z | xargs -0 sha256sum; } | sha256sum | cut -d' ' -f1)
 fingerprint="${CARGO_TARGET_DIR:-target}/shadowcode-source.sha256"
 if [[ ! -f "$fingerprint" || "$(cat "$fingerprint")" != "$source_hash" ]]; then
   cargo clean --release -p shadowcode-core -p shadowcode-desktop
@@ -71,6 +71,7 @@ for size in 32 128 256 512; do
 done
 install -Dm644 LICENSE /app/share/licenses/shadowcode/LICENSE
 install -Dm644 NOTICE /app/share/licenses/shadowcode/NOTICE
+install -Dm644 TRADEMARKS.md /app/share/licenses/shadowcode/TRADEMARKS.md
 cp -a licenses/native /app/share/licenses/shadowcode/native
 cp -a vendor/glib-0.18.5/LICENSE /app/share/licenses/shadowcode/glib-LICENSE
 cp -a /usr/lib/sdk/node24/share/licenses /app/share/licenses/shadowcode/node-sdk

@@ -111,28 +111,53 @@ export function AboutPage({
   return (
     <section className="settings-page about-page">
       <h3>About ShadowCode</h3>
+      <p className="hint">
+        A free, local-first AI coding agent for Linux. Developed and maintained
+        by Shadowfetch.
+      </p>
       <div className="kv about-facts">
         <div>
           <span>Version</span>
           <code>{about.version}</code>
         </div>
         <div>
-          <span>Commit</span>
-          {about.commit ? (
-            <code title={about.commit}>{about.commit.slice(0, 12)}</code>
-          ) : (
-            <span>Not recorded in this build</span>
-          )}
-        </div>
-        <div>
-          <span>Installed as</span>
-          <code>{about.install.label}</code>
-        </div>
-        <div>
           <span>License</span>
-          <code>{about.license.name}</code>
+          <a href={about.links.license}>{about.license.name}</a>
+        </div>
+        <div>
+          <span>Publisher</span>
+          <a href={about.links.publisher}>{about.publisher}</a>
+        </div>
+        <div>
+          <span>Official website</span>
+          <a href={about.links.website}>{about.links.website}</a>
+        </div>
+        <div>
+          <span>GitHub repository</span>
+          <a href={about.links.repository}>Shadowfetchapps/ShadowCode</a>
+        </div>
+        <div>
+          <span>Contributors</span>
+          <a href={about.links.contributors}>View contributors</a>
         </div>
       </div>
+      <details className="about-notice">
+        <summary>Build information</summary>
+        <div className="kv">
+          <div>
+            <span>Commit</span>
+            {about.commit ? (
+              <code title={about.commit}>{about.commit.slice(0, 12)}</code>
+            ) : (
+              <span>Not recorded in this build</span>
+            )}
+          </div>
+          <div>
+            <span>Installed as</span>
+            <code>{about.install.label}</code>
+          </div>
+        </div>
+      </details>
       <p className="hint">
         Copyright 2026 {about.license.holder}. ShadowCode was originally created
         by {about.license.holder}. If you share a copy or a changed version,
@@ -141,6 +166,10 @@ export function AboutPage({
       <details className="about-notice">
         <summary>NOTICE</summary>
         <pre>{about.license.notice}</pre>
+      </details>
+      <details className="about-notice">
+        <summary>Trademark and branding policy</summary>
+        <pre>{about.license.trademark_policy}</pre>
       </details>
       {about.license.third_party && (
         <p className="hint">

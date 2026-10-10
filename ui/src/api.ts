@@ -1332,7 +1332,7 @@ export type SandboxStatus = {
 
 /** How this copy was installed (`/api/about`, `/api/updates`). */
 export type InstallInfo = {
-  kind: "appimage" | "deb" | "system" | "source" | "unknown";
+  kind: "appimage" | "deb" | "flatpak" | "system" | "source" | "unknown";
   label: string;
 };
 
@@ -1383,6 +1383,7 @@ export type UpdateStatus = {
 /** `GET /api/about`: Settings › About. */
 export type AboutInfo = {
   name: string;
+  publisher: string;
   version: string;
   commit: string | null;
   install: InstallInfo;
@@ -1390,12 +1391,17 @@ export type AboutInfo = {
     spdx: string;
     name: string;
     holder: string;
+    trademark_policy: string;
     /** ShadowCode's NOTICE file. */
     notice: string;
     /** Folder with third-party license texts, when installed. */
     third_party: string | null;
   };
   links: {
+    website: string;
+    publisher: string;
+    contributors: string;
+    trademarks: string;
     repository: string;
     release_notes: string;
     releases: string;

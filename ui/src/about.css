@@ -1,4 +1,8 @@
 /* Settings › About and the status-bar update notice. */
+.about-facts a {
+  max-width: 70%;
+  overflow-wrap: anywhere;
+}
 .about-facts code {
   max-width: 70%;
 }

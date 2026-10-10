@@ -1,19 +1,32 @@
 # ShadowCode
 
+**One harness. All models.**
+
+### An open-source project by Shadowfetch
+
+ShadowCode is a free, local-first AI coding agent for Linux.
+
+Work with Codex, Claude Code, Cursor, Antigravity, Grok, OpenRouter, and supported local AI models from one desktop application.
+
+Bring your existing subscriptions, use API keys, or run open-weight models on your own hardware.
+
+**Your computer. Your models. Your workflow.**
+
+Developed and maintained by **Shadowfetch**.
+
+Licensed under Apache 2.0.
+
+Official project: https://github.com/Shadowfetchapps/ShadowCode
+
+Publisher: https://shadowfetch.com
+
+Official website: https://www.shadowfetchlinux.org/shadowcode
+
+The code is open source; the Shadowfetch and ShadowCode product identity is covered by the [trademark and branding policy](TRADEMARKS.md).
+
 <p align="center">
   <img src="assets/branding/shadowcode-original.png" alt="ShadowCode — One Harness. All Models." width="420" />
 </p>
-
-ShadowCode is a Linux desktop coding agent. Open a project, pick a model,
-describe the change, watch the agent work, then review the diff.
-
-The model can come from a subscription you already have (Codex, Claude Code,
-Cursor, Antigravity or Grok, driven through each vendor's own command-line
-tool), from an [OpenRouter](https://openrouter.ai) API key if you have no
-subscription (hundreds of models, billed per token), or from a model that
-runs on your computer through a llama.cpp runtime that ships with the app.
-With no account at all, ShadowCode offers a free model to download that fits
-your computer. You don't need Ollama, LM Studio or any other model server.
 
 ![ShadowCode workspace](docs/images/workspace-light.png)
 

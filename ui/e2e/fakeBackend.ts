@@ -4766,6 +4766,7 @@ export function installFakeBackend(options: FakeOptions = {}) {
       const repo = "https://github.com/Shadowfetchapps/ShadowCode";
       return {
         name: "ShadowCode",
+        publisher: "Shadowfetch",
         version: "0.33.0",
         commit: "e15c4480e65db5650af012bb2a9773dbe89acf84",
         install: updatesView().install,
@@ -4773,11 +4774,16 @@ export function installFakeBackend(options: FakeOptions = {}) {
           spdx: "Apache-2.0",
           name: "Apache License 2.0",
           holder: "Shadowfetch",
+          trademark_policy: "Names and logos identify the official publisher.",
           notice:
             "ShadowCode\nCopyright 2026 Shadowfetch\n\nShadowCode was originally created by Shadowfetch.\n",
           third_party: "/usr/share/doc/shadowcode/notices",
         },
         links: {
+          website: "https://www.shadowfetchlinux.org/shadowcode",
+          publisher: "https://shadowfetch.com",
+          contributors: `${repo}/graphs/contributors`,
+          trademarks: `${repo}/blob/main/TRADEMARKS.md`,
           repository: repo,
           release_notes: `${repo}/releases/tag/${tag}`,
           releases: `${repo}/releases`,
