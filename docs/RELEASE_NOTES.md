@@ -1,6 +1,6 @@
 # ShadowCode 2.0.0
 
-Version 2.0.0 adds a source-built Flatpak, closes three reproduced remote-access defects, and updates the affected development dependency. See [Flatpak](FLATPAK.md) for installation, host-tool permissions, and package-specific limits. This version is not yet published on GitHub or Flathub. Previous release notes follow.
+Version 2.0.0 adds a source-built Flatpak, closes three reproduced remote-access defects, and updates the affected development dependency. See [Flatpak](FLATPAK.md) for installation, host-tool permissions, and package-specific limits. The source is published in this repository; binary release publication and Flathub submission remain pending. About ShadowCode shows the version, Apache license, publisher, official website, repository, and contributors. The [trademark and branding policy](../TRADEMARKS.md) covers the official identity and permits forks and accurate community attribution. Previous release notes follow.
 
 # ShadowCode 1.0.1
 

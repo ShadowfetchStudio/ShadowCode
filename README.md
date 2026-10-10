@@ -70,7 +70,7 @@ The code is open source; the Shadowfetch and ShadowCode product identity is cove
   own terminal, go from commit to pull request, preview the app you're
   building, dictate with your voice, and follow along from your phone.
 
-The source tree is now **2.0.0**, with a locally buildable Flatpak and fixes for private-profile access and secret-file diff redaction. See [Flatpak installation and build instructions](docs/FLATPAK.md). Version 2.0.0 has not been published on GitHub or Flathub.
+The source tree is now **2.0.0**, with a locally buildable Flatpak and fixes for private-profile access and secret-file diff redaction. See [Flatpak installation and build instructions](docs/FLATPAK.md). The 2.0.0 source is available here; its Flatpak bundle is a local build and has not been published as a GitHub release or on Flathub.
 
 The last published release, ShadowCode **1.0.1**, is available in [GitHub releases](https://github.com/Shadowfetchapps/ShadowCode/releases/tag/v1.0.1).
 See the [1.0.1 release notes](docs/RELEASE_NOTES.md) for changes and qualification

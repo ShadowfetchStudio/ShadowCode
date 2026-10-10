@@ -1,7 +1,9 @@
 # Changelog
 
-## 2.0.0: Flatpak and remote-access fixes
+## 2.0.0: Flatpak, brand identity, and remote-access fixes
 
+- Introduce the Shadowfetch and ShadowCode trademark policy, update the project introduction, and show publisher, website, repository, and contributor information in About.
+- Preserve host terminal job control, resizing, Ctrl-C, and cleanup through a host PTY relay.
 - Build the native desktop and CPU/Vulkan llama.cpp runtime inside GNOME SDK 50 and export a single-file Flatpak. Host Git, terminals, and installed coding CLIs are reached through an explicit host bridge.
 - Prevent remote projects from overlapping private profile directories, including a parent folder or an inherited desktop conversation.
 - Remove secret-file contents from aggregate diff hunks and correctly decode Git-quoted filenames.
