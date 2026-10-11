@@ -20,7 +20,11 @@
 #     recovered on retry or with --recover. An activation-started crash is also
 #     recoverable while every recorded launcher/desktop integration is unchanged;
 #     ambiguous or changed state is preserved for review.
-#   * Settings and task history are never touched. Previous ShadowCode
+#   * With a display, the profile database is snapshotted (VACUUM INTO) before
+#     activation and the new version must report its first window in time;
+#     otherwise it is stopped and AppImage, runtime, integrations and the
+#     database snapshot are restored (also by --recover after a crash).
+#   * Settings and task history are otherwise never touched. Previous ShadowCode
 #     AppImages are removed only after success.
 set -euo pipefail
 umask 077
@@ -65,6 +69,17 @@ JOURNAL="$(dirname "$LIB")/.shadowcode-install-intent"
 # A convenience symlink next to downloads must not choose a substitute bundle.
 INSTALLER_FILE="$(realpath -- "${BASH_SOURCE[0]}")"
 ROOT="$(cd "$(dirname "$INSTALLER_FILE")/.." && pwd)"
+# The profile database, as the app finds it (an XDG base must be absolute).
+STATE_HOME="${XDG_STATE_HOME:-}"
+[[ "$STATE_HOME" == /* ]] || STATE_HOME="$HOME/.local/state"
+PROFILE_STATE="$STATE_HOME/shadow-agent"
+DATABASE="$PROFILE_STATE/shadow-agent.db"
+# First-window check after activation: auto (when a display is available),
+# require, or skip. The new version must report its first start in time.
+FIRST_START_CHECK="${SHADOWCODE_FIRST_START_CHECK:-auto}"
+FIRST_START_TIMEOUT="${SHADOWCODE_FIRST_START_TIMEOUT:-120}"
+[[ "$FIRST_START_CHECK" =~ ^(auto|require|skip)$ ]] || fail 'SHADOWCODE_FIRST_START_CHECK must be auto, require or skip.'
+[[ "$FIRST_START_TIMEOUT" =~ ^[1-9][0-9]{0,3}$ ]] || fail 'SHADOWCODE_FIRST_START_TIMEOUT must be a number of seconds.'
 mkdir -p "$APPS" "$BIN" "$(dirname "$LIB")" "$DATA/applications" "$DATA/icons/hicolor/scalable/apps"
 
 # Keep one stable lock inode, including between failed attempts. Two installers
@@ -111,6 +126,32 @@ runtime_hash() {
   fi
 }
 private_dir() { [[ -d "$1" && ! -L "$1" && "$(stat -c '%u:%a' -- "$1")" == "$(id -u):700" ]]; }
+# No ShadowCode holds the profile lock (the engine flocks native.lock).
+profile_idle() {
+  local lock="$PROFILE_STATE/native.lock"
+  ! exists "$lock" && return 0
+  [[ -f "$lock" && ! -L "$lock" ]] || return 1
+  flock -n -- "$lock" true
+}
+# Put back the pre-activation database snapshot (or the recorded absence of
+# a database) once the new version has stopped. The log files go first: a
+# snapshot must never be paired with another database's WAL.
+restore_database() {
+  local snapshot=$1 expected=$2
+  profile_idle || return 1
+  if [[ "$expected" == - ]]; then
+    rm -f -- "$DATABASE-wal" "$DATABASE-shm" "$DATABASE" || return 1
+  else
+    [[ "$(file_hash "$snapshot")" == "$expected" ]] || return 1
+    rm -f -- "$DATABASE.rollback.pending" || return 1
+    cp -- "$snapshot" "$DATABASE.rollback.pending" || return 1
+    chmod 600 -- "$DATABASE.rollback.pending" || return 1
+    [[ "$(file_hash "$DATABASE.rollback.pending")" == "$expected" ]] || return 1
+    rm -f -- "$DATABASE-wal" "$DATABASE-shm" || return 1
+    mv -Tf -- "$DATABASE.rollback.pending" "$DATABASE" || return 1
+  fi
+  sync -f "$PROFILE_STATE" 2>/dev/null || true
+}
 recovery_refusal() { fail "Interrupted install needs manual review: $*. Preserve $JOURNAL and $LIB.previous."; }
 read_field() {
   local field="$JOURNAL/$1"
@@ -131,7 +172,22 @@ recover_install() {
   candidate="$(read_field candidate)"; candidate_hash="$(read_field candidate-sha256)"
   existed="$(read_field candidate-existed)"; new_hash="$(read_field new-runtime-sha256)"
   stage_name="$(read_field stage)"
-  [[ ( "$schema" == 1 || "$schema" == 2 || "$schema" == 3 ) && ( "$phase" == prepared || ( "$schema" == 3 && "$phase" == activation_started ) ) ]] || recovery_refusal 'unsupported intent or activation already started'
+  [[ ( "$schema" == 1 || "$schema" == 2 || "$schema" == 3 ) && ( "$phase" == prepared || ( "$schema" == 3 && ( "$phase" == activation_started || "$phase" == first_start_check ) ) ) ]] || recovery_refusal 'unsupported intent or activation already started'
+  # A first-window check may have started the new version, which may have
+  # migrated the database: its snapshot is restored with the package.
+  local restore_db=0 db_snapshot_hash=- first_start=0 candidate_fp
+  local -a integration_restores=()
+  if [[ "$phase" == first_start_check ]]; then
+    phase=activation_started
+    first_start=1
+    if [[ "$(read_field database-check)" == 1 ]]; then
+      restore_db=1
+      [[ "$(read_field database-path)" == "$DATABASE" ]] || recovery_refusal 'profile database location changed'
+      db_snapshot_hash="$(read_field database-snapshot-sha256)"
+      [[ "$db_snapshot_hash" == - || "$db_snapshot_hash" =~ ^[a-f0-9]{64}$ ]] || recovery_refusal 'invalid database snapshot identity'
+      profile_idle || recovery_refusal 'ShadowCode is running on this profile; close it, then retry'
+    fi
+  fi
   if [[ "$schema" == 3 ]]; then
     [[ "$(read_field bin-root)" == "$(realpath -- "$BIN")" && "$(read_field applications-root)" == "$(realpath -- "$DATA/applications")" && "$(read_field icons-root)" == "$(realpath -- "$DATA/icons/hicolor/scalable/apps")" ]] || recovery_refusal 'launcher or desktop installation root changed'
   fi
@@ -202,11 +258,27 @@ recover_install() {
       expected="$(read_field "integration-$name")"
       [[ "$expected" == - || "$expected" =~ ^[a-f0-9]{64}$ ]] || recovery_refusal 'invalid integration identity'
       actual="$(integration_fingerprint "$location")" || recovery_refusal "$name integration cannot be identified"
-      [[ "$actual" == "$expected" ]] || recovery_refusal "$name integration changed after activation began"
+      if [[ "$first_start" == 1 ]]; then
+        # Activation completed before the check: each file is the recorded
+        # candidate (or already restored), and its prior copy is intact.
+        candidate_fp="$(read_field "integration-new-$name")"
+        [[ "$candidate_fp" =~ ^[a-f0-9]{64}$ ]] || recovery_refusal 'invalid integration identity'
+        [[ "$actual" == "$expected" || "$actual" == "$candidate_fp" ]] || recovery_refusal "$name integration changed after activation began"
+        if [[ "$expected" != - ]]; then
+          [[ "$(integration_fingerprint "$stage/integration-prior/$name")" == "$expected" ]] || recovery_refusal "$name prior integration copy changed or missing"
+        fi
+        ! exists "$location.rollback.pending" || recovery_refusal "$name integration rollback copy already exists"
+        [[ "$actual" == "$expected" ]] || integration_restores+=("$name")
+      else
+        [[ "$actual" == "$expected" ]] || recovery_refusal "$name integration changed after activation began"
+      fi
     done
   fi
   if [[ "$active_link_candidate" == 1 ]]; then
     [[ "$(file_hash "$APPS/$candidate")" == "$candidate_hash" ]] || recovery_refusal 'active candidate AppImage changed'
+  fi
+  if [[ "$restore_db" == 1 && "$db_snapshot_hash" != - ]]; then
+    [[ "$(file_hash "$stage/database-snapshot.db")" == "$db_snapshot_hash" ]] || recovery_refusal 'database snapshot changed or missing'
   fi
   if exists "$stage/recovery-link"; then
     [[ "$active_link_candidate" == 1 && "$prior" != - && -L "$stage/recovery-link" && "$(readlink -- "$stage/recovery-link")" == "$prior" ]] || recovery_refusal 'recovery link changed'
@@ -231,6 +303,24 @@ recover_install() {
   [[ "$existed" == 1 ]] || rm -f -- "$APPS/$candidate"
   rm -f -- "$APPS/$candidate.pending"
   rm -f -- "$APPS/.ShadowCode.AppImage.pending"
+  for name in "${integration_restores[@]}"; do
+    case "$name" in
+      shadow) location="$BIN/shadow" ;;
+      shadowcode) location="$BIN/shadowcode" ;;
+      icon) location="$DATA/icons/hicolor/scalable/apps/shadow-agent.svg" ;;
+      desktop) location="$DATA/applications/shadow-agent.desktop" ;;
+    esac
+    expected="$(read_field "integration-$name")"
+    if [[ "$expected" == - ]]; then
+      rm -f -- "$location" || recovery_refusal "could not remove the $name integration"
+    else
+      cp -a --no-dereference -- "$stage/integration-prior/$name" "$location.rollback.pending" \
+        && mv -Tf -- "$location.rollback.pending" "$location" || recovery_refusal "could not restore the $name integration"
+    fi
+  done
+  if [[ "$restore_db" == 1 ]]; then
+    restore_database "$stage/database-snapshot.db" "$db_snapshot_hash" || recovery_refusal 'could not restore the database snapshot'
+  fi
   sync -f "$(dirname "$LIB")"
   # Retire the active record by rename, so interruption of recursive staging
   # cleanup cannot leave a partially deleted active journal blocking recovery.
@@ -267,6 +357,23 @@ LINK_REPLACING=0
 DEST_CREATING=0
 INTEGRATION_ACTIVE=0
 PREVIOUS_LINK="$(readlink "$APPS/ShadowCode.AppImage" 2>/dev/null || true)"
+APP_PID=''
+DATABASE_ACTIVE=0
+DB_SNAPSHOT_HASH=-
+# Stop the whole session of the started version (it runs under setsid).
+stop_first_start() {
+  local tries=0
+  kill -TERM -- "-$APP_PID" 2>/dev/null || true
+  while kill -0 -- "-$APP_PID" 2>/dev/null && (( tries < 100 )); do
+    sleep 0.1; tries=$((tries + 1))
+  done
+  kill -KILL -- "-$APP_PID" 2>/dev/null || true
+  wait "$APP_PID" 2>/dev/null || true
+  tries=0
+  while ! profile_idle && (( tries < 50 )); do sleep 0.1; tries=$((tries + 1)); done
+  APP_PID=''
+  profile_idle
+}
 restore_integration() {
   local name=$1 destination=$2 prior=$3 candidate=$4 actual backup pending
   backup="$STAGE/integration-prior/$name"
@@ -292,6 +399,10 @@ finish() {
   local restored=1
   trap - EXIT INT TERM
   if [[ "$status" != 0 ]]; then
+    # A new version that did not report its first start is stopped before
+    # anything it uses is put back.
+    local app_stopped=1
+    [[ -z "$APP_PID" ]] || stop_first_start || { restored=0; app_stopped=0; }
     if [[ "$RUNTIME_REPLACING" == 1 ]]; then
       if [[ -e "$LIB.previous" || -L "$LIB.previous" ]]; then
         if rm -rf -- "$LIB"; then
@@ -319,6 +430,14 @@ finish() {
       restore_integration icon "$DATA/icons/hicolor/scalable/apps/shadow-agent.svg" "$ICON_INTEGRATION" "$POST_ICON_INTEGRATION" || restored=0
       restore_integration shadowcode "$BIN/shadowcode" "$SHADOWCODE_INTEGRATION" "$POST_SHADOWCODE_INTEGRATION" || restored=0
       restore_integration shadow "$BIN/shadow" "$SHADOW_INTEGRATION" "$POST_SHADOW_INTEGRATION" || restored=0
+    fi
+    if [[ "$DATABASE_ACTIVE" == 1 ]]; then
+      if [[ "$app_stopped" == 1 ]] && restore_database "$STAGE/database-snapshot.db" "$DB_SNAPSHOT_HASH"; then
+        echo 'The database snapshot taken before activation was restored.' >&2
+      else
+        restored=0
+        echo "The database snapshot could not be restored; it is kept in $STAGE/database-snapshot.db." >&2
+      fi
     fi
     if [[ "$DEST_CREATING" == 1 && "$restored" == 1 ]]; then
       rm -f -- "$DEST" || restored=0
@@ -454,6 +573,30 @@ POST_SHADOW_INTEGRATION="$(integration_fingerprint "$STAGE/integration-new/shado
 POST_SHADOWCODE_INTEGRATION="$(integration_fingerprint "$STAGE/integration-new/shadowcode")" || fail 'Candidate launcher alias cannot be identified.'
 POST_ICON_INTEGRATION="$(integration_fingerprint "$STAGE/integration-new/icon")" || fail 'Candidate icon cannot be identified.'
 POST_DESKTOP_INTEGRATION="$(integration_fingerprint "$STAGE/integration-new/desktop")" || fail 'Candidate desktop entry cannot be identified.'
+# First-window check and database snapshot. The check starts the new version
+# on this profile, which may migrate its database; an older version refuses a
+# newer database format, so rollback needs the pre-activation database.
+CHECK_FIRST_START=0
+case "$FIRST_START_CHECK" in
+  require) CHECK_FIRST_START=1 ;;
+  auto) [[ -z "${DISPLAY:-}" && -z "${WAYLAND_DISPLAY:-}" ]] || CHECK_FIRST_START=1 ;;
+esac
+if [[ "$CHECK_FIRST_START" == 1 ]]; then
+  profile_idle || fail 'ShadowCode is running on this profile. Close it, then run the installer again.'
+  ! exists "$DATABASE.rollback.pending" || fail "A database rollback copy already exists: $DATABASE.rollback.pending"
+  # SQLite's VACUUM INTO through the verified candidate: a consistent copy,
+  # never a raw copy of a live WAL database, and the source is not migrated.
+  SNAPSHOT_RESULT="$(cd / && "$SOURCE" --appimage-extract-and-run install-snapshot "$STAGE/database-snapshot.db")" \
+    || fail 'Could not snapshot the profile database; nothing was replaced.'
+  if [[ "$SNAPSHOT_RESULT" == absent ]]; then
+    ! exists "$STAGE/database-snapshot.db" || fail 'Unexpected database snapshot.'
+  else
+    [[ "$SNAPSHOT_RESULT" =~ ^[0-9]+$ ]] || fail 'Unexpected database snapshot result.'
+    chmod 600 "$STAGE/database-snapshot.db"
+    DB_SNAPSHOT_HASH="$(file_hash "$STAGE/database-snapshot.db")" || fail 'Database snapshot missing.'
+  fi
+  profile_idle || fail 'ShadowCode started during the database snapshot. Close it, then run the installer again.'
+fi
 sync -f "$STAGE"
 [[ "$(file_hash "$SOURCE")" == "$ACTUAL" ]] || fail 'AppImage changed during validation.'
 prepare_accepted_record
@@ -470,6 +613,10 @@ write_field integration-shadow "$SHADOW_INTEGRATION"
 write_field integration-shadowcode "$SHADOWCODE_INTEGRATION"
 write_field integration-icon "$ICON_INTEGRATION"
 write_field integration-desktop "$DESKTOP_INTEGRATION"
+write_field integration-new-shadow "$POST_SHADOW_INTEGRATION"
+write_field integration-new-shadowcode "$POST_SHADOWCODE_INTEGRATION"
+write_field integration-new-icon "$POST_ICON_INTEGRATION"
+write_field integration-new-desktop "$POST_DESKTOP_INTEGRATION"
 write_field prior-link "${PREVIOUS_LINK:--}"
 write_field prior-app-sha256 "$PRIOR_HASH"
 write_field had-runtime "$HAD_RUNTIME"
@@ -483,6 +630,9 @@ write_field accepted-prior "$STATE_PRIOR"
 write_field accepted-candidate "$CANDIDATE_ID"
 write_field accepted-record-sha256 "$CANDIDATE_RECORD_HASH"
 write_field state-root "$STATE"
+write_field database-check "$CHECK_FIRST_START"
+write_field database-path "$DATABASE"
+write_field database-snapshot-sha256 "$DB_SNAPSHOT_HASH"
 sync -f "$JOURNAL_TEMP"
 JOURNAL_CREATED=1
 mv -T -- "$JOURNAL_TEMP" "$JOURNAL"
@@ -526,6 +676,39 @@ mv -Tf -- "$DATA/applications/shadow-agent.desktop.pending" "$DATA/applications/
    "$(integration_fingerprint "$DATA/icons/hicolor/scalable/apps/shadow-agent.svg")" == "$POST_ICON_INTEGRATION" && \
    "$(integration_fingerprint "$DATA/applications/shadow-agent.desktop")" == "$POST_DESKTOP_INTEGRATION" ]] \
   || fail 'Desktop integration changed during activation; rollback requires review if an unrelated edit occurred.'
+if [[ "$CHECK_FIRST_START" == 1 ]]; then
+  # Recorded before the start: a crash from here on also restores the
+  # database snapshot on recovery.
+  printf 'first_start_check\n' > "$JOURNAL/phase.pending"
+  chmod 600 "$JOURNAL/phase.pending"
+  mv -f -- "$JOURNAL/phase.pending" "$JOURNAL/phase"
+  sync -f "$JOURNAL"
+  DATABASE_ACTIVE=1
+  MARKER="$STAGE/first-start"
+  printf 'Starting ShadowCode %s to check its first window (up to %ss)...\n' "$VERSION" "$FIRST_START_TIMEOUT"
+  # Its own session, so a failed start is stopped with every child process.
+  # It must not inherit the installer lock: it outlives a successful install.
+  (exec {INSTALL_LOCK}>&- && cd "$HOME" && SHADOWCODE_FIRST_START_MARKER="$MARKER" exec setsid "$BIN/shadow" ui) \
+    < /dev/null > "$STAGE/first-start.log" 2>&1 &
+  APP_PID=$!
+  deadline=$((SECONDS + FIRST_START_TIMEOUT))
+  until [[ -f "$MARKER" ]]; do
+    if ! kill -0 "$APP_PID" 2>/dev/null; then
+      tail -n 20 "$STAGE/first-start.log" >&2 || true
+      fail "ShadowCode $VERSION exited before its first window opened; rolling back."
+    fi
+    if (( SECONDS >= deadline )); then
+      tail -n 20 "$STAGE/first-start.log" >&2 || true
+      fail "ShadowCode $VERSION did not report its first window within ${FIRST_START_TIMEOUT}s; rolling back."
+    fi
+    sleep 0.2
+  done
+  [[ "$(cat -- "$MARKER")" == "ShadowCode $VERSION" ]] || fail 'The first-start report is not from the installed version; rolling back.'
+  # Healthy: leave the new version running for the user.
+  disown "$APP_PID" 2>/dev/null || true
+  APP_PID=''
+  DATABASE_ACTIVE=0
+fi
 # Success: drop the previous runtime and older AppImages.
 mv -T -- "$JOURNAL" "$STAGE/completed-intent"
 JOURNAL_CREATED=0
@@ -537,5 +720,10 @@ for old in "$APPS"/ShadowCode-*-"$INSTALLED_ARCH".AppImage; do
   [[ "$old" == "$DEST" || ! -f "$old" ]] || rm -- "$old"
 done
 command -v update-desktop-database >/dev/null && update-desktop-database "$DATA/applications" || true
-printf 'Installed %s\nInstalled llama.cpp %s to %s\nConfig and task history are preserved. Restart the app to use the new release.\n' \
+printf 'Installed %s\nInstalled llama.cpp %s to %s\nConfig and task history are preserved.\n' \
   "$DEST" "${RUNTIME_COMMIT:0:9}" "$LIB"
+if [[ "$CHECK_FIRST_START" == 1 ]]; then
+  printf 'ShadowCode %s opened its first window and is running.\n' "$VERSION"
+else
+  printf 'The first-window check was skipped (no display, or SHADOWCODE_FIRST_START_CHECK=skip). Restart the app to use the new release.\n'
+fi

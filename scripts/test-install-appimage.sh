@@ -4,6 +4,7 @@
 # links, refusal of broken runtimes, rollback, and preserved profile data.
 # Never touches the real HOME.
 set -euo pipefail
+trap 'echo "test-install-appimage.sh failed at line $LINENO" >&2' ERR
 SOURCE_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SCRATCH="$(mktemp -d)"
 cleanup() { chmod -R u+w -- "$SCRATCH" 2>/dev/null || true; rm -rf -- "$SCRATCH"; }
@@ -33,7 +34,10 @@ REAL_BIN="$SOURCE_ROOT/packaging/llama.cpp/bin"
 HOME="$SCRATCH/home"
 export HOME
 export XDG_DATA_HOME="$HOME/.local/share"
-unset SHADOWCODE_SHA256SUMS SHADOWCODE_GIT_SHA
+unset SHADOWCODE_SHA256SUMS SHADOWCODE_GIT_SHA XDG_STATE_HOME SHADOWCODE_FIRST_START_TIMEOUT
+# Scenarios 1-19 run without a display, so the first-window check is skipped;
+# scenarios 20 onward require it.
+unset DISPLAY WAYLAND_DISPLAY SHADOWCODE_FIRST_START_CHECK
 COMMIT_A="$(printf 'a1%.0s' {1..20})"
 COMMIT_B="$(printf 'b2%.0s' {1..20})"
 LIB="$HOME/.local/lib/shadowcode"
@@ -45,14 +49,39 @@ printf 'old runtime' > "$LIB/old-runtime-marker"
 
 # fake_appimage FILE VERSION COMMIT MODE
 # MODE: good | absolute-link | dangling-link | broken-server | wrong-commit | no-runtime
+# START (first window, optional): ok | hang | crash | wrong-version
+# The fake profile database is a text file; the real VACUUM INTO snapshot is
+# covered by the native core tests.
 fake_appimage() {
-  local file="$1" version="$2" commit="$3" mode="$4"
+  local file="$1" version="$2" commit="$3" mode="$4" start="${5:-ok}"
   mkdir -p "$(dirname "$file")"
   cat > "$file" <<FAKE
 #!/usr/bin/env bash
 set -euo pipefail
 if [[ "\${1:-}" == "--appimage-extract-and-run" && "\${2:-}" == "--version" ]]; then
   printf 'ShadowCode $version\\n'
+  exit 0
+fi
+profile="\${XDG_STATE_HOME:-\$HOME/.local/state}/shadow-agent"
+if [[ "\${1:-}" == "--appimage-extract-and-run" && "\${2:-}" == "install-snapshot" ]]; then
+  if [[ -f "\$profile/shadow-agent.db" ]]; then cp -- "\$profile/shadow-agent.db" "\$3"; echo 27; else echo absent; fi
+  exit 0
+fi
+if [[ "\${1:-}" == "--appimage-extract-and-run" && "\${2:-}" == "ui" ]]; then
+  mkdir -p "\$profile"
+  exec 9>"\$profile/native.lock"
+  flock -n 9
+  # The new version migrates the database before its window loads.
+  printf 'format of $version\\n' > "\$profile/shadow-agent.db"
+  printf 'wal of $version\\n' > "\$profile/shadow-agent.db-wal"
+  printf '%s\\n' "\$\$" > "\$profile/fake-app.pid"
+  case "$start" in
+    ok) printf 'ShadowCode $version\\n' > "\$SHADOWCODE_FIRST_START_MARKER.tmp"
+        mv "\$SHADOWCODE_FIRST_START_MARKER.tmp" "\$SHADOWCODE_FIRST_START_MARKER" ;;
+    wrong-version) printf 'ShadowCode 0.0.1\\n' > "\$SHADOWCODE_FIRST_START_MARKER"; sleep 600 ;;
+    hang) sleep 600 ;;
+    crash) echo 'fake window failed' >&2; exit 1 ;;
+  esac
   exit 0
 fi
 if [[ "\${1:-}" == "--appimage-extract" && "\${2:-}" == "usr/lib/shadowcode" ]]; then
@@ -470,7 +499,100 @@ cp -p "$SCRATCH/prior-desktop" "$XDG_DATA_HOME/applications/shadow-agent.desktop
 grep -Fq 'Recovered the previous runtime and AppImage' "$SCRATCH/recovered-after-link.txt"
 assert_state_unchanged "$PRIOR_LINK" "$PRIOR_COMMIT"
 test "$(cat "$XDG_DATA_HOME/shadow-agent/profile.txt")" = 'keep this profile data'
-# 20. An aarch64 host installs only the signed aarch64 AppImage, under
+
+# 20. First-window check: a new version that never reports its first start is
+# stopped, and the AppImage, runtime, launchers and pre-activation database
+# snapshot are all restored. The accepted-release record is not lowered.
+PROFILE_STATE="$HOME/.local/state/shadow-agent"
+DB="$PROFILE_STATE/shadow-agent.db"
+mkdir -p "$PROFILE_STATE"
+printf 'format of the prior version\n' > "$DB"
+first_start_env=(env SHADOWCODE_FIRST_START_CHECK=require SHADOWCODE_FIRST_START_TIMEOUT=2)
+assert_database_restored() {
+  test "$(cat "$DB")" = 'format of the prior version'
+  test ! -e "$DB-wal"
+  test ! -e "$DB.rollback.pending"
+}
+ACCEPTED_BEFORE="$(readlink "$HOME/.local/lib/.shadowcode-release-state/accepted")"
+HANGS="$SCRATCH/release/0.29.0/ShadowCode_0.29.0_amd64.AppImage"
+fake_appimage "$HANGS" 0.29.0 "$COMMIT_B" good hang
+checksum "$HANGS"
+expect_refusal 'first window never reported' "${first_start_env[@]}" "$INSTALLER" "$HANGS"
+grep -Fq 'did not report its first window within 2s' "$SCRATCH/refused.txt"
+grep -Fq 'database snapshot taken before activation was restored' "$SCRATCH/refused.txt"
+grep -Fq 'previous runtime and AppImage were restored' "$SCRATCH/refused.txt"
+assert_database_restored
+assert_state_unchanged "$PRIOR_LINK" "$PRIOR_COMMIT"
+test ! -e "$HOME/Applications/ShadowCode-0.29.0-x86_64.AppImage"
+flock -n "$PROFILE_STATE/native.lock" true
+# Rollback keeps the durable highest accepted release: 0.28.5 is now a downgrade.
+test "$(readlink "$HOME/.local/lib/.shadowcode-release-state/accepted")" != "$ACCEPTED_BEFORE"
+expect_refusal 'downgrade below a rolled-back release' "$INSTALLER" "$NEXT"
+grep -Fq 'release downgrade' "$SCRATCH/refused.txt"
+
+# 21. A version that exits before its window, or reports another version,
+# is rolled back the same way.
+for case_version in crash:0.29.1 wrong-version:0.29.2; do
+  start=${case_version%%:*}; version=${case_version#*:}
+  rm -f "$SCRATCH/release/SHA256SUMS"
+  FAILS="$SCRATCH/release/$version/ShadowCode_${version}_amd64.AppImage"
+  fake_appimage "$FAILS" "$version" "$COMMIT_B" good "$start"
+  checksum "$FAILS"
+  expect_refusal "first start $start" "${first_start_env[@]}" "$INSTALLER" "$FAILS"
+  grep -Fq 'database snapshot taken before activation was restored' "$SCRATCH/refused.txt"
+  assert_database_restored
+  assert_state_unchanged "$PRIOR_LINK" "$PRIOR_COMMIT"
+done
+grep -Fq 'not from the installed version' "$SCRATCH/refused.txt"
+
+# 22. The check refuses to start while ShadowCode holds the profile lock;
+# nothing is replaced and the database is not touched.
+GOOD="$SCRATCH/release/0.29.3/ShadowCode_0.29.3_amd64.AppImage"
+fake_appimage "$GOOD" 0.29.3 "$COMMIT_A" good ok
+checksum "$GOOD"
+exec {HOLDER}>"$PROFILE_STATE/native.lock"; flock -n "$HOLDER"
+expect_refusal 'profile in use' "${first_start_env[@]}" "$INSTALLER" "$GOOD"
+exec {HOLDER}>&-
+grep -Fq 'ShadowCode is running on this profile' "$SCRATCH/refused.txt"
+assert_database_restored
+assert_state_unchanged "$PRIOR_LINK" "$PRIOR_COMMIT"
+
+# 23. A healthy first start completes the install and keeps the migrated data.
+"${first_start_env[@]}" "$INSTALLER" "$GOOD" > "$SCRATCH/first-start-ok.txt"
+grep -Fq 'ShadowCode 0.29.3 opened its first window' "$SCRATCH/first-start-ok.txt"
+assert_state_unchanged ShadowCode-0.29.3-x86_64.AppImage "$COMMIT_A"
+test "$(cat "$DB")" = 'format of 0.29.3'
+PRIOR_LINK=ShadowCode-0.29.3-x86_64.AppImage
+PRIOR_COMMIT="$COMMIT_A"
+rm -f "$DB-wal"
+printf 'format of the prior version\n' > "$DB"
+
+# 24. An installer killed during the check leaves a first_start_check intent.
+# Recovery waits until the started version is closed, then restores the
+# package and the database snapshot together.
+KILLED="$SCRATCH/release/0.29.4/ShadowCode_0.29.4_amd64.AppImage"
+fake_appimage "$KILLED" 0.29.4 "$COMMIT_B" good hang
+checksum "$KILLED"
+rm -f "$PROFILE_STATE/fake-app.pid"
+SHADOWCODE_FIRST_START_CHECK=require SHADOWCODE_FIRST_START_TIMEOUT=60 "$INSTALLER" "$KILLED" > "$SCRATCH/killed-check.txt" 2>&1 &
+KILLED_INSTALLER=$!
+for _ in $(seq 100); do [[ -s "$PROFILE_STATE/fake-app.pid" ]] && break; sleep 0.1; done
+test "$(cat "$JOURNAL/phase")" = first_start_check
+kill -KILL "$KILLED_INSTALLER"; wait "$KILLED_INSTALLER" 2>/dev/null || true
+# Its short-lived children (a polling sleep) may hold the installer lock briefly.
+for _ in $(seq 50); do flock -n "$HOME/.local/lib/.shadowcode-install-lock" true && break; sleep 0.1; done
+expect_refusal 'recover while the new version runs' "$INSTALLER" --recover
+grep -Fq 'ShadowCode is running on this profile' "$SCRATCH/refused.txt"
+test -d "$JOURNAL"
+kill -TERM -- "-$(cat "$PROFILE_STATE/fake-app.pid")"
+for _ in $(seq 50); do flock -n "$PROFILE_STATE/native.lock" true && break; sleep 0.1; done
+"$INSTALLER" --recover > "$SCRATCH/recovered-check.txt"
+grep -Fq 'Recovered the previous runtime and AppImage' "$SCRATCH/recovered-check.txt"
+grep -Fxq "X-ShadowCode-Version=0.29.3" "$DESKTOP"
+assert_database_restored
+assert_state_unchanged "$PRIOR_LINK" "$PRIOR_COMMIT"
+
+# 25. An aarch64 host installs only the signed aarch64 AppImage, under
 # -aarch64 names, and an x86_64 host refuses it. A uname shim selects the
 # host; the fake AppImages are architecture-neutral scripts.
 ARM_ROOT="$SCRATCH/installer-arm"

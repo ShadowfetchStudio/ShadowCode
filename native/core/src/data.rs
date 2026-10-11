@@ -499,6 +499,25 @@ fn copy_database(source: &Path, target: &Path) -> Result<i64> {
     Ok(version)
 }
 
+/// The installer's pre-activation snapshot of the profile database: a
+/// consistent `VACUUM INTO` copy (the live database is neither migrated nor
+/// written). `None` when the profile has no database yet. The installer
+/// restores it only after the new version failed its first start and was
+/// stopped, so the older version is not handed a database format newer than
+/// it reads.
+pub fn install_snapshot(paths: &AppPaths, target: &Path) -> Result<Option<i64>> {
+    let source = paths.database();
+    if !source.exists() {
+        return Ok(None);
+    }
+    ensure!(
+        fs::symlink_metadata(target).is_err(),
+        "{} already exists",
+        target.display()
+    );
+    copy_database(&source, target).map(Some)
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct BackupOptions<'a> {
     pub include_secrets: bool,
@@ -1622,6 +1641,52 @@ pub fn restart_hint(mode: Option<&str>, pid: u32) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The installer's snapshot is a consistent copy of a live WAL database
+    /// (committed rows still in the log included), does not migrate or
+    /// write the source, and puts back a database the current version opens
+    /// after a newer version marked the live one as a newer format.
+    #[test]
+    fn install_snapshot_copies_a_live_database_for_rollback() {
+        let temp = tempfile::tempdir().unwrap();
+        let paths = AppPaths::isolated(&temp.path().join("profile")).unwrap();
+        let target = temp.path().join("snapshot.db");
+        assert_eq!(install_snapshot(&paths, &target).unwrap(), None);
+        assert!(!target.exists());
+
+        let store = store::Store::open(&paths.database()).unwrap();
+        // Held open in WAL mode with a committed row not yet checkpointed.
+        let live = Connection::open(paths.database()).unwrap();
+        live.execute_batch(
+            "CREATE TABLE install_probe(v TEXT); INSERT INTO install_probe VALUES('kept');",
+        )
+        .unwrap();
+        assert_eq!(
+            install_snapshot(&paths, &target).unwrap(),
+            Some(store::SCHEMA_VERSION)
+        );
+        let copy = Connection::open(&target).unwrap();
+        let kept: String = copy
+            .query_row("SELECT v FROM install_probe", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(kept, "kept");
+        drop(copy);
+        // An existing target is never overwritten.
+        assert!(install_snapshot(&paths, &target).is_err());
+
+        // A newer version migrated the live database; this version refuses it.
+        live.pragma_update(None, "user_version", store::SCHEMA_VERSION + 1)
+            .unwrap();
+        drop(live);
+        drop(store);
+        assert!(store::Store::open(&paths.database()).is_err());
+        // Rollback: the snapshot replaces the database and its WAL files.
+        for suffix in ["-wal", "-shm"] {
+            let _ = fs::remove_file(format!("{}{suffix}", paths.database().display()));
+        }
+        fs::rename(&target, paths.database()).unwrap();
+        store::Store::open(&paths.database()).unwrap();
+    }
 
     /// Someone who can change the chosen folder renames the new backup
     /// folder and puts a symlink to their own folder in its place: every

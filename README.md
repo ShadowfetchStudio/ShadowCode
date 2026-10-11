@@ -146,8 +146,18 @@ as `--trust-dir` are not installer options.
   AppImage/runtime on retry when all recorded identities still match. Run
   `./ShadowCode/scripts/install-appimage.sh --recover` to attempt that recovery
   without the original download, using the same trusted installer bundle. Changed, ambiguous or activation-stage states
-  are preserved for manual recovery; first-window and database rollback are
-  not yet qualified.
+  are preserved for manual recovery.
+- when a display is available, checks the first window: before activation it
+  snapshots the profile database with SQLite's `VACUUM INTO` (close ShadowCode
+  first; the installer refuses while it runs), then starts the new version,
+  which must report that its database opened and its main window loaded
+  within 120 seconds. Otherwise it is stopped and the AppImage, runtime,
+  launchers and database snapshot are all restored; `--recover` does the same
+  after an installer crash during the check. `SHADOWCODE_FIRST_START_CHECK`
+  (`auto`, `require`, `skip`) and `SHADOWCODE_FIRST_START_TIMEOUT` (seconds)
+  change this. Without a display the check is skipped and says so. An older
+  version never opens a database a newer version changed, so a rollback
+  cannot corrupt it.
 
 After obtaining and verifying the intended package, run the AppImage without installing it:
 `./ShadowCode_1.0.1_amd64.AppImage --appimage-extract-and-run`. FUSE is not

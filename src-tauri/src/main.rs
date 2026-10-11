@@ -516,6 +516,14 @@ fn run() -> Result<()> {
                             && url.host_str() == Some("127.0.0.1")
                             && url.port() == Some(5174))
                 })
+                .on_page_load(|_, payload| {
+                    // The backend (and its database migration) opened before
+                    // the window was built; a loaded page completes the first
+                    // start the AppImage installer waits for.
+                    if matches!(payload.event(), tauri::webview::PageLoadEvent::Finished) {
+                        shadowcode_core::lifecycle::report_first_start();
+                    }
+                })
                 .build()?;
             app.manage(window_size::SizeMemory::new(
                 size_file,

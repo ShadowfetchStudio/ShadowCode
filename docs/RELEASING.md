@@ -138,7 +138,16 @@ bash scripts/test-install-appimage.sh
 - **`test-install-appimage.sh`** uses fake AppImages in a temporary `HOME`. It
   covers checksum refusal, broken runtimes, `--unverified`, rollback after the
   runtime swap and a changed download. If `packaging/llama.cpp/bin` exists, it
-  also runs the real `llama-server`.
+  also runs the real `llama-server`. Scenarios 20–24 cover the first-window
+  check: a version that hangs, exits or reports another version is stopped and
+  the AppImage, runtime, launchers and database snapshot are restored without
+  lowering the accepted-release record; the check refuses while ShadowCode
+  holds the profile lock; and `--recover` after an installer killed during the
+  check waits for the started version to close, then restores all of it. Run
+  it as an ordinary user: as root, permission-based failure injection
+  (scenario 5) cannot fail. The real `VACUUM INTO` snapshot and the
+  first-start marker are covered by `cargo test -p shadowcode-core --lib --
+  install_snapshot first_start`.
 
 ## 5. Protected signing review and tag
 
@@ -265,7 +274,10 @@ The installer accepts a single AppImage path or `--recover`; it does not accept
 read-only verifier. No checksum-only or `--unverified` bypass is supported.
 For manual Debian verification/install, see the [README](../README.md#debian-package).
 
-Then open ShadowCode from the desktop entry and check:
+With a display, the installer starts the new version itself and waits for its
+first window (see the [README](../README.md#appimage-recommended)); a failed first start
+rolls back the AppImage, runtime and database snapshot. Then use the
+ShadowCode it opened, or open it from the desktop entry, and check:
 
 - Settings, conversations and accounts are still there.
 - **Settings › Local models › Runtime** shows the pinned commit and the
