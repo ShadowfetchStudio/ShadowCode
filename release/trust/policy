@@ -2,7 +2,7 @@ ShadowCode-Release-Trust-v1
 repository=Shadowfetchapps/ShadowCode
 repository-id=1377099349
 owner-id=209457103
-target=x86_64-unknown-linux-gnu
+target=x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu
 channel=stable
 minimum-epoch=1
 minimum-version=0.33.0

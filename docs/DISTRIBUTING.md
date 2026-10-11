@@ -29,10 +29,12 @@ GitHub's `ubuntu-24.04-arm` runners and pass the same release gates:
 | `ShadowCode_VERSION_appimage-runtime-sources.tar.gz` | `ShadowCode_VERSION_aarch64_appimage-runtime-sources.tar.gz` |
 | `ShadowCode_VERSION_x86_64.flatpak` | `ShadowCode_VERSION_aarch64.flatpak` |
 
-Until the publisher adds `aarch64-unknown-linux-gnu` to `release/trust/policy`,
-aarch64 packages are workflow artifacts, not signed release assets, and the
-verifier refuses them. Build them from source (below) on an aarch64 machine
-in the meantime. Cross-building is not supported: each architecture is built
+The publisher's trust policy (`release/trust/policy`) names both
+`x86_64-unknown-linux-gnu` and `aarch64-unknown-linux-gnu`, so the verifier and
+installer accept a signed aarch64 release. Until the release workflow signs and
+publishes the aarch64 envelope alongside the x86_64 one, aarch64 packages are
+workflow artifacts rather than release assets; build them from source (below)
+on an aarch64 machine in the meantime. Cross-building is not supported: each architecture is built
 on its own hardware.
 
 Both contain the same compiled application and the same pinned llama.cpp

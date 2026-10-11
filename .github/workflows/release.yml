@@ -137,8 +137,9 @@ jobs:
           compression-level: 0
   # aarch64 packages are built and qualified natively on GitHub's Arm runner
   # with the same required gates, then retained as an unsigned workflow
-  # artifact. Signing and publication stay x86_64-only until the owner adds
-  # aarch64-unknown-linux-gnu to release/trust/policy (see docs/RELEASING.md).
+  # artifact. release/trust/policy trusts aarch64, but signing and publication
+  # stay x86_64-only until sign/publish emit a per-target aarch64 envelope
+  # (see docs/RELEASING.md).
   build-aarch64:
     needs: configuration
     runs-on: ubuntu-24.04-arm
