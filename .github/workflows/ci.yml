@@ -52,3 +52,123 @@ jobs:
         run: |
           node --test --test-reporter=tap scripts/test-install-auth.mjs
           bash scripts/test-install-appimage.sh
+  # Pull requests that touch packaging inputs also run the packaging checks on
+  # both architectures and build the Flatpak. Change detection uses Git only,
+  # so no third-party path-filter action has to be trusted.
+  packaging-changes:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      packaging: ${{ steps.diff.outputs.packaging }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: diff
+        name: Detect packaging, scripts, desktop, core or workflow changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA")
+          printf '%s\n' "$changed"
+          if printf '%s\n' "$changed" | grep -Eq '^(packaging|scripts|src-tauri|native|\.github/workflows)/'; then
+            echo packaging=true >> "$GITHUB_OUTPUT"
+          else
+            echo packaging=false >> "$GITHUB_OUTPUT"
+          fi
+  packaging-dry-run:
+    needs: packaging-changes
+    if: needs.packaging-changes.outputs.packaging == 'true'
+    name: packaging dry run (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Debian packaging tools
+        run: sudo apt-get update && sudo apt-get install -y lintian desktop-file-utils appstream
+      - name: Architecture names, release authentication and signed targets
+        run: node --test scripts/test-native-arch.mjs scripts/test-native-release-auth.mjs
+      - name: Debian package assembly, runtime repack and desktop metadata
+        run: node --test scripts/test-native-deb.mjs scripts/test-llama-runtime.mjs scripts/test-native-desktop-metadata.mjs scripts/test-native-app-run.mjs
+      - name: Packaging PATH and pinned sources
+        run: node --test scripts/test-native-packaging-env.mjs scripts/test-native-source-fetch.mjs
+      - name: Installer on this architecture
+        run: |
+          node --test --test-reporter=tap scripts/test-install-auth.mjs
+          bash scripts/test-install-appimage.sh
+      - name: Shell syntax of packaging scripts
+        run: |
+          for script in packaging/native-app-run.sh packaging/native-runtime/build.sh packaging/flatpak/build-in-sdk.sh scripts/*.sh; do
+            bash -n "$script"
+          done
+          python3 -m py_compile scripts/build-flatpak.py
+  flatpak:
+    needs: packaging-changes
+    if: needs.packaging-changes.outputs.packaging == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      RUSTUP_TOOLCHAIN: '1.95.0'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Install the pinned Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+      - name: Flatpak tools and Flathub
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          # flatpak-builder's bubblewrap needs unprivileged user namespaces,
+          # which Ubuntu 24.04 restricts through AppArmor by default.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+      - name: Restore the flatpak-builder and SDK build caches
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.flatpak-builder
+            target/flatpak/sdk-cargo-cache
+            target/flatpak/sdk-native-cache
+          key: flatpak-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('Cargo.lock', 'ui/package-lock.json', 'tools/llama.cpp.pin', 'packaging/flatpak/**', 'scripts/build-flatpak.py') }}
+          restore-keys: |
+            flatpak-${{ runner.os }}-${{ runner.arch }}-
+      - name: Build the Flatpak with the GNOME 50 SDK (CPU-only llama.cpp)
+        # Releases also build the Vulkan module; it is skipped here for time.
+        run: python3 scripts/build-flatpak.py --cpu-only-llama --install-deps-from=flathub --state-dir ~/.flatpak-builder
+      - name: Install and start the bundle
+        run: |
+          flatpak install --user --noninteractive target/flatpak/ShadowCode_*_x86_64.flatpak
+          flatpak run com.shadowfetch.shadowcode --version
+          flatpak run --command=/app/lib/shadowcode/llama-server com.shadowfetch.shadowcode --version
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: flatpak-pr-build
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            target/flatpak/*.flatpak
+            target/flatpak/SHA256SUMS
+            target/flatpak/SOURCE-INPUTS.json
+            target/flatpak/com.shadowfetch.shadowcode.json

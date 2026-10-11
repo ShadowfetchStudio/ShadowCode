@@ -53,6 +53,11 @@ mkdir -p /app/lib/shadowcode/NOTICES
 install -m755 "$llama_build/bin/llama-server" "$llama_build/bin/llama-cli" /app/lib/shadowcode/
 cp -a "$llama_build/bin/"*.so* /app/lib/shadowcode/
 cp tools/llama.cpp.pin /app/lib/shadowcode/COMMIT
+if [[ "${SHADOWCODE_LLAMA_VULKAN:-1}" == 0 ]]; then
+  # Record the CPU-only CI runtime honestly; notices then omit SPIRV-Headers.
+  sed -i 's/^backend=.*/backend=cpu/; /^spirv_headers_commit=/d' /app/lib/shadowcode/COMMIT
+  export SHADOWCODE_ALLOW_CPU_ONLY_RUNTIME=1
+fi
 printf 'built=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> /app/lib/shadowcode/COMMIT
 cp tools/llama.cpp/LICENSE /app/lib/shadowcode/NOTICES/llama.cpp-LICENSE
 cp tools/llama.cpp/licenses/LICENSE-jsonhpp /app/lib/shadowcode/NOTICES/nlohmann-json-LICENSE
