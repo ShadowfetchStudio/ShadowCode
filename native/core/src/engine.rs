@@ -1871,7 +1871,10 @@ impl Engine {
             }
         );
         let mut saved = json!(*job);
-        let event = self.0.store.finish_job(&mut saved)?;
+        let event = self
+            .0
+            .store
+            .finish_job_with(&mut saved, running.child.is_none())?;
         job.event_cursor = event["id"].as_i64().unwrap_or(0);
         let _ = self.0.sender.send(event);
         running.finished.store(true, Ordering::Release);

@@ -16,6 +16,7 @@ mod goals;
 pub mod keys;
 mod memory;
 mod meta;
+mod outcomes;
 pub use automations::AutomationRun;
 pub use goals::MilestoneSpec;
 pub use meta::MetaTransaction;
@@ -94,7 +95,22 @@ CREATE TABLE IF NOT EXISTS task_notes (
 
 /// Current schema version. Older databases are backed up, then migrated
 /// forward one step at a time inside one transaction.
-pub const SCHEMA_VERSION: i64 = 27;
+pub const SCHEMA_VERSION: i64 = 28;
+
+/// Version 28: per-model, per-project outcome history (`crate::outcomes`).
+/// `cost_usd` is NULL unless the cost was reported; `passed` is NULL when
+/// nothing was verified.
+const MIGRATION_28: &str = r#"
+CREATE TABLE IF NOT EXISTS model_outcomes (
+ task_id TEXT PRIMARY KEY, session_id TEXT NOT NULL, workspace TEXT NOT NULL,
+ model_id TEXT NOT NULL, model_label TEXT NOT NULL, mode TEXT NOT NULL,
+ status TEXT NOT NULL, success INTEGER NOT NULL, started_at REAL NOT NULL,
+ finished_at REAL NOT NULL, duration_seconds REAL NOT NULL,
+ total_tokens INTEGER NOT NULL, tokens_estimated INTEGER NOT NULL,
+ cost_usd REAL, passed INTEGER, recorded_at REAL NOT NULL
+);
+CREATE INDEX IF NOT EXISTS model_outcomes_workspace ON model_outcomes(workspace,finished_at);
+"#;
 
 /// Version 27: bounded, profile-private editor drafts. Draft bytes are never
 /// written into the project until the user explicitly saves a reviewed file.
@@ -340,6 +356,9 @@ impl Store {
             }
             if version < 27 {
                 tx.execute_batch(MIGRATION_27)?;
+            }
+            if version < 28 {
+                tx.execute_batch(MIGRATION_28)?;
             }
             tx.pragma_update(None, "user_version", SCHEMA_VERSION)?;
             tx.commit()?;
@@ -1010,7 +1029,13 @@ impl Store {
                 runs.push(id);
             }
             tx.execute("DELETE FROM native_meta WHERE key=?", [&index])?;
-            for table in ["events", "pins", "session_meta", "queued_tasks"] {
+            for table in [
+                "events",
+                "pins",
+                "session_meta",
+                "queued_tasks",
+                "model_outcomes",
+            ] {
                 tx.execute(
                     &format!("DELETE FROM {table} WHERE session_id=?"),
                     [session],
@@ -1047,10 +1072,15 @@ impl Store {
         Ok(task)
     }
     pub fn finish_task(&self, tid: &str, status: &str, summary: &str, usage: &Value) -> Result<()> {
-        self.finish_transaction(tid, status, summary, usage, None)
+        self.finish_transaction(tid, status, summary, usage, None, false)
             .map(|_| ())
     }
     pub fn finish_job(&self, job: &mut Value) -> Result<Value> {
+        self.finish_job_with(job, true)
+    }
+    /// Finish a job; `record_outcome` adds it to the per-model outcome
+    /// history (`crate::outcomes`). Subagent jobs pass `false`.
+    pub fn finish_job_with(&self, job: &mut Value, record_outcome: bool) -> Result<Value> {
         let tid = job["task_id"]
             .as_str()
             .context("Missing task ID")?
@@ -1058,7 +1088,7 @@ impl Store {
         let status = job["status"].as_str().context("Missing status")?.to_owned();
         let summary = job["summary"].as_str().unwrap_or("").to_owned();
         let usage = job["usage"].clone();
-        self.finish_transaction(&tid, &status, &summary, &usage, Some(job))?
+        self.finish_transaction(&tid, &status, &summary, &usage, Some(job), record_outcome)?
             .context("Missing completion event")
     }
     fn finish_transaction(
@@ -1068,6 +1098,7 @@ impl Store {
         summary: &str,
         usage: &Value,
         job: Option<&mut Value>,
+        record_outcome: bool,
     ) -> Result<Option<Value>> {
         let mut db = self.lock()?;
         let tx = db.transaction()?;
@@ -1078,6 +1109,11 @@ impl Store {
             tx.execute("INSERT INTO events(ts,type,session_id,task_id,payload) VALUES(?,'agent.completed',?,?,?)",params![ts,sid,tid,payload.to_string()])?;
             let cursor = tx.last_insert_rowid();
             job["event_cursor"] = json!(cursor);
+            if record_outcome {
+                if let Some(outcome) = crate::outcomes::from_job(job, &sid) {
+                    outcomes::record_on(&tx, &outcome)?;
+                }
+            }
             tx.execute(
                 "UPDATE desktop_jobs SET payload=? WHERE id=?",
                 params![job.to_string(), job["id"].as_str()],

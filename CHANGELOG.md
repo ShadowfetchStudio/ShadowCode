@@ -40,6 +40,20 @@
   `shadowcode install-snapshot FILE` command makes the installer's database
   snapshot. An older version still refuses a database a newer version changed,
   without changing it.
+- **Model history per project in the picker.** Every finished task records
+  the model that ran it, how long it took, its tokens, its cost when the
+  provider, vendor CLI or this computer reported it (otherwise shown as
+  *cost unavailable*, never estimated), and whether observed verification
+  passed. Picker rows show the median time, median reported cost, pass count
+  and number of tasks in this project, and **Compare history** shows all
+  models side by side. Stored in a new `model_outcomes` table (database
+  format 28, migrated with a backup like earlier formats).
+- **Opt-in suggestion: the cheapest model that passed here before.** Turn on
+  **Suggest the cheapest model that passed here** (`routing.suggest_from_history`)
+  to see a suggestion you can accept or dismiss. ShadowCode never switches
+  models on its own; offline only local models are suggested, and spending
+  limits for paid API models are respected.
+- New experimental endpoint `GET /api/models/outcomes`.
 
 ## 2.0.0: Flatpak, brand identity, and remote-access fixes
 

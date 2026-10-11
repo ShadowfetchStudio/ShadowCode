@@ -37,6 +37,14 @@ import {
   vendorSections,
   type PickerTarget,
 } from "../lib/picker";
+import {
+  compactHistory,
+  formatCost,
+  formatDuration,
+  formatPassRate,
+  statsFor,
+  type ModelOutcomes,
+} from "../lib/outcomes";
 
 type Item =
   | { kind: "row"; key: string; target: PickerTarget }
@@ -76,6 +84,8 @@ export function UnifiedPicker({
   note,
   loading,
   label = "Model for this task",
+  outcomes,
+  onSuggestionsChange,
 }: {
   targets: PickerTarget[];
   value: string;
@@ -92,6 +102,10 @@ export function UnifiedPicker({
   loading?: boolean;
   /** Accessible name of the trigger, before the chosen row's name. */
   label?: string;
+  /** This project's per-model outcome history and the opt-in suggestion. */
+  outcomes?: ModelOutcomes | null;
+  /** Turn "suggest the cheapest model that passed here" on or off. */
+  onSuggestionsChange?: (on: boolean) => void;
 }) {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -99,6 +113,16 @@ export function UnifiedPicker({
   const [details, setDetails] = useState<string | null>(null);
   const [recent] = useState(recentTargets);
   const [refreshing, setRefreshing] = useState(false);
+  const [comparing, setComparing] = useState(false);
+  const [dismissed, setDismissed] = useState<string | null>(null);
+  const offered = outcomes?.suggestion ?? null;
+  const suggestion =
+    offered &&
+    offered.model_id !== value &&
+    offered.model_id !== dismissed &&
+    targets.some((t) => t.id === offered.model_id && isReady(t))
+      ? offered
+      : null;
   const trigger = useRef<HTMLButtonElement>(null);
   const root = useRef<HTMLDivElement>(null);
   const search = useRef<HTMLInputElement>(null);
@@ -376,6 +400,39 @@ export function UnifiedPicker({
               onKeyDown={onKeyDown}
             />
           </label>
+          {suggestion && (
+            <div
+              className="unified-picker-suggestion"
+              role="note"
+              aria-label="Suggested model"
+            >
+              <span>
+                Suggestion: <strong>{suggestion.name}</strong> passed here
+                before ({suggestion.passes} passed, median{" "}
+                {formatCost(suggestion.median_cost_usd)}).
+              </span>
+              <span className="row">
+                <button
+                  type="button"
+                  className="mini"
+                  title={suggestion.reason}
+                  onClick={() => {
+                    onSelect(suggestion.model_id);
+                    close();
+                  }}
+                >
+                  Use {suggestion.name}
+                </button>
+                <button
+                  type="button"
+                  className="mini ghost"
+                  onClick={() => setDismissed(suggestion.model_id)}
+                >
+                  Not now
+                </button>
+              </span>
+            </div>
+          )}
           <div
             className="unified-picker-list"
             role="listbox"
@@ -455,6 +512,7 @@ export function UnifiedPicker({
                       key={item.key}
                       id={optionId(item)}
                       target={item.target}
+                      history={statsFor(outcomes, item.target.id)}
                       active={isActive}
                       selected={item.target.id === value}
                       detailsOpen={details === item.target.id}
@@ -491,6 +549,9 @@ export function UnifiedPicker({
               }}
             />
           )}
+          {comparing && outcomes && (
+            <OutcomeTable outcomes={outcomes} targets={targets} />
+          )}
           <div className="unified-picker-actions">
             {onRefresh && (
               <button
@@ -509,6 +570,25 @@ export function UnifiedPicker({
                 <RefreshCw size={14} aria-hidden="true" />
                 {refreshing ? "Checking models…" : "Refresh models"}
               </button>
+            )}
+            {outcomes && outcomes.models.length > 0 && (
+              <button
+                type="button"
+                aria-pressed={comparing}
+                onClick={() => setComparing((c) => !c)}
+              >
+                {comparing ? "Hide history" : "Compare history"}
+              </button>
+            )}
+            {onSuggestionsChange && outcomes && (
+              <label className="unified-picker-optin">
+                <input
+                  type="checkbox"
+                  checked={outcomes.suggest_from_history}
+                  onChange={(e) => onSuggestionsChange(e.target.checked)}
+                />
+                Suggest the cheapest model that passed here
+              </label>
             )}
             <button
               type="button"
@@ -544,9 +624,58 @@ function countShown(items: Item[], vendor: string) {
   ).length;
 }
 
+/** Side-by-side history for this project: one row per model. */
+function OutcomeTable({
+  outcomes,
+  targets,
+}: {
+  outcomes: ModelOutcomes;
+  targets: PickerTarget[];
+}) {
+  return (
+    <div className="unified-picker-history">
+      <table aria-label="Model history in this project">
+        <thead>
+          <tr>
+            <th scope="col">Model</th>
+            <th scope="col">Tasks</th>
+            <th scope="col">Median time</th>
+            <th scope="col">Median reported cost</th>
+            <th scope="col">Verified</th>
+          </tr>
+        </thead>
+        <tbody>
+          {outcomes.models.map((m) => (
+            <tr key={m.model_id}>
+              <th scope="row">
+                {targets.find((t) => t.id === m.model_id)?.name ||
+                  m.model_label}
+              </th>
+              <td>{m.samples}</td>
+              <td>{formatDuration(m.median_seconds)}</td>
+              <td>
+                {formatCost(m.median_cost_usd)}
+                {m.cost_samples > 0 && m.cost_samples < m.samples
+                  ? ` (${m.cost_samples} reported)`
+                  : ""}
+              </td>
+              <td>{formatPassRate(m)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p>
+        Costs appear only when the provider, vendor or this computer reported
+        them.
+      </p>
+    </div>
+  );
+}
+
 function Row({
   id,
   target,
+  history,
   active,
   selected,
   detailsOpen,
@@ -557,6 +686,7 @@ function Row({
 }: {
   id: string;
   target: PickerTarget;
+  history?: ReturnType<typeof statsFor>;
   active: boolean;
   selected: boolean;
   detailsOpen: boolean;
@@ -601,6 +731,12 @@ function Row({
               "Usage unavailable" explanation stays in the details panel. */}
           {target.usage?.state !== "unavailable" &&
             rowUsage(availabilityLabel(target), target)}
+          {history && (
+            <span className="picker-history">
+              {" "}
+              · Here: {compactHistory(history)}
+            </span>
+          )}
         </small>
       </span>
       <span className="unified-picker-meta">

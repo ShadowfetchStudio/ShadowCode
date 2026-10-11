@@ -645,6 +645,47 @@ button.link {
 .unified-picker-hint {
   color: var(--warn) !important;
 }
+.unified-picker-suggestion {
+  display: grid;
+  gap: 4px;
+  margin: 4px 4px 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+}
+.unified-picker-suggestion .row {
+  gap: 6px;
+}
+.picker-history {
+  color: var(--text-2);
+}
+.unified-picker-history {
+  border-top: 1px solid var(--border);
+  padding: 6px 4px;
+  font-size: 12px;
+  overflow-x: auto;
+}
+.unified-picker-history table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.unified-picker-history th,
+.unified-picker-history td {
+  text-align: left;
+  padding: 2px 6px;
+  white-space: nowrap;
+}
+.unified-picker-history p {
+  margin: 4px 6px 0;
+  color: var(--text-2);
+}
+.unified-picker-optin {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
 .unified-picker-actions {
   display: flex;
   flex-wrap: wrap;
