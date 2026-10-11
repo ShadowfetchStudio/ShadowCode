@@ -211,7 +211,28 @@ if [[ "$WANT_VULKAN" == "1" ]]; then
   BACKEND="vulkan+cpu"
 fi
 
-"$CMAKE" -S "$SRC" -B "$BUILD_DIR" "${GENERATOR[@]}" \
+# On aarch64, GGML_CPU_ALL_VARIANTS includes an Armv9.2 SME variant
+# (-march=armv9.2-a+…+sme), which needs GCC 14 or newer; Ubuntu 24.04's default
+# compiler is GCC 13. Use gcc-14/g++-14 when the default cannot target it.
+# SHADOWCODE_CC and SHADOWCODE_CXX choose the compilers explicitly.
+COMPILER_FLAGS=()
+if [[ "$(uname -m)" == aarch64 ]]; then
+  targets_sme() { printf 'int shadowcode_probe;\n' | "$1" -x "$2" -march=armv9.2-a+sme -c -o /dev/null - >/dev/null 2>&1; }
+  LLAMA_CC="${SHADOWCODE_CC:-${CC:-cc}}"
+  LLAMA_CXX="${SHADOWCODE_CXX:-${CXX:-c++}}"
+  if ! { targets_sme "$LLAMA_CC" c && targets_sme "$LLAMA_CXX" c++; }; then
+    if [[ -z "${SHADOWCODE_CC:-}${SHADOWCODE_CXX:-}" ]] && command -v gcc-14 >/dev/null 2>&1 && command -v g++-14 >/dev/null 2>&1 \
+       && targets_sme gcc-14 c && targets_sme g++-14 c++; then
+      LLAMA_CC=gcc-14 LLAMA_CXX=g++-14
+    else
+      echo "llama.cpp's aarch64 CPU variants need a C/C++ compiler that targets armv9.2-a+sme (GCC 14 or newer): install gcc-14 and g++-14, or set SHADOWCODE_CC and SHADOWCODE_CXX." >&2
+      exit 1
+    fi
+  fi
+  COMPILER_FLAGS=(-DCMAKE_C_COMPILER="$LLAMA_CC" -DCMAKE_CXX_COMPILER="$LLAMA_CXX")
+fi
+
+"$CMAKE" -S "$SRC" -B "$BUILD_DIR" "${GENERATOR[@]}" "${COMPILER_FLAGS[@]}" \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_SHARED_LIBS=ON \
   -DGGML_BACKEND_DL=ON \

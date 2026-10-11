@@ -153,7 +153,11 @@ On an aarch64 host the same commands produce
 `ShadowCode_VERSION_aarch64.AppImage` and `ShadowCode_VERSION_arm64.deb`; pass
 those names to `check-native-package.mjs`. The AppImage runtime is built in a
 `linux/arm64` container from the same pinned Alpine image (a multi-arch
-index), so Docker or Podman must run natively there.
+index), so Docker or Podman must run natively there. The llama.cpp runtime's
+aarch64 CPU variants include Armv9.2 SME, which needs GCC 14 or newer; on
+Ubuntu 24.04 install `gcc-14` and `g++-14` (`scripts/build-llama.cpp.sh` uses
+them when the default compiler cannot target `armv9.2-a+sme`), or set
+`SHADOWCODE_CC` and `SHADOWCODE_CXX`.
 
 Build-time switches, read from the environment of the build:
 
