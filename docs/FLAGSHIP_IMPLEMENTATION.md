@@ -4,7 +4,7 @@ Goal: a dependable, easy-to-use native workspace combining supported vendor logi
 
 Baseline: `e371baaa4c690527173a322f7e0e1cfae4db329a`. Implementation branch: `flagship/reliability-foundation`. Preserve the existing architecture and provider integrations. The complete [acceptance specification](FLAGSHIP_ACCEPTANCE_SPEC.md) remains in scope; this ledger is not a narrowed definition of completion.
 
-Current release checkpoint (September 30, 2026): **1.0.0 is published and installed** ([run 36677001772](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/36677001772), attempt 2: all 15 gates, signing and publication passed from `e0ab265`; installed here with the authenticated installer over 0.34.2, settings and history kept; see [the 1.0 program](#10-program)). Earlier pending statements below describe their historical checkpoints. Broader physical desktop, GPU endurance and live provider lifecycle acceptance remain open.
+Current release checkpoint (October 11, 2026): **2.1.0 is published and installed** ([run 38169859337](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/38169859337), attempt 3: all 15 gates on x86_64 and aarch64, signing, publication and the signed APT repository passed from `a32c2af`; installed here with the authenticated installer, first-window check passed). Earlier pending statements below describe their historical checkpoints. Broader physical desktop, GPU endurance and live provider lifecycle acceptance remain open.
 
 ## 1.0.1 window fix
 
