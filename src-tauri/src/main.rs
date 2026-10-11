@@ -481,6 +481,18 @@ fn run() -> Result<()> {
             // window that fits it, title bar and panel included: the screen
             // the window-state plugin moves it back to on X11, every screen
             // on Wayland.
+            // The content size remembered from the last launch (not for an
+            // isolated profile), then fitted to the screen like the default.
+            let size_file = (!isolated)
+                .then(|| app.path().app_config_dir().ok())
+                .flatten()
+                .map(|dir| dir.join(window_size::CONTENT_SIZE_FILE));
+            window_size::restore_config(
+                &mut config,
+                size_file
+                    .as_deref()
+                    .and_then(window_size::SizeMemory::load),
+            );
             let opening = window_size::opening_on(app, !isolated);
             if let Some(opening) = &opening {
                 window_size::fit_config(&mut config, opening);
@@ -500,6 +512,10 @@ fn run() -> Result<()> {
                             && url.port() == Some(5174))
                 })
                 .build()?;
+            app.manage(window_size::SizeMemory::new(
+                size_file,
+                (config.width, config.height),
+            ));
             // Building the window queued the plugin's move back to where it
             // was (X11); this move follows it and keeps the fitted window
             // inside that screen's work area.
@@ -572,6 +588,18 @@ fn run() -> Result<()> {
             Ok(())
         })
         .on_window_event(|window, event| {
+            if window.label() == "main" {
+                if let Some(memory) = window.try_state::<window_size::SizeMemory>() {
+                    match event {
+                        tauri::WindowEvent::Resized(_) => memory.observe(window),
+                        tauri::WindowEvent::CloseRequested { .. } => {
+                            memory.observe(window);
+                            memory.save();
+                        }
+                        _ => {}
+                    }
+                }
+            }
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 api.prevent_close();
                 request_shutdown(window.app_handle());

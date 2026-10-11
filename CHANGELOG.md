@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.1.0 (unreleased)
+
+- **The window remembers its size again.** ShadowCode now saves the size of
+  the window's content, without the title bar or the shadow the desktop
+  adds, and reopens at that size. On Wayland desktops such as KDE Plasma
+  the window opens at the size you left it and no longer grows from launch
+  to launch. The remembered size is still fitted to the screen (at most 90%
+  of it, never below 520x640), so it fits a smaller screen too. Sizes saved
+  by earlier versions are ignored, so the first launch after updating opens
+  at the default size.
+
 ## 2.0.0: Flatpak, brand identity, and remote-access fixes
 
 - Update repository, contributor, release and package links for the ShadowfetchStudio GitHub account rename. Preserve verification of existing signed releases with the same pinned repository and publisher IDs.

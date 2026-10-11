@@ -14,9 +14,9 @@ use tauri_plugin_window_state::StateFlags;
 /// plugin saved the size GTK reports in its configure event, which includes
 /// that header bar and the shadow margins, and restoring it added them
 /// again, so the window grew on every launch (about 52 px wide and 99 px
-/// tall). The window now opens at its configured size fitted to the screen
-/// ([`fit_config`]) on every desktop, and a size saved by an earlier version
-/// is ignored.
+/// tall). The plugin's size is therefore never used: the content size is
+/// remembered separately ([`SizeMemory`], [`ContentSize`]) without those
+/// decorations, and fitted to the screen ([`fit_config`]).
 pub const REMEMBERED: StateFlags = StateFlags::all().difference(StateFlags::SIZE);
 
 /// The window-state plugin, remembering [`REMEMBERED`].
@@ -416,6 +416,168 @@ impl Opening {
             fit(y, height, work.y, work.height),
         );
         (inside != (x, y)).then_some(inside)
+    }
+}
+
+/// File, in the app's config directory, holding the remembered content
+/// size. It is separate from the window-state plugin's file, whose size is
+/// not used (see [`REMEMBERED`]).
+pub const CONTENT_SIZE_FILE: &str = "window-content-size.json";
+
+/// Version of [`ContentSize`]'s file. A file without it, or with another
+/// version, is ignored, so no size saved before 2.1.0 is ever restored.
+pub const CONTENT_SIZE_VERSION: u32 = 2;
+
+/// A larger difference between the size the window asked for and the size
+/// it reports is not a title bar or shadow (a tiling window manager, say),
+/// so it is not taken off.
+const MAX_DECORATION: f64 = 200.0;
+
+/// The window's content (inner) size in logical pixels, as remembered
+/// between launches.
+#[derive(Clone, Copy, Debug, PartialEq, serde::Serialize, Deserialize)]
+pub struct ContentSize {
+    pub version: u32,
+    pub width: f64,
+    pub height: f64,
+}
+
+impl ContentSize {
+    pub fn new(width: f64, height: f64) -> Self {
+        Self {
+            version: CONTENT_SIZE_VERSION,
+            width: width.round(),
+            height: height.round(),
+        }
+    }
+
+    /// Read a saved file: None for another version or a size that is not a
+    /// positive, finite number.
+    pub fn parse(file: &str) -> Option<Self> {
+        let saved: Self = serde_json::from_str(file).ok()?;
+        let valid = |length: f64| length.is_finite() && length > 0.0;
+        (saved.version == CONTENT_SIZE_VERSION && valid(saved.width) && valid(saved.height))
+            .then_some(saved)
+    }
+
+    pub fn to_json(self) -> String {
+        serde_json::to_string(&self).unwrap_or_default()
+    }
+}
+
+/// What the window adds to the content size it was opened with, when it
+/// reports its size: on Wayland GTK can count its header bar and shadow,
+/// on X11 nothing. Measured once, from the first size the window reports
+/// while neither maximized nor full screen, against the size it was built
+/// with. Negative or implausibly large differences count as none.
+pub fn decoration(requested: (f64, f64), reported: (f64, f64)) -> (f64, f64) {
+    let extra = |asked: f64, got: f64| {
+        let extra = got - asked;
+        if extra.is_finite() && (0.0..=MAX_DECORATION).contains(&extra) {
+            extra
+        } else {
+            0.0
+        }
+    };
+    (
+        extra(requested.0, reported.0),
+        extra(requested.1, reported.1),
+    )
+}
+
+/// The content size to remember for a window that reports `reported`
+/// (logical pixels), taking off its [`decoration`].
+pub fn content_size(reported: (f64, f64), decoration: (f64, f64)) -> ContentSize {
+    ContentSize::new(reported.0 - decoration.0, reported.1 - decoration.1)
+}
+
+/// The inner size to open with: the remembered content size, or the
+/// configured one, never below the minimum. [`fit_config`] then fits it to
+/// the screen.
+pub fn restored_size(
+    configured: (f64, f64),
+    min: (f64, f64),
+    saved: Option<ContentSize>,
+) -> (f64, f64) {
+    match saved {
+        Some(saved) => (saved.width.max(min.0), saved.height.max(min.1)),
+        None => configured,
+    }
+}
+
+/// Use the remembered content size, if any, as the window's configured
+/// inner size. Call before [`fit_config`].
+pub fn restore_config(config: &mut WindowConfig, saved: Option<ContentSize>) {
+    let min = (
+        config.min_width.unwrap_or(0.0),
+        config.min_height.unwrap_or(0.0),
+    );
+    (config.width, config.height) = restored_size((config.width, config.height), min, saved);
+}
+
+/// Remembers the main window's content size: tracks the window's reported
+/// size and writes the content size when the window closes.
+pub struct SizeMemory {
+    file: Option<std::path::PathBuf>,
+    requested: (f64, f64),
+    state: std::sync::Mutex<MemoryState>,
+}
+
+#[derive(Default)]
+struct MemoryState {
+    decoration: Option<(f64, f64)>,
+    last: Option<ContentSize>,
+}
+
+impl SizeMemory {
+    /// `file` is None for an isolated profile, which remembers nothing.
+    /// `requested` is the inner size the window was built with.
+    pub fn new(file: Option<std::path::PathBuf>, requested: (f64, f64)) -> Self {
+        Self {
+            file,
+            requested,
+            state: Default::default(),
+        }
+    }
+
+    /// The saved content size in `file`, if it is of this version.
+    pub fn load(file: &std::path::Path) -> Option<ContentSize> {
+        ContentSize::parse(&std::fs::read_to_string(file).ok()?)
+    }
+
+    /// Note the window's current size. A maximized or full-screen window's
+    /// size is not its own and is skipped.
+    pub fn observe<R: Runtime>(&self, window: &tauri::Window<R>) {
+        if window.is_maximized().unwrap_or(true) || window.is_fullscreen().unwrap_or(true) {
+            return;
+        }
+        let Ok(size) = window.inner_size() else {
+            return;
+        };
+        let scale = valid_scale(window.scale_factor().unwrap_or(1.0));
+        let reported = (
+            f64::from(size.width) / scale,
+            f64::from(size.height) / scale,
+        );
+        let Ok(mut state) = self.state.lock() else {
+            return;
+        };
+        let decoration = *state
+            .decoration
+            .get_or_insert_with(|| decoration(self.requested, reported));
+        state.last = Some(content_size(reported, decoration));
+    }
+
+    /// Write the last content size noted, if any.
+    pub fn save(&self) {
+        let Some(file) = &self.file else { return };
+        let last = self.state.lock().ok().and_then(|state| state.last);
+        if let Some(last) = last {
+            if let Some(dir) = file.parent() {
+                let _ = std::fs::create_dir_all(dir);
+            }
+            let _ = std::fs::write(file, last.to_json());
+        }
     }
 }
 
@@ -890,5 +1052,77 @@ mod tests {
             None
         );
         assert_eq!(Saved::main_window("not json"), None);
+    }
+
+    /// A window manager that reports `extra` more than the content size,
+    /// as GTK's header bar and shadow did on Plasma (52x99).
+    fn launch(saved: Option<ContentSize>, screen: Screen, extra: (f64, f64)) -> ContentSize {
+        let mut config = shipped_config();
+        restore_config(&mut config, saved);
+        let opening = Opening {
+            desktop: Desktop::Wayland,
+            screens: vec![screen],
+            restored: None,
+        };
+        fit_config(&mut config, &opening);
+        let requested = (config.width, config.height);
+        let reported = (requested.0 + extra.0, requested.1 + extra.1);
+        content_size(reported, decoration(requested, reported))
+    }
+
+    #[test]
+    fn save_then_restore_is_a_fixed_point() {
+        for extra in [(0.0, 0.0), (52.0, 99.0)] {
+            let first = launch(None, wayland(1920.0, 1080.0), extra);
+            assert_eq!((first.width, first.height), DEFAULT);
+            let user = ContentSize::new(1000.0, 700.0);
+            let again = launch(Some(user), wayland(1920.0, 1080.0), extra);
+            assert_eq!(again, user);
+        }
+    }
+
+    #[test]
+    fn repeated_launches_never_grow() {
+        let mut saved = None;
+        for _ in 0..20 {
+            let next = launch(saved, wayland(2560.0, 1440.0), (52.0, 99.0));
+            if let Some(previous) = saved {
+                assert_eq!(next, previous);
+            }
+            saved = Some(next);
+        }
+        assert_eq!(saved.map(|s| (s.width, s.height)), Some(DEFAULT));
+    }
+
+    #[test]
+    fn a_remembered_size_still_fits_a_small_screen() {
+        let big = ContentSize::new(1800.0, 1000.0);
+        let small = launch(Some(big), wayland(1366.0, 768.0), (0.0, 0.0));
+        assert_eq!((small.width, small.height), (1229.0, 691.0));
+        let tiny = ContentSize::new(100.0, 100.0);
+        let floor = launch(Some(tiny), wayland(1920.0, 1080.0), (0.0, 0.0));
+        assert_eq!((floor.width, floor.height), MIN);
+    }
+
+    #[test]
+    fn sizes_from_other_versions_are_ignored() {
+        assert_eq!(ContentSize::parse(r#"{"width":1432,"height":1019}"#), None);
+        assert_eq!(
+            ContentSize::parse(r#"{"version":1,"width":1432,"height":1019}"#),
+            None
+        );
+        assert_eq!(
+            ContentSize::parse(r#"{"version":2,"width":-1,"height":1019}"#),
+            None
+        );
+        let size = ContentSize::new(1000.4, 700.6);
+        assert_eq!(ContentSize::parse(&size.to_json()), Some(size));
+        assert_eq!((size.width, size.height), (1000.0, 701.0));
+    }
+
+    #[test]
+    fn implausible_decorations_are_not_taken_off() {
+        assert_eq!(decoration((1000.0, 700.0), (900.0, 1400.0)), (0.0, 0.0));
+        assert_eq!(decoration((1000.0, 700.0), (1052.0, 799.0)), (52.0, 99.0));
     }
 }
