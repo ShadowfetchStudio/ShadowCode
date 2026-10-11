@@ -40,6 +40,18 @@ that every upgrade finds your data. Don't rename them.
   made by the older version, or one of the copies made before the upgrade
   (below), with `shadowcode restore FOLDER` in a terminal: the older app
   cannot open Settings on that profile.
+- **AppImage installer rollback.** Before it activates a new version (with a
+  display, or `SHADOWCODE_FIRST_START_CHECK=require`), the
+  [AppImage installer](../README.md#appimage-recommended) copies
+  `~/.local/state/shadow-agent/shadow-agent.db` with SQLite's `VACUUM INTO`
+  (a consistent copy of the live WAL database, without migrating it) into its
+  private staging folder. It refuses while ShadowCode runs on the profile. If
+  the new version does not report that its database opened and its window
+  loaded in time, the installer stops it and puts the copy back (removing the
+  `-wal`/`-shm` files first) together with the previous AppImage and runtime,
+  so the older version gets the database format it reads. The copy is deleted
+  after a successful install; data written by the new version during a failed
+  first start is not kept.
 
 ## Back up
 

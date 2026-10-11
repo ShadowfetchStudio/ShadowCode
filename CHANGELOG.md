@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.1.0 (unreleased)
+
+- **The AppImage installer checks the first window and can roll back the
+  database.** Before activation it snapshots the profile database with
+  SQLite's `VACUUM INTO` and refuses while ShadowCode is running. With a
+  display, it then starts the new version, which must report within 120
+  seconds that its database opened (and migrated) and its main window loaded.
+  Otherwise the new version is stopped and the previous AppImage, llama.cpp
+  runtime, launchers, desktop entry and database snapshot are restored.
+  `--recover` does the same after an installer crash during the check. The
+  durable highest accepted release is not lowered by this rollback.
+  `SHADOWCODE_FIRST_START_CHECK` (`auto`, `require`, `skip`) and
+  `SHADOWCODE_FIRST_START_TIMEOUT` control the check; without a display it is
+  skipped.
+- The desktop app writes the installer's first-start report after the
+  database opened and the main window finished loading, and a hidden
+  `shadowcode install-snapshot FILE` command makes the installer's database
+  snapshot. An older version still refuses a database a newer version changed,
+  without changing it.
+
 ## 2.0.0: Flatpak, brand identity, and remote-access fixes
 
 - Update repository, contributor, release and package links for the ShadowfetchStudio GitHub account rename. Preserve verification of existing signed releases with the same pinned repository and publisher IDs.
