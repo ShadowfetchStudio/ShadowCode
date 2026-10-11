@@ -185,7 +185,7 @@ verifies and indexes both `.deb` files. The pinned tooling commit must include
 this multi-target signer and publisher; an older pin refuses the aarch64
 signing call, so the release fails rather than shipping x86_64 alone.
 
-Public trust in `release/trust` currently allows the x86_64 and aarch64 targets, epoch 1 and versions 0.33.0–1.0.1
+Public trust in `release/trust` currently allows the x86_64 and aarch64 targets, epoch 1 and versions 0.33.0–2.1.0
 (raise the key's maximum version in the release commit, as for earlier releases);
 `release/install-policy` fixes the first authenticated version at 0.33.0.
 The `release-signing` environment has the signing secret and requires review by

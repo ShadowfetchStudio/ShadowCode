@@ -104,7 +104,7 @@ assets are checksum-only and cannot be installed by this new entry point; use
 the instructions shipped with that released version for those existing assets.
 The 0.33.0 release attempt failed before signing and publication. Its tag stays
 unchanged. Version 0.33.1 was the first signed release; the public trust policy
-in `release/trust` now authorizes 0.33.0 through 1.0.1.
+in `release/trust` now authorizes 0.33.0 through 2.1.0.
 For development, use [Build from source](#build-from-source).
 
 Obtain an independently authenticated installer bundle as described below,
