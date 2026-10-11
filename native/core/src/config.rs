@@ -339,7 +339,7 @@ impl Default for Config {
             // config.example.yaml documents it (tests/config_keys.rs).
             ui: json!({"theme":"light","notify":true,"notify_approval":true,"notify_failed":true,"notify_limit":true,"notify_finished":true,"notify_sound":false}),
             onboarding: json!({"completed":false,"workspace":""}),
-            routing: json!({"enabled":false,"planner":"","coder":"","reviewer":"","tester":"","architecture":"","small_edits":"","vision":"","local":""}),
+            routing: json!({"enabled":false,"planner":"","coder":"","reviewer":"","tester":"","architecture":"","small_edits":"","vision":"","local":"","suggest_from_history":false}),
             mcp: json!({"servers":[],"approved":[],"share_with_cli_agents":true}),
             hooks: crate::hooks::HookConfig::default(),
             verification: crate::verification::CheckConfig::default(),

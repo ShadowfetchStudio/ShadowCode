@@ -139,6 +139,9 @@ routing:
   small_edits: ""
   vision: ""
   local: ""
+  # Offer the cheapest model that passed verification in this project
+  # before (a suggestion only; it never switches the model).
+  suggest_from_history: false
 
 # MCP servers (Settings › Advanced › MCP). An entry is
 # {name, command: [program, args…] or url, api_key_env, description,
