@@ -27,7 +27,7 @@ command line runs directly.
 - uses: actions/checkout@v4
   with:
     persist-credentials: false
-- uses: Shadowfetchapps/ShadowCode/integrations/github-action@<tag-or-sha>
+- uses: ShadowfetchStudio/ShadowCode/integrations/github-action@<tag-or-sha>
   with:
     task: ${{ github.event.comment.body }}
     api-key: ${{ secrets.OPENROUTER_API_KEY }}

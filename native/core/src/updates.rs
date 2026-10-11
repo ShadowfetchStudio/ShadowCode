@@ -36,9 +36,9 @@ use std::{
     time::Duration,
 };
 
-pub const REPOSITORY_URL: &str = "https://github.com/Shadowfetchapps/ShadowCode";
-pub const RELEASES_URL: &str = "https://github.com/Shadowfetchapps/ShadowCode/releases";
-const DEFAULT_API: &str = "https://api.github.com/repos/Shadowfetchapps/ShadowCode/releases/latest";
+pub const REPOSITORY_URL: &str = "https://github.com/ShadowfetchStudio/ShadowCode";
+pub const RELEASES_URL: &str = "https://github.com/ShadowfetchStudio/ShadowCode/releases";
+const DEFAULT_API: &str = "https://api.github.com/repos/ShadowfetchStudio/ShadowCode/releases/latest";
 /// Fixed; carries no version so every installation sends the same bytes.
 pub const USER_AGENT: &str = "ShadowCode-update-check";
 /// Automatic checks run at most this often.
@@ -857,7 +857,7 @@ mod tests {
         // The link is built from the tag, not taken from html_url.
         assert_eq!(
             release.url,
-            "https://github.com/Shadowfetchapps/ShadowCode/releases/tag/v0.34.0"
+            "https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v0.34.0"
         );
         assert_eq!(
             release.published_at.as_deref(),
@@ -1102,7 +1102,7 @@ mod tests {
         );
         assert_eq!(
             appimage["link"],
-            "https://github.com/Shadowfetchapps/ShadowCode/blob/v0.34.0/README.md#appimage-recommended"
+            "https://github.com/ShadowfetchStudio/ShadowCode/blob/v0.34.0/README.md#appimage-recommended"
         );
         let unsigned = Release {
             signed: false,

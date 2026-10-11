@@ -8,7 +8,7 @@ and the license terms.
 
 ## Which package
 
-Each release on [GitHub](https://github.com/Shadowfetchapps/ShadowCode/releases)
+Each release on [GitHub](https://github.com/ShadowfetchStudio/ShadowCode/releases)
 has two packages for x86_64 Linux with glibc 2.39 or newer (Debian 13,
 Ubuntu 24.04 and later):
 
@@ -29,7 +29,7 @@ verifier and public key from a reviewed copy of the ShadowCode repository at
 the release tag, never with files that came with the download:
 
 ```sh
-git clone --depth 1 --branch vVERSION https://github.com/Shadowfetchapps/ShadowCode trusted
+git clone --depth 1 --branch vVERSION https://github.com/ShadowfetchStudio/ShadowCode trusted
 bash trusted/scripts/verify-native-release.sh \
   --bundle-dir /path/to/downloads \
   --trust-dir trusted/release/trust \
@@ -141,7 +141,7 @@ The package strips the runtime's binaries and gives its shared libraries mode
 ShadowCode checks for a newer release at most once a day while its window is
 open, and when the user presses **Check now** in **Settings › About**. It
 sends one HTTPS `GET` to
-`https://api.github.com/repos/Shadowfetchapps/ShadowCode/releases/latest` with
+`https://api.github.com/repos/ShadowfetchStudio/ShadowCode/releases/latest` with
 the fixed `User-Agent: ShadowCode-update-check`. The request has no query
 string and carries no version, account, token, cookie or other identifier.
 ShadowCode sends no telemetry.

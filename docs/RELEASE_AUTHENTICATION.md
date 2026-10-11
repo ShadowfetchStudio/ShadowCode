@@ -1,23 +1,23 @@
 # Publisher authentication contract
 
-The helpers in `scripts/native-release-auth.mjs` and `scripts/verify-native-release.sh` verify offline publisher signatures. They do not install, execute, download or publish an application, update trusted keys, or generate production keys. CI tests their behavior with disposable fixture keys. Public trust for 0.33.0–1.0.1 is tracked and the protected signing environment is configured. The installer uses these helpers before executing a candidate and explicitly refuses `--unverified`. [Version 0.33.1](https://github.com/Shadowfetchapps/ShadowCode/releases/tag/v0.33.1), published on September 28, 2026, is the first signed release.
+The helpers in `scripts/native-release-auth.mjs` and `scripts/verify-native-release.sh` verify offline publisher signatures. They do not install, execute, download or publish an application, update trusted keys, or generate production keys. CI tests their behavior with disposable fixture keys. Public trust for 0.33.0–1.0.1 is tracked and the protected signing environment is configured. The installer uses these helpers before executing a candidate and explicitly refuses `--unverified`. [Version 0.33.1](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v0.33.1), published on September 28, 2026, is the first signed release.
 
 The Bash verifier loads `scripts/native-release-auth-lib.sh` from its own script directory. Keep both reviewed code files together in the trusted tooling bundle; do not obtain the library from the candidate download or source metadata as shell code. The installer uses the same reviewed routines for current candidates and signed historical receipts; it never sources release metadata as code.
 
 ## Published release: 1.0.0
 
-[Version 1.0.0](https://github.com/Shadowfetchapps/ShadowCode/releases/tag/v1.0.0) was published on September 30, 2026 from `e0ab26553cec4243dfb1aeabb66b206bbc6c0474` by [run 36677001772](https://github.com/Shadowfetchapps/ShadowCode/actions/runs/36677001772) (attempt 2): all 15 required gates, protected signing and publication completed in the workflow. Before approving the signing review, every receipt was checked: passed, exit 0, that commit, run and attempt, no required skips, and script digests matching the tagged gate definitions. The downloaded AppImage and .deb verify with `verify-native-release.sh` against the tracked trust bundle, and the authenticated installer upgraded an installed 0.34.2 to it.
+[Version 1.0.0](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v1.0.0) was published on September 30, 2026 from `e0ab26553cec4243dfb1aeabb66b206bbc6c0474` by [run 36677001772](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/36677001772) (attempt 2): all 15 required gates, protected signing and publication completed in the workflow. Before approving the signing review, every receipt was checked: passed, exit 0, that commit, run and attempt, no required skips, and script digests matching the tagged gate definitions. The downloaded AppImage and .deb verify with `verify-native-release.sh` against the tracked trust bundle, and the authenticated installer upgraded an installed 0.34.2 to it.
 
 ## Published release: 0.34.2
 
-[Version 0.34.2](https://github.com/Shadowfetchapps/ShadowCode/releases/tag/v0.34.2) was published on September 29, 2026 from `3f81044e1fe3d8f24cc1293e8efde79db5533213` by [run 36515721147](https://github.com/Shadowfetchapps/ShadowCode/actions/runs/36515721147): all 15 required gates, protected signing and publication completed in the workflow. The downloaded AppImage and .deb verify with `verify-native-release.sh` against the tracked trust bundle, and the authenticated installer upgraded an installed 0.33.1 to it. The `v0.34.0` and `v0.34.1` attempts stopped in required gates before signing and stay unchanged (see [RELEASING.md](RELEASING.md)).
+[Version 0.34.2](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v0.34.2) was published on September 29, 2026 from `3f81044e1fe3d8f24cc1293e8efde79db5533213` by [run 36515721147](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/36515721147): all 15 required gates, protected signing and publication completed in the workflow. The downloaded AppImage and .deb verify with `verify-native-release.sh` against the tracked trust bundle, and the authenticated installer upgraded an installed 0.33.1 to it. The `v0.34.0` and `v0.34.1` attempts stopped in required gates before signing and stay unchanged (see [RELEASING.md](RELEASING.md)).
 
 ## Published release: 0.33.1
 
 The `v0.33.0` release attempt at `9e385cb` failed its source-integrity gate
-before signing/publication ([run 36414378697](https://github.com/Shadowfetchapps/ShadowCode/actions/runs/36414378697)).
+before signing/publication ([run 36414378697](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/36414378697)).
 Its tag remains unchanged. The 0.33.1 release and reviewed tooling are pinned to
-`e15c4480e65db5650af012bb2a9773dbe89acf84`. [Run 36427024374](https://github.com/Shadowfetchapps/ShadowCode/actions/runs/36427024374),
+`e15c4480e65db5650af012bb2a9773dbe89acf84`. [Run 36427024374](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/36427024374),
 attempt 1, passed all 15 required build gates and protected signing. Its
 publication job failed on a transient draft-listing response; the frozen
 publisher then resumed locally with the same signed artifact `10987931982`, compared
@@ -27,7 +27,7 @@ or qualification beyond the recorded gates.
 
 ## Trust and security contract
 
-The authorized canonical publisher is `Shadowfetchapps/ShadowCode`, repository ID `1377099349`, owner ID `209457103`. A read-only GitHub API query resolved the historical `ShadowfetchLinux/ShadowCode` origin to that identity. Only stable `MAJOR.MINOR.PATCH`, `x86_64-unknown-linux-gnu` releases are supported by this slice.
+The authorized canonical publisher is `ShadowfetchStudio/ShadowCode`, repository ID `1377099349`, owner ID `209457103`. GitHub confirmed the account rename on October 10, 2026 with both numeric identities unchanged. The historical `Shadowfetchapps/ShadowCode` and `ShadowfetchLinux/ShadowCode` URLs redirect to this repository. Only stable `MAJOR.MINOR.PATCH`, `x86_64-unknown-linux-gnu` releases are supported by this slice.
 
 SHA-256 establishes byte integrity. The detached Ed25519 signature establishes that the holder of an already trusted publisher key signed the release envelope. It does not independently prove which workflow ran, that code is safe, or that the release is the newest available. The workflow identity is currently a publisher assertion; a future GitHub attestation can add an OIDC-backed workflow identity proof.
 
@@ -39,10 +39,12 @@ The initial installer/key bootstrap requires an authenticated distribution chann
 
 `RELEASE-AUTH` is at most 4096 bytes, printable ASCII plus LF/TAB, with a final LF and exactly 16 ordered lines. Unknown, missing, duplicate and reordered fields are rejected. Scalar values cannot contain `=` or TAB. Numeric version components and key epochs are bounded to nine decimal digits with no unnecessary leading zeroes. Commit is exactly 40 lowercase hexadecimal digits; hashes are exactly 64.
 
+New envelopes use `ShadowfetchStudio/ShadowCode`. Existing releases through 1.0.1 retain the signed `Shadowfetchapps/ShadowCode` name. Both Node and OpenSSL verification accept exactly those two names while requiring the same numeric repository ID, owner ID, trusted key and all other bindings. The shipped trust policy retains its historical name and key intervals; the account rename does not authorize a new signing key or extend a key interval.
+
 The line order is:
 
 1. Literal `ShadowCode-Release-Auth-v1`.
-2. `repository=Shadowfetchapps/ShadowCode`.
+2. `repository=ShadowfetchStudio/ShadowCode` (or the historical signed name above).
 3. `repository-id=1377099349`.
 4. `owner-id=209457103`.
 5. `version=MAJOR.MINOR.PATCH`.
@@ -71,7 +73,7 @@ The explicit trust directory contains `policy` and one `KEY_ID.pem` public key p
 `policy` is at most 4096 bytes with these nine fixed lines, followed by one to eight unique key lines:
 
 1. `ShadowCode-Release-Trust-v1`.
-2. `repository=Shadowfetchapps/ShadowCode`.
+2. `repository=ShadowfetchStudio/ShadowCode` (or the historical signed name above).
 3. `repository-id=1377099349`.
 4. `owner-id=209457103`.
 5. `target=x86_64-unknown-linux-gnu`.

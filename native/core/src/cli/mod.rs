@@ -309,7 +309,7 @@ The bundled llama.cpp runtime for local models.
 Base folders for the files above.
 .SH PRIVACY
 ShadowCode sends no telemetry. Once a day, unless turned off, it asks
-api.github.com for the latest release of Shadowfetchapps/ShadowCode; the
+api.github.com for the latest release of ShadowfetchStudio/ShadowCode; the
 request carries no version or identifier. Offline mode stops it.
 .SH COPYRIGHT
 Copyright 2026 Shadowfetch. ShadowCode was originally created by Shadowfetch.
@@ -318,7 +318,7 @@ Licensed under the Apache License, Version 2.0; see
 .SH SEE ALSO
 \fBgit\fR(1), \fBbwrap\fR(1)
 .PP
-Documentation: https://github.com/Shadowfetchapps/ShadowCode
+Documentation: https://github.com/ShadowfetchStudio/ShadowCode
 "#;
 /// The executable an editor or MCP client should launch, with the AppImage
 /// flag when running from an AppImage.

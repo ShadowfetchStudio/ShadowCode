@@ -33,7 +33,8 @@ take() {
   [[ -n "$VALUE" && "$VALUE" != *$'\t'* && "$VALUE" != *=* ]] || fail "invalid $2"
 }
 identity() {
-  take 1 repository; [[ "$VALUE" == Shadowfetchapps/ShadowCode ]] || fail 'wrong repository'
+  # Historical envelopes keep their signed name; numeric identities stay pinned.
+  take 1 repository; [[ "$VALUE" == ShadowfetchStudio/ShadowCode || "$VALUE" == Shadowfetchapps/ShadowCode ]] || fail 'wrong repository'
   take 2 repository-id; [[ "$VALUE" == 1377099349 ]] || fail 'wrong repository ID'
   take 3 owner-id; [[ "$VALUE" == 209457103 ]] || fail 'wrong owner ID'
 }

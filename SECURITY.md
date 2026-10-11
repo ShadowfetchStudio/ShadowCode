@@ -3,7 +3,7 @@
 ## Supported versions and reporting
 
 The latest release and `main` are supported. Report vulnerabilities through a
-[private security advisory](https://github.com/Shadowfetchapps/ShadowCode/security/advisories/new).
+[private security advisory](https://github.com/ShadowfetchStudio/ShadowCode/security/advisories/new).
 Include the affected versions, the impact and steps to reproduce, and leave out
 live credentials. There is no bug bounty program.
 

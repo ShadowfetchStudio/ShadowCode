@@ -1,6 +1,6 @@
 # Release procedure
 
-The most recent documented release is [**1.0.0**](https://github.com/Shadowfetchapps/ShadowCode/releases/tag/v1.0.0), published on September 30, 2026 from `e0ab265` by [run 36677001772](https://github.com/Shadowfetchapps/ShadowCode/actions/runs/36677001772) (attempt 2) with all 15 gates, protected signing and publication passing. Attempt 1 stopped in the `release-tests` gate when the private test-session cleanup found a live, unreadable process of the runner's user on the hosted runner; the same test passed on the same commit in the `main` checks, so the unchanged run was re-run and the `v1.0.0` tag was not moved. Updating version files or
+The most recent documented release is [**1.0.0**](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v1.0.0), published on September 30, 2026 from `e0ab265` by [run 36677001772](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/36677001772) (attempt 2) with all 15 gates, protected signing and publication passing. Attempt 1 stopped in the `release-tests` gate when the private test-session cleanup found a live, unreadable process of the runner's user on the hosted runner; the same test passed on the same commit in the `main` checks, so the unchanged run was re-run and the `v1.0.0` tag was not moved. Updating version files or
 these instructions does not publish or sign a release. Bind final build, test
 and authentication receipts to the exact candidate before publication.
 
@@ -143,15 +143,15 @@ bash scripts/test-install-appimage.sh
 ## 5. Protected signing review and tag
 
 The `v0.33.0` attempt at `9e385cb` failed before signing/publication in
-[run 36414378697](https://github.com/Shadowfetchapps/ShadowCode/actions/runs/36414378697).
+[run 36414378697](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/36414378697).
 Do not move or overwrite that tag. The `v0.34.0` attempt at `3409d59` likewise
-stopped in the `native-source` gate ([run 36499751141](https://github.com/Shadowfetchapps/ShadowCode/actions/runs/36499751141))
+stopped in the `native-source` gate ([run 36499751141](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/36499751141))
 because two new opt-in network tests were not on the optional-test list, and
-the `v0.34.1` attempt at `206fd03` stopped in `native-window` ([run 36507326107](https://github.com/Shadowfetchapps/ShadowCode/actions/runs/36507326107))
+the `v0.34.1` attempt at `206fd03` stopped in `native-window` ([run 36507326107](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/36507326107))
 because the window test expected a ready model on the clean CI host; nothing
 was signed and both tags stay unchanged. Version 0.33.1 was published from
 `e15c4480e65db5650af012bb2a9773dbe89acf84`, with all 15 required build gates and
-protected signing passing in [run 36427024374](https://github.com/Shadowfetchapps/ShadowCode/actions/runs/36427024374).
+protected signing passing in [run 36427024374](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/36427024374).
 The workflow publication job failed on a transient draft-listing response;
 publication resumed locally with the same frozen publisher and signed artifact, verifying
 all seven remote asset files before publication. This does not make that workflow

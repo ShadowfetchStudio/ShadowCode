@@ -98,6 +98,35 @@ test('all three artifact roles verify independently; consumers need only the sel
   for (const [, name] of assetNames(f.version).slice(1)) await rm(path.join(f.bundleDir, name));
   await accepted(f);
 });
+test('the account rename preserves old signed releases and old trust policies', async t => {
+  const f = await fixture(t);
+  const current = IDENTITY.repository;
+  const historical = 'Shadowfetchapps/ShadowCode';
+  const policyFile = path.join(f.trustDir, 'policy');
+  const policy = await readFile(policyFile, 'utf8');
+  const verifyRename = async () => {
+    const { result } = await accepted(f);
+    await rm(result.stageDir, { recursive: true });
+  };
+  // New envelopes verify against the shipped historical trust policy.
+  await writeFile(policyFile, policy.replace(current, historical));
+  await verifyRename();
+  // Existing signatures bind the old name, not a rewritten release envelope.
+  await mutateEnvelope(f, bytes => bytes.replace(current, historical));
+  await verifyRename();
+  await writeFile(policyFile, policy);
+  await verifyRename();
+  for (const [oldValue, newValue] of [
+    [`repository-id=${IDENTITY.repositoryId}`, 'repository-id=1377099350'],
+    [`owner-id=${IDENTITY.ownerId}`, 'owner-id=209457104'],
+  ]) {
+    const original = await readFile(path.join(f.bundleDir, 'RELEASE-AUTH'), 'utf8');
+    await mutateEnvelope(f, bytes => bytes.replace(oldValue, newValue));
+    await refused(f);
+    await mutateEnvelope(f, () => original);
+  }
+  await verifyRename();
+});
 test('missing production trust is refused; no adjacent-key fallback exists', async t => {
   const f = await fixture(t);
   await rm(f.trustDir, { recursive: true });
@@ -164,7 +193,7 @@ test('the exact audit-manifest bytes are authenticated', async t => {
   await refused(f, {}, /manifest digest mismatch/);
 });
 for (const [name, from, to] of [
-  ['repository', 'repository=Shadowfetchapps/ShadowCode', 'repository=another/ShadowCode'],
+  ['repository', 'repository=ShadowfetchStudio/ShadowCode', 'repository=another/ShadowCode'],
   ['repository ID', 'repository-id=1377099349', 'repository-id=1377099350'],
   ['owner ID', 'owner-id=209457103', 'owner-id=209457104'],
   ['target', 'target=x86_64-unknown-linux-gnu', 'target=aarch64-unknown-linux-gnu'],

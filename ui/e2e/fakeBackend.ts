@@ -2729,7 +2729,7 @@ export function installFakeBackend(options: FakeOptions = {}) {
       ? {
           version: "0.34.0",
           tag: "v0.34.0",
-          url: "https://github.com/Shadowfetchapps/ShadowCode/releases/tag/v0.34.0",
+          url: "https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v0.34.0",
           published_at: "2026-10-02T09:15:00Z",
           signed: true,
         }
@@ -2737,7 +2737,7 @@ export function installFakeBackend(options: FakeOptions = {}) {
         ? {
             version: "0.33.0",
             tag: "v0.33.0",
-            url: "https://github.com/Shadowfetchapps/ShadowCode/releases/tag/v0.33.0",
+            url: "https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v0.33.0",
             published_at: "2026-09-28T09:15:00Z",
             signed: true,
           }
@@ -2768,15 +2768,15 @@ export function installFakeBackend(options: FakeOptions = {}) {
               text: "Download ShadowCode_0.34.0_amd64.AppImage and its four signature files (SHA256SUMS, RELEASE-MANIFEST.json, RELEASE-AUTH, RELEASE-AUTH.sig) from the release page into one folder. Then run the installer from a trusted copy of ShadowCode's installer bundle. It checks the publisher signature before it runs anything and keeps your settings.",
               command:
                 "bash /path/to/trusted-bundle/scripts/install-appimage.sh ~/Downloads/ShadowCode_0.34.0_amd64.AppImage",
-              link: "https://github.com/Shadowfetchapps/ShadowCode/blob/v0.34.0/README.md#appimage-recommended",
+              link: "https://github.com/ShadowfetchStudio/ShadowCode/blob/v0.34.0/README.md#appimage-recommended",
             }
           : {
               text: "Update through your package manager or your distribution's software updates. If you installed the .deb from GitHub yourself, download the new .deb and its four signature files, verify them, then install it with apt.",
               command: null,
-              link: "https://github.com/Shadowfetchapps/ShadowCode/blob/v0.34.0/README.md#debian-package",
+              link: "https://github.com/ShadowfetchStudio/ShadowCode/blob/v0.34.0/README.md#debian-package",
             }
         : null,
-      releases_url: "https://github.com/Shadowfetchapps/ShadowCode/releases",
+      releases_url: "https://github.com/ShadowfetchStudio/ShadowCode/releases",
     };
   }
 
@@ -4763,7 +4763,7 @@ export function installFakeBackend(options: FakeOptions = {}) {
     }
     if (path === "/api/about" && method === "GET") {
       const tag = "v0.33.0";
-      const repo = "https://github.com/Shadowfetchapps/ShadowCode";
+      const repo = "https://github.com/ShadowfetchStudio/ShadowCode";
       return {
         name: "ShadowCode",
         publisher: "Shadowfetch",

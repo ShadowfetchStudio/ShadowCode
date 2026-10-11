@@ -20,7 +20,7 @@ use tokio::{
     net::TcpListener,
 };
 
-const API_PATH: &str = "/repos/Shadowfetchapps/ShadowCode/releases/latest";
+const API_PATH: &str = "/repos/ShadowfetchStudio/ShadowCode/releases/latest";
 
 #[derive(Default)]
 struct Fake {
@@ -144,7 +144,7 @@ async fn daily_and_manual_update_checks_respect_settings_and_send_no_identifiers
     assert_eq!(status["latest"]["version"], "999.0.0");
     assert_eq!(
         status["latest"]["url"],
-        "https://github.com/Shadowfetchapps/ShadowCode/releases/tag/v999.0.0"
+        "https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v999.0.0"
     );
     assert!(status["last_checked_at"].as_f64().unwrap() > 0.0);
     assert!(status["error"].is_null());
@@ -324,7 +324,7 @@ async fn daily_and_manual_update_checks_respect_settings_and_send_no_identifiers
     assert_eq!(
         about["links"]["release_notes"],
         format!(
-            "https://github.com/Shadowfetchapps/ShadowCode/releases/tag/v{}",
+            "https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v{}",
             shadowcode_core::VERSION
         )
     );

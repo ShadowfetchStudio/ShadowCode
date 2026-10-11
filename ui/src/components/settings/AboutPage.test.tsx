@@ -16,7 +16,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-const repo = "https://github.com/Shadowfetchapps/ShadowCode";
+const repo = "https://github.com/ShadowfetchStudio/ShadowCode";
 
 function updates(overrides: Partial<UpdateStatus> = {}): UpdateStatus {
   return {
@@ -115,7 +115,7 @@ it("shows version, commit, install type, license and links", async () => {
   ).toBe("https://www.shadowfetchlinux.org/shadowcode");
   expect(
     screen
-      .getByRole("link", { name: "Shadowfetchapps/ShadowCode" })
+      .getByRole("link", { name: "ShadowfetchStudio/ShadowCode" })
       .getAttribute("href"),
   ).toBe(repo);
   expect(

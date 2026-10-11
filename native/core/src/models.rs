@@ -633,7 +633,7 @@ impl ModelClient {
             request = request
                 .header(
                     "HTTP-Referer",
-                    "https://github.com/Shadowfetchapps/ShadowCode",
+                    "https://github.com/ShadowfetchStudio/ShadowCode",
                 )
                 .header("X-Title", "ShadowCode");
         }

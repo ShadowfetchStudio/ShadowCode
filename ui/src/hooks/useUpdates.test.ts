@@ -27,7 +27,7 @@ function updateStatus(overrides: Partial<UpdateStatus> = {}): UpdateStatus {
     available: false,
     dismissed: false,
     next_step: null,
-    releases_url: "https://github.com/Shadowfetchapps/ShadowCode/releases",
+    releases_url: "https://github.com/ShadowfetchStudio/ShadowCode/releases",
     ...overrides,
   };
 }
@@ -37,7 +37,7 @@ const available = updateStatus({
   latest: {
     version: "0.34.0",
     tag: "v0.34.0",
-    url: "https://github.com/Shadowfetchapps/ShadowCode/releases/tag/v0.34.0",
+    url: "https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v0.34.0",
     published_at: "2026-10-02T09:15:00Z",
     signed: true,
   },

@@ -134,7 +134,7 @@ export function AboutPage({
         </div>
         <div>
           <span>GitHub repository</span>
-          <a href={about.links.repository}>Shadowfetchapps/ShadowCode</a>
+          <a href={about.links.repository}>ShadowfetchStudio/ShadowCode</a>
         </div>
         <div>
           <span>Contributors</span>

@@ -24,7 +24,7 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 
 export const DEB_PACKAGE = "shadow-code";
 export const DEB_DOC = `usr/share/doc/${DEB_PACKAGE}`;
-export const HOMEPAGE = "https://github.com/Shadowfetchapps/ShadowCode";
+export const HOMEPAGE = "https://github.com/ShadowfetchStudio/ShadowCode";
 export const MAN_PAGE = "usr/share/man/man1/shadowcode.1.gz";
 export const COMPLETIONS = {
   bash: "usr/share/bash-completion/completions/shadowcode",

@@ -9,7 +9,7 @@ version = "2.0.0"
 edition = "2021"
 rust-version = "1.95"
 license = "Apache-2.0"
-repository = "https://github.com/Shadowfetchapps/ShadowCode"
+repository = "https://github.com/ShadowfetchStudio/ShadowCode"
 
 [patch.crates-io]
 # GTK3/WebKit still require 0.18. Preserve that API with the upstream UB fix.

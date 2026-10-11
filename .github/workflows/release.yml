@@ -29,7 +29,7 @@ jobs:
           import assert from 'node:assert/strict';
           import { appendFileSync } from 'node:fs';
           const env = process.env;
-          assert.equal(env.GITHUB_REPOSITORY, 'Shadowfetchapps/ShadowCode');
+          assert.equal(env.GITHUB_REPOSITORY, 'ShadowfetchStudio/ShadowCode');
           assert.equal(env.REPOSITORY_ID, '1377099349');
           assert.equal(env.OWNER_ID, '209457103');
           assert.equal(env.GITHUB_EVENT_NAME, 'push');

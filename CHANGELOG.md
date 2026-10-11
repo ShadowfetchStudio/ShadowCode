@@ -2,6 +2,7 @@
 
 ## 2.0.0: Flatpak, brand identity, and remote-access fixes
 
+- Update repository, contributor, release and package links for the ShadowfetchStudio GitHub account rename. Preserve verification of existing signed releases with the same pinned repository and publisher IDs.
 - Introduce the Shadowfetch and ShadowCode trademark policy, update the project introduction, and show publisher, website, repository, and contributor information in About.
 - Preserve host terminal job control, resizing, Ctrl-C, and cleanup through a host PTY relay.
 - Build the native desktop and CPU/Vulkan llama.cpp runtime inside GNOME SDK 50 and export a single-file Flatpak. Host Git, terminals, and installed coding CLIs are reached through an explicit host bridge.
@@ -210,7 +211,7 @@ Packaging:
 
 ## 0.34.1: Failed release attempt (unpublished)
 
-[Release run 36507326107](https://github.com/Shadowfetchapps/ShadowCode/actions/runs/36507326107)
+[Release run 36507326107](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/36507326107)
 at `206fd03` passed `native-source` but stopped in the required
 `native-window` gate. On a clean CI host no model is ready, so the welcome
 offers a free model, an OpenRouter key or a subscription instead of
@@ -220,7 +221,7 @@ unchanged, and 0.34.2 ships the same changes.
 
 ## 0.34.0: Failed release attempt (unpublished)
 
-[Release run 36499751141](https://github.com/Shadowfetchapps/ShadowCode/actions/runs/36499751141)
+[Release run 36499751141](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/36499751141)
 at `3409d59` stopped in the required `native-source` gate: every Rust test
 passed, but two new opt-in network tests (the Hugging Face catalog check and
 a multi-GB download) were not on the gate's list of allowed optional tests,
@@ -237,13 +238,13 @@ and the gate refuses any unlisted skip. Nothing was signed or published. The
 - Safer Compare snapshots and recovery, unsaved-draft guards, and coordination of short workspace writes across cooperating ShadowCode processes.
 - Shared native event listeners prevent per-task listener growth. A real source-built X11 endurance run passed 100 tasks after bounded warm-up; this is not GPU or physical Wayland endurance evidence.
 - AppImage launch preserves an explicitly selected display backend; package normalization accepts only the exact expected linuxdeploy version field.
-- Authenticated installer recovery and staged release verification are strengthened. [Version 0.33.1](https://github.com/Shadowfetchapps/ShadowCode/releases/tag/v0.33.1) was published on September 28, 2026 from `e15c448`, after all 15 required build gates and protected signing passed. The workflow publication job failed on a transient draft-listing response; publication resumed locally with the same frozen publisher and signed artifact, with all seven remote assets compared before publication. See the release notes for the exact evidence and remaining limits.
+- Authenticated installer recovery and staged release verification are strengthened. [Version 0.33.1](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v0.33.1) was published on September 28, 2026 from `e15c448`, after all 15 required build gates and protected signing passed. The workflow publication job failed on a transient draft-listing response; publication resumed locally with the same frozen publisher and signed artifact, with all seven remote assets compared before publication. See the release notes for the exact evidence and remaining limits.
 
 See [release notes](docs/RELEASE_NOTES.md) for scope and remaining qualification.
 
 ## 0.33.0: Failed release attempt (unpublished)
 
-[Release run 36414378697](https://github.com/Shadowfetchapps/ShadowCode/actions/runs/36414378697) at `9e385cb` failed the managed-runtime source-integrity gate after the runtime built and its six tests passed. The builder rewrote tracked runtime pin/COMMIT timestamps. Signing and publication were skipped. The existing `v0.33.0` tag remains unchanged; the separately qualified successor is 0.33.1. Earlier local 0.33.0 package and latency results remain evidence for those exact bytes only.
+[Release run 36414378697](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/36414378697) at `9e385cb` failed the managed-runtime source-integrity gate after the runtime built and its six tests passed. The builder rewrote tracked runtime pin/COMMIT timestamps. Signing and publication were skipped. The existing `v0.33.0` tag remains unchanged; the separately qualified successor is 0.33.1. Earlier local 0.33.0 package and latency results remain evidence for those exact bytes only.
 
 ## 0.32.0: The big upgrade
 
@@ -996,4 +997,4 @@ integrations, broader stress checks, packaging, and installation are tracked in
 
 Introduced the minimal drawer-based desktop, Goal Mode, per-task rewind, session
 management, model picker, notifications, and source-checkout updater. Release
-history is available on [GitHub](https://github.com/Shadowfetchapps/ShadowCode/releases).
+history is available on [GitHub](https://github.com/ShadowfetchStudio/ShadowCode/releases).

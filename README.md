@@ -16,7 +16,7 @@ Developed and maintained by **Shadowfetch**.
 
 Licensed under Apache 2.0.
 
-Official project: https://github.com/Shadowfetchapps/ShadowCode
+Official project: https://github.com/ShadowfetchStudio/ShadowCode
 
 Publisher: https://shadowfetch.com
 
@@ -72,14 +72,14 @@ The code is open source; the Shadowfetch and ShadowCode product identity is cove
 
 The source tree is now **2.0.0**, with a locally buildable Flatpak and fixes for private-profile access and secret-file diff redaction. See [Flatpak installation and build instructions](docs/FLATPAK.md). The 2.0.0 source is available here; its Flatpak bundle is a local build and has not been published as a GitHub release or on Flathub.
 
-The last published release, ShadowCode **1.0.1**, is available in [GitHub releases](https://github.com/Shadowfetchapps/ShadowCode/releases/tag/v1.0.1).
+The last published release, ShadowCode **1.0.1**, is available in [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v1.0.1).
 See the [1.0.1 release notes](docs/RELEASE_NOTES.md) for changes and qualification
 limits, and the [release history](CHANGELOG.md).
 
 ## Install
 
 Releases target x86_64 Linux with glibc 2.39 or newer (Ubuntu 24.04 or later).
-Check [GitHub releases](https://github.com/Shadowfetchapps/ShadowCode/releases)
+Check [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases)
 for published versions. The 1.0.1 packages and checksums are:
 
 - `ShadowCode_1.0.1_amd64.AppImage`

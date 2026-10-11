@@ -47,7 +47,7 @@ test("no notice without a newer release; About shows the facts", async ({
     settings.getByRole("link", { name: "View contributors" }),
   ).toHaveAttribute(
     "href",
-    "https://github.com/Shadowfetchapps/ShadowCode/graphs/contributors",
+    "https://github.com/ShadowfetchStudio/ShadowCode/graphs/contributors",
   );
   await settings.getByText("Build information", { exact: true }).click();
   await expect(settings.getByText("e15c4480e65d")).toBeVisible();
@@ -59,7 +59,7 @@ test("no notice without a newer release; About shows the facts", async ({
     settings.getByRole("link", { name: "Release notes" }),
   ).toHaveAttribute(
     "href",
-    "https://github.com/Shadowfetchapps/ShadowCode/releases/tag/v0.33.0",
+    "https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v0.33.0",
   );
   await expect(settings.getByRole("status")).toHaveText(
     "Not checked yet. ShadowCode checks once a day.",
@@ -106,7 +106,7 @@ test("a newer release shows a quiet notice that opens About with the steps", asy
     card.getByRole("link", { name: "Release notes" }),
   ).toHaveAttribute(
     "href",
-    "https://github.com/Shadowfetchapps/ShadowCode/releases/tag/v0.34.0",
+    "https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v0.34.0",
   );
   await expect(card).toContainText("install-appimage.sh");
   await expect(card).toContainText("RELEASE-AUTH.sig");
@@ -161,6 +161,6 @@ test("Debian installs are told to use the package manager", async ({
     card.getByRole("link", { name: "Install instructions" }),
   ).toHaveAttribute(
     "href",
-    "https://github.com/Shadowfetchapps/ShadowCode/blob/v0.34.0/README.md#debian-package",
+    "https://github.com/ShadowfetchStudio/ShadowCode/blob/v0.34.0/README.md#debian-package",
   );
 });

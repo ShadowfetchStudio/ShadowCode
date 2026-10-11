@@ -71,7 +71,7 @@ const TAURI_CONTROL = `Package: shadow-code
 Version: ${version}
 Architecture: amd64
 Installed-Size: 1
-Maintainer: Shadowfetch <209457103+Shadowfetchapps@users.noreply.github.com>
+Maintainer: Shadowfetch <209457103+ShadowfetchStudio@users.noreply.github.com>
 Priority: optional
 Depends: git, libgomp1, libssl3, libasound2, libwebkit2gtk-4.1-0, libgtk-3-0
 Recommends: libvulkan1, bubblewrap
@@ -379,7 +379,7 @@ test("a finished package passes the distribution checks", async () => {
     assert.ok(control.split("\n").every((line) => line.length <= 80));
     assert.equal(
       (await run("dpkg-deb", ["--field", deb, "Homepage"])).stdout.trim(),
-      "https://github.com/Shadowfetchapps/ShadowCode",
+      "https://github.com/ShadowfetchStudio/ShadowCode",
     );
     // The shared library lost its execute bit; the executable kept it.
     const listing = (await run("dpkg-deb", ["--contents", deb])).stdout;

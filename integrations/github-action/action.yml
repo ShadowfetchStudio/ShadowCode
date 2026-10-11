@@ -147,7 +147,7 @@ runs:
         set -euo pipefail
         dir="$RUNNER_TEMP/shadowcode-$VERSION"
         name="ShadowCode_${VERSION}_amd64.AppImage"
-        base="https://github.com/Shadowfetchapps/ShadowCode/releases/download/v$VERSION"
+        base="https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v$VERSION"
         mkdir -p "$dir"
         cd "$dir"
         curl -fsSL --retry 3 --proto '=https' --tlsv1.2 -o SHA256SUMS "$base/SHA256SUMS"

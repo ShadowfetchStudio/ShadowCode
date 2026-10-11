@@ -271,15 +271,15 @@ Complete each phase's implementation and tests before declaring it done. Do not 
 These are review references, not instructions to trust an old snapshot over the current checkout.
 
 ```text
-https://github.com/Shadowfetchapps/ShadowCode/blob/e371baaa4c690527173a322f7e0e1cfae4db329a/native/core/src/compare.rs
+https://github.com/ShadowfetchStudio/ShadowCode/blob/e371baaa4c690527173a322f7e0e1cfae4db329a/native/core/src/compare.rs
   resolve_models / remove_lanes / stop_lanes: retrieved source lines 640–815
   get / list / commit_checkout / apply_checkout: retrieved source lines 900–1130
   keep / discard / cancel / concurrency tests: retrieved source lines 1131–1390
 
-https://github.com/Shadowfetchapps/ShadowCode/blob/e371baaa4c690527173a322f7e0e1cfae4db329a/.github/workflows/release.yml
+https://github.com/ShadowfetchStudio/ShadowCode/blob/e371baaa4c690527173a322f7e0e1cfae4db329a/.github/workflows/release.yml
   checked native build and final publication sequence
 
-https://github.com/Shadowfetchapps/ShadowCode/actions/runs/36210288819
+https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/36210288819
   most recent retrieved summary: UI/Rust passes; headless CLI fails; later checks skipped
 
 https://developers.openai.com/codex/app-server

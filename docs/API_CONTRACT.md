@@ -2977,7 +2977,7 @@ Remote policy (`remote::policy::check`), besides each route's Remote column:
 Settings › About and the update notice (`native/core/src/updates.rs`,
 [DISTRIBUTING.md](DISTRIBUTING.md#updates)). Only `?auto=1` and
 `POST /api/updates/check` reach the network, and only `GET
-https://api.github.com/repos/Shadowfetchapps/ShadowCode/releases/latest`
+https://api.github.com/repos/ShadowfetchStudio/ShadowCode/releases/latest`
 with `User-Agent: ShadowCode-update-check` and no identifiers.
 
 - `GET /api/about` → `{name, publisher, version, commit: string|null, install: {kind:

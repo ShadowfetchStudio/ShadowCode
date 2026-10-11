@@ -5,7 +5,10 @@ import { constants } from 'node:fs';
 import { open } from 'node:fs/promises';
 import path from 'node:path';
 
-export const IDENTITY = Object.freeze({ repository: 'Shadowfetchapps/ShadowCode', repositoryId: '1377099349', ownerId: '209457103', target: 'x86_64-unknown-linux-gnu', channel: 'stable' });
+export const IDENTITY = Object.freeze({ repository: 'ShadowfetchStudio/ShadowCode', repositoryId: '1377099349', ownerId: '209457103', target: 'x86_64-unknown-linux-gnu', channel: 'stable' });
+// Releases through 1.0.1 retain their original signed bytes after the rename.
+// Both names require the same pinned repository and owner IDs and trusted key.
+const REPOSITORY_NAMES = new Set([IDENTITY.repository, 'Shadowfetchapps/ShadowCode']);
 export const LIMITS = Object.freeze({ envelope: 4096, trust: 4096, manifest: 1024 * 1024, checksums: 4096, publicKey: 1024, signature: 64, artifact: 32 * 1024 ** 3, keys: 8 });
 const HEX = /^[a-f0-9]{64}$/;
 const VERSION = /^(0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8})$/;
@@ -44,7 +47,7 @@ export function assetNames(version) {
   ];
 }
 function fixedIdentity(rows, offset = 1) {
-  assert.equal(field(rows[offset], 'repository'), IDENTITY.repository, 'Wrong publisher repository');
+  assert(REPOSITORY_NAMES.has(field(rows[offset], 'repository')), 'Wrong publisher repository');
   assert.equal(field(rows[offset + 1], 'repository-id'), IDENTITY.repositoryId, 'Wrong repository ID');
   assert.equal(field(rows[offset + 2], 'owner-id'), IDENTITY.ownerId, 'Wrong owner ID');
 }
