@@ -17,6 +17,24 @@ Ubuntu 24.04 and later):
 | `ShadowCode_VERSION_amd64.deb` (package name `shadow-code`) | You install system-wide through dpkg/APT. **Recommended for distributions.** |
 | `ShadowCode_VERSION_amd64.AppImage` | One user installs it in their home folder with the authenticated installer. It carries its own WebKit and does not need FUSE (`libfuse2`). |
 
+### ARM64 (aarch64)
+
+From 2.1.0 the same packages are built natively for 64-bit ARM (aarch64) on
+GitHub's `ubuntu-24.04-arm` runners and pass the same release gates:
+
+| x86_64 | aarch64 |
+| --- | --- |
+| `ShadowCode_VERSION_amd64.deb` | `ShadowCode_VERSION_arm64.deb` (`Architecture: arm64`) |
+| `ShadowCode_VERSION_amd64.AppImage` | `ShadowCode_VERSION_aarch64.AppImage` |
+| `ShadowCode_VERSION_appimage-runtime-sources.tar.gz` | `ShadowCode_VERSION_aarch64_appimage-runtime-sources.tar.gz` |
+| `ShadowCode_VERSION_x86_64.flatpak` | `ShadowCode_VERSION_aarch64.flatpak` |
+
+Until the publisher adds `aarch64-unknown-linux-gnu` to `release/trust/policy`,
+aarch64 packages are workflow artifacts, not signed release assets, and the
+verifier refuses them. Build them from source (below) on an aarch64 machine
+in the meantime. Cross-building is not supported: each architecture is built
+on its own hardware.
+
 Both contain the same compiled application and the same pinned llama.cpp
 runtime. There is no ShadowCode APT repository: a distribution that ships the
 `.deb` delivers updates itself (see [Updates](#updates)).
@@ -60,6 +78,12 @@ node scripts/check-native-package.mjs \
   target/release/bundle/appimage/ShadowCode_VERSION_amd64.AppImage \
   target/release/bundle/deb/ShadowCode_VERSION_amd64.deb
 ```
+
+On an aarch64 host the same commands produce
+`ShadowCode_VERSION_aarch64.AppImage` and `ShadowCode_VERSION_arm64.deb`; pass
+those names to `check-native-package.mjs`. The AppImage runtime is built in a
+`linux/arm64` container from the same pinned Alpine image (a multi-arch
+index), so Docker or Podman must run natively there.
 
 Build-time switches, read from the environment of the build:
 

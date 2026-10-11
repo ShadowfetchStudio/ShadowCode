@@ -159,6 +159,14 @@ run green. Existing 0.33.0 receipts do not qualify the new package bytes.
 The first-authenticated install boundary remains 0.33.0; do not silently move
 this durable boundary.
 
+The release workflow also runs every required gate on aarch64 (`build-aarch64`,
+on `ubuntu-24.04-arm`) and keeps the unsigned aarch64 packages and receipts as
+the `unsigned-aarch64-packages-RUN-ATTEMPT` workflow artifact. Signing and
+publication remain x86_64-only: to ship aarch64, the owner first adds the target
+to the trust policy (`target=x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu`)
+in a reviewed tooling commit, and the sign/publish jobs gain a second
+per-target envelope (`RELEASE-AUTH` and its companions are per target).
+
 Public trust in `release/trust` currently allows epoch 1 and versions 0.33.0–1.0.1;
 `release/install-policy` fixes the first authenticated version at 0.33.0.
 The `release-signing` environment has the signing secret and requires review by

@@ -79,6 +79,11 @@ limits, and the [release history](CHANGELOG.md).
 ## Install
 
 Releases target x86_64 Linux with glibc 2.39 or newer (Ubuntu 24.04 or later).
+From 2.1.0, aarch64 (64-bit ARM) packages are built and qualified too:
+`ShadowCode_VERSION_aarch64.AppImage`, `ShadowCode_VERSION_arm64.deb` and
+`ShadowCode_VERSION_aarch64.flatpak`. They are installable through the signed
+installer once the publisher's trust policy names the aarch64 target; see
+[Distributing](docs/DISTRIBUTING.md#arm64-aarch64).
 Check [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases)
 for published versions. The 1.0.1 packages and checksums are:
 
@@ -113,7 +118,9 @@ bash /path/to/trusted-bundle/scripts/install-appimage.sh /path/to/downloads/Shad
 ```
 
 The installer takes the AppImage path (or `--recover`), resolves its own trusted
-policy and keys, and verifies the adjacent release metadata. Verifier flags such
+policy and keys, and verifies the adjacent release metadata. It installs only
+the AppImage for the machine it runs on: `_amd64.AppImage` on x86_64 and
+`_aarch64.AppImage` on aarch64, whose signed target must match the machine. Verifier flags such
 as `--trust-dir` are not installer options.
 
 [`scripts/install-appimage.sh`](scripts/install-appimage.sh):
