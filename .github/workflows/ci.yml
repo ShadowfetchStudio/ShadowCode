@@ -140,7 +140,7 @@ jobs:
       - name: Flatpak tools and Flathub
         run: |
           sudo apt-get update
-          sudo apt-get install -y flatpak flatpak-builder
+          sudo apt-get install -y flatpak flatpak-builder dbus-daemon
           # flatpak-builder's bubblewrap needs unprivileged user namespaces,
           # which Ubuntu 24.04 restricts through AppArmor by default.
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
@@ -161,8 +161,9 @@ jobs:
       - name: Install and start the bundle
         run: |
           flatpak install --user --noninteractive target/flatpak/ShadowCode_*_x86_64.flatpak
-          flatpak run com.shadowfetch.shadowcode --version
-          flatpak run --command=/app/lib/shadowcode/llama-server com.shadowfetch.shadowcode --version
+          # `flatpak run` needs a session bus; the runner has no desktop session.
+          dbus-run-session -- flatpak run com.shadowfetch.shadowcode --version
+          dbus-run-session -- flatpak run --command=/app/lib/shadowcode/llama-server com.shadowfetch.shadowcode --version
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:

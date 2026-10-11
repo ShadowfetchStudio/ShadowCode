@@ -1378,6 +1378,14 @@ mod tests {
         .await;
         fs::set_permissions(&blocked, fs::Permissions::from_mode(0o755)).unwrap();
         assert!(removed.is_err());
+        // Git stops at the first entry it cannot delete, so whether it reached
+        // q/.git first depends on the filesystem's directory order (tmpfs and
+        // some ext4 hash seeds list `blocked` first). Model the removal that
+        // got past q/.git explicitly.
+        match fs::remove_file(q.join(".git")) {
+            Err(error) if error.kind() != std::io::ErrorKind::NotFound => panic!("{error}"),
+            _ => {}
+        }
         let admin = f.session.admin_path();
         let mut pending = f.session.intent.as_ref().unwrap().clone();
         let parent = admin.parent().unwrap();
