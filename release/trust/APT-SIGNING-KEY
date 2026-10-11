@@ -1,0 +1,39 @@
+ShadowCode APT repository signing key
+
+Fingerprint: 1BC07B5ECFDB514673A296FB021CAB3F2F7A1F61
+  (1BC0 7B5E CFDB 5146 73A2 96FB 021C AB3F 2F7A 1F61)
+
+Key: RSA 4096, created 2026-10-11, no expiry, signs the repository's InRelease
+and Release.gpg only. Compare this fingerprint with the keyring you download
+before trusting it; a change of key is announced in a reviewed commit here.
+
+-----BEGIN PGP PUBLIC KEY BLOCK-----
+
+mQINBGrLlrwBEADZ0SDyrw48pu8+LWpJ43J61zLmk+0u1Qr7IaXDowDcEzId2Bov
++YiesDyAIdaI/K2ouvdCKw4M97do8y6VS0jS6VTY0q3bYbQTjIybkLPCJwON2EXi
+UW8IFg0r13wPBqB9W9Nxpnq+Jbsu2tv4fFj/05lHmli+bO3V8KoMt9LwkudGdHfF
+j8a+u3HRRumQMJlLbgnQDxo/brZyiqkvQY2gv0fYl1vCSH+zKyoah9VWXyx/M/3c
+8MnckFRQQn2SXRYtHkr1plfeZjh7EN5FdAErTVC8CuEtIiplcdfauw08wrmedvoH
+AoGbCblgI8kk/sb+WW74sqba9t8MPF1TSatVDBkMAqAYwZhju88KbLZAfZum2Uz9
+FUybeTlf4P8ZlOysiGg6u7x0f38gnk1IaizclBnQ3t9TP5FhSzRCn/2A6c7ybpdU
+MqFNur5Ed8gazolncKKHE47epgb+bgb8H8D5k5nDfcqp0tyyv2OKLy2ZBwJY+pWQ
+u4THhO1kexVRFNBtK5x7M0Bj9gC2sMJscCKTKT29Xp88zCNMK90FBC282yAFPBQf
+YonY0oWzV3609E7Iw0t5iMTJ5WbclPxcGxbLhUvtwTd4enUHEss4DqOgrzcnrbUN
+wOGMze8ioqGcHn5e4ytAiMhY64yJ5VzontiSq/3i7nQaIQQTeOYkfCGRwQARAQAB
+tE5TaGFkb3dDb2RlIEFQVCByZXBvc2l0b3J5IDwyMDk0NTcxMDMrU2hhZG93ZmV0
+Y2hhcHBzQHVzZXJzLm5vcmVwbHkuZ2l0aHViLmNvbT6JAlEEEwEKADsWIQQbwHte
+z9tRRnOilvsCHKs/L3ofYQUCasuWvAIbAwULCQgHAgIiAgYVCgkICwIEFgIDAQIe
+BwIXgAAKCRACHKs/L3ofYbT+EACOyd7OxXC/HS4W3ARWUn+tXmKYtwkTimyb0CMM
+rughf/AWBt/YGZjkgSBnFsr0/Vm9huhLO514TEcFcYY6bi1K1Aburdf/ORwihaZL
+m63Bg6pwiGm8+8INBy53B2sXzWqgSKt3f9uapQJK4bETuFz1luiC6uTPyaDkJGKG
+rP2NoAFmJbpfPPzKH6AkM7gBxwuwcAyOnWo1tm0DPYqbJUxJsqnPvC/XikISAR/J
+chNCGoJ9Rq1i0TqhJ7epj1pt523XHx7t2zKmhBCxXcF1R9QGTW7HAvoGHoyCgQZ7
+ZR9FwGoplo/FJfW+iljLEh/cyqNxnylf/P5S3+4MP3w0tOR29dCAJW5akiPYWFpq
+ugO3IuttuZ30L8HFcrC8P8cTBUreuVvkGVWDQDByuVe0eHgekhEOtISKik3kwaU8
+eJI/ckrV+pnwJz/YkRWdH7uxFd17SnSpKXeXqUUEky13eHvz5cjA/aQIpeIZ9UZ+
+LxChhcKY9expfSAUTqfMAVoE8VyG2fw1YRWt7zzhzo+V9xrOARHRs8peQNRSPRAo
+6zu31mqeKUCgMIPseFXgXd1ZlxdHbSWTQc91t9nFaKzUdWA6C9jd9zm5gPWKGO7r
+uTwyFc7xr20QKpFrLXoBD4vtLfO3Sin4w04keUFZtxGV+XidiO3gpWrm7hkD7Y1b
+HV7E5g==
+=XvBJ
+-----END PGP PUBLIC KEY BLOCK-----
