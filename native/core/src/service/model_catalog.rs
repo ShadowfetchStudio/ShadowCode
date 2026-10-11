@@ -107,6 +107,7 @@ impl Service {
                 let unloaded = self.engine.local_runtime().unload().await?;
                 Ok(json!({"ok":true,"unloaded":unloaded}))
             }
+            ("GET", "/api/models/outcomes") => self.model_outcomes(call).await,
             ("POST", "/api/models/test") => self.test_model(&call.body).await,
             _ => self.blocking(call, Self::model_routes_sync).await,
         }
@@ -176,6 +177,46 @@ impl Service {
             }
             _ => Err(call.unavailable()),
         }
+    }
+    /// GET /api/models/outcomes?workspace=&current=: per-model outcome
+    /// history for one project, and (only when `routing.suggest_from_history`
+    /// is on) the cheapest model that passed there before. Never switches
+    /// the model; the picker shows the suggestion for the user to accept.
+    async fn model_outcomes(&self, call: &Call) -> Result<Value> {
+        let workspace = if call.q("workspace").is_empty() {
+            self.workspace()?
+        } else {
+            Workspace::open(&expand_path(call.q("workspace"))?)?.path
+        };
+        let cfg = Config::load(self.engine.paths(), Some(&workspace))?;
+        let store = self.engine.store();
+        let rows = {
+            let workspace = workspace.clone();
+            store.run(move |s| s.model_outcomes(&workspace)).await?
+        };
+        let stats = crate::outcomes::summarize(&rows);
+        let opted_in = cfg.routing["suggest_from_history"] == true;
+        let suggestion = if opted_in && !stats.is_empty() {
+            let picker = self.picker_catalog_with(&cfg, false, true).await?;
+            let targets = picker["targets"].as_array().cloned().unwrap_or_default();
+            let day = crate::spending::today(&store, crate::now())?;
+            let limits = crate::outcomes::Constraints {
+                offline: cfg.offline(),
+                daily_limit_reached: crate::spending::daily_limit(&cfg.spending, &day)
+                    .is_some_and(|limit| day.usd >= limit),
+                task_limit_usd: cfg.spending.task_usd,
+                current: Some(call.q("current").to_owned()).filter(|c| !c.is_empty()),
+            };
+            crate::outcomes::suggest(&stats, &targets, &limits)
+        } else {
+            None
+        };
+        Ok(json!({
+            "workspace": workspace,
+            "suggest_from_history": opted_in,
+            "models": stats,
+            "suggestion": suggestion,
+        }))
     }
     /// POST /api/models/test: one short completion (vendor CLIs report
     /// their install/login state instead), bounded to 45 seconds.

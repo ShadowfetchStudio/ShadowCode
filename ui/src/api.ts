@@ -1,6 +1,7 @@
 import { request, ApiError } from "./lib/transport";
 import { createVerificationReader } from "./lib/verificationRefresh";
 import type { BillingMode, PickerTarget, UsageSnapshot } from "./lib/picker";
+import type { ModelOutcomes } from "./lib/outcomes";
 import type { ContextAttachment } from "./lib/pendingAttachments";
 import type { PreviewOpened, PreviewServer } from "./lib/preview";
 
@@ -1728,6 +1729,12 @@ export const api = {
     get<PickerResponse>(`/api/picker${refresh ? "?refresh=1" : ""}`),
   /** Local and cached rows only; does not start provider or network probes. */
   pickerCached: () => get<PickerResponse>("/api/picker?cached=1"),
+  /** Per-model outcome history for a project, plus the opt-in suggestion
+   * (never applied automatically). */
+  modelOutcomes: (workspace: string, current = "") =>
+    get<ModelOutcomes>(
+      `/api/models/outcomes?workspace=${encodeURIComponent(workspace)}&current=${encodeURIComponent(current)}`,
+    ),
   accounts: (refresh = false) =>
     get<AccountsResponse>(`/api/accounts${refresh ? "?refresh=1" : ""}`),
   accountsCached: () => get<AccountsResponse>("/api/accounts?cached=1"),

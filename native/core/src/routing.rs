@@ -44,8 +44,8 @@ pub fn validate(value: &Value) -> Result<()> {
         )
     })?;
     for (key, value) in object {
-        if key == "enabled" {
-            ensure!(value.is_boolean(), "routing.enabled must be a boolean");
+        if key == "enabled" || key == "suggest_from_history" {
+            ensure!(value.is_boolean(), "routing.{key} must be a boolean");
         } else {
             ensure!(
                 PURPOSES.contains(&key.as_str()),

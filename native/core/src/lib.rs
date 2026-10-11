@@ -50,6 +50,7 @@ pub mod models;
 pub mod notify;
 pub mod ollama_store;
 pub mod openrouter;
+pub mod outcomes;
 pub mod page_context;
 pub mod parallel;
 pub mod patch;

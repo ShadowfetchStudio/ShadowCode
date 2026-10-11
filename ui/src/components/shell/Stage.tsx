@@ -47,6 +47,7 @@ import { chipInput } from "../../lib/usageChip";
 import { ContextChip } from "../ContextChip";
 import type { Roles } from "../../hooks/useRoles";
 import { useSpendEstimate } from "../../hooks/useSpendEstimate";
+import { useModelOutcomes } from "../../hooks/useModelOutcomes";
 import type { TryOn } from "../../hooks/useTaskActions";
 
 /** The main column: banners, the Compare view or the conversation, the
@@ -182,6 +183,11 @@ export function Stage({
   const { switching, sessionId, modelChoice, runningChoice } = nav;
   // Updates are this computer's business: a paired phone never asks.
   const updates = useUpdateNotice(isNative() && !isRemote());
+  const modelOutcomes = useModelOutcomes(
+    workspace,
+    modelChoice || "",
+    pickerOpen,
+  );
   const view = compare.view;
   const locked = busy || submitting || switching || Boolean(shutdown);
   const composerLocked = submitting || switching || Boolean(shutdown);
@@ -442,6 +448,12 @@ export function Stage({
           onConnect: (vendor) => openSettings("accounts", { vendor }),
           onSetup: openSetup,
           onAddLocal: () => openSettings("local"),
+          outcomes: modelOutcomes.outcomes,
+          onSuggestionsChange: (on) => {
+            modelOutcomes
+              .setSuggestions(on)
+              .catch((error: unknown) => toast(String(error), "err"));
+          },
         }}
         permission={{
           mode: access.mode,
