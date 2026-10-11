@@ -210,3 +210,77 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/publish-native-release.mjs "$RUNNER_TEMP/signed-download" release/trust
+  # Signed APT repository on GitHub Pages (gh-pages branch, path apt/). Only
+  # the .deb that passed publisher authentication is indexed; the repository
+  # signing key is a separate OpenPGP key held in the protected environment.
+  apt-repository:
+    needs: [configuration, sign, publish]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    environment: ${{ needs.configuration.outputs.environment }}
+    steps:
+      - name: Checkout independently approved tooling and public trust
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.configuration.outputs.tooling }}
+          path: trusted
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Require a pinned APT signing fingerprint
+        env:
+          APT_FPR: ${{ vars.NATIVE_APT_SIGNING_FINGERPRINT }}
+        run: node -e "require('node:assert/strict').match(process.env.APT_FPR || '', /^[0-9A-F]{40}$/, 'Provision NATIVE_APT_SIGNING_FINGERPRINT')"
+      - name: Download only this signing job's immutable public bundle
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          artifact-ids: ${{ needs.sign.outputs.artifact-id }}
+          path: ${{ runner.temp }}/signed-download
+          merge-multiple: true
+      - name: Authenticate the .deb against the tracked trust bundle
+        working-directory: trusted
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          bash scripts/verify-native-release.sh \
+            --bundle-dir "$RUNNER_TEMP/signed-download" \
+            --trust-dir release/trust \
+            --artifact "ShadowCode_${version}_amd64.deb" \
+            --stage-dir "$RUNNER_TEMP/verified-deb" \
+            --expect-version "$version"
+      - name: Checkout the published Pages branch
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        continue-on-error: true
+        id: pages
+        with:
+          ref: gh-pages
+          path: pages
+      - name: Build and sign the repository, keeping earlier pool packages
+        working-directory: trusted
+        env:
+          APT_REPO_SIGNING_KEY: ${{ secrets.NATIVE_APT_SIGNING_KEY }}
+          APT_FPR: ${{ vars.NATIVE_APT_SIGNING_FINGERPRINT }}
+        run: |
+          previous=()
+          [ -d "$GITHUB_WORKSPACE/pages/apt" ] && previous=(--previous "$GITHUB_WORKSPACE/pages/apt")
+          node scripts/build-apt-repo.mjs --out "$RUNNER_TEMP/apt" --fingerprint "$APT_FPR" "${previous[@]}" "$RUNNER_TEMP"/verified-deb/*.deb
+          gpgv --keyring "$RUNNER_TEMP/apt/shadowcode-archive-keyring.gpg" "$RUNNER_TEMP/apt/dists/stable/InRelease"
+      - name: Publish to gh-pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ steps.pages.outcome }}" != success ]; then
+            rm -rf pages && mkdir pages && cd pages
+            git init -q -b gh-pages
+            git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+            touch .nojekyll
+          else
+            cd pages
+          fi
+          rm -rf apt && cp -a "$RUNNER_TEMP/apt" apt
+          git add -A
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com \
+            commit -q -m "APT repository for ${GITHUB_REF_NAME}"
+          git push origin HEAD:gh-pages

@@ -148,7 +148,49 @@ required.
 
 ### Debian package
 
-Verify the Debian artifact using the independently trusted verifier bundle.
+The recommended route is the signed APT repository, which delivers updates
+through `apt upgrade`:
+
+```sh
+sudo install -d -m 0755 /etc/apt/keyrings
+curl -fsSLo /tmp/shadowcode-archive-keyring.gpg \
+  https://shadowfetchstudio.github.io/ShadowCode/apt/shadowcode-archive-keyring.gpg
+gpg --show-keys --with-fingerprint /tmp/shadowcode-archive-keyring.gpg
+# Compare the fingerprint with release/trust/APT-SIGNING-KEY in a reviewed
+# copy of the repository at a release tag; stop if it differs.
+sudo install -m 0644 /tmp/shadowcode-archive-keyring.gpg /etc/apt/keyrings/
+sudo tee /etc/apt/sources.list.d/shadowcode.sources >/dev/null <<'EOF'
+Types: deb
+URIs: https://shadowfetchstudio.github.io/ShadowCode/apt
+Suites: stable
+Components: main
+Architectures: amd64 arm64
+Signed-By: /etc/apt/keyrings/shadowcode-archive-keyring.gpg
+EOF
+sudo apt update && sudo apt install shadow-code
+```
+
+The keyring is fetched once, over HTTPS, and must be checked against the
+fingerprint in a reviewed copy of the repository: like the AppImage
+installer's trust bundle, a key downloaded beside the packages does not
+authenticate itself. `Signed-By` scopes the key to this one source; it is not
+added to APT's global trusted keys. The repository key is a separate OpenPGP
+key from the Ed25519 publisher key: CI indexes only a `.deb` that already
+passed `verify-native-release.sh` against `release/trust`, then signs
+`InRelease` and `Release.gpg`.
+
+Downgrade and rollback protection comes from APT. It verifies `InRelease` with
+the keyring, checks every index and package against the SHA-256 sums in the
+signed `Release`, and never replaces an installed version with a lower one
+during `apt upgrade`; a downgrade needs an explicit `shadow-code=VERSION` and
+`--allow-downgrades`. Earlier versions stay in the pool so an administrator can
+roll back deliberately. `Release` carries no `Valid-Until` by default, so a
+mirror or network attacker could keep serving an old signed `Release` (a
+freeze); that withholds updates but cannot install anything older than what is
+installed. The repository is published by the release workflow only; nothing
+in ShadowCode adds or contacts it by itself.
+
+To install one release by hand instead, verify the Debian artifact using the independently trusted verifier bundle.
 `verified-deb-1.0.1` must not already exist; install the verified snapshot:
 
 ```bash
@@ -161,8 +203,9 @@ bash /path/to/trusted-bundle/scripts/verify-native-release.sh \
 sudo apt install ./verified-deb-1.0.1/ShadowCode_1.0.1_amd64.deb
 ```
 
-This manual Debian verification does not provide the AppImage installer's durable
-accepted-version and rollback state. Checksums alone do not authenticate a publisher.
+A `.deb` installed by hand this way gets no updates and none of the APT
+repository's rollback protection; add the repository above to get both.
+Checksums alone do not authenticate a publisher.
 
 The deb installs `shadowcode` and the same llama.cpp runtime in
 `/usr/lib/shadowcode`, with a manual page (`man shadowcode`) and bash, zsh and
@@ -183,8 +226,8 @@ About**, ShadowCode asks GitHub for the latest release. The request carries
 no version or identifier, and nothing is downloaded or installed for you.
 When a newer version exists, **Update available** appears in the status bar;
 **Settings › About** links the release notes and shows how to update this
-installation (the authenticated installer for the AppImage, your package
-manager for the deb). Turn it off there with **Check for updates once a
+installation (the authenticated installer for the AppImage, `apt upgrade` from the
+ShadowCode APT repository or your package manager for the deb). Turn it off there with **Check for updates once a
 day**; Offline mode pauses it. Distributions can turn it off for everyone.
 
 ## First run
