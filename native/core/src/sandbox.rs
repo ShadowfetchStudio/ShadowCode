@@ -475,6 +475,94 @@ pub struct ChildSetup {
     #[cfg(target_os = "linux")]
     landlock: Option<Arc<std::os::fd::OwnedFd>>,
     gate: Option<Arc<proxy::Gate>>,
+    /// Flatpak host commands: the proxy's Unix socket, reached through the
+    /// relay inside the host bubblewrap network namespace.
+    relay: Option<Arc<RelaySocket>>,
+}
+/// The proxy's listening Unix socket and the private folder holding it,
+/// removed when the command's setup is dropped.
+pub struct RelaySocket {
+    listener: Mutex<Option<std::os::unix::net::UnixListener>>,
+    dir: tempfile::TempDir,
+}
+impl RelaySocket {
+    /// Bind a fresh socket in a private folder below `base`.
+    pub fn bind(base: &Path) -> Result<Self> {
+        let dir = tempfile::Builder::new()
+            .prefix("scp-")
+            .tempdir_in(base)
+            .context("Could not create the allow-list proxy folder")?;
+        let path = dir.path().join(RELAY_SOCKET);
+        // sockaddr_un holds 107 bytes and a terminating NUL.
+        ensure!(
+            path.as_os_str().len() < 108,
+            "The allow-list proxy socket path is too long ({})",
+            path.display()
+        );
+        let listener = std::os::unix::net::UnixListener::bind(&path)
+            .context("Could not create the allow-list proxy socket")?;
+        Ok(Self {
+            listener: Mutex::new(Some(listener)),
+            dir,
+        })
+    }
+    pub fn dir(&self) -> &Path {
+        self.dir.path()
+    }
+}
+impl std::fmt::Debug for RelaySocket {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RelaySocket")
+            .field("dir", &self.dir.path())
+            .finish()
+    }
+}
+/// Socket file name inside the relay folder.
+const RELAY_SOCKET: &str = "p";
+/// Where the relay binary and the proxy folder appear inside bubblewrap.
+const RELAY_IN_SANDBOX: &str = "/shadowcode-proxy-relay";
+const RELAY_DIR_IN_SANDBOX: &str = "/shadowcode-proxy";
+
+/// Turn an [`isolated_args`] profile built with [`Net::Proxy`] into one that
+/// a host bubblewrap enforces by itself: a private network namespace whose
+/// only way out is `relay`, forwarding loopback port [`proxy::PROXY_PORT`] to
+/// the proxy socket in `socket_dir`. Refuses rather than guess if the profile
+/// does not have the expected shape.
+pub fn host_relay_args(
+    mut args: Vec<String>,
+    relay: &Path,
+    socket_dir: &Path,
+) -> Result<Vec<String>> {
+    let separator = args
+        .iter()
+        .rposition(|arg| arg == "--")
+        .context("Sandbox profile has no command separator")?;
+    ensure!(
+        args[separator + 1..].first().map(String::as_str) == Some("/bin/sh"),
+        "Sandbox profile has an unexpected command"
+    );
+    ensure!(
+        !args[..separator].iter().any(|arg| arg == "--share-net"),
+        "Sandbox profile shares the network"
+    );
+    let s = |p: &Path| p.to_string_lossy().into_owned();
+    let insert = [
+        "--unshare-net".to_owned(),
+        "--ro-bind".to_owned(),
+        s(relay),
+        RELAY_IN_SANDBOX.to_owned(),
+        "--ro-bind".to_owned(),
+        s(socket_dir),
+        RELAY_DIR_IN_SANDBOX.to_owned(),
+    ];
+    let relay_command = [
+        RELAY_IN_SANDBOX.to_owned(),
+        format!("{RELAY_DIR_IN_SANDBOX}/{RELAY_SOCKET}"),
+        proxy::PROXY_PORT.to_string(),
+    ];
+    args.splice(separator + 1..separator + 1, relay_command);
+    args.splice(separator..separator, insert);
+    Ok(args)
 }
 impl std::fmt::Debug for ChildSetup {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -482,7 +570,9 @@ impl std::fmt::Debug for ChildSetup {
         #[cfg(target_os = "linux")]
         d.field("netns", &self.netns.is_some())
             .field("landlock", &self.landlock.is_some());
-        d.field("proxy", &self.gate.is_some()).finish()
+        d.field("proxy", &self.gate.is_some())
+            .field("relay", &self.relay)
+            .finish()
     }
 }
 /// Stops the allow-list proxy when the command's process is finished.
@@ -513,6 +603,15 @@ impl ChildSetup {
         if let (Some(netns), Some(gate)) = (&self.netns, &self.gate) {
             let listener = netns.receive()?;
             return Ok(Some(ProxyGuard(proxy::spawn(listener, gate.clone())?)));
+        }
+        if let (Some(relay), Some(gate)) = (&self.relay, &self.gate) {
+            let listener = relay
+                .listener
+                .lock()
+                .map_err(|_| anyhow::anyhow!("Proxy socket lock poisoned"))?
+                .take()
+                .context("The allow-list proxy socket was already used")?;
+            return Ok(Some(ProxyGuard(proxy::spawn_unix(listener, gate.clone())?)));
         }
         Ok(None)
     }
@@ -569,9 +668,6 @@ pub fn prepare_shell(
     command: &str,
     policy: &ShellPolicy,
 ) -> Result<PreparedShell> {
-    if crate::flatpak::host_bridge().is_some() && policy.network == ShellNetwork::Allowlist {
-        bail!("The command did not run: host-name network restrictions are unavailable for Flatpak host commands. Choose network off or on in Settings > Permissions & network.");
-    }
     let layout = HomeLayout::current(&policy.home_binds, workspace);
     match working_bwrap(workspace) {
         Ok(program) => {
@@ -582,7 +678,37 @@ pub fn prepare_shell(
             };
             let mut child = None;
             let mut gate = None;
-            if net == Net::Proxy {
+            let mut relay = None;
+            if net == Net::Proxy && crate::flatpak::host_bridge().is_some() {
+                // bubblewrap runs on the host, so this process cannot place it
+                // in a namespace. The host bubblewrap makes its own private
+                // network namespace instead, and the relay shipped in the
+                // package is its only route, to this process's proxy.
+                let unavailable =
+                    "The command did not run: the network allow-list for Flatpak host commands";
+                let program = crate::flatpak::host_relay().with_context(|| {
+                    format!(
+                        "{unavailable} needs {} in this package",
+                        crate::flatpak::RELAY_NAME
+                    )
+                })?;
+                let base = crate::flatpak::shared_socket_base().with_context(|| {
+                    format!("{unavailable} needs a folder shared with the host")
+                })?;
+                let socket =
+                    Arc::new(RelaySocket::bind(&base).with_context(|| unavailable.to_owned())?);
+                let shared = proxy::Gate::new(policy.allow.clone());
+                child = Some(ChildSetup {
+                    #[cfg(target_os = "linux")]
+                    netns: None,
+                    #[cfg(target_os = "linux")]
+                    landlock: None,
+                    gate: Some(shared.clone()),
+                    relay: Some(socket.clone()),
+                });
+                gate = Some(shared);
+                relay = Some((program, socket));
+            } else if net == Net::Proxy {
                 #[cfg(target_os = "linux")]
                 {
                     let shared = proxy::Gate::new(policy.allow.clone());
@@ -590,6 +716,7 @@ pub fn prepare_shell(
                         netns: Some(Arc::new(netns::Netns::new()?)),
                         landlock: None,
                         gate: Some(shared.clone()),
+                        relay: None,
                     });
                     gate = Some(shared);
                 }
@@ -601,6 +728,9 @@ pub fn prepare_shell(
             if let Some(index) = args.iter().position(|arg| arg == "--chdir") {
                 args[index + 1] = cwd.to_string_lossy().into_owned();
             }
+            if let Some((program, socket)) = &relay {
+                args = host_relay_args(args, program, socket.dir())?;
+            }
             let note = json!({
                 "mode": "bubblewrap",
                 "network": network_label(policy.network),
@@ -608,6 +738,7 @@ pub fn prepare_shell(
                 "network_enforcement": match net {
                     Net::Off => "private_namespace",
                     Net::On => "none",
+                    Net::Proxy if relay.is_some() => "host_allowlist_proxy_relay",
                     Net::Proxy => "host_allowlist_proxy",
                 },
                 "allow": if net == Net::Proxy { json!(policy.allow_text) } else { Value::Null },
@@ -708,6 +839,7 @@ pub fn prepare_shell(
                     netns: None,
                     landlock: Some(Arc::new(fd)),
                     gate: None,
+                    relay: None,
                 }),
                 #[cfg(not(target_os = "linux"))]
                 child: None,
@@ -899,6 +1031,172 @@ mod tests {
         assert!(position(&proxy, &["--setenv", "HTTPS_PROXY", &url]).is_some());
         assert!(position(&proxy, &["--setenv", "http_proxy", &url]).is_some());
         assert!(position(&proxy, &["--unsetenv", "NO_PROXY"]).is_some());
+    }
+
+    #[test]
+    fn flatpak_relay_profile_unshares_the_network_and_wraps_the_command() {
+        let (_root, home, ws) = fake_home();
+        let layout = HomeLayout::build(Some(home), &[], &ws);
+        let base = isolated_args(&ws, "curl https://crates.io", Net::Proxy, None, &layout);
+        let relay = Path::new("/var/lib/flatpak/app/x/files/libexec/shadowcode-proxy-relay");
+        let dir = Path::new("/run/user/1000/app/x/scp-abc");
+        let args = host_relay_args(base, relay, dir).unwrap();
+        let separator = args.iter().rposition(|a| a == "--").unwrap();
+        assert!(args[..separator].iter().any(|a| a == "--unshare-net"));
+        assert!(
+            position(&args, &["--ro-bind", &text(relay), RELAY_IN_SANDBOX]).unwrap() < separator
+        );
+        assert!(
+            position(&args, &["--ro-bind", &text(dir), RELAY_DIR_IN_SANDBOX]).unwrap() < separator
+        );
+        let port = proxy::PROXY_PORT.to_string();
+        assert_eq!(
+            &args[separator + 1..],
+            &[
+                RELAY_IN_SANDBOX,
+                "/shadowcode-proxy/p",
+                port.as_str(),
+                "/bin/sh",
+                "-c",
+                "curl https://crates.io"
+            ]
+        );
+        // Proxy environment is still set for the command.
+        let url = format!("http://127.0.0.1:{}", proxy::PROXY_PORT);
+        assert!(position(&args, &["--setenv", "HTTPS_PROXY", &url]).is_some());
+    }
+
+    #[test]
+    fn flatpak_relay_profile_refuses_unexpected_shapes() {
+        let relay = Path::new("/r");
+        let dir = Path::new("/d");
+        assert!(host_relay_args(vec!["--die-with-parent".into()], relay, dir).is_err());
+        assert!(host_relay_args(vec!["--".into(), "/usr/bin/env".into()], relay, dir).is_err());
+        let shared = vec!["--share-net".into(), "--".into(), "/bin/sh".into()];
+        assert!(host_relay_args(shared, relay, dir).is_err());
+    }
+
+    #[test]
+    fn relay_socket_refuses_paths_the_kernel_cannot_hold() {
+        let root = tempfile::tempdir().unwrap();
+        let deep = root.path().join("d".repeat(120));
+        fs::create_dir(&deep).unwrap();
+        assert!(RelaySocket::bind(&deep).is_err());
+        let ok = RelaySocket::bind(root.path()).unwrap();
+        assert!(ok.dir().join(RELAY_SOCKET).exists());
+        let dir = ok.dir().to_owned();
+        drop(ok);
+        assert!(
+            !dir.exists(),
+            "the socket folder is removed with the command"
+        );
+    }
+
+    /// Build the relay shipped in the Flatpak, or skip when no C compiler.
+    fn build_relay(out: &Path) -> Option<PathBuf> {
+        let source =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packaging/flatpak/proxy-relay.c");
+        let binary = out.join("relay");
+        let status = Command::new("cc")
+            .args(["-Os", "-Wall", "-Wextra", "-Werror", "-o"])
+            .arg(&binary)
+            .arg(&source)
+            .status()
+            .ok()?;
+        status.success().then_some(binary)
+    }
+
+    fn free_port() -> u16 {
+        std::net::TcpListener::bind("127.0.0.1:0")
+            .unwrap()
+            .local_addr()
+            .unwrap()
+            .port()
+    }
+
+    #[tokio::test]
+    async fn flatpak_relay_forwards_only_through_the_allow_list_proxy() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let temp = tempfile::tempdir().unwrap();
+        let Some(binary) = build_relay(temp.path()) else {
+            eprintln!("skipping: no C compiler");
+            return;
+        };
+        let socket = Arc::new(RelaySocket::bind(temp.path()).unwrap());
+        let gate = proxy::Gate::new(proxy::parse_list(&["allowed.invalid".into()]).unwrap());
+        let setup = ChildSetup {
+            gate: Some(gate.clone()),
+            relay: Some(socket.clone()),
+            ..ChildSetup::default()
+        };
+        let _guard = setup.after_spawn().unwrap().unwrap();
+        let port = free_port();
+        let mut relay = tokio::process::Command::new(&binary)
+            .arg(socket.dir().join(RELAY_SOCKET))
+            .arg(port.to_string())
+            .args(["/bin/sh", "-c", "sleep 5; exit 7"])
+            .kill_on_drop(true)
+            .spawn()
+            .unwrap();
+        let mut stream = None;
+        for _ in 0..100 {
+            if let Ok(s) = tokio::net::TcpStream::connect(("127.0.0.1", port)).await {
+                stream = Some(s);
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        let mut stream = stream.expect("relay listens on loopback");
+        stream
+            .write_all(b"CONNECT example.com:443 HTTP/1.1\r\n\r\n")
+            .await
+            .unwrap();
+        let mut reply = Vec::new();
+        let _ = tokio::time::timeout(Duration::from_secs(5), stream.read_to_end(&mut reply)).await;
+        let reply = String::from_utf8_lossy(&reply);
+        assert!(reply.starts_with("HTTP/1.1 403"), "{reply}");
+        assert!(gate.report()["blocked"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|b| b == "example.com:443"));
+        let status = relay.wait().await.unwrap();
+        assert_eq!(
+            status.code(),
+            Some(7),
+            "the relay returns the command's status"
+        );
+    }
+
+    #[test]
+    fn flatpak_relay_fails_closed_without_the_proxy() {
+        let temp = tempfile::tempdir().unwrap();
+        let Some(binary) = build_relay(temp.path()) else {
+            eprintln!("skipping: no C compiler");
+            return;
+        };
+        let marker = temp.path().join("ran");
+        let script = format!("touch '{}'", marker.display());
+        let output = Command::new(&binary)
+            .arg(temp.path().join("missing.sock"))
+            .arg(free_port().to_string())
+            .args(["/bin/sh", "-c", &script])
+            .output()
+            .unwrap();
+        assert_eq!(output.status.code(), Some(125));
+        assert!(!marker.exists(), "the command must not run");
+        assert!(String::from_utf8_lossy(&output.stderr).contains("did not run"));
+        // A port that is already taken is refused the same way.
+        let busy = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let socket = RelaySocket::bind(temp.path()).unwrap();
+        let output = Command::new(&binary)
+            .arg(socket.dir().join(RELAY_SOCKET))
+            .arg(busy.local_addr().unwrap().port().to_string())
+            .args(["/bin/sh", "-c", &script])
+            .output()
+            .unwrap();
+        assert_eq!(output.status.code(), Some(125));
+        assert!(!marker.exists(), "the command must not run");
     }
 
     #[test]

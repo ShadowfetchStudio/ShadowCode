@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.0 (unreleased)
+
+- Flatpak: hostname allow-list mode for agent shell commands now works. The host bubblewrap gets its own private network namespace, and a small packaged relay forwards loopback port 3128 to ShadowCode's allow-list proxy over a Unix socket. If the relay or proxy socket cannot be set up, the command is still refused.
+
 ## 2.0.0: Flatpak, brand identity, and remote-access fixes
 
 - Update repository, contributor, release and package links for the ShadowfetchStudio GitHub account rename. Preserve verification of existing signed releases with the same pinned repository and publisher IDs.
