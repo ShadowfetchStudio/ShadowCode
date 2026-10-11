@@ -157,7 +157,9 @@ index), so Docker or Podman must run natively there. The llama.cpp runtime's
 aarch64 CPU variants include Armv9.2 SME, which needs GCC 14 or newer; on
 Ubuntu 24.04 install `gcc-14` and `g++-14` (`scripts/build-llama.cpp.sh` uses
 them when the default compiler cannot target `armv9.2-a+sme`), or set
-`SHADOWCODE_CC` and `SHADOWCODE_CXX`.
+`SHADOWCODE_CC` and `SHADOWCODE_CXX`. The AppImage bundler copies
+`/usr/bin/xdg-open` into the AppImage, so install `xdg-utils` on a minimal
+build host.
 
 Build-time switches, read from the environment of the build:
 
