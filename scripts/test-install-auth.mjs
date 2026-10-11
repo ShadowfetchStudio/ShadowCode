@@ -32,6 +32,9 @@ async function fixture(t) {
   await writeFile(path.join(x86, 'uname'), `#!/bin/sh\nif [ "\${1:-}" = -m ]; then echo x86_64; else exec /usr/bin/uname "$@"; fi\n`, { mode: 0o755 });
   const env = { ...process.env, PATH: `${x86}:${process.env.PATH}`, HOME: home, XDG_DATA_HOME: path.join(home, '.local/share') };
   delete env.SHADOWCODE_SHA256SUMS; delete env.SHADOWCODE_GIT_SHA;
+  // A developer desktop's display would turn on the first-window check, which
+  // these fixture AppImages do not implement (as test-install-appimage.sh).
+  delete env.DISPLAY; delete env.WAYLAND_DISPLAY; delete env.SHADOWCODE_FIRST_START_CHECK;
   const run = (args, extra = {}) => spawnSync('/bin/bash', [installer, ...args], { env: { ...env, ...extra }, encoding: 'utf8', timeout: 20000 });
   return { root, bundle, home, key, library, libraryParent, marker, installer, env, run, state: path.join(libraryParent, '.shadowcode-release-state'), journal: path.join(libraryParent, '.shadowcode-install-intent') };
 }
