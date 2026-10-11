@@ -87,6 +87,26 @@ A row that isn't ready still opens something useful: *Sign in* opens
 ShadowCode stores the choice for the conversation and uses it as the project's
 default for new conversations.
 
+### How each model did in this project
+
+After tasks finish, each row that ran in this project shows a short history:
+median time, median cost, how many verified tasks passed and how many tasks
+it ran, for example *Here: 2m 5s · $0.04 · 3/4 passed · 5 tasks*. The cost is
+shown only when the provider, the vendor CLI or this computer reported it;
+otherwise it reads *cost unavailable*. ShadowCode never fills in a guess.
+A task counts as passed only when its checks actually ran and passed; a task
+without observed checks is *not verified*. **Compare history** in the picker
+shows every model side by side. Cancelled tasks, plain commands and
+subagents are not counted, and deleting a conversation removes its history.
+
+Tick **Suggest the cheapest model that passed here** to get a suggestion at
+the top of the picker: the model with the lowest median reported cost that
+passed in this project before and is ready now. It is only a suggestion:
+choose **Use …** to switch, or **Not now**. ShadowCode never switches for
+you. Offline, only models on this computer are suggested; paid API models
+are left out once today's spending limit is reached or when they usually
+cost more than the per-task limit.
+
 Until a subscription is connected, **On this computer** comes first, marked
 *Free · your code stays on this computer*, so the first row (and Enter) is a
 free model.

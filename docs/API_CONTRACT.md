@@ -466,6 +466,7 @@ need a Unix build. ShadowCode 1.x ships for Linux, where all of them exist.
 | `POST` | `/api/mcp/servers/delete` | stable | allowed | [Extensions](#extensions) |
 | `POST` | `/api/memory` | stable | allowed | [Slash commands and memory](#slash-commands-and-memory) |
 | `GET` | `/api/models` | stable | allowed | [Accounts and models](#accounts-and-models) |
+| `GET` | `/api/models/outcomes` | experimental | allowed | [Accounts and models](#accounts-and-models) |
 | `POST` | `/api/models/register` | stable | allowed | [Accounts and models](#accounts-and-models) |
 | `POST` | `/api/models/select` | stable | allowed | [Accounts and models](#accounts-and-models) |
 | `POST` | `/api/models/test` | stable | allowed | [Accounts and models](#accounts-and-models) |
@@ -2122,6 +2123,46 @@ token` and never shows plan usage. Vendor rows carry `reasoning: false` for
 models that take no effort (Claude Haiku). A loaded local row's `reason`
 starts with `Loaded ·` (and says `CPU fallback (GPU load failed)` when the GPU
 start failed).
+
+### Model outcome history and suggestion
+
+`GET /api/models/outcomes?workspace=&current=` (experimental) →
+`{workspace, suggest_from_history: boolean, models: ModelOutcomeStats[],
+suggestion: OutcomeSuggestion|null}`. `workspace` defaults to the current
+project; `current` is the picker id now selected (never suggested).
+
+```
+ModelOutcomeStats = {
+  model_id,             // exact picker id that ran the tasks
+  model_label,
+  samples,              // finished top-level tasks counted (newest 50)
+  median_seconds, median_tokens,
+  median_cost_usd,      // null = unavailable: no cost was reported
+  cost_samples,         // tasks whose cost was reported
+  verified_samples,     // tasks with an observed pass/fail
+  passes, pass_rate,    // pass_rate null when nothing was verified
+  last_finished_at
+}
+OutcomeSuggestion = {model_id, name, median_cost_usd, pass_rate, passes, samples, reason}
+```
+
+One row per finished task is written to `model_outcomes` (schema 28) in the
+same transaction as `agent.completed`. Cancelled tasks, `command` mode and
+subagent jobs are not recorded. `cost_usd` is stored only when the provider,
+the vendor CLI or this computer reported it; price-list estimates and
+unknown prices are stored as `NULL` and shown as "unavailable". A task passes
+only on observed verification (`verification.verified`); a model's claim
+alone is "not verified". Deleting a conversation deletes its outcomes.
+
+`suggestion` is `null` unless `routing.suggest_from_history` is `true` (set
+with `PUT /api/config {values: {routing: {suggest_from_history: true}}}`).
+It is the cheapest model by median **reported** cost that passed
+verification in this project at least once and is `ready` in the picker now.
+Models whose cost was never reported are not ranked. When the app is
+offline only `inference: "local"` rows qualify; paid API rows are skipped
+once today's spending limit is reached or when their median cost is above
+the per-task limit. The endpoint never changes the selected model: the
+picker shows the suggestion and the user accepts it (`Use …`) or not.
 
 ### Accounts (subscriptions)
 

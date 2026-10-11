@@ -22,6 +22,27 @@ Test for required command verification. Planning and review retain read-only
 permissions regardless of the selected model. A different model never grants
 additional workspace or command permissions.
 
+## Suggestions from outcome history
+
+Routing never learns on its own. With `routing.suggest_from_history: true`
+(off by default; the picker's **Suggest the cheapest model that passed
+here** checkbox sets it) the picker asks `GET /api/models/outcomes` for a
+suggestion: the model with the lowest median reported cost that passed
+observed verification in this project before and is ready in the picker
+now. The user accepts it with **Use …**; nothing changes otherwise, and
+explicit selections, routes and running tasks are never altered.
+
+- Only reported costs count (provider, vendor CLI, or $0 on this computer).
+  Price-list estimates and unknown prices are "unavailable" and such models
+  are not ranked.
+- Offline (`network.mode: offline`): only models on this computer.
+- Spending limits: paid API models are skipped once today's limit is reached
+  and when their median cost is above the per-task limit.
+- The model already selected is never suggested.
+
+Outcomes are stored per task in `model_outcomes` (schema 28); see
+[the API contract](API_CONTRACT.md#model-outcome-history-and-suggestion).
+
 ## Models with the same name
 
 Discovered and newly configured models receive IDs derived from their provider,
