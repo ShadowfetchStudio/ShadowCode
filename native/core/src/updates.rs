@@ -38,7 +38,8 @@ use std::{
 
 pub const REPOSITORY_URL: &str = "https://github.com/ShadowfetchStudio/ShadowCode";
 pub const RELEASES_URL: &str = "https://github.com/ShadowfetchStudio/ShadowCode/releases";
-const DEFAULT_API: &str = "https://api.github.com/repos/ShadowfetchStudio/ShadowCode/releases/latest";
+const DEFAULT_API: &str =
+    "https://api.github.com/repos/ShadowfetchStudio/ShadowCode/releases/latest";
 /// Fixed; carries no version so every installation sends the same bytes.
 pub const USER_AGENT: &str = "ShadowCode-update-check";
 /// Automatic checks run at most this often.
