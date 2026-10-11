@@ -132,7 +132,7 @@ set -euo pipefail
 if [[ "$AUTH_FAULT" == accepted-sync && "\${@: -1}" == "$HOME/.local/lib/.shadowcode-release-state" ]]; then echo 'Injected accepted state flush failure' >&2; exit 75; fi
 exec /usr/bin/sync "$@"
 `, { mode: 0o755 });
-  return { PATH: `${bin}:${process.env.PATH}`, AUTH_FAULT_MODE: 'kill' };
+  return { PATH: `${bin}:${f.env.PATH}`, AUTH_FAULT_MODE: 'kill' };
 }
 
 test('rejects jointly replaced checksums and candidate before any executable runs', async t => {
@@ -289,7 +289,7 @@ if [[ "\${1:-}" == 500 && "\${2:-}" == */verified-release/*.AppImage ]]; then
 fi
 exec /usr/bin/chmod "$@"
 `, { mode: 0o755 });
-  passed(f.run([file], { PATH: `${bin}:${process.env.PATH}`, AUTH_MUTATE_DOWNLOAD: file }));
+  passed(f.run([file], { PATH: `${bin}:${f.env.PATH}`, AUTH_MUTATE_DOWNLOAD: file }));
   assert.notDeepEqual(await readFile(file), original);
   assert.deepEqual(await readFile(path.join(f.home, 'Applications/ShadowCode-0.28.0-x86_64.AppImage')), original);
   for (const executed of (await readFile(f.marker, 'utf8')).trim().split('\n')) assert(executed.includes('/verified-release/'));
