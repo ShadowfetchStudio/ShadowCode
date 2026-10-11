@@ -74,4 +74,7 @@ test("the AppImage runtime build and launcher handle both architectures", async 
   const docker = await readFile(new URL("./clean-host-runtime.Dockerfile", import.meta.url), "utf8");
   assert.match(docker, /FROM --platform=linux\/amd64 debian@sha256:[a-f0-9]{64} AS debian-amd64/);
   assert.match(docker, /FROM --platform=linux\/arm64 debian@sha256:[a-f0-9]{64} AS debian-arm64/);
+  // BuildKit's own TARGETARCH must select the stage; a default would override it.
+  assert.match(docker, /^ARG TARGETARCH$/m);
+  assert.doesNotMatch(docker, /ARG TARGETARCH=/);
 });
