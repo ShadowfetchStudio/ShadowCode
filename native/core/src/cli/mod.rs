@@ -436,6 +436,14 @@ pub async fn run(options: Options) -> Result<i32> {
     )?)?
     .path;
     let paths = options.paths()?;
+    if let Some(Command::InstallSnapshot { output }) = &options.command {
+        let output = std::env::current_dir()?.join(expand(output)?);
+        match crate::data::install_snapshot(&paths, &output)? {
+            Some(version) => println!("{version}"),
+            None => println!("absent"),
+        }
+        return Ok(0);
+    }
     if let Some(command @ (Command::Restore { .. } | Command::Reset { .. })) = &options.command {
         return data_command(&paths, &workspace, command, options.json).await;
     }
@@ -1141,8 +1149,8 @@ async fn execute(backend: &Backend, workspace: &Path, options: &Options) -> Resu
             value["items"] = json!(items);
             value
         }
-        Command::Restore { .. } | Command::Reset { .. } => {
-            unreachable!("Restore and reset are handled before the engine opens")
+        Command::Restore { .. } | Command::Reset { .. } | Command::InstallSnapshot { .. } => {
+            unreachable!("Restore, reset and install snapshots are handled before the engine opens")
         }
         Command::Understand { save } => {
             backend

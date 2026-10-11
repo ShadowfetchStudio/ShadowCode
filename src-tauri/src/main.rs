@@ -499,6 +499,14 @@ fn run() -> Result<()> {
                             && url.host_str() == Some("127.0.0.1")
                             && url.port() == Some(5174))
                 })
+                .on_page_load(|_, payload| {
+                    // The backend (and its database migration) opened before
+                    // the window was built; a loaded page completes the first
+                    // start the AppImage installer waits for.
+                    if matches!(payload.event(), tauri::webview::PageLoadEvent::Finished) {
+                        shadowcode_core::lifecycle::report_first_start();
+                    }
+                })
                 .build()?;
             // Building the window queued the plugin's move back to where it
             // was (X11); this move follows it and keeps the fitted window

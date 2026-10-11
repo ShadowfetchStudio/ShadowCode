@@ -73,3 +73,51 @@ pub async fn parent_exited(parent: Option<u32>) {
         tokio::time::sleep(Duration::from_millis(50)).await;
     }
 }
+
+/// Set by the AppImage installer when it starts a newly installed version
+/// for its first-window check. The installer rolls back the AppImage,
+/// runtime and database snapshot unless this file appears in time.
+pub const FIRST_START_MARKER_ENV: &str = "SHADOWCODE_FIRST_START_MARKER";
+
+/// Reports a successful first start: the profile database opened (and any
+/// migration committed) and the main window finished loading its page.
+/// Writes `ShadowCode VERSION` once to the file named by
+/// [`FIRST_START_MARKER_ENV`]; does nothing when it is unset. Best effort:
+/// a failure only makes the installer roll back.
+pub fn report_first_start() {
+    static REPORTED: std::sync::Once = std::sync::Once::new();
+    REPORTED.call_once(|| {
+        if let Some(path) = std::env::var_os(FIRST_START_MARKER_ENV).map(PathBuf::from) {
+            if let Err(error) = write_first_start(&path) {
+                tracing::warn!("could not report the first start: {error:#}");
+            }
+        }
+    });
+}
+
+fn write_first_start(path: &std::path::Path) -> anyhow::Result<()> {
+    anyhow::ensure!(
+        path.is_absolute(),
+        "the first-start marker path must be absolute"
+    );
+    crate::paths::atomic_write(
+        path,
+        format!("ShadowCode {}\n", crate::VERSION).as_bytes(),
+        true,
+    )
+}
+
+#[cfg(test)]
+mod first_start_tests {
+    #[test]
+    fn first_start_marker_names_this_version() {
+        let temp = tempfile::tempdir().unwrap();
+        let marker = temp.path().join("first-start");
+        super::write_first_start(&marker).unwrap();
+        assert_eq!(
+            std::fs::read_to_string(&marker).unwrap(),
+            format!("ShadowCode {}\n", crate::VERSION)
+        );
+        assert!(super::write_first_start(std::path::Path::new("relative")).is_err());
+    }
+}

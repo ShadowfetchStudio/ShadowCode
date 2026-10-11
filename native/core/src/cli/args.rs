@@ -81,6 +81,15 @@ pub enum Command {
         #[arg(long)]
         repair: bool,
     },
+    /// Installer use: copy the profile database to a new file with SQLite's
+    /// `VACUUM INTO` (never a raw copy of a live WAL database), without
+    /// opening or migrating it. Prints the copied database format, or
+    /// `absent` when the profile has no database yet.
+    #[command(hide = true)]
+    InstallSnapshot {
+        /// The new file to write; it must not exist.
+        output: PathBuf,
+    },
     /// Back up your conversations, jobs, goals and settings to a folder.
     Backup {
         /// Also copy API keys (secrets.env and keys kept in the desktop
