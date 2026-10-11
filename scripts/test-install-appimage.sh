@@ -463,4 +463,55 @@ cp -p "$SCRATCH/prior-desktop" "$XDG_DATA_HOME/applications/shadow-agent.desktop
 grep -Fq 'Recovered the previous runtime and AppImage' "$SCRATCH/recovered-after-link.txt"
 assert_state_unchanged "$PRIOR_LINK" "$PRIOR_COMMIT"
 test "$(cat "$XDG_DATA_HOME/shadow-agent/profile.txt")" = 'keep this profile data'
+# 20. An aarch64 host installs only the signed aarch64 AppImage, under
+# -aarch64 names, and an x86_64 host refuses it. A uname shim selects the
+# host; the fake AppImages are architecture-neutral scripts.
+ARM_ROOT="$SCRATCH/installer-arm"
+mkdir -p "$ARM_ROOT"
+cp -a "$ROOT/scripts" "$ROOT/assets" "$ROOT/packaging" "$ARM_ROOT/"
+ARM_KEY="$SCRATCH/fixture-arm-private.pem"
+node "$FIXTURE_TOOL" provision "$ARM_ROOT" "$ARM_KEY" x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu
+ARM_INSTALLER="$ARM_ROOT/scripts/install-appimage.sh"
+ARM_SHIM="$SCRATCH/arm-uname"
+mkdir -p "$ARM_SHIM"
+printf '#!/bin/sh\nif [ "${1:-}" = -m ]; then echo aarch64; else exec %s "$@"; fi\n' "$(command -v uname)" > "$ARM_SHIM/uname"
+chmod 755 "$ARM_SHIM/uname"
+ARM_HOME="$SCRATCH/arm-home"
+mkdir -p "$ARM_HOME/Applications" "$ARM_HOME/.local/share/shadow-agent"
+printf 'keep this profile data' > "$ARM_HOME/.local/share/shadow-agent/profile.txt"
+arm_install() { env HOME="$ARM_HOME" XDG_DATA_HOME="$ARM_HOME/.local/share" PATH="$ARM_SHIM:$PATH" "$ARM_INSTALLER" "$@"; }
+ARM_APP="$SCRATCH/arm-release/0.29.0/ShadowCode_0.29.0_aarch64.AppImage"
+fake_appimage "$ARM_APP" 0.29.0 "$COMMIT_A" good
+node "$FIXTURE_TOOL" sign "$ARM_APP" "$ARM_KEY"
+test -f "$SCRATCH/arm-release/0.29.0/ShadowCode_0.29.0_arm64.deb"
+test -f "$SCRATCH/arm-release/0.29.0/ShadowCode_0.29.0_aarch64_appimage-runtime-sources.tar.gz"
+# The signed x86_64 AppImage is not installable on aarch64.
+X86_APP="$SCRATCH/arm-release/x86/ShadowCode_0.29.0_amd64.AppImage"
+fake_appimage "$X86_APP" 0.29.0 "$COMMIT_A" good
+node "$FIXTURE_TOOL" sign "$X86_APP" "$ARM_KEY"
+expect_refusal 'x86_64 AppImage on aarch64' arm_install "$X86_APP"
+grep -Fq 'Only the authenticated AppImage role' "$SCRATCH/refused.txt"
+grep -Fq 'ShadowCode_VERSION_aarch64.AppImage' "$SCRATCH/refused.txt"
+test -z "$(ls -A "$ARM_HOME/Applications")"
+# An aarch64 AppImage is not installable on x86_64.
+expect_refusal 'aarch64 AppImage on x86_64' env HOME="$ARM_HOME" XDG_DATA_HOME="$ARM_HOME/.local/share" "$ARM_INSTALLER" "$ARM_APP"
+grep -Fq 'Only the authenticated AppImage role' "$SCRATCH/refused.txt"
+test -z "$(ls -A "$ARM_HOME/Applications")"
+# A file renamed to the aarch64 role is not an authenticated asset of the x86_64 release.
+cp -p "$X86_APP" "$SCRATCH/arm-release/x86/ShadowCode_0.29.0_aarch64.AppImage"
+expect_refusal 'renamed x86_64 AppImage on aarch64' arm_install "$SCRATCH/arm-release/x86/ShadowCode_0.29.0_aarch64.AppImage"
+test -z "$(ls -A "$ARM_HOME/Applications")"
+arm_install "$ARM_APP" > "$SCRATCH/arm-installed.txt"
+grep -Fq "Installed $ARM_HOME/Applications/ShadowCode-0.29.0-aarch64.AppImage" "$SCRATCH/arm-installed.txt"
+test "$(readlink "$ARM_HOME/Applications/ShadowCode.AppImage")" = ShadowCode-0.29.0-aarch64.AppImage
+grep -Fxq "commit=$COMMIT_A" "$ARM_HOME/.local/lib/shadowcode/COMMIT"
+test "$(cat "$ARM_HOME/.local/share/shadow-agent/profile.txt")" = 'keep this profile data'
+# Upgrades keep the aarch64 identity and remove the older aarch64 AppImage.
+ARM_NEXT="$SCRATCH/arm-release/0.29.1/ShadowCode_0.29.1_aarch64.AppImage"
+fake_appimage "$ARM_NEXT" 0.29.1 "$COMMIT_B" good
+node "$FIXTURE_TOOL" sign "$ARM_NEXT" "$ARM_KEY"
+arm_install "$ARM_NEXT" > /dev/null
+test "$(readlink "$ARM_HOME/Applications/ShadowCode.AppImage")" = ShadowCode-0.29.1-aarch64.AppImage
+test ! -e "$ARM_HOME/Applications/ShadowCode-0.29.0-aarch64.AppImage"
+grep -Fxq "commit=$COMMIT_B" "$ARM_HOME/.local/lib/shadowcode/COMMIT"
 printf 'AppImage installer checks passed.\n'

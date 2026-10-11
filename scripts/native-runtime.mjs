@@ -15,6 +15,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { applyPackagingPath } from "./native-packaging-env.mjs";
+import { archInfo, hostArch } from "./native-arch.mjs";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const exec = promisify(execFile);
 const sha = (value) => createHash("sha256").update(value).digest("hex");
@@ -45,7 +46,8 @@ async function command(binary, args) {
     );
   });
 }
-export async function buildRuntime() {
+export async function buildRuntime(arch = hostArch().arch) {
+  const info = archInfo(arch);
   applyPackagingPath(root);
   const recipe = path.join(root, "packaging/native-runtime");
   const files = [
@@ -63,6 +65,9 @@ export async function buildRuntime() {
       .update(name)
       .update("\0")
       .update(await readFile(path.join(recipe, name)));
+  // x86_64 hashes only the recipe files, as it always has; every other
+  // architecture is a distinct build input.
+  if (info.arch !== "x86_64") input.update("arch\0").update(info.arch);
   const inputHash = input.digest("hex");
   const manifest = JSON.parse(
     await readFile(path.join(recipe, "manifest.json"), "utf8"),
@@ -78,7 +83,7 @@ export async function buildRuntime() {
     "target/native-runtime",
     inputHash.slice(0, 24),
   );
-  const runtime = path.join(directory, "runtime-x86_64");
+  const runtime = path.join(directory, `runtime-${info.arch}`);
   const receiptPath = path.join(directory, "receipt.json");
   try {
     const receipt = JSON.parse(await readFile(receiptPath, "utf8"));
@@ -138,7 +143,7 @@ export async function buildRuntime() {
   await command(engine, [
     "build",
     "--platform",
-    "linux/amd64",
+    info.docker,
     "--build-arg",
     `BASE_IMAGE=${manifest.container}`,
     "--tag",
@@ -179,7 +184,7 @@ export async function buildRuntime() {
     "build-packages.txt",
     "compiler.txt",
     "runtime-dynamic.txt",
-    "runtime-x86_64.debug",
+    `runtime-${info.arch}.debug`,
   ])
     artifacts.push({
       file,
@@ -253,4 +258,4 @@ if (
   process.argv[1] &&
   path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 )
-  await buildRuntime();
+  await buildRuntime(process.argv[2] || hostArch().arch);

@@ -15,6 +15,7 @@ import {
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { hostArch, packageNames } from "./native-arch.mjs";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const expectedVersion = JSON.parse(
   await readFile(path.join(root, "src-tauri/tauri.conf.json"), "utf8"),
@@ -23,7 +24,7 @@ const binary = path.resolve(
   process.argv[2] ||
     path.join(
       root,
-      `target/release/bundle/appimage/ShadowCode_${expectedVersion}_amd64.AppImage`,
+      `target/release/bundle/appimage/${packageNames(expectedVersion, hostArch().arch).appimage}`,
     ),
 );
 const artifacts = path.resolve(

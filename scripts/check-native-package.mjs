@@ -21,6 +21,7 @@ import {
   verifyRuntimeDirectory,
 } from "./llama-runtime.mjs";
 import { DESKTOP_FILE, METAINFO_FILE } from "./native-desktop-metadata.mjs";
+import { hostArch, packageNames } from "./native-arch.mjs";
 import { lintDebianPackage, verifyDebianPackage } from "./native-deb.mjs";
 const run = promisify(execFile);
 const [appimagePath, debPath] = process.argv
@@ -254,7 +255,7 @@ try {
   );
   const sourcesPath = path.join(
     path.dirname(appimagePath),
-    `ShadowCode_${version.split(" ")[1]}_appimage-runtime-sources.tar.gz`,
+    packageNames(version.split(" ")[1], hostArch().arch).runtimeSources,
   );
   const sources = path.join(scratch, "runtime-sources");
   await mkdir(sources);

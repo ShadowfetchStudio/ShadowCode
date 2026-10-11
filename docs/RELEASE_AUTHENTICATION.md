@@ -50,7 +50,7 @@ The line order is:
 5. `version=MAJOR.MINOR.PATCH`.
 6. `tag=vMAJOR.MINOR.PATCH`, exactly matching version.
 7. `commit=COMMIT_SHA`.
-8. `target=x86_64-unknown-linux-gnu`.
+8. `target=x86_64-unknown-linux-gnu` or `target=aarch64-unknown-linux-gnu`.
 9. `channel=stable`.
 10. `key-id=SHA256_OF_ED25519_SPKI_DER`.
 11. `key-epoch=POSITIVE_INTEGER`.
@@ -59,6 +59,8 @@ The line order is:
 14. `asset=appimage<TAB>ShadowCode_VERSION_amd64.AppImage<TAB>SIZE<TAB>SHA256`.
 15. `asset=deb<TAB>ShadowCode_VERSION_amd64.deb<TAB>SIZE<TAB>SHA256`.
 16. `asset=runtime-sources<TAB>ShadowCode_VERSION_appimage-runtime-sources.tar.gz<TAB>SIZE<TAB>SHA256`.
+
+Those are the x86_64 names. An `aarch64-unknown-linux-gnu` envelope names `ShadowCode_VERSION_aarch64.AppImage`, `ShadowCode_VERSION_arm64.deb` and `ShadowCode_VERSION_aarch64_appimage-runtime-sources.tar.gz` instead, so both targets' packages can sit side by side. Each target has its own envelope, signature, manifest and checksums.
 
 `RELEASE-AUTH.sig` is exactly the 64-byte raw Ed25519 signature over all envelope bytes. There is no home-grown cryptography, prehash signature variant, URL field, arbitrary asset path or shell-sourced content. The domain marker prevents reuse as a different application statement.
 
@@ -76,7 +78,7 @@ The explicit trust directory contains `policy` and one `KEY_ID.pem` public key p
 2. `repository=ShadowfetchStudio/ShadowCode` (or the historical signed name above).
 3. `repository-id=1377099349`.
 4. `owner-id=209457103`.
-5. `target=x86_64-unknown-linux-gnu`.
+5. `target=TARGETS`: `x86_64-unknown-linux-gnu`, `aarch64-unknown-linux-gnu`, or both separated by a comma (no spaces, no duplicates). An envelope whose target the policy does not name is refused, and a release cannot switch target against its accepted history.
 6. `channel=stable`.
 7. `minimum-epoch=POSITIVE_INTEGER`.
 8. `minimum-version=MAJOR.MINOR.PATCH`.

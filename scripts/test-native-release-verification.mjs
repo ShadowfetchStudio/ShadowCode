@@ -143,6 +143,7 @@ async function sourceFixture(directory) {
   };
   for (const name of ['scripts', 'ui', 'src-tauri', 'packaging', 'artifacts/bin']) await mkdir(path.join(directory, name), { recursive: true });
   await copyFile(new URL('./native-release-verification.mjs', import.meta.url), path.join(directory, 'scripts/native-release-verification.mjs'));
+  await copyFile(new URL('./native-arch.mjs', import.meta.url), path.join(directory, 'scripts/native-arch.mjs'));
   await writeFile(path.join(directory, '.gitignore'), '/artifacts/\n');
   await writeFile(path.join(directory, 'tracked.txt'), 'committed source\n');
   await utimes(path.join(directory, 'tracked.txt'), 946684800, 946684800);

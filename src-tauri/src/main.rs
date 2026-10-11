@@ -25,6 +25,13 @@ mod web_ui;
 mod window_size;
 use backend::Backend;
 
+/// WebKit's helper process inside an AppImage built on this architecture; the
+/// bundler copies it into the build host's Debian multiarch directory.
+#[cfg(target_arch = "aarch64")]
+const APPIMAGE_WEBKIT_PROCESS: &str = "usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess";
+#[cfg(not(target_arch = "aarch64"))]
+const APPIMAGE_WEBKIT_PROCESS: &str = "usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess";
+
 #[derive(Default)]
 struct Lifecycle {
     requested: AtomicBool,
@@ -396,9 +403,7 @@ fn run() -> Result<()> {
     );
     if let Some(appdir) = std::env::var_os("APPDIR").map(PathBuf::from) {
         if std::env::current_exe()?.starts_with(&appdir)
-            && appdir
-                .join("usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess")
-                .is_file()
+            && appdir.join(APPIMAGE_WEBKIT_PROCESS).is_file()
         {
             // No GTK or asynchronous runtime has been started at this point.
             std::env::set_current_dir(appdir.join("usr"))?;

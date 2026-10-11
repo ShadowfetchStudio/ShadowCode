@@ -8,6 +8,12 @@
   Install it with a deb822 `.sources` file and a `Signed-By` keyring in
   `/etc/apt/keyrings`; updates and downgrade protection then come from APT.
   See the README's Debian section and `docs/DISTRIBUTING.md`.
+- **ARM64 (aarch64) builds.** The AppImage (`_aarch64.AppImage`), Debian package (`_arm64.deb`, `Architecture: arm64`), Flatpak (`_aarch64.flatpak`), the source-built AppImage runtime and the bundled llama.cpp runtime are built natively on aarch64. x86_64 package names and contents are unchanged.
+- Native CI runs on x86_64 and on GitHub's `ubuntu-24.04-arm` runners. The release workflow qualifies aarch64 packages with every required gate and keeps them as unsigned workflow artifacts until the trust policy names the aarch64 target.
+- Release authentication accepts `aarch64-unknown-linux-gnu` envelopes with their own asset names. Trust policies may list several targets; releases for a target the policy does not name, or that switch target against accepted history, are refused.
+- The AppImage installer installs only the AppImage for the machine's architecture and requires the signed target to match it.
+- `build-flatpak.py` gains `--arch`, `--state-dir`, `--install-deps-from` and `--cpu-only-llama`.
+- Pull requests that touch packaging, scripts, the desktop, the core or workflows build the Flatpak with the GNOME 50 SDK and run the packaging checks on both architectures.
 
 ## 2.0.0: Flatpak, brand identity, and remote-access fixes
 

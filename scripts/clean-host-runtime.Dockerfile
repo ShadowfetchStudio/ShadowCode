@@ -1,7 +1,12 @@
 # Debian qualification image: application runtime libraries plus a virtual
 # display harness. The app must not rely on the repository, Node, Cargo, or
 # the CI runner's development packages.
-FROM --platform=linux/amd64 debian@sha256:38a76d01668772e381ad2826d876627c89e7133e2f8a0f5d567306798b0f2a16
+# debian:trixie-20260803-slim, pinned per architecture. BuildKit only pulls the
+# stage for the target platform (the host's unless --platform is given).
+ARG TARGETARCH=amd64
+FROM --platform=linux/amd64 debian@sha256:38a76d01668772e381ad2826d876627c89e7133e2f8a0f5d567306798b0f2a16 AS debian-amd64
+FROM --platform=linux/arm64 debian@sha256:c94f5ddd41327aa2d4a7cfba7889056c02936182fd76a513fec6160c97181fc0 AS debian-arm64
+FROM debian-${TARGETARCH}
 RUN apt-get update -qq \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
       git libgomp1 libssl3t64 libasound2t64 libwebkit2gtk-4.1-0 libgtk-3-0 \

@@ -42,13 +42,14 @@ load_trust_policy
 copy_file "$BUNDLE/RELEASE-AUTH" "$SCRATCH/RELEASE-AUTH" 4096
 copy_file "$BUNDLE/RELEASE-AUTH.sig" "$SCRATCH/RELEASE-AUTH.sig" 64
 verify_envelope "$SCRATCH/RELEASE-AUTH" "$SCRATCH/RELEASE-AUTH.sig" 0
-CURRENT_VERSION=$EN_VERSION; CURRENT_EPOCH=$EN_EPOCH; CURRENT_HASH=$(hash_file "$SCRATCH/RELEASE-AUTH")
+CURRENT_VERSION=$EN_VERSION; CURRENT_TARGET=$EN_TARGET; CURRENT_EPOCH=$EN_EPOCH; CURRENT_HASH=$(hash_file "$SCRATCH/RELEASE-AUTH")
 [[ -z "$EXPECT_VERSION" || "$EXPECT_VERSION" == "$EN_VERSION" ]] || fail 'unexpected version'
 [[ -z "$EXPECT_COMMIT" || "$EXPECT_COMMIT" == "$EN_COMMIT" ]] || fail 'unexpected commit'
 if [[ -n "$PREVIOUS" ]]; then
   copy_file "$PREVIOUS/RELEASE-AUTH" "$SCRATCH/previous-auth" 4096
   copy_file "$PREVIOUS/RELEASE-AUTH.sig" "$SCRATCH/previous-auth.sig" 64
   verify_envelope "$SCRATCH/previous-auth" "$SCRATCH/previous-auth.sig" 1
+  [[ "$CURRENT_TARGET" == "$EN_TARGET" ]] || fail 'release target changed'
   (( CURRENT_EPOCH >= EN_EPOCH )) || fail 'signing epoch rollback'
   version_compare "$CURRENT_VERSION" "$EN_VERSION"; (( CMP >= 0 )) || fail 'release downgrade'
   if (( CMP == 0 )); then [[ "$CURRENT_HASH" == "$(hash_file "$SCRATCH/previous-auth")" ]] || fail 'changed release under accepted version'; fi

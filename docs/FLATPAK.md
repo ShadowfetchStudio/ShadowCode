@@ -2,7 +2,8 @@
 
 The Flatpak runs the native GTK/WebKit desktop, application engine, SQLite
 profile, and bundled CPU/Vulkan llama.cpp runtime on GNOME Platform 50. It is
-an x86_64 package built from source inside the SDK. Version 2.0.0 is a local
+an x86_64 or aarch64 package built from source inside the SDK on a host of
+the same architecture. Version 2.0.0 is a local
 build until a publisher signs and publishes it; it is not listed on Flathub.
 
 ## Install the local bundle
@@ -11,6 +12,8 @@ build until a publisher signs and publishes it; it is not listed on Flathub.
 flatpak install --user ./ShadowCode_2.0.0_x86_64.flatpak
 flatpak run com.shadowfetch.shadowcode
 ```
+
+On 64-bit ARM, install `ShadowCode_VERSION_aarch64.flatpak` instead.
 
 The bundle points to Flathub for the GNOME runtime. Installation exports the
 application launcher and icons into the desktop's Applications menu.
@@ -86,7 +89,18 @@ application code is rebuilt; packaging-only retries retain the finished link.
 
 Use `--prepare-only` to prepare inputs, `--skip-fetch` to reuse prepared
 dependency caches, or `--install` to install the finished bundle for the
-current user. SDK extensions and the host compiler may differ; the
+current user. The bundle is built for the host architecture
+(`ShadowCode_VERSION_x86_64.flatpak` or `ShadowCode_VERSION_aarch64.flatpak`);
+`--arch` names it explicitly and is passed to flatpak-builder, which needs
+QEMU user emulation for a foreign architecture. `--state-dir DIR` moves
+flatpak-builder's cache (CI uses `~/.flatpak-builder`),
+`--install-deps-from=flathub` lets flatpak-builder install the SDK and
+extensions itself, and `--cpu-only-llama` skips the Vulkan module for faster
+test builds (the runtime then records `backend=cpu`; never ship such a bundle).
+
+Pull requests that change `packaging/`, `scripts/`, `src-tauri/`, `native/` or
+the workflows run the `flatpak` job in `.github/workflows/ci.yml`: a
+CPU-only-llama build with the GNOME 50 SDK, then install and start the bundle. SDK extensions and the host compiler may differ; the
 packaged notices identify the compiler that actually built the app.
 
 After installing, verify command ownership with:

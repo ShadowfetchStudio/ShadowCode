@@ -4,6 +4,14 @@ HEX='^[a-f0-9]{64}$'
 VERSION_PATTERN='^(0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8})$'
 EPOCH_PATTERN='^[1-9][0-9]{0,8}$'
 MAX_ARTIFACT=34359738368
+# Supported signed targets. x86_64 package names are historical and fixed.
+target_names() {
+  case "$1" in
+    x86_64-unknown-linux-gnu) TARGET_APPIMAGE=amd64 TARGET_DEB=amd64 TARGET_SOURCES=appimage-runtime-sources ;;
+    aarch64-unknown-linux-gnu) TARGET_APPIMAGE=aarch64 TARGET_DEB=arm64 TARGET_SOURCES=aarch64_appimage-runtime-sources ;;
+    *) return 1 ;;
+  esac
+}
 copy_file() {
   local source=$1 destination=$2 limit=$3 size copied
   [[ -f "$source" && ! -L "$source" ]] || fail 'input must be a regular non-symlink file'
@@ -56,13 +64,13 @@ parse_envelope() {
   take 4 version; EN_VERSION=$VALUE; [[ "$EN_VERSION" =~ $VERSION_PATTERN ]] || fail 'invalid stable version'
   take 5 tag; [[ "$VALUE" == "v$EN_VERSION" ]] || fail 'version/tag mismatch'
   take 6 commit; EN_COMMIT=$VALUE; [[ "$EN_COMMIT" =~ ^[a-f0-9]{40}$ ]] || fail 'invalid commit'
-  take 7 target; [[ "$VALUE" == x86_64-unknown-linux-gnu ]] || fail 'wrong target'
+  take 7 target; EN_TARGET=$VALUE; target_names "$EN_TARGET" || fail 'wrong target'
   take 8 channel; [[ "$VALUE" == stable ]] || fail 'wrong channel'
   take 9 key-id; EN_KEY=$VALUE; [[ "$EN_KEY" =~ $HEX ]] || fail 'invalid key ID'
   take 10 key-epoch; EN_EPOCH=$VALUE; [[ "$EN_EPOCH" =~ $EPOCH_PATTERN ]] || fail 'invalid key epoch'
   take 11 manifest-sha256; EN_MANIFEST=$VALUE; [[ "$EN_MANIFEST" =~ $HEX ]] || fail 'invalid manifest digest'
   take 12 checksums-sha256; EN_SUMS=$VALUE; [[ "$EN_SUMS" =~ $HEX ]] || fail 'invalid checksums digest'
-  EN_NAMES=("ShadowCode_${EN_VERSION}_amd64.AppImage" "ShadowCode_${EN_VERSION}_amd64.deb" "ShadowCode_${EN_VERSION}_appimage-runtime-sources.tar.gz")
+  EN_NAMES=("ShadowCode_${EN_VERSION}_${TARGET_APPIMAGE}.AppImage" "ShadowCode_${EN_VERSION}_${TARGET_DEB}.deb" "ShadowCode_${EN_VERSION}_${TARGET_SOURCES}.tar.gz")
   EN_HASHES=(); EN_SIZES=()
   local -a roles=(appimage deb runtime-sources)
   local i value role name size hash extra
@@ -80,7 +88,17 @@ load_trust_policy() {
   read_lines "$SCRATCH/trust-policy" 4096
   [[ "${#ROWS[@]}" -ge 10 && "${#ROWS[@]}" -le 17 && "${ROWS[0]}" == ShadowCode-Release-Trust-v1 ]] || fail 'trust policy schema/field count'
   identity
-  take 4 target; [[ "$VALUE" == x86_64-unknown-linux-gnu ]] || fail 'wrong trusted target'
+  # One target, or a comma-separated list of distinct supported targets.
+  take 4 target
+  local trusted
+  TRUST_TARGETS=()
+  IFS=, read -r -a TRUST_TARGETS <<< "$VALUE"
+  [[ "${#TRUST_TARGETS[@]}" -ge 1 && "$VALUE" != *, ]] || fail 'wrong trusted target'
+  declare -A trusted_seen=()
+  for trusted in "${TRUST_TARGETS[@]}"; do
+    target_names "$trusted" && [[ -z "${trusted_seen[$trusted]:-}" ]] || fail 'wrong trusted target'
+    trusted_seen[$trusted]=1
+  done
   take 5 channel; [[ "$VALUE" == stable ]] || fail 'wrong trusted channel'
   take 6 minimum-epoch; MIN_EPOCH=$VALUE; [[ "$MIN_EPOCH" =~ $EPOCH_PATTERN ]] || fail 'invalid epoch floor'
   take 7 minimum-version; MIN_VERSION=$VALUE; [[ "$MIN_VERSION" =~ $VERSION_PATTERN ]] || fail 'invalid version floor'
@@ -100,6 +118,9 @@ load_trust_policy() {
 verify_envelope() {
   local file=$1 signature=$2 historical=$3 i found=-1 der_hex
   parse_envelope "$file"
+  local trusted_target=0 candidate
+  for candidate in "${TRUST_TARGETS[@]}"; do [[ "$candidate" != "$EN_TARGET" ]] || trusted_target=1; done
+  [[ "$trusted_target" == 1 ]] || fail 'release target is not trusted'
   [[ "$(stat -c %s -- "$signature")" == 64 ]] || fail 'signature must be exactly 64 bytes'
   for i in "${!KEY_IDS[@]}"; do [[ "${KEY_IDS[$i]}" != "$EN_KEY" ]] || found=$i; done
   (( found >= 0 )) || fail 'unknown signing key'
