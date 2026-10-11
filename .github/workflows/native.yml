@@ -140,7 +140,7 @@ jobs:
       - name: Inspect both packages
         run: node scripts/check-native-package.mjs "target/release/bundle/appimage/ShadowCode_${VERSION}_${{ matrix.appimage }}.AppImage" "target/release/bundle/deb/ShadowCode_${VERSION}_${{ matrix.deb }}.deb"
       - name: Build runtime-only clean-host qualification image
-        run: docker build -f scripts/clean-host-runtime.Dockerfile -t shadowcode-clean-runtime:ci scripts
+        run: docker build --build-arg TARGETARCH="$(dpkg --print-architecture)" -f scripts/clean-host-runtime.Dockerfile -t shadowcode-clean-runtime:ci scripts
       - name: Install and first-launch both packages in an offline clean host
         run: node scripts/test-clean-host-packages.mjs "target/release/bundle/appimage/ShadowCode_${VERSION}_${{ matrix.appimage }}.AppImage" "target/release/bundle/deb/ShadowCode_${VERSION}_${{ matrix.deb }}.deb" artifacts/native-package/SHA256SUMS
       - name: Reject AppImage extraction writes that fail

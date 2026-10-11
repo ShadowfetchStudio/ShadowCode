@@ -4,7 +4,9 @@
 # debian:trixie-20260803-slim, pinned per architecture. BuildKit only pulls the
 # stage for the target platform (the host's unless --platform is given).
 # TARGETARCH has no default: a declared default would win over the value
-# BuildKit sets, selecting the amd64 stage on an arm64 host.
+# BuildKit sets, selecting the amd64 stage on an arm64 host. The build
+# commands also pass the host's architecture, because Docker's classic
+# builder sets no TARGETARCH at all.
 ARG TARGETARCH
 FROM --platform=linux/amd64 debian@sha256:38a76d01668772e381ad2826d876627c89e7133e2f8a0f5d567306798b0f2a16 AS debian-amd64
 FROM --platform=linux/arm64 debian@sha256:c94f5ddd41327aa2d4a7cfba7889056c02936182fd76a513fec6160c97181fc0 AS debian-arm64

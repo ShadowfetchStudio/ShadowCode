@@ -265,7 +265,7 @@ test('clean-host package qualification is required and bound to the verified art
   const gate = 'clean-host-packages';
   assert(REQUIRED_GATES.includes(gate));
   assert.match(GATES[gate].scope, /packaged MCP stdio.*visible first GUI window.*Interactive GUI tasks.*remain separate/);
-  assert.match(GATES[gate].script, /docker build -f scripts\/clean-host-runtime\.Dockerfile/);
+  assert.match(GATES[gate].script, /docker build --build-arg TARGETARCH="\$\(dpkg --print-architecture\)" -f scripts\/clean-host-runtime\.Dockerfile/);
   assert.match(GATES[gate].script, /test-clean-host-packages\.mjs.*SHA256SUMS/);
   const missing = complete(); delete missing.gates[gate];
   assert.throws(() => validateVerification(missing, commit, artifacts), /gate set mismatch/);

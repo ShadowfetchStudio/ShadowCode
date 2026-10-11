@@ -77,4 +77,13 @@ test("the AppImage runtime build and launcher handle both architectures", async 
   // BuildKit's own TARGETARCH must select the stage; a default would override it.
   assert.match(docker, /^ARG TARGETARCH$/m);
   assert.doesNotMatch(docker, /ARG TARGETARCH=/);
+  // Docker's classic builder sets no TARGETARCH, so the image's build
+  // commands pass the host architecture themselves.
+  const gates = await readFile(new URL("./native-release-verification.mjs", import.meta.url), "utf8");
+  const ci = await readFile(new URL("../.github/workflows/native.yml", import.meta.url), "utf8");
+  for (const text of [gates, ci]) {
+    const builds = text.match(/docker build [^\n]*clean-host-runtime\.Dockerfile[^\n]*/g) ?? [];
+    assert.ok(builds.length > 0);
+    for (const line of builds) assert.match(line, /--build-arg TARGETARCH="\$\(dpkg --print-architecture\)"/);
+  }
 });
