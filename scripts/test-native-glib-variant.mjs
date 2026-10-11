@@ -32,7 +32,10 @@ const directory = await mkdtemp(path.join(os.tmpdir(), 'shadowcode-glib-regressi
 try {
   const binary = path.join(directory, 'variant-tests');
   console.log(`${compiler.trim()}\nOptimized iterator fixture: ${libraries[0]}`);
-  execFileSync('rustc', ['--edition=2021', '--test', '-O', '--extern', `glib=${libraries[0]}`, '-L', `dependency=${dependencies}`, ...nativeSearch, path.join(root, 'scripts/fixtures/native-glib-variant.rs'), '-o', binary], { ...options, stdio: 'inherit' });
+  // The release profile's LTO makes Cargo emit bitcode-only rlibs. rust-lld
+  // (the x86_64 default) accepts them, but the system linker on aarch64 does
+  // not, so link through LTO here to produce real objects on every host.
+  execFileSync('rustc', ['--edition=2021', '--test', '-O', '-C', 'lto=fat', '--extern', `glib=${libraries[0]}`, '-L', `dependency=${dependencies}`, ...nativeSearch, path.join(root, 'scripts/fixtures/native-glib-variant.rs'), '-o', binary], { ...options, stdio: 'inherit' });
   execFileSync(binary, ['--test-threads=1'], { ...options, timeout: 30000, stdio: 'inherit' });
 } finally {
   await rm(directory, { recursive: true, force: true });
