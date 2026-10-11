@@ -19,6 +19,9 @@ install -Dm755 packaging/flatpak/shadowcode-host /app/libexec/shadowcode-host
 cc -static -Os -Wall -Wextra -Werror packaging/flatpak/host-monitor.c -o /app/libexec/shadowcode-host-monitor
 strip /app/libexec/shadowcode-host-monitor
 install -Dm644 packaging/flatpak/host-monitor.c /app/share/licenses/shadowcode/host-monitor.c
+cc -static -Os -Wall -Wextra -Werror packaging/flatpak/proxy-relay.c -o /app/libexec/shadowcode-proxy-relay
+strip /app/libexec/shadowcode-proxy-relay
+install -Dm644 packaging/flatpak/proxy-relay.c /app/share/licenses/shadowcode/proxy-relay.c
 
 native_cache="${SHADOWCODE_NATIVE_CACHE:-$PWD/target}"
 spirv_commit=$(sed -n 's/^spirv_headers_commit=//p' tools/llama.cpp.pin)

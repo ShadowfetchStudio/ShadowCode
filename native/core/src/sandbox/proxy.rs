@@ -13,7 +13,7 @@ use std::{
     time::Duration,
 };
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
+    io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt},
     net::{TcpListener, TcpStream},
 };
 
@@ -293,7 +293,7 @@ fn usable(addr: &SocketAddr, literal: bool) -> bool {
     }
 }
 
-async fn deny(stream: &mut TcpStream, status: &str, text: &str) -> Result<()> {
+async fn deny<S: AsyncWrite + Unpin>(stream: &mut S, status: &str, text: &str) -> Result<()> {
     let body = format!("ShadowCode sandbox: {text}\n");
     let reply = format!(
         "HTTP/1.1 {status}\r\nContent-Type: text/plain\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
@@ -303,7 +303,7 @@ async fn deny(stream: &mut TcpStream, status: &str, text: &str) -> Result<()> {
     Ok(())
 }
 
-async fn handle(mut client: TcpStream, gate: &Gate) -> Result<()> {
+async fn handle<S: AsyncRead + AsyncWrite + Unpin>(mut client: S, gate: &Gate) -> Result<()> {
     let mut buffer = Vec::with_capacity(4096);
     let end = tokio::time::timeout(Duration::from_secs(15), async {
         loop {
@@ -392,6 +392,37 @@ pub fn spawn(
     listener.set_nonblocking(true)?;
     let listener = TcpListener::from_std(listener)?;
     Ok(tokio::spawn(serve(listener, gate)))
+}
+
+/// Serve the same proxy on a Unix socket until the returned task is aborted.
+///
+/// Used for Flatpak host commands: the command runs in a host bubblewrap
+/// network namespace whose loopback relay forwards each connection to this
+/// socket, so the allow-list decision still happens here.
+#[cfg(unix)]
+pub fn spawn_unix(
+    listener: std::os::unix::net::UnixListener,
+    gate: Arc<Gate>,
+) -> Result<tokio::task::JoinHandle<()>> {
+    listener.set_nonblocking(true)?;
+    let listener = tokio::net::UnixListener::from_std(listener)?;
+    Ok(tokio::spawn(async move {
+        let slots = Arc::new(tokio::sync::Semaphore::new(MAX_CONNECTIONS));
+        loop {
+            let Ok((stream, _)) = listener.accept().await else {
+                tokio::time::sleep(Duration::from_millis(20)).await;
+                continue;
+            };
+            let Ok(permit) = slots.clone().acquire_owned().await else {
+                return;
+            };
+            let gate = gate.clone();
+            tokio::spawn(async move {
+                let _ = handle(stream, &gate).await;
+                drop(permit);
+            });
+        }
+    }))
 }
 
 #[cfg(test)]

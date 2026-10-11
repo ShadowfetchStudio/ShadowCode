@@ -48,9 +48,15 @@ The package includes the SDK's glibc, GCC, and Git license notices.
 
 Agent shell commands require working bubblewrap on the host. Network off
 uses bubblewrap's private network namespace; network on leaves network
-access enabled. Hostname allow-list mode refuses to run, because the
-current bridge cannot transfer the native network namespace to a host
-process. It does not silently widen the selected permission.
+access enabled. Hostname allow-list mode runs the command in a host
+bubblewrap with its own private network namespace (`--unshare-net`); the
+packaged `shadowcode-proxy-relay` (built statically from
+`packaging/flatpak/proxy-relay.c`, source under
+`/app/share/licenses/shadowcode/proxy-relay.c`) forwards loopback port 3128
+to ShadowCode's allow-list proxy over a Unix socket in
+`$XDG_RUNTIME_DIR/app/com.shadowfetch.shadowcode`. If the relay, the shared
+socket, or its startup probe is unavailable, the command is refused rather
+than run with wider access. See [NATIVE_SANDBOX.md](NATIVE_SANDBOX.md).
 
 Flatpak stores its application profile below
 `~/.var/app/com.shadowfetch.shadowcode`. Existing AppImage/Debian profile

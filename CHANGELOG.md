@@ -14,6 +14,7 @@
 - The AppImage installer installs only the AppImage for the machine's architecture and requires the signed target to match it.
 - `build-flatpak.py` gains `--arch`, `--state-dir`, `--install-deps-from` and `--cpu-only-llama`.
 - Pull requests that touch packaging, scripts, the desktop, the core or workflows build the Flatpak with the GNOME 50 SDK and run the packaging checks on both architectures.
+- Flatpak: hostname allow-list mode for agent shell commands now works. The host bubblewrap gets its own private network namespace, and a small packaged relay forwards loopback port 3128 to ShadowCode's allow-list proxy over a Unix socket. If the relay or proxy socket cannot be set up, the command is still refused.
 
 ## 2.0.0: Flatpak, brand identity, and remote-access fixes
 
