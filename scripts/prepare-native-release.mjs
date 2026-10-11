@@ -5,12 +5,13 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { execFileSync } from 'node:child_process';
-import { assetNames, IDENTITY, LIMITS } from './native-release-auth.mjs';
+import { assetNames, metadataNames, IDENTITY, LIMITS } from './native-release-auth.mjs';
 import { digest, packageHashes, readVerification, validateVerification } from './native-release-verification.mjs';
-import { snapshotFile, validateContext, validateStagedRelease, retainBundle, releaseNames, jsonBytes } from './native-release-assets.mjs';
+import { snapshotFile, validateContext, validateStagedRelease, retainBundle, releaseNames, jsonBytes, targetArch } from './native-release-assets.mjs';
+import { hostArch } from './native-arch.mjs';
 
-export async function prepareRelease({ files, checksums, source, verification, context, outputDir }) {
-  const version = validateContext(context), names = assetNames(version).map(([, name]) => name);
+export async function prepareRelease({ files, checksums, source, verification, context, outputDir, target = IDENTITY.target }) {
+  const version = validateContext(context), names = assetNames(version, target).map(([, name]) => name);
   assert.deepEqual(files.map(file => path.basename(file)).sort(), [...names].sort(), 'Build package set mismatch');
   const directory = await mkdtemp(path.join(tmpdir(), 'shadowcode-build-handoff-'));
   try {
@@ -19,12 +20,13 @@ export async function prepareRelease({ files, checksums, source, verification, c
       const name = path.basename(file);
       observed.set(name, { file: path.join(directory, name), ...await snapshotFile(file, path.join(directory, name), LIMITS.artifact) });
     }
-    await snapshotFile(checksums, path.join(directory, 'SHA256SUMS'), LIMITS.checksums);
+    const metadata = metadataNames(target);
+    await snapshotFile(checksums, path.join(directory, metadata.sums), LIMITS.checksums);
     const assets = Object.fromEntries(names.map(name => [name, observed.get(name).hash]));
-    const manifest = { schema: 1, tag: context.tag, commit: context.commit, target: IDENTITY.target, cargo_lock_sha256: source.cargo_lock_sha256, ui_lock_sha256: source.ui_lock_sha256, runtime_pin: source.runtime_pin, verification: validateVerification(verification, context.commit, assets), assets };
-    await writeFile(path.join(directory, 'RELEASE-MANIFEST.json'), jsonBytes(manifest), { mode: 0o400 });
-    await validateStagedRelease({ directory, observed, verification, context, signed: false });
-    await retainBundle(directory, outputDir, releaseNames(version, false), verification);
+    const manifest = { schema: 1, tag: context.tag, commit: context.commit, target, cargo_lock_sha256: source.cargo_lock_sha256, ui_lock_sha256: source.ui_lock_sha256, runtime_pin: source.runtime_pin, verification: validateVerification(verification, context.commit, assets, targetArch(target)), assets };
+    await writeFile(path.join(directory, metadata.manifest), jsonBytes(manifest), { mode: 0o400 });
+    await validateStagedRelease({ directory, observed, verification, context, signed: false, target });
+    await retainBundle(directory, outputDir, releaseNames(version, false, target), verification);
   } finally { await rm(directory, { recursive: true, force: true }); }
 }
 async function main() {
@@ -35,10 +37,12 @@ async function main() {
   assert.equal(git(['rev-parse', 'HEAD']), context.commit);
   assert.equal(git(['rev-parse', `${context.tag}^{commit}`]), context.commit);
   assert.equal(JSON.parse(await readFile('src-tauri/tauri.conf.json', 'utf8')).version, version);
+  // The handoff is for the packages this host built; cross packaging is refused.
+  const { arch, target } = hostArch();
   const base = 'target/release/bundle';
-  const files = assetNames(version).map(([role, name]) => `${base}/${role === 'deb' ? 'deb' : 'appimage'}/${name}`);
-  const verification = await readVerification('artifacts/release-verification', context.commit, context.runId, context.runAttempt, await packageHashes());
+  const files = assetNames(version, target).map(([role, name]) => `${base}/${role === 'deb' ? 'deb' : 'appimage'}/${name}`);
+  const verification = await readVerification('artifacts/release-verification', context.commit, context.runId, context.runAttempt, await packageHashes(arch), arch);
   const source = { cargo_lock_sha256: await digest('Cargo.lock'), ui_lock_sha256: await digest('ui/package-lock.json'), runtime_pin: (await readFile('tools/llama.cpp.pin', 'utf8')).trim() };
-  await prepareRelease({ files, checksums: `${base}/SHA256SUMS`, source, verification, context, outputDir });
+  await prepareRelease({ files, checksums: `${base}/SHA256SUMS`, source, verification, context, outputDir, target });
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) await main();

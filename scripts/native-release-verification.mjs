@@ -7,15 +7,17 @@ import { tmpdir } from 'node:os';
 import { spawn, execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { hostArch } from './native-arch.mjs';
-
-// Gate scripts name the packages of the build host's architecture. On x86_64
-// they are byte-identical to the historical scripts (and their digests).
-const ARCH = hostArch();
+import { archInfo, hostArch } from './native-arch.mjs';
 
 const version = String.raw`VERSION=$(node -p "require('./src-tauri/tauri.conf.json').version")`;
-const packaged = `${version}\nBINARY="$GITHUB_WORKSPACE/target/release/bundle/appimage/ShadowCode_${'${VERSION}'}_${ARCH.appimage}.AppImage"`;
-export const GATES = {
+// Gate scripts name one architecture's packages. On x86_64 they are
+// byte-identical to the historical scripts (and their digests). A signer on one
+// architecture checks another architecture's receipts against that
+// architecture's scripts, never its own.
+export function gatesFor(arch = hostArch().arch) {
+  const ARCH = archInfo(arch);
+  const packaged = `${version}\nBINARY="$GITHUB_WORKSPACE/target/release/bundle/appimage/ShadowCode_${'${VERSION}'}_${ARCH.appimage}.AppImage"`;
+  return {
   'release-tests': { script: 'node --test --test-reporter=tap scripts/test-native-release.mjs scripts/test-native-release-verification.mjs scripts/test-publisher-auth.mjs scripts/test-native-release-signing.mjs scripts/test-native-test-session.mjs scripts/test-clean-host-mcp-receipt.mjs scripts/test-clean-host-container.mjs scripts/test-native-app-run.mjs scripts/test-llama-build-inputs.mjs\nnode scripts/test-native-process-ownership.mjs' },
   'release-auth': { script: 'node scripts/check-secrets.mjs\nnode --test --test-reporter=tap scripts/test-native-release-auth.mjs scripts/test-check-secrets.mjs', scope: 'Publisher authentication parser, crypto, replay and private-snapshot fixtures with ephemeral keys; production signing and installer integration are separate.' },
   'release-tag': { script: `${version}\n` + String.raw`test "$GITHUB_REF_NAME" = "v$VERSION"
@@ -49,7 +51,9 @@ SHADOW_DESKTOP_BINARY="$BINARY" SHADOW_CLI_ARGS='["--appimage-extract-and-run"]'
 npm --prefix scripts/native-mcp-peer ci --ignore-scripts --no-audit --no-fund
 SHADOW_DESKTOP_BINARY="$BINARY" SHADOW_CLI_ARGS='["--appimage-extract-and-run"]' node scripts/test-native-mcp-peer.mjs` },
   installer: { artifacts: true, unchanged: true, script: 'node --test --test-reporter=tap scripts/test-install-auth.mjs\nbash scripts/test-install-appimage.sh' },
-};
+  };
+}
+export const GATES = gatesFor();
 export const REQUIRED_GATES = Object.keys(GATES);
 const OPTIONAL_RUST_TESTS = new Set([
   'live_qwen3_agent_and_gemma4_vision_from_the_ollama_store',
@@ -68,13 +72,14 @@ const OPTIONAL_RUST_TESTS = new Set([
   // A real desktop keyring in a private D-Bus session (docs/OPENROUTER.md).
   'keyring::tests::live_secret_service_round_trip',
 ]);
-export const scriptDigest = gate => createHash('sha256').update(GATES[gate].script).digest('hex');
+export const scriptDigest = (gate, arch) => createHash('sha256').update((arch === undefined ? GATES : gatesFor(arch))[gate].script).digest('hex');
 export async function digest(file) {
   const hash = createHash('sha256');
   for await (const chunk of createReadStream(file)) hash.update(chunk);
   return hash.digest('hex');
 }
-export async function packageHashes() {
+export async function packageHashes(arch = hostArch().arch) {
+  const ARCH = archInfo(arch);
   const { version: releaseVersion } = JSON.parse(await readFile('src-tauri/tauri.conf.json', 'utf8'));
   const base = 'target/release/bundle';
   const files = [`${base}/appimage/ShadowCode_${releaseVersion}_${ARCH.appimage}.AppImage`, `${base}/appimage/ShadowCode_${releaseVersion}_${ARCH.runtimeSources}.tar.gz`, `${base}/deb/ShadowCode_${releaseVersion}_${ARCH.deb}.deb`];
@@ -99,7 +104,8 @@ export function inspectLine(gate, raw, requiredSkips, optional) {
       || /^SKIP\b/.test(line)) requiredSkips.add(line);
 }
 
-export function validateVerification(verification, commit, assets) {
+export function validateVerification(verification, commit, assets, arch) {
+  const gateTable = arch === undefined ? GATES : gatesFor(arch);
   assert(verification?.schema === 1, 'Required release verification receipts are missing');
   assert.equal(verification.commit, commit, 'Release verification commit mismatch');
   assert.match(verification.run_id, /^\d+$/, 'Release verification run identity missing');
@@ -119,25 +125,25 @@ export function validateVerification(verification, commit, assets) {
     assert.equal(receipt.commit, commit, `Stale verification receipt: ${gate}`);
     assert.equal(receipt.run_id, verification.run_id, `Wrong workflow run: ${gate}`);
     assert.equal(receipt.run_attempt, verification.run_attempt, `Wrong workflow attempt: ${gate}`);
-    assert.equal(receipt.script_sha256, scriptDigest(gate), `Verification command changed: ${gate}`);
+    assert.equal(receipt.script_sha256, scriptDigest(gate, arch), `Verification command changed: ${gate}`);
     assert.equal(receipt.status, 'passed', `Required verification gate did not pass: ${gate}`);
     assert.equal(receipt.exit_code, 0, `Required verification command failed: ${gate}`);
     assert.deepEqual(receipt.required_skips, [], `Required verification checks skipped: ${gate}`);
     assert(Array.isArray(receipt.optional_checks), `Optional verification scope missing: ${gate}`);
-    if (GATES[gate].artifacts) assert.deepEqual(receipt.artifacts, verification.artifacts, `Verification artifact mismatch: ${gate}`);
-    gates[gate] = { status: 'passed', script_sha256: receipt.script_sha256, scope: GATES[gate].scope || 'All checks in this required gate.', optional_checks: receipt.optional_checks };
+    if (gateTable[gate].artifacts) assert.deepEqual(receipt.artifacts, verification.artifacts, `Verification artifact mismatch: ${gate}`);
+    gates[gate] = { status: 'passed', script_sha256: receipt.script_sha256, scope: gateTable[gate].scope || 'All checks in this required gate.', optional_checks: receipt.optional_checks };
   }
   return { schema: 1, status: 'required_gates_passed', scope: 'Declared Linux CI gates only; excluded checks are not verified. This does not establish publisher authentication, first GUI launch, local-model operation or complete clean-host usability.', gates };
 }
 
-export async function readVerification(directory, commit, runId, attempt, artifacts) {
+export async function readVerification(directory, commit, runId, attempt, artifacts, arch) {
   const gates = {};
   for (const gate of REQUIRED_GATES) {
     try { gates[gate] = JSON.parse(await readFile(path.join(directory, `${gate}.json`), 'utf8')); }
     catch (error) { throw new Error(`Required verification receipt missing or invalid: ${gate}`, { cause: error }); }
   }
   const result = { schema: 1, commit, run_id: runId, run_attempt: attempt, artifacts, gates };
-  validateVerification(result, commit, artifacts);
+  validateVerification(result, commit, artifacts, arch);
   return result;
 }
 

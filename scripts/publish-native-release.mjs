@@ -7,19 +7,38 @@ import { execFileSync } from 'node:child_process';
 import assert from 'node:assert/strict';
 import { setTimeout as delay } from 'node:timers/promises';
 import { digest } from './native-release-verification.mjs';
-import { IDENTITY } from './native-release-auth.mjs';
+import { IDENTITY, TARGETS } from './native-release-auth.mjs';
 import { withReleaseSnapshot, validateContext, validateStagedRelease, readReceipts, requireTransportLayout } from './native-release-assets.mjs';
 
 export { digest } from './native-release-verification.mjs';
 const command = (args) => execFileSync('gh', args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
 
-export async function publish({ repo, tag, commit, files, verification, trustDir, runId, runAttempt, gh = command, sleep = delay }) {
+// One release carries every target's signed bundle. Each bundle is snapshotted
+// and authenticated for its own target before any release operation; their
+// asset names are disjoint (non-x86_64 metadata carries a target suffix).
+export async function publish({ repo, tag, commit, files, verification, bundles, trustDir, runId, runAttempt, gh = command, sleep = delay }) {
   const context = { repo, tag, commit, runId, runAttempt };
   const version = validateContext(context);
-  return withReleaseSnapshot({ files, version }, async (directory, expected) => {
-    await validateStagedRelease({ directory, observed: expected, verification, context, trustDir, signed: true });
-    return publishVerified({ repo, tag, commit, expected, gh, sleep });
-  });
+  bundles ??= [{ target: IDENTITY.target, files, verification }];
+  assert(Array.isArray(bundles) && bundles.length >= 1, 'At least one signed release bundle is required');
+  const targets = bundles.map(bundle => bundle.target);
+  assert(targets.every(target => Object.hasOwn(TARGETS, target)), 'Unsupported release target');
+  assert.equal(new Set(targets).size, targets.length, 'Duplicate release target');
+  assert(targets.includes(IDENTITY.target), 'The x86_64 release bundle is required');
+  const expected = new Map();
+  const stage = async index => {
+    if (index === bundles.length) return publishVerified({ repo, tag, commit, expected, gh, sleep });
+    const { target, files: bundleFiles, verification: receipts } = bundles[index];
+    return withReleaseSnapshot({ files: bundleFiles, version, target }, async (directory, observed) => {
+      await validateStagedRelease({ directory, observed, verification: receipts, context, trustDir, signed: true, target });
+      for (const [name, asset] of observed) {
+        assert(!expected.has(name), `Duplicate release asset across targets: ${name}`);
+        expected.set(name, asset);
+      }
+      return stage(index + 1);
+    });
+  };
+  return stage(0);
 }
 async function publishVerified({ repo, tag, commit, expected, gh, sleep }) {
   const identity = JSON.parse(gh(['api', `repos/${repo}`]));
@@ -92,12 +111,13 @@ async function publishVerified({ repo, tag, commit, expected, gh, sleep }) {
 }
 
 async function main() {
-  const [bundle, trustDir] = process.argv.slice(2);
-  assert(bundle && trustDir && process.argv.length === 4, 'Usage: node publish-native-release.mjs SIGNED_BUNDLE TRUST_DIR');
+  const [bundle, trustDir, aarch64Bundle] = process.argv.slice(2);
+  assert(bundle && trustDir && (process.argv.length === 4 || (process.argv.length === 5 && aarch64Bundle)), 'Usage: node publish-native-release.mjs SIGNED_BUNDLE TRUST_DIR [AARCH64_SIGNED_BUNDLE]');
   const context = { repo: process.env.GITHUB_REPOSITORY, tag: process.env.GITHUB_REF_NAME, commit: process.env.GITHUB_SHA, runId: process.env.GITHUB_RUN_ID, runAttempt: process.env.GITHUB_RUN_ATTEMPT };
   const version = validateContext(context);
-  const files = await requireTransportLayout(bundle, version, true);
-  const verification = await readReceipts(bundle);
-  console.log(await publish({ ...context, files, verification, trustDir }));
+  const load = async (directory, target) => ({ target, files: await requireTransportLayout(directory, version, true, target), verification: await readReceipts(directory) });
+  const bundles = [await load(bundle, IDENTITY.target)];
+  if (aarch64Bundle) bundles.push(await load(aarch64Bundle, 'aarch64-unknown-linux-gnu'));
+  console.log(await publish({ ...context, bundles, trustDir }));
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) await main();

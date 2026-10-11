@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { assetNames, createEnvelope, signEnvelope, verifyBundle, parseEnvelope, parseTrustPolicy, publicKeyIdentity, digestBytes, IDENTITY, LIMITS, TARGETS } from './native-release-auth.mjs';
+import { assetNames, metadataNames, createEnvelope, signEnvelope, verifyBundle, parseEnvelope, parseTrustPolicy, publicKeyIdentity, digestBytes, IDENTITY, LIMITS, TARGETS } from './native-release-auth.mjs';
 
 const ARM = 'aarch64-unknown-linux-gnu';
 
@@ -34,11 +34,12 @@ async function makeBundle(directory, key, { version = '0.32.0', commit = 'a'.rep
     hashes[name] = digestBytes(bytes);
     await writeFile(path.join(directory, name), bytes, { mode: 0o755 });
   }
-  await writeFile(path.join(directory, 'SHA256SUMS'), Object.entries(hashes).map(([name, hash]) => `${hash}  ${name}\n`).join(''));
-  await writeFile(path.join(directory, 'RELEASE-MANIFEST.json'), `${JSON.stringify({ schema: 1, tag: `v${version}`, commit, target, assets: hashes }, null, 2)}\n`);
+  const meta = metadataNames(target);
+  await writeFile(path.join(directory, meta.sums), Object.entries(hashes).map(([name, hash]) => `${hash}  ${name}\n`).join(''));
+  await writeFile(path.join(directory, meta.manifest), `${JSON.stringify({ schema: 1, tag: `v${version}`, commit, target, assets: hashes }, null, 2)}\n`);
   const bytes = await createEnvelope({ bundleDir: directory, version, commit, keyId: key.id, keyEpoch: epoch, target });
-  await writeFile(path.join(directory, 'RELEASE-AUTH'), bytes);
-  await writeFile(path.join(directory, 'RELEASE-AUTH.sig'), signEnvelope(bytes, key.privatePem));
+  await writeFile(path.join(directory, meta.auth), bytes);
+  await writeFile(path.join(directory, meta.signature), signEnvelope(bytes, key.privatePem));
   return { version, commit, artifact: assetNames(version, target)[0][1] };
 }
 async function fixture(t) {
@@ -377,13 +378,30 @@ test('an aarch64 release verifies in Node and OpenSSL when the policy trusts bot
   assert.equal(arm.artifact, 'ShadowCode_0.32.0_aarch64.AppImage');
   const { metadata } = await accepted(f, { bundleDir: armDir, artifact: arm.artifact, stageDir: path.join(f.root, 'arm-stage'), expectedTarget: ARM });
   assert.equal(metadata.target, ARM);
-  assert.equal(parseEnvelope(await readFile(path.join(armDir, 'RELEASE-AUTH'))).target, ARM);
+  assert.equal(parseEnvelope(await readFile(path.join(armDir, 'RELEASE-AUTH-aarch64'))).target, ARM);
+  await notExists(path.join(armDir, 'RELEASE-AUTH'));
   for (const [role, artifact] of assetNames(f.version, ARM)) await accepted(f, { bundleDir: armDir, artifact, stageDir: path.join(f.root, `arm-${role}`) });
   // The x86_64 release still verifies under the two-target policy.
   await accepted(f, { stageDir: path.join(f.root, 'x86-stage'), expectedTarget: IDENTITY.target });
-  await assert.rejects(verifyBundle({ ...f, expectedTarget: ARM }), /Unexpected target/);
-  // An x86_64 basename is not an authenticated aarch64 asset.
-  await refused(f, { bundleDir: armDir, artifact: f.artifact, stageDir: path.join(f.root, 'arm-wrong-name') }, /exact authenticated basename/);
+  // An x86_64 bundle has no aarch64 metadata to authenticate.
+  await assert.rejects(verifyBundle({ ...f, expectedTarget: ARM }), { code: 'ENOENT' });
+  // An x86_64 basename selects x86_64 metadata, which an aarch64 bundle lacks.
+  await refused(f, { bundleDir: armDir, artifact: f.artifact, stageDir: path.join(f.root, 'arm-wrong-name') }, /input must be a regular non-symlink file/);
+});
+test('the target suffix on release metadata must match the signed envelope', async t => {
+  const f = await fixture(t), armDir = path.join(f.root, 'arm');
+  await trustPolicy(f.trustDir, [f.key], { target: `${IDENTITY.target},${ARM}` });
+  const arm = await makeBundle(armDir, f.key, { marker: f.marker, target: ARM });
+  // A valid x86_64 envelope, signature, manifest and checksums placed under the
+  // aarch64 names are refused for an aarch64 package before any digest check.
+  for (const [from, to] of [['RELEASE-AUTH', 'RELEASE-AUTH-aarch64'], ['RELEASE-AUTH.sig', 'RELEASE-AUTH-aarch64.sig'], ['RELEASE-MANIFEST.json', 'RELEASE-MANIFEST-aarch64.json'], ['SHA256SUMS', 'SHA256SUMS-aarch64']]) {
+    await writeFile(path.join(armDir, to), await readFile(path.join(f.bundleDir, from)));
+  }
+  await refused(f, { bundleDir: armDir, artifact: arm.artifact }, /release metadata names another target/);
+  await assert.rejects(verifyBundle({ bundleDir: armDir, trustDir: f.trustDir, artifact: arm.artifact }), /Release metadata names another target/);
+  await assert.rejects(verifyBundle({ bundleDir: armDir, trustDir: f.trustDir, artifact: arm.artifact, expectedTarget: ARM }), /Unexpected target/);
+  // The x86_64 package still reads only the historical names beside them.
+  await accepted(f);
 });
 test('an aarch64 release is refused by an x86_64-only trust policy', async t => {
   const f = await fixture(t), armDir = path.join(f.root, 'arm');

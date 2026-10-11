@@ -9,7 +9,8 @@
   `/etc/apt/keyrings`; updates and downgrade protection then come from APT.
   See the README's Debian section and `docs/DISTRIBUTING.md`.
 - **ARM64 (aarch64) builds.** The AppImage (`_aarch64.AppImage`), Debian package (`_arm64.deb`, `Architecture: arm64`), Flatpak (`_aarch64.flatpak`), the source-built AppImage runtime and the bundled llama.cpp runtime are built natively on aarch64. x86_64 package names and contents are unchanged.
-- Native CI runs on x86_64 and on GitHub's `ubuntu-24.04-arm` runners. The release workflow qualifies aarch64 packages with every required gate and keeps them as unsigned workflow artifacts until the release workflow signs and publishes an aarch64 envelope.
+- Native CI runs on x86_64 and on GitHub's `ubuntu-24.04-arm` runners. The release workflow qualifies aarch64 packages with every required gate, signs them with their own envelope and publishes them in the same release as x86_64. Their signature files carry an `-aarch64` suffix (`RELEASE-AUTH-aarch64`, `RELEASE-AUTH-aarch64.sig`, `RELEASE-MANIFEST-aarch64.json`, `SHA256SUMS-aarch64`); the x86_64 names are unchanged. The APT repository indexes the arm64 `.deb` too.
+- On ARM64, the in-app update notice names the aarch64 AppImage and its signature files, and treats a release as signed only when they are present.
 - Release authentication accepts `aarch64-unknown-linux-gnu` envelopes with their own asset names. Trust policies may list several targets; releases for a target the policy does not name, or that switch target against accepted history, are refused. The publisher's trust policy now names both `x86_64-unknown-linux-gnu` and `aarch64-unknown-linux-gnu`.
 - The AppImage installer installs only the AppImage for the machine's architecture and requires the signed target to match it.
 - `build-flatpak.py` gains `--arch`, `--state-dir`, `--install-deps-from` and `--cpu-only-llama`.

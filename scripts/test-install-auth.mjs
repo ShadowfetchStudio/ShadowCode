@@ -371,7 +371,7 @@ test('current publisher handoff and signer produce an installable authenticated 
   // execution or real package qualification is claimed by this fixture.
   const verification = { schema: 1, commit: COMMIT, run_id: context.runId, run_attempt: context.runAttempt, artifacts,
     gates: Object.fromEntries(REQUIRED_GATES.map(gate => [gate, { schema: 1, gate, commit: COMMIT, run_id: context.runId, run_attempt: context.runAttempt,
-      script_sha256: scriptDigest(gate), status: 'passed', exit_code: 0, required_skips: [], optional_checks: [], ...(GATES[gate].artifacts ? { artifacts } : {}),
+      script_sha256: scriptDigest(gate, 'x86_64'), status: 'passed', exit_code: 0, required_skips: [], optional_checks: [], ...(GATES[gate].artifacts ? { artifacts } : {}),
     }])),
   };
   const unsigned = path.join(f.root, 'unsigned-handoff'), signed = path.join(f.root, 'signed-handoff');
@@ -381,6 +381,34 @@ test('current publisher handoff and signer produce an installable authenticated 
   const receipt = await accepted(f);
   assert.deepEqual(await readFile(path.join(f.state, receipt, 'RELEASE-AUTH')), await readFile(path.join(signed, 'RELEASE-AUTH')));
   assert.deepEqual(await readFile(path.join(f.home, 'Applications/ShadowCode-0.28.0-x86_64.AppImage')), await readFile(file));
+});
+
+test('an aarch64 handoff signed on an x86_64 signer installs on an aarch64 host', async t => {
+  const f = await fixture(t), env = await armHost(f), version = '0.28.0', target = 'aarch64-unknown-linux-gnu';
+  await provision(f.bundle, f.key, [IDENTITY.target, target]);
+  const file = await candidate(f, version, '', 'aarch64');
+  const packages = assetNames(version, target).map(([, name]) => path.join(path.dirname(file), name));
+  const artifacts = Object.fromEntries(await Promise.all(packages.map(async file => [path.basename(file), digestBytes(await readFile(file))])));
+  const context = { repo: IDENTITY.repository, tag: `v${version}`, commit: COMMIT, runId: '992', runAttempt: '1' };
+  // Receipts from the aarch64 runner carry the aarch64 gate scripts' digests.
+  const receipts = arch => ({ schema: 1, commit: COMMIT, run_id: context.runId, run_attempt: context.runAttempt, artifacts,
+    gates: Object.fromEntries(REQUIRED_GATES.map(gate => [gate, { schema: 1, gate, commit: COMMIT, run_id: context.runId, run_attempt: context.runAttempt,
+      script_sha256: scriptDigest(gate, arch), status: 'passed', exit_code: 0, required_skips: [], optional_checks: [], ...(GATES[gate].artifacts ? { artifacts } : {}),
+    }])),
+  });
+  const source = { cargo_lock_sha256: 'd'.repeat(64), ui_lock_sha256: 'e'.repeat(64), runtime_pin: `commit=${'f'.repeat(40)}` };
+  const checksums = path.join(path.dirname(file), 'SHA256SUMS-aarch64');
+  // x86_64 gate digests do not qualify aarch64 packages.
+  await assert.rejects(prepareRelease({ files: packages, checksums, source, verification: receipts('x86_64'), context, outputDir: path.join(f.root, 'wrong-arch'), target }), /Verification command changed/);
+  const unsigned = path.join(f.root, 'unsigned-aarch64'), signed = path.join(f.root, 'signed-aarch64');
+  await prepareRelease({ files: packages, checksums, source, verification: receipts('aarch64'), context, outputDir: unsigned, target });
+  await signRelease({ bundleDir: unsigned, trustDir: path.join(f.bundle, 'release/trust'), privateKey: await readFile(f.key), context, outputDir: signed, target });
+  assert.deepEqual((await readdir(signed)).sort(), [...assetNames(version, target).map(([, name]) => name), 'RELEASE-AUTH-aarch64', 'RELEASE-AUTH-aarch64.sig', 'RELEASE-MANIFEST-aarch64.json', 'SHA256SUMS-aarch64', 'VERIFICATION.json'].sort());
+  passed(f.run([path.join(signed, path.basename(file))], env));
+  assert.equal(await readlink(path.join(f.home, 'Applications/ShadowCode.AppImage')), 'ShadowCode-0.28.0-aarch64.AppImage');
+  // The accepted-release receipt keeps the historical metadata names.
+  const receipt = await accepted(f);
+  assert.deepEqual(await readFile(path.join(f.state, receipt, 'RELEASE-AUTH')), await readFile(path.join(signed, 'RELEASE-AUTH-aarch64')));
 });
 
 

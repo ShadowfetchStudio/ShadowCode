@@ -55,6 +55,23 @@ export function assetNames(version, target = IDENTITY.target) {
     ['runtime-sources', `ShadowCode_${version}_${names.sources}.tar.gz`],
   ];
 }
+// Release metadata names. x86_64 keeps the historical unsuffixed names, which
+// existing installers read; other targets carry a suffix so every target's
+// envelope, signature, manifest and checksums fit one GitHub release.
+const METADATA_SUFFIX = Object.freeze({ 'x86_64-unknown-linux-gnu': '', 'aarch64-unknown-linux-gnu': '-aarch64' });
+export function metadataNames(target = IDENTITY.target) {
+  assert(Object.hasOwn(TARGETS, target), 'Unsupported release target');
+  const suffix = METADATA_SUFFIX[target];
+  return Object.freeze({ sums: `SHA256SUMS${suffix}`, manifest: `RELEASE-MANIFEST${suffix}.json`, auth: `RELEASE-AUTH${suffix}`, signature: `RELEASE-AUTH${suffix}.sig` });
+}
+// The target whose package set contains this basename. Package names differ
+// per target, so the requested artifact selects which metadata to read; the
+// signed envelope must then name the same target.
+export function targetForArtifact(name) {
+  const version = /^ShadowCode_((?:0|[1-9][0-9]{0,8})\.(?:0|[1-9][0-9]{0,8})\.(?:0|[1-9][0-9]{0,8}))_/.exec(String(name))?.[1];
+  if (version) for (const target of Object.keys(TARGETS)) if (assetNames(version, target).some(([, asset]) => asset === name)) return target;
+  return IDENTITY.target;
+}
 function fixedIdentity(rows, offset = 1) {
   assert(REPOSITORY_NAMES.has(field(rows[offset], 'repository')), 'Wrong publisher repository');
   assert.equal(field(rows[offset + 1], 'repository-id'), IDENTITY.repositoryId, 'Wrong repository ID');
@@ -156,11 +173,11 @@ async function assetHash(file) {
 }
 function canonicalChecksums(assets) { return Buffer.from(assets.map(asset => `${asset.hash}  ${asset.name}\n`).join('')); }
 export async function createEnvelope({ bundleDir, version, commit, keyId, keyEpoch, target = IDENTITY.target }) {
-  const assets = [];
+  const assets = [], names = metadataNames(target);
   for (const [role, name] of assetNames(version, target)) assets.push({ role, name, ...await assetHash(path.join(bundleDir, name)) });
-  const sums = await boundedFile(path.join(bundleDir, 'SHA256SUMS'), LIMITS.checksums);
+  const sums = await boundedFile(path.join(bundleDir, names.sums), LIMITS.checksums);
   assert(sums.equals(canonicalChecksums(assets)), 'Checksums must contain the exact canonical asset set');
-  const manifestBytes = await boundedFile(path.join(bundleDir, 'RELEASE-MANIFEST.json'), LIMITS.manifest);
+  const manifestBytes = await boundedFile(path.join(bundleDir, names.manifest), LIMITS.manifest);
   const manifest = JSON.parse(manifestBytes.toString('utf8'));
   assert(manifestBytes.equals(Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`)), 'Manifest must be canonical JSON without duplicate fields');
   assert.equal(manifest.schema, 1); assert.equal(manifest.tag, `v${version}`);
@@ -203,13 +220,16 @@ export async function verifyEnvelope({ bytes, signature, trustDir }) {
 }
 export async function verifyBundle({ bundleDir, trustDir, artifact, previousDir, expectedVersion, expectedCommit, expectedTarget }) {
   assert(trustDir, 'An independently trusted key directory is required');
-  const bytes = await boundedFile(path.join(bundleDir, 'RELEASE-AUTH'), LIMITS.envelope);
-  const signature = await boundedFile(path.join(bundleDir, 'RELEASE-AUTH.sig'), LIMITS.signature);
+  const target = expectedTarget ?? targetForArtifact(artifact), names = metadataNames(target);
+  const bytes = await boundedFile(path.join(bundleDir, names.auth), LIMITS.envelope);
+  const signature = await boundedFile(path.join(bundleDir, names.signature), LIMITS.signature);
   const metadata = await verifyEnvelope({ bytes, signature, trustDir });
   if (expectedVersion !== undefined) assert.equal(metadata.version, expectedVersion, 'Unexpected version');
   if (expectedCommit !== undefined) assert.equal(metadata.commit, expectedCommit, 'Unexpected commit');
-  if (expectedTarget !== undefined) assert.equal(metadata.target, expectedTarget, 'Unexpected target');
+  assert.equal(metadata.target, target, expectedTarget === undefined ? 'Release metadata names another target' : 'Unexpected target');
   if (previousDir) {
+    // The previously accepted release is a verified stage or installer receipt,
+    // which keeps the historical metadata names for every target.
     const previous = await verifyEnvelopeInternal({ bytes: await boundedFile(path.join(previousDir, 'RELEASE-AUTH'), LIMITS.envelope), signature: await boundedFile(path.join(previousDir, 'RELEASE-AUTH.sig'), LIMITS.signature), trustDir, historical: true });
     assert.equal(metadata.target, previous.target, 'Release target changed');
     assert(metadata.keyEpoch >= previous.keyEpoch, 'Signing epoch rollback');
@@ -217,8 +237,8 @@ export async function verifyBundle({ bundleDir, trustDir, artifact, previousDir,
     assert(comparison >= 0, 'Release downgrade');
     if (comparison === 0) assert.equal(metadata.envelopeHash, previous.envelopeHash, 'Changed release under an accepted version');
   }
-  const manifest = await boundedFile(path.join(bundleDir, 'RELEASE-MANIFEST.json'), LIMITS.manifest);
-  const sums = await boundedFile(path.join(bundleDir, 'SHA256SUMS'), LIMITS.checksums);
+  const manifest = await boundedFile(path.join(bundleDir, names.manifest), LIMITS.manifest);
+  const sums = await boundedFile(path.join(bundleDir, names.sums), LIMITS.checksums);
   assert.equal(HASH(manifest), metadata.manifestHash, 'Manifest digest mismatch');
   assert.equal(HASH(sums), metadata.checksumsHash, 'Checksums digest mismatch');
   assert(sums.equals(canonicalChecksums(metadata.assets)), 'Checksums asset set mismatch');

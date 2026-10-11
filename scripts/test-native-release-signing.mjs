@@ -125,10 +125,18 @@ test('release workflow separates untrusted build from protected signing and writ
   const apt = workflow.split('\n  apt-repository:')[1];
   assert(workflow.includes('permissions:\n  contents: read'));
   assert(!/secrets\.|contents: write|publish-native-release/.test(build));
-  assert.match(sign, /needs: \[configuration, build\]/); assert.match(sign, /environment: \$\{\{ needs.configuration.outputs.environment \}\}/);
+  assert.match(sign, /needs: \[configuration, build, build-aarch64\]/); assert.match(sign, /environment: \$\{\{ needs.configuration.outputs.environment \}\}/);
   assert(!/contents: write|npm |cargo |cache:/.test(sign));
   assert.match(sign, /ref: \$\{\{ needs.configuration.outputs.tooling \}\}/);
   assert.match(sign, /artifact-ids: \$\{\{ needs.build.outputs.artifact-id \}\}/);
+  // Each target is built, handed off and signed separately; aarch64 is named.
+  const arm = workflow.split('\n  build-aarch64:')[1].split('\n  sign:')[0];
+  assert.match(arm, /runs-on: ubuntu-24\.04-arm/); assert.match(arm, /prepare-native-release\.mjs/);
+  assert.match(sign, /artifact-ids: \$\{\{ needs.build-aarch64.outputs.artifact-id \}\}/);
+  assert.match(sign, /sign-native-release\.mjs "\$RUNNER_TEMP\/unsigned-download" release\/trust "\$RUNNER_TEMP\/signed-release\/x86_64"\n/);
+  assert.match(sign, /sign-native-release\.mjs "\$RUNNER_TEMP\/unsigned-download-aarch64" release\/trust "\$RUNNER_TEMP\/signed-release\/aarch64" aarch64-unknown-linux-gnu/);
+  assert.match(publication, /publish-native-release\.mjs "\$RUNNER_TEMP\/signed-download\/x86_64" release\/trust "\$RUNNER_TEMP\/signed-download\/aarch64"/);
+  assert.match(apt, /x86_64:amd64 aarch64:arm64/);
   assert.match(publication, /artifact-ids: \$\{\{ needs.sign.outputs.artifact-id \}\}/);
   assert.match(publication, /needs: \[configuration, build, sign\]/); assert.match(publication, /contents: write/);
   assert(!/SIGNING_KEY|secrets\./.test(publication));
@@ -160,3 +168,27 @@ for (const status of ['missing', 'failed', 'skipped']) test(`signing and publish
   await assert.rejects(f.execute({ verification: receipts }), /gate|verification/i);
   assert.equal(f.state.calls.length, 0);
 }));
+test('each target is handed off, signed under its own metadata names and published together', () => fixture(async f => {
+  const ARM = 'aarch64-unknown-linux-gnu', [x86, arm] = f.bundles, sign = (input, target, outputDir, trustDir = f.trustDir) => signRelease({ bundleDir: input, trustDir, privateKey: f.privateKey, context, outputDir, target });
+  const handoff = async ({ target, directory, packages, verification }) => {
+    const outputDir = path.join(f.root, `unsigned-${target}`);
+    await prepareRelease({ files: packages, checksums: path.join(directory, target === ARM ? 'SHA256SUMS-aarch64' : 'SHA256SUMS'), source: f.source, verification, context, outputDir, target });
+    return outputDir;
+  };
+  const x86Input = await handoff(x86), armInput = await handoff(arm);
+  // The signer refuses a target the provisioned policy does not trust.
+  const policy = path.join(f.trustDir, 'policy'), trusted = await readFile(policy, 'utf8');
+  await writeFile(policy, trusted.replace(`,${ARM}`, ''));
+  await assert.rejects(sign(armInput, ARM, path.join(f.root, 'refused')), /not in the provisioned trust policy/);
+  await assert.rejects(stat(path.join(f.root, 'refused')), { code: 'ENOENT' });
+  await writeFile(policy, trusted);
+  // An aarch64 handoff is not an x86_64 transport layout.
+  await assert.rejects(sign(armInput, IDENTITY.target, path.join(f.root, 'wrong-target')), /transport file set/);
+  await sign(x86Input, IDENTITY.target, path.join(f.root, 'signed-x86_64'));
+  await sign(armInput, ARM, path.join(f.root, 'signed-aarch64'));
+  assert.deepEqual((await readdir(path.join(f.root, 'signed-aarch64'))).sort(), [...releaseNames(VERSION, true, ARM), 'VERIFICATION.json'].sort());
+  const load = async (directory, target) => ({ target, files: await requireTransportLayout(directory, VERSION, true, target), verification: await readReceipts(directory) });
+  const bundles = [await load(path.join(f.root, 'signed-x86_64'), IDENTITY.target), await load(path.join(f.root, 'signed-aarch64'), ARM)];
+  assert.equal((await f.execute({ bundles })).status, 'published');
+  assert.equal(f.state.assets.size, 14);
+}, publish, { targets: ['x86_64-unknown-linux-gnu', 'aarch64-unknown-linux-gnu'] }));

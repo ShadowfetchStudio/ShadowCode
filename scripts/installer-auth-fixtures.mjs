@@ -2,7 +2,7 @@
 import { generateKeyPairSync } from 'node:crypto';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { assetNames, createEnvelope, signEnvelope, publicKeyIdentity, digestBytes, IDENTITY } from './native-release-auth.mjs';
+import { assetNames, metadataNames, createEnvelope, signEnvelope, publicKeyIdentity, digestBytes, IDENTITY } from './native-release-auth.mjs';
 
 export const COMMIT = 'c'.repeat(40);
 export async function provision(root, privateFile, targets = [IDENTITY.target]) {
@@ -29,12 +29,14 @@ export async function signFixture(file, privateFile, target) {
     if (role !== 'appimage') await writeFile(assetFile, `Fixture ${role} ${version}\n`);
     assets[name] = digestBytes(await readFile(assetFile));
   }
-  await writeFile(path.join(directory, 'SHA256SUMS'), Object.entries(assets).map(([name, hash]) => `${hash}  ${name}\n`).join(''));
-  await writeFile(path.join(directory, 'RELEASE-MANIFEST.json'), `${JSON.stringify({ schema: 1, tag: `v${version}`, commit: COMMIT, target, assets, fixture_only: true }, null, 2)}\n`);
+  // Release asset names: aarch64 metadata carries its target suffix.
+  const meta = metadataNames(target);
+  await writeFile(path.join(directory, meta.sums), Object.entries(assets).map(([name, hash]) => `${hash}  ${name}\n`).join(''));
+  await writeFile(path.join(directory, meta.manifest), `${JSON.stringify({ schema: 1, tag: `v${version}`, commit: COMMIT, target, assets, fixture_only: true }, null, 2)}\n`);
   const privatePem = await readFile(privateFile);
   const envelope = await createEnvelope({ bundleDir: directory, version, commit: COMMIT, keyId: publicKeyIdentity(privatePem), keyEpoch: 1, target });
-  await writeFile(path.join(directory, 'RELEASE-AUTH'), envelope);
-  await writeFile(path.join(directory, 'RELEASE-AUTH.sig'), signEnvelope(envelope, privatePem));
+  await writeFile(path.join(directory, meta.auth), envelope);
+  await writeFile(path.join(directory, meta.signature), signEnvelope(envelope, privatePem));
 }
 if (process.argv[2] === 'provision') await provision(process.argv[3], process.argv[4], process.argv[5]?.split(','));
 if (process.argv[2] === 'sign') await signFixture(process.argv[3], process.argv[4]);

@@ -5,17 +5,29 @@ import { open, mkdtemp, mkdir, rm, readFile, writeFile, readdir } from 'node:fs/
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { assetNames, LIMITS, IDENTITY, verifyBundle } from './native-release-auth.mjs';
+import { assetNames, metadataNames, LIMITS, IDENTITY, TARGETS, verifyBundle } from './native-release-auth.mjs';
 import { validateVerification } from './native-release-verification.mjs';
+import { ARCHES } from './native-arch.mjs';
 
 export const METADATA = Object.freeze(['SHA256SUMS', 'RELEASE-MANIFEST.json', 'RELEASE-AUTH', 'RELEASE-AUTH.sig']);
 export const RECEIPTS_LIMIT = 1024 * 1024;
 export const jsonBytes = value => Buffer.from(`${JSON.stringify(value, null, 2)}\n`);
-export function releaseNames(version, signed = true) {
-  return [...assetNames(version).map(([, name]) => name), ...METADATA.slice(0, signed ? 4 : 2)];
+// Every name below is a release asset name too: one target's bundle uploads
+// as-is next to the other targets' bundles in the same GitHub release.
+export function metadataList(target = IDENTITY.target) {
+  const names = metadataNames(target);
+  return [names.sums, names.manifest, names.auth, names.signature];
 }
-export function classifyFiles(files, version, signed = true) {
-  const expected = releaseNames(version, signed);
+export function releaseNames(version, signed = true, target = IDENTITY.target) {
+  return [...assetNames(version, target).map(([, name]) => name), ...metadataList(target).slice(0, signed ? 4 : 2)];
+}
+// Release gates name packages by build architecture; signed targets map to it.
+export function targetArch(target = IDENTITY.target) {
+  assert(Object.hasOwn(TARGETS, target), 'Unsupported release target');
+  return Object.values(ARCHES).find(info => info.target === target).arch;
+}
+export function classifyFiles(files, version, signed = true, target = IDENTITY.target) {
+  const expected = releaseNames(version, signed, target);
   assert(Array.isArray(files), 'Required signed release assets missing');
   const result = new Map();
   for (const file of files) {
@@ -29,7 +41,12 @@ export function classifyFiles(files, version, signed = true) {
   return result;
 }
 function limitFor(name) {
-  return { 'SHA256SUMS': LIMITS.checksums, 'RELEASE-MANIFEST.json': LIMITS.manifest, 'RELEASE-AUTH': LIMITS.envelope, 'RELEASE-AUTH.sig': LIMITS.signature, 'VERIFICATION.json': RECEIPTS_LIMIT }[name] ?? LIMITS.artifact;
+  for (const target of Object.keys(TARGETS)) {
+    const names = metadataNames(target);
+    const limit = { [names.sums]: LIMITS.checksums, [names.manifest]: LIMITS.manifest, [names.auth]: LIMITS.envelope, [names.signature]: LIMITS.signature }[name];
+    if (limit !== undefined) return limit;
+  }
+  return name === 'VERIFICATION.json' ? RECEIPTS_LIMIT : LIMITS.artifact;
 }
 export async function snapshotFile(source, destination, limit) {
   const input = await open(source, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
@@ -52,8 +69,8 @@ export async function snapshotFile(source, destination, limit) {
     return { hash: hash.digest('hex'), size };
   } finally { await output?.close(); await input.close(); }
 }
-export async function withReleaseSnapshot({ files, version, signed = true }, use) {
-  const sources = classifyFiles(files, version, signed);
+export async function withReleaseSnapshot({ files, version, signed = true, target = IDENTITY.target }, use) {
+  const sources = classifyFiles(files, version, signed, target);
   const directory = await mkdtemp(path.join(tmpdir(), 'shadowcode-publisher-snapshot-'));
   try {
     const observed = new Map();
@@ -83,30 +100,30 @@ export function validateContext({ repo, tag, commit, runId, runAttempt }) {
   assert.match(runAttempt, /^[1-9][0-9]*$/, 'Expected workflow attempt required');
   return tag.slice(1);
 }
-export async function validateStagedRelease({ directory, observed, verification, context, trustDir, signed }) {
-  const version = validateContext(context);
-  const packages = Object.fromEntries(assetNames(version).map(([, name]) => [name, observed.get(name).hash]));
-  const gates = validateVerification(verification, context.commit, packages);
+export async function validateStagedRelease({ directory, observed, verification, context, trustDir, signed, target = IDENTITY.target }) {
+  const version = validateContext(context), names = metadataNames(target);
+  const packages = Object.fromEntries(assetNames(version, target).map(([, name]) => [name, observed.get(name).hash]));
+  const gates = validateVerification(verification, context.commit, packages, targetArch(target));
   assert.equal(verification.run_id, context.runId, 'Unexpected workflow run');
   assert.equal(verification.run_attempt, context.runAttempt, 'Unexpected workflow attempt');
-  const manifest = await readJson(path.join(directory, 'RELEASE-MANIFEST.json'), LIMITS.manifest);
+  const manifest = await readJson(path.join(directory, names.manifest), LIMITS.manifest);
   assert.deepEqual(Object.keys(manifest).sort(), ['schema', 'tag', 'commit', 'target', 'cargo_lock_sha256', 'ui_lock_sha256', 'runtime_pin', 'verification', 'assets'].sort(), 'Manifest field set mismatch');
-  assert.equal(manifest.schema, 1); assert.equal(manifest.tag, context.tag); assert.equal(manifest.commit, context.commit); assert.equal(manifest.target, IDENTITY.target);
+  assert.equal(manifest.schema, 1); assert.equal(manifest.tag, context.tag); assert.equal(manifest.commit, context.commit); assert.equal(manifest.target, target);
   assert.match(manifest.cargo_lock_sha256, /^[a-f0-9]{64}$/); assert.match(manifest.ui_lock_sha256, /^[a-f0-9]{64}$/);
   assert(typeof manifest.runtime_pin === 'string' && manifest.runtime_pin.length > 0 && manifest.runtime_pin.length <= 65536, 'Invalid runtime pin');
   assert.deepEqual(manifest.assets, packages, 'Manifest package identities mismatch');
   assert.deepEqual(manifest.verification, gates, 'Signed manifest gate claims differ from required receipts');
   const sums = Buffer.from(Object.entries(packages).map(([name, hash]) => `${hash}  ${name}\n`).join(''));
-  assert((await readFile(path.join(directory, 'SHA256SUMS'))).equals(sums), 'Checksums must contain the exact canonical package set');
+  assert((await readFile(path.join(directory, names.sums))).equals(sums), 'Checksums must contain the exact canonical package set');
   if (signed) {
     assert(trustDir, 'Publisher authentication requires independently trusted public keys');
-    for (const [name] of Object.entries(packages)) await verifyBundle({ bundleDir: directory, trustDir, artifact: name, expectedVersion: version, expectedCommit: context.commit });
+    for (const [name] of Object.entries(packages)) await verifyBundle({ bundleDir: directory, trustDir, artifact: name, expectedVersion: version, expectedCommit: context.commit, expectedTarget: target });
   }
   return { packages, gates, manifest };
 }
-export async function requireTransportLayout(directory, version, signed = false) {
-  assert.deepEqual((await readdir(directory)).sort(), [...releaseNames(version, signed), 'VERIFICATION.json'].sort(), 'Unexpected transport file set');
-  return releaseNames(version, signed).map(name => path.join(directory, name));
+export async function requireTransportLayout(directory, version, signed = false, target = IDENTITY.target) {
+  assert.deepEqual((await readdir(directory)).sort(), [...releaseNames(version, signed, target), 'VERIFICATION.json'].sort(), 'Unexpected transport file set');
+  return releaseNames(version, signed, target).map(name => path.join(directory, name));
 }
 export async function retainBundle(directory, destination, names, verification) {
   await mkdir(destination, { mode: 0o700 }); // Refuse an existing output, including a symlink.

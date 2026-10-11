@@ -81,9 +81,12 @@ limits, and the [release history](CHANGELOG.md).
 Releases target x86_64 Linux with glibc 2.39 or newer (Ubuntu 24.04 or later).
 From 2.1.0, aarch64 (64-bit ARM) packages are built and qualified too:
 `ShadowCode_VERSION_aarch64.AppImage`, `ShadowCode_VERSION_arm64.deb` and
-`ShadowCode_VERSION_aarch64.flatpak`. The publisher's trust policy names the
-aarch64 target, so the signed installer accepts them once a release publishes
-them; see
+`ShadowCode_VERSION_aarch64.flatpak`. Each is signed for its own target and
+published next to the x86_64 files, with its signature files named
+`RELEASE-AUTH-aarch64`, `RELEASE-AUTH-aarch64.sig`,
+`RELEASE-MANIFEST-aarch64.json` and `SHA256SUMS-aarch64`; download those with
+the package and use the same installer and verifier commands with the aarch64
+file name. See
 [Distributing](docs/DISTRIBUTING.md#arm64-aarch64).
 Check [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases)
 for published versions. The 1.0.1 packages and checksums are:

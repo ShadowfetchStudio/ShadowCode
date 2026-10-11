@@ -169,14 +169,24 @@ The first-authenticated install boundary remains 0.33.0; do not silently move
 this durable boundary.
 
 The release workflow also runs every required gate on aarch64 (`build-aarch64`,
-on `ubuntu-24.04-arm`) and keeps the unsigned aarch64 packages and receipts as
-the `unsigned-aarch64-packages-RUN-ATTEMPT` workflow artifact. The trust policy
-trusts both targets (`target=x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu`),
-but signing and publication are still x86_64-only: to ship aarch64, the
-sign/publish jobs must gain a second per-target envelope (`RELEASE-AUTH` and
-its companions are per target).
+on `ubuntu-24.04-arm`) and hands off its packages and receipts unsigned, exactly
+like x86_64 (`unsigned-release-aarch64-RUN-ATTEMPT`). The trust policy trusts
+both targets (`target=x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu`).
+`sign` waits for both builds and signs each target separately with the same
+key: `node scripts/sign-native-release.mjs BUNDLE TRUST OUTPUT [TARGET]`, where
+the aarch64 bundle's receipts are checked against the aarch64 gate scripts (the
+package names in three gates differ by architecture) and its metadata is
+written as `RELEASE-AUTH-aarch64`, `RELEASE-AUTH-aarch64.sig`,
+`RELEASE-MANIFEST-aarch64.json` and `SHA256SUMS-aarch64`. `publish` takes the
+x86_64 bundle and then the aarch64 bundle, authenticates each for its own
+target and stages all fourteen assets in one draft before publishing; the
+x86_64 bundle is required and no asset name may repeat. `apt-repository`
+verifies and indexes both `.deb` files. The pinned tooling commit must include
+this multi-target signer and publisher; an older pin refuses the aarch64
+signing call, so the release fails rather than shipping x86_64 alone.
 
-Public trust in `release/trust` currently allows the x86_64 and aarch64 targets, epoch 1 and versions 0.33.0–1.0.1;
+Public trust in `release/trust` currently allows the x86_64 and aarch64 targets, epoch 1 and versions 0.33.0–1.0.1
+(raise the key's maximum version in the release commit, as for earlier releases);
 `release/install-policy` fixes the first authenticated version at 0.33.0.
 The `release-signing` environment has the signing secret and requires review by
 `Shadowfetchapps` (User ID `209457103`). Self-review is allowed and GitHub's

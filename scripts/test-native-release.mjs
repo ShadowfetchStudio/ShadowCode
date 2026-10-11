@@ -1,10 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { writeFile } from 'node:fs/promises';
+import { writeFile, readFile } from 'node:fs/promises';
+import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { publish } from './publish-native-release.mjs';
 
-import { fixture as signedFixture } from './publisher-fixtures.mjs';
+import { fixture as signedFixture, ARM } from './publisher-fixtures.mjs';
 const fixture = run => signedFixture(run, publish);
 
 test('uploads to a draft, verifies all bytes, then publishes', () => fixture(async ({ state, execute }) => {
@@ -113,3 +114,39 @@ for (const status of ['failed', 'skipped', 'running']) {
     assert.equal(state.calls.length, 0);
   }));
 }
+
+const twoTargets = run => signedFixture(run, publish, { targets: ['x86_64-unknown-linux-gnu', ARM] });
+test('one release carries the x86_64 and aarch64 bundles under disjoint names', () => twoTargets(async ({ state, execute }) => {
+  assert.equal((await execute()).status, 'published');
+  assert.deepEqual([...state.assets.keys()].sort(), [
+    'RELEASE-AUTH', 'RELEASE-AUTH-aarch64', 'RELEASE-AUTH-aarch64.sig', 'RELEASE-AUTH.sig',
+    'RELEASE-MANIFEST-aarch64.json', 'RELEASE-MANIFEST.json', 'SHA256SUMS', 'SHA256SUMS-aarch64',
+    'ShadowCode_1.0.0_aarch64.AppImage', 'ShadowCode_1.0.0_aarch64_appimage-runtime-sources.tar.gz', 'ShadowCode_1.0.0_amd64.AppImage', 'ShadowCode_1.0.0_amd64.deb',
+    'ShadowCode_1.0.0_appimage-runtime-sources.tar.gz', 'ShadowCode_1.0.0_arm64.deb',
+  ].sort());
+  const publication = state.calls.findIndex(args => args[1] === 'edit');
+  assert.equal(state.calls.slice(0, publication).filter(args => args[1] === 'download').length, 14);
+  // A retry reads the published release back and changes nothing.
+  const before = state.calls.length;
+  assert.equal((await execute()).status, 'already-published');
+  assert(state.calls.slice(before).every(args => args[0] === 'api' || args[1] === 'download'));
+}));
+test('an aarch64 bundle is authenticated for its own target before any release operation', () => twoTargets(async ({ state, execute, signedBundles, bundles, trustDir }) => {
+  const [x86, arm] = signedBundles;
+  // The x86_64 bundle is required; targets cannot repeat or be unknown.
+  await assert.rejects(execute({ bundles: [arm] }), /x86_64 release bundle is required/);
+  await assert.rejects(execute({ bundles: [x86, x86] }), /Duplicate release target/);
+  await assert.rejects(execute({ bundles: [x86, { ...arm, target: 'riscv64gc-unknown-linux-gnu' }] }), /Unsupported release target/);
+  // x86_64 receipts or files offered as the aarch64 bundle are refused.
+  await assert.rejects(execute({ bundles: [x86, { ...x86, target: ARM }] }), /Unexpected release asset|asset set mismatch/);
+  await assert.rejects(execute({ bundles: [x86, { ...arm, verification: x86.verification }] }), /Verification package set or bytes changed/);
+  // An aarch64 envelope is invalid once the policy stops trusting aarch64.
+  const policy = path.join(trustDir, 'policy'), trusted = await readFile(policy, 'utf8');
+  await writeFile(policy, trusted.replace(`,${ARM}`, ''));
+  await assert.rejects(execute(), /Release target is not trusted/);
+  await writeFile(policy, trusted);
+  // A tampered aarch64 package fails its own signed checksums.
+  await writeFile(bundles[1].packages[1], 'tampered');
+  await assert.rejects(execute(), /Checksums|digest|Verification package/);
+  assert.equal(state.calls.length, 0);
+}));

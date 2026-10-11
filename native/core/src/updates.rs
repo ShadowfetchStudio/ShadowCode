@@ -52,13 +52,27 @@ const STATE_FILE: &str = "update-check.json";
 const MAX_RESPONSE_BYTES: usize = 2_000_000;
 const MAX_POLICY_BYTES: u64 = 64 * 1024;
 const MAX_MESSAGE_CHARS: usize = 300;
-/// Files a release needs before the authenticated installer accepts it.
-const SIGNATURE_FILES: [&str; 4] = [
-    "SHA256SUMS",
-    "RELEASE-MANIFEST.json",
-    "RELEASE-AUTH",
-    "RELEASE-AUTH.sig",
-];
+/// Files a release needs before the authenticated installer accepts it on
+/// `arch`. x86_64 keeps the historical names; aarch64 release metadata carries
+/// an `-aarch64` suffix so both architectures fit one release.
+fn signature_files(arch: &str) -> [String; 4] {
+    let suffix = if arch == "aarch64" { "-aarch64" } else { "" };
+    [
+        format!("SHA256SUMS{suffix}"),
+        format!("RELEASE-MANIFEST{suffix}.json"),
+        format!("RELEASE-AUTH{suffix}"),
+        format!("RELEASE-AUTH{suffix}.sig"),
+    ]
+}
+
+/// The AppImage name part for `arch` (`ShadowCode_VERSION_<part>.AppImage`).
+fn appimage_arch(arch: &str) -> &'static str {
+    if arch == "aarch64" {
+        "aarch64"
+    } else {
+        "amd64"
+    }
+}
 
 /// `updates` in config.yaml.
 #[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq, Eq)]
@@ -205,6 +219,10 @@ pub struct Release {
 /// Drafts, pre-releases and tags other than `vMAJOR.MINOR.PATCH` are
 /// refused. Links are built from the tag, never taken from the response.
 pub fn parse_release(value: &Value) -> Result<Release> {
+    parse_release_for(value, std::env::consts::ARCH)
+}
+
+fn parse_release_for(value: &Value, arch: &str) -> Result<Release> {
     ensure!(value.is_object(), "GitHub returned an unexpected answer");
     ensure!(
         value["draft"] != Value::Bool(true) && value["prerelease"] != Value::Bool(true),
@@ -233,7 +251,9 @@ pub fn parse_release(value: &Value) -> Result<Release> {
                 .collect()
         })
         .unwrap_or_default();
-    let signed = SIGNATURE_FILES.iter().all(|name| assets.contains(name));
+    let signed = signature_files(arch)
+        .iter()
+        .all(|name| assets.contains(&name.as_str()));
     let published_at = value["published_at"]
         .as_str()
         .filter(|text| {
@@ -683,6 +703,15 @@ pub fn dismiss(paths: &AppPaths, version: &str) -> Result<()> {
 
 /// The steps to update this kind of installation to `release`.
 pub fn next_step(install: InstallKind, policy: &Policy, release: Option<&Release>) -> Value {
+    next_step_for(install, policy, release, std::env::consts::ARCH)
+}
+
+fn next_step_for(
+    install: InstallKind,
+    policy: &Policy,
+    release: Option<&Release>,
+    arch: &str,
+) -> Value {
     if let Some(message) = &policy.message {
         return json!({"text": message, "command": null, "link": null});
     }
@@ -695,11 +724,15 @@ pub fn next_step(install: InstallKind, policy: &Policy, release: Option<&Release
             "command": null,
             "link": null,
         }),
-        InstallKind::Appimage => json!({
-            "text": format!("Download ShadowCode_{version}_amd64.AppImage and its four signature files (SHA256SUMS, RELEASE-MANIFEST.json, RELEASE-AUTH, RELEASE-AUTH.sig) from the release page into one folder. Then run the installer from a trusted copy of ShadowCode's installer bundle. It checks the publisher signature before it runs anything and keeps your settings."),
-            "command": format!("bash /path/to/trusted-bundle/scripts/install-appimage.sh ~/Downloads/ShadowCode_{version}_amd64.AppImage"),
-            "link": readme("appimage-recommended"),
-        }),
+        InstallKind::Appimage => {
+            let image = format!("ShadowCode_{version}_{}.AppImage", appimage_arch(arch));
+            let files = signature_files(arch).join(", ");
+            json!({
+                "text": format!("Download {image} and its four signature files ({files}) from the release page into one folder. Then run the installer from a trusted copy of ShadowCode's installer bundle. It checks the publisher signature before it runs anything and keeps your settings."),
+                "command": format!("bash /path/to/trusted-bundle/scripts/install-appimage.sh ~/Downloads/{image}"),
+                "link": readme("appimage-recommended"),
+            })
+        }
         InstallKind::Deb => json!({
             "text": "Update through your package manager or your distribution's software updates. If you installed the .deb from GitHub yourself, download the new .deb and its four signature files, verify them, then install it with apt.",
             "command": null,
@@ -852,7 +885,7 @@ mod tests {
 
     #[test]
     fn release_json_is_read_from_github_fixtures() {
-        let release = parse_release(&fixture("latest-signed.json")).unwrap();
+        let release = parse_release_for(&fixture("latest-signed.json"), "x86_64").unwrap();
         assert_eq!(release.version, "0.34.0");
         assert_eq!(release.tag, "v0.34.0");
         // The link is built from the tag, not taken from html_url.
@@ -866,7 +899,7 @@ mod tests {
         );
         assert!(release.signed);
 
-        let unsigned = parse_release(&fixture("latest-unsigned.json")).unwrap();
+        let unsigned = parse_release_for(&fixture("latest-unsigned.json"), "x86_64").unwrap();
         assert_eq!(unsigned.version, "0.32.0");
         assert!(!unsigned.signed);
 
@@ -1090,10 +1123,41 @@ mod tests {
     }
 
     #[test]
+    fn aarch64_needs_its_own_signature_files_and_appimage() {
+        // A release signed only for x86_64 is not installable on aarch64.
+        let mut value = fixture("latest-signed.json");
+        assert!(!parse_release_for(&value, "aarch64").unwrap().signed);
+        let assets = value["assets"].as_array_mut().unwrap();
+        for name in [
+            "SHA256SUMS-aarch64",
+            "RELEASE-MANIFEST-aarch64.json",
+            "RELEASE-AUTH-aarch64",
+            "RELEASE-AUTH-aarch64.sig",
+        ] {
+            assets.push(json!({"name": name}));
+        }
+        let release = parse_release_for(&value, "aarch64").unwrap();
+        assert!(release.signed);
+        let open = policy_from(None, None, &[]);
+        let step = next_step_for(InstallKind::Appimage, &open, Some(&release), "aarch64");
+        let text = step["text"].as_str().unwrap();
+        assert!(
+            text.contains("ShadowCode_0.34.0_aarch64.AppImage"),
+            "{text}"
+        );
+        assert!(text.contains("RELEASE-AUTH-aarch64.sig"), "{text}");
+        assert!(!text.contains("amd64"), "{text}");
+        assert_eq!(
+            step["command"],
+            "bash /path/to/trusted-bundle/scripts/install-appimage.sh ~/Downloads/ShadowCode_0.34.0_aarch64.AppImage"
+        );
+    }
+
+    #[test]
     fn update_steps_match_the_install_type() {
         let open = policy_from(None, None, &[]);
-        let release = parse_release(&fixture("latest-signed.json")).unwrap();
-        let appimage = next_step(InstallKind::Appimage, &open, Some(&release));
+        let release = parse_release_for(&fixture("latest-signed.json"), "x86_64").unwrap();
+        let appimage = next_step_for(InstallKind::Appimage, &open, Some(&release), "x86_64");
         let text = appimage["text"].as_str().unwrap();
         assert!(text.contains("ShadowCode_0.34.0_amd64.AppImage"));
         assert!(text.contains("RELEASE-AUTH.sig"));
@@ -1109,7 +1173,7 @@ mod tests {
             signed: false,
             ..release.clone()
         };
-        let refused = next_step(InstallKind::Appimage, &open, Some(&unsigned));
+        let refused = next_step_for(InstallKind::Appimage, &open, Some(&unsigned), "x86_64");
         assert!(refused["text"].as_str().unwrap().contains("will refuse it"));
         assert!(refused["command"].is_null());
 

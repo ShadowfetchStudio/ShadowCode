@@ -4,13 +4,29 @@ HEX='^[a-f0-9]{64}$'
 VERSION_PATTERN='^(0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8})$'
 EPOCH_PATTERN='^[1-9][0-9]{0,8}$'
 MAX_ARTIFACT=34359738368
-# Supported signed targets. x86_64 package names are historical and fixed.
+# Supported signed targets. x86_64 package and metadata names are historical
+# and fixed; other targets' release metadata carries TARGET_META as a suffix
+# (RELEASE-AUTH-aarch64 …) so every target fits one GitHub release.
 target_names() {
   case "$1" in
-    x86_64-unknown-linux-gnu) TARGET_APPIMAGE=amd64 TARGET_DEB=amd64 TARGET_SOURCES=appimage-runtime-sources ;;
-    aarch64-unknown-linux-gnu) TARGET_APPIMAGE=aarch64 TARGET_DEB=arm64 TARGET_SOURCES=aarch64_appimage-runtime-sources ;;
+    x86_64-unknown-linux-gnu) TARGET_APPIMAGE=amd64 TARGET_DEB=amd64 TARGET_SOURCES=appimage-runtime-sources TARGET_META='' ;;
+    aarch64-unknown-linux-gnu) TARGET_APPIMAGE=aarch64 TARGET_DEB=arm64 TARGET_SOURCES=aarch64_appimage-runtime-sources TARGET_META=-aarch64 ;;
     *) return 1 ;;
   esac
+}
+# The target whose package set contains this basename (x86_64 otherwise); the
+# signed envelope read for it must name the same target.
+target_for_artifact() {
+  local name=$1 target
+  ARTIFACT_TARGET=x86_64-unknown-linux-gnu
+  [[ "$name" =~ ^ShadowCode_((0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8}))_ ]] || return 0
+  local version=${BASH_REMATCH[1]}
+  for target in aarch64-unknown-linux-gnu x86_64-unknown-linux-gnu; do
+    target_names "$target"
+    if [[ "$name" == "ShadowCode_${version}_${TARGET_APPIMAGE}.AppImage" || "$name" == "ShadowCode_${version}_${TARGET_DEB}.deb" || "$name" == "ShadowCode_${version}_${TARGET_SOURCES}.tar.gz" ]]; then
+      ARTIFACT_TARGET=$target; return 0
+    fi
+  done
 }
 copy_file() {
   local source=$1 destination=$2 limit=$3 size copied

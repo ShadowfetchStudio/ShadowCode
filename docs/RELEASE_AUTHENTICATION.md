@@ -60,7 +60,16 @@ The line order is:
 15. `asset=deb<TAB>ShadowCode_VERSION_amd64.deb<TAB>SIZE<TAB>SHA256`.
 16. `asset=runtime-sources<TAB>ShadowCode_VERSION_appimage-runtime-sources.tar.gz<TAB>SIZE<TAB>SHA256`.
 
-Those are the x86_64 names. An `aarch64-unknown-linux-gnu` envelope names `ShadowCode_VERSION_aarch64.AppImage`, `ShadowCode_VERSION_arm64.deb` and `ShadowCode_VERSION_aarch64_appimage-runtime-sources.tar.gz` instead, so both targets' packages can sit side by side. Each target has its own envelope, signature, manifest and checksums.
+Those are the x86_64 names. An `aarch64-unknown-linux-gnu` envelope names `ShadowCode_VERSION_aarch64.AppImage`, `ShadowCode_VERSION_arm64.deb` and `ShadowCode_VERSION_aarch64_appimage-runtime-sources.tar.gz` instead, so both targets' packages can sit side by side. Each target has its own envelope, signature, manifest and checksums, published in the same GitHub release under per-target names:
+
+| | x86_64 | aarch64 |
+| --- | --- | --- |
+| Envelope | `RELEASE-AUTH` | `RELEASE-AUTH-aarch64` |
+| Signature | `RELEASE-AUTH.sig` | `RELEASE-AUTH-aarch64.sig` |
+| Manifest | `RELEASE-MANIFEST.json` | `RELEASE-MANIFEST-aarch64.json` |
+| Checksums | `SHA256SUMS` | `SHA256SUMS-aarch64` |
+
+The x86_64 names are historical and unchanged, so existing installers keep working. The requested package basename selects which names a verifier reads (an `_aarch64`/`_arm64` package reads the `-aarch64` metadata), and the envelope found there must name that same target; an envelope filed under another target's names is refused before any digest check. The names describe only the published release: a verified stage and the installer's accepted-release receipt always keep the historical names, whatever the target. The rest of this document says `RELEASE-AUTH`, `SHA256SUMS` and so on for either target's file.
 
 `RELEASE-AUTH.sig` is exactly the 64-byte raw Ed25519 signature over all envelope bytes. There is no home-grown cryptography, prehash signature variant, URL field, arbitrary asset path or shell-sourced content. The domain marker prevents reuse as a different application statement.
 

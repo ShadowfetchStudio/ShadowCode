@@ -39,9 +39,14 @@ trap 'exit 143' TERM
 # shellcheck source=native-release-auth-lib.sh
 source "$(dirname "$0")/native-release-auth-lib.sh"
 load_trust_policy
-copy_file "$BUNDLE/RELEASE-AUTH" "$SCRATCH/RELEASE-AUTH" 4096
-copy_file "$BUNDLE/RELEASE-AUTH.sig" "$SCRATCH/RELEASE-AUTH.sig" 64
+# The requested package selects its target's metadata names; the verified stage
+# keeps the historical names, so installers and receipts read one layout.
+target_for_artifact "$ARTIFACT"; META_TARGET=$ARTIFACT_TARGET
+target_names "$META_TARGET"; META=$TARGET_META
+copy_file "$BUNDLE/RELEASE-AUTH$META" "$SCRATCH/RELEASE-AUTH" 4096
+copy_file "$BUNDLE/RELEASE-AUTH$META.sig" "$SCRATCH/RELEASE-AUTH.sig" 64
 verify_envelope "$SCRATCH/RELEASE-AUTH" "$SCRATCH/RELEASE-AUTH.sig" 0
+[[ "$EN_TARGET" == "$META_TARGET" ]] || fail 'release metadata names another target'
 CURRENT_VERSION=$EN_VERSION; CURRENT_TARGET=$EN_TARGET; CURRENT_EPOCH=$EN_EPOCH; CURRENT_HASH=$(hash_file "$SCRATCH/RELEASE-AUTH")
 [[ -z "$EXPECT_VERSION" || "$EXPECT_VERSION" == "$EN_VERSION" ]] || fail 'unexpected version'
 [[ -z "$EXPECT_COMMIT" || "$EXPECT_COMMIT" == "$EN_COMMIT" ]] || fail 'unexpected commit'
@@ -55,8 +60,8 @@ if [[ -n "$PREVIOUS" ]]; then
   if (( CMP == 0 )); then [[ "$CURRENT_HASH" == "$(hash_file "$SCRATCH/previous-auth")" ]] || fail 'changed release under accepted version'; fi
   parse_envelope "$SCRATCH/RELEASE-AUTH"
 fi
-copy_file "$BUNDLE/RELEASE-MANIFEST.json" "$SCRATCH/RELEASE-MANIFEST.json" 1048576
-copy_file "$BUNDLE/SHA256SUMS" "$SCRATCH/SHA256SUMS" 4096
+copy_file "$BUNDLE/RELEASE-MANIFEST$META.json" "$SCRATCH/RELEASE-MANIFEST.json" 1048576
+copy_file "$BUNDLE/SHA256SUMS$META" "$SCRATCH/SHA256SUMS" 4096
 [[ "$(hash_file "$SCRATCH/RELEASE-MANIFEST.json")" == "$EN_MANIFEST" ]] || fail 'manifest digest mismatch'
 [[ "$(hash_file "$SCRATCH/SHA256SUMS")" == "$EN_SUMS" ]] || fail 'checksums digest mismatch'
 SELECTED=-1

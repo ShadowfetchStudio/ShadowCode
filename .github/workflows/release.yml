@@ -136,10 +136,9 @@ jobs:
           if-no-files-found: error
           compression-level: 0
   # aarch64 packages are built and qualified natively on GitHub's Arm runner
-  # with the same required gates, then retained as an unsigned workflow
-  # artifact. release/trust/policy trusts aarch64, but signing and publication
-  # stay x86_64-only until sign/publish emit a per-target aarch64 envelope
-  # (see docs/RELEASING.md).
+  # with the same required gates and handed off unsigned exactly like x86_64.
+  # The signer authenticates each target's bundle; its release metadata carries
+  # an -aarch64 suffix so both targets publish into one release.
   build-aarch64:
     needs: configuration
     runs-on: ubuntu-24.04-arm
@@ -148,6 +147,8 @@ jobs:
       RUSTUP_TOOLCHAIN: '1.95.0'
       SHADOWCODE_BUILD_JOBS: '4'
       SHADOWCODE_REQUIRE_LINTIAN: '1'
+    outputs:
+      artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -183,21 +184,19 @@ jobs:
             artifacts/native-endurance
             artifacts/native-x11
             artifacts/native-package
-      - name: Retain unsigned aarch64 packages with their receipts
+      - name: Prepare immutable unsigned aarch64 handoff with all required receipts
+        run: node scripts/prepare-native-release.mjs "$RUNNER_TEMP/unsigned-release"
+      - id: unsigned
+        name: Retain this run's exact unsigned aarch64 handoff
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: unsigned-aarch64-packages-${{ github.run_id }}-${{ github.run_attempt }}
+          name: unsigned-release-aarch64-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/unsigned-release
           if-no-files-found: error
           compression-level: 0
-          path: |
-            target/release/bundle/appimage/*_aarch64.AppImage
-            target/release/bundle/appimage/*_aarch64_appimage-runtime-sources.tar.gz
-            target/release/bundle/deb/*_arm64.deb
-            target/release/bundle/SHA256SUMS
-            artifacts/release-verification
 
   sign:
-    needs: [configuration, build]
+    needs: [configuration, build, build-aarch64]
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
@@ -216,21 +215,31 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '22'
-      - name: Require one build artifact identity
+      - name: Require one build artifact identity per target
         env:
           RELEASE_ARTIFACT_ID: ${{ needs.build.outputs.artifact-id }}
-        run: node -e "require('node:assert/strict').match(process.env.RELEASE_ARTIFACT_ID || '', /^[1-9][0-9]*$/)"
+          AARCH64_ARTIFACT_ID: ${{ needs.build-aarch64.outputs.artifact-id }}
+        run: node -e "const assert = require('node:assert/strict'); for (const id of [process.env.RELEASE_ARTIFACT_ID, process.env.AARCH64_ARTIFACT_ID]) assert.match(id || '', /^[1-9][0-9]*$/); assert.notEqual(process.env.RELEASE_ARTIFACT_ID, process.env.AARCH64_ARTIFACT_ID)"
       - name: Download only the immutable artifact ID produced by this build
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           artifact-ids: ${{ needs.build.outputs.artifact-id }}
           path: ${{ runner.temp }}/unsigned-download
           merge-multiple: true
-      - name: Sign and reverify qualified data with the protected key
+      - name: Download only the immutable artifact ID produced by the aarch64 build
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          artifact-ids: ${{ needs.build-aarch64.outputs.artifact-id }}
+          path: ${{ runner.temp }}/unsigned-download-aarch64
+          merge-multiple: true
+      - name: Sign and reverify each target's qualified data with the protected key
         working-directory: trusted
         env:
           NATIVE_RELEASE_SIGNING_KEY_PEM: ${{ secrets.NATIVE_RELEASE_SIGNING_KEY_PEM }}
-        run: node scripts/sign-native-release.mjs "$RUNNER_TEMP/unsigned-download" release/trust "$RUNNER_TEMP/signed-release"
+        run: |
+          mkdir -m 700 "$RUNNER_TEMP/signed-release"
+          node scripts/sign-native-release.mjs "$RUNNER_TEMP/unsigned-download" release/trust "$RUNNER_TEMP/signed-release/x86_64"
+          node scripts/sign-native-release.mjs "$RUNNER_TEMP/unsigned-download-aarch64" release/trust "$RUNNER_TEMP/signed-release/aarch64" aarch64-unknown-linux-gnu
       - id: signed
         name: Retain only authenticated public release data
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -270,7 +279,7 @@ jobs:
         working-directory: trusted
         env:
           GH_TOKEN: ${{ github.token }}
-        run: node scripts/publish-native-release.mjs "$RUNNER_TEMP/signed-download" release/trust
+        run: node scripts/publish-native-release.mjs "$RUNNER_TEMP/signed-download/x86_64" release/trust "$RUNNER_TEMP/signed-download/aarch64"
   # Signed APT repository on GitHub Pages (gh-pages branch, path apt/). Only
   # the .deb that passed publisher authentication is indexed; the repository
   # signing key is a separate OpenPGP key held in the protected environment.
@@ -301,16 +310,19 @@ jobs:
           artifact-ids: ${{ needs.sign.outputs.artifact-id }}
           path: ${{ runner.temp }}/signed-download
           merge-multiple: true
-      - name: Authenticate the .deb against the tracked trust bundle
+      - name: Authenticate each target's .deb against the tracked trust bundle
         working-directory: trusted
         run: |
           version="${GITHUB_REF_NAME#v}"
-          bash scripts/verify-native-release.sh \
-            --bundle-dir "$RUNNER_TEMP/signed-download" \
-            --trust-dir release/trust \
-            --artifact "ShadowCode_${version}_amd64.deb" \
-            --stage-dir "$RUNNER_TEMP/verified-deb" \
-            --expect-version "$version"
+          mkdir -m 700 "$RUNNER_TEMP/verified-deb"
+          for pair in x86_64:amd64 aarch64:arm64; do
+            bash scripts/verify-native-release.sh \
+              --bundle-dir "$RUNNER_TEMP/signed-download/${pair%%:*}" \
+              --trust-dir release/trust \
+              --artifact "ShadowCode_${version}_${pair#*:}.deb" \
+              --stage-dir "$RUNNER_TEMP/verified-deb/${pair#*:}" \
+              --expect-version "$version"
+          done
       - name: Checkout the published Pages branch
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         continue-on-error: true
@@ -326,7 +338,7 @@ jobs:
         run: |
           previous=()
           [ -d "$GITHUB_WORKSPACE/pages/apt" ] && previous=(--previous "$GITHUB_WORKSPACE/pages/apt")
-          node scripts/build-apt-repo.mjs --out "$RUNNER_TEMP/apt" --fingerprint "$APT_FPR" "${previous[@]}" "$RUNNER_TEMP"/verified-deb/*.deb
+          node scripts/build-apt-repo.mjs --out "$RUNNER_TEMP/apt" --fingerprint "$APT_FPR" "${previous[@]}" "$RUNNER_TEMP"/verified-deb/*/*.deb
           gpgv --keyring "$RUNNER_TEMP/apt/shadowcode-archive-keyring.gpg" "$RUNNER_TEMP/apt/dists/stable/InRelease"
       - name: Publish to gh-pages
         env:

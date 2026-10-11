@@ -30,11 +30,23 @@ GitHub's `ubuntu-24.04-arm` runners and pass the same release gates:
 | `ShadowCode_VERSION_x86_64.flatpak` | `ShadowCode_VERSION_aarch64.flatpak` |
 
 The publisher's trust policy (`release/trust/policy`) names both
-`x86_64-unknown-linux-gnu` and `aarch64-unknown-linux-gnu`, so the verifier and
-installer accept a signed aarch64 release. Until the release workflow signs and
-publishes the aarch64 envelope alongside the x86_64 one, aarch64 packages are
-workflow artifacts rather than release assets; build them from source (below)
-on an aarch64 machine in the meantime. Cross-building is not supported: each architecture is built
+`x86_64-unknown-linux-gnu` and `aarch64-unknown-linux-gnu`. Each release
+publishes both targets' packages, each with its own signed metadata; the
+aarch64 files carry an `-aarch64` suffix: `RELEASE-AUTH-aarch64`,
+`RELEASE-AUTH-aarch64.sig`, `RELEASE-MANIFEST-aarch64.json` and
+`SHA256SUMS-aarch64`. Verify an aarch64 package exactly like an x86_64 one,
+naming the aarch64 package; the verifier reads the suffixed metadata itself:
+
+```bash
+bash /path/to/trusted-bundle/scripts/verify-native-release.sh \
+  --bundle-dir /path/to/downloads \
+  --trust-dir /path/to/trusted-bundle/release/trust \
+  --artifact ShadowCode_VERSION_arm64.deb \
+  --stage-dir ./verified-deb-VERSION
+```
+
+Releases before 2.1.0 have no aarch64 packages; build them from source (below)
+on an aarch64 machine. Cross-building is not supported: each architecture is built
 on its own hardware.
 
 Both contain the same compiled application and the same pinned llama.cpp
@@ -93,8 +105,9 @@ in ShadowCode adds or contacts it by itself.
 `scripts/build-apt-repo.mjs` builds the repository (a plain pool plus
 `Packages`, `Release`, `InRelease` and `Release.gpg`, no reprepro needed) and
 `scripts/test-build-apt-repo.mjs` checks it with a throwaway key, `gpgv` and
-`apt-get` in a private root. Releases currently ship amd64 only; the arm64
-index exists so an arm64 package can be added without changing sources.
+`apt-get` in a private root. From 2.1.0 each release adds both the amd64 and
+the arm64 `.deb`, each verified against its own signed envelope first, so one
+`.sources` file serves both architectures.
 
 ## Verify a release before you ship it
 
