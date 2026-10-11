@@ -15,6 +15,14 @@
 - `build-flatpak.py` gains `--arch`, `--state-dir`, `--install-deps-from` and `--cpu-only-llama`.
 - Pull requests that touch packaging, scripts, the desktop, the core or workflows build the Flatpak with the GNOME 50 SDK and run the packaging checks on both architectures.
 - Flatpak: hostname allow-list mode for agent shell commands now works. The host bubblewrap gets its own private network namespace, and a small packaged relay forwards loopback port 3128 to ShadowCode's allow-list proxy over a Unix socket. If the relay or proxy socket cannot be set up, the command is still refused.
+- **The window remembers its size again.** ShadowCode now saves the size of
+  the window's content, without the title bar or the shadow the desktop
+  adds, and reopens at that size. On Wayland desktops such as KDE Plasma
+  the window opens at the size you left it and no longer grows from launch
+  to launch. The remembered size is still fitted to the screen (at most 90%
+  of it, never below 520x640), so it fits a smaller screen too. Sizes saved
+  by earlier versions are ignored, so the first launch after updating opens
+  at the default size.
 
 ## 2.0.0: Flatpak, brand identity, and remote-access fixes
 
