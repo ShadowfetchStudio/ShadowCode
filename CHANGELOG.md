@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.1.0 (unreleased)
+
+- **Signed APT repository.** Each release's authenticated `.deb` is indexed in
+  an APT repository on GitHub Pages (`stable`/`main`, amd64 and arm64), signed
+  with a dedicated OpenPGP key held in the protected release environment.
+  Install it with a deb822 `.sources` file and a `Signed-By` keyring in
+  `/etc/apt/keyrings`; updates and downgrade protection then come from APT.
+  See the README's Debian section and `docs/DISTRIBUTING.md`.
+
 ## 2.0.0: Flatpak, brand identity, and remote-access fixes
 
 - Update repository, contributor, release and package links for the ShadowfetchStudio GitHub account rename. Preserve verification of existing signed releases with the same pinned repository and publisher IDs.

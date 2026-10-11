@@ -121,7 +121,8 @@ test('release workflow separates untrusted build from protected signing and writ
   const workflow = await readFile(new URL('../.github/workflows/release.yml', import.meta.url), 'utf8');
   const build = workflow.split('\n  build:')[1].split('\n  sign:')[0];
   const sign = workflow.split('\n  sign:')[1].split('\n  publish:')[0];
-  const publication = workflow.split('\n  publish:')[1];
+  const publication = workflow.split('\n  publish:')[1].split('\n  apt-repository:')[0];
+  const apt = workflow.split('\n  apt-repository:')[1];
   assert(workflow.includes('permissions:\n  contents: read'));
   assert(!/secrets\.|contents: write|publish-native-release/.test(build));
   assert.match(sign, /needs: \[configuration, build\]/); assert.match(sign, /environment: \$\{\{ needs.configuration.outputs.environment \}\}/);
@@ -132,6 +133,11 @@ test('release workflow separates untrusted build from protected signing and writ
   assert.match(publication, /needs: \[configuration, build, sign\]/); assert.match(publication, /contents: write/);
   assert(!/SIGNING_KEY|secrets\./.test(publication));
   assert.equal([...workflow.matchAll(/secrets\.NATIVE_RELEASE_SIGNING_KEY_PEM/g)].length, 1);
+  assert.match(apt, /needs: \[configuration, sign, publish\]/); assert.match(apt, /environment: \$\{\{ needs.configuration.outputs.environment \}\}/);
+  assert.match(apt, /artifact-ids: \$\{\{ needs.sign.outputs.artifact-id \}\}/);
+  assert.match(apt, /verify-native-release\.sh[\s\S]*build-apt-repo\.mjs/);
+  assert.equal([...workflow.matchAll(/secrets\.NATIVE_APT_SIGNING_KEY\b/g)].length, 1);
+  assert(!/NATIVE_RELEASE_SIGNING_KEY_PEM|npm |cargo |cache:/.test(apt));
   for (const [, ref] of workflow.matchAll(/uses: ([^\s#]+)/g)) assert.match(ref, /@[a-f0-9]{40}$/);
 });
 test('workflow configuration fails closed without real provisioning; fixture-only inputs exercise its parser', () => testFixture(async f => {

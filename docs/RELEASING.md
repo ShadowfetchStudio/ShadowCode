@@ -211,6 +211,36 @@ version are refused. Do not overwrite published versioned assets.
 Don't announce a tag until this job succeeds. Afterwards, compare the uploaded
 checksums and the release text with what you expect.
 
+### APT repository
+
+After `publish`, the `apt-repository` job re-verifies the `.deb` with
+`verify-native-release.sh` against `release/trust`, rebuilds the repository
+with `scripts/build-apt-repo.mjs` (keeping every package already in the
+`gh-pages` pool; changed bytes under an existing file name are refused), checks
+`InRelease` with `gpgv` and pushes `apt/` to `gh-pages`. Pages must be set to
+deploy from that branch.
+
+It needs, in the protected signing environment:
+
+- `secrets.NATIVE_APT_SIGNING_KEY`: the ASCII-armored OpenPGP secret key
+  (`gpg --armor --export-secret-keys FPR`), without a passphrase. Generate it
+  offline; never commit it or a copy of it.
+- `vars.NATIVE_APT_SIGNING_FINGERPRINT`: its 40-digit uppercase primary
+  fingerprint. The builder refuses a secret holding any other key.
+
+Record the public fingerprint in `release/trust/APT-SIGNING-KEY` through a
+reviewed commit before the first repository publication, so users can check
+the keyring they download. Rotating the key is a reviewed change to that file
+and the two settings; announce it, since every installed source must import
+the new keyring.
+
+Check afterwards:
+
+```sh
+node --test scripts/test-build-apt-repo.mjs   # locally, before tagging
+curl -fsSL https://shadowfetchstudio.github.io/ShadowCode/apt/dists/stable/InRelease | gpgv --keyring ./shadowcode-archive-keyring.gpg
+```
+
 ## 6. Install check
 
 Use the complete independently authenticated installer bundle, including its

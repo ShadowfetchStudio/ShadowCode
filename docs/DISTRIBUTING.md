@@ -18,8 +18,63 @@ Ubuntu 24.04 and later):
 | `ShadowCode_VERSION_amd64.AppImage` | One user installs it in their home folder with the authenticated installer. It carries its own WebKit and does not need FUSE (`libfuse2`). |
 
 Both contain the same compiled application and the same pinned llama.cpp
-runtime. There is no ShadowCode APT repository: a distribution that ships the
-`.deb` delivers updates itself (see [Updates](#updates)).
+runtime. Each release is also indexed in a signed APT repository (see
+[APT repository](#apt-repository)); a distribution that ships the `.deb`
+itself delivers updates itself (see [Updates](#updates)).
+
+## APT repository
+
+The release workflow publishes `https://shadowfetchstudio.github.io/ShadowCode/apt`
+(suite `stable`, component `main`, architectures `amd64 arm64`) from the
+`gh-pages` branch. Configure it with a deb822 source and a scoped keyring in
+`/etc/apt/keyrings`:
+
+```sh
+sudo install -d -m 0755 /etc/apt/keyrings
+curl -fsSLo /tmp/shadowcode-archive-keyring.gpg \
+  https://shadowfetchstudio.github.io/ShadowCode/apt/shadowcode-archive-keyring.gpg
+gpg --show-keys --with-fingerprint /tmp/shadowcode-archive-keyring.gpg
+# Compare the fingerprint with release/trust/APT-SIGNING-KEY in a reviewed
+# copy of the repository at a release tag; stop if it differs.
+sudo install -m 0644 /tmp/shadowcode-archive-keyring.gpg /etc/apt/keyrings/
+sudo tee /etc/apt/sources.list.d/shadowcode.sources >/dev/null <<'EOF'
+Types: deb
+URIs: https://shadowfetchstudio.github.io/ShadowCode/apt
+Suites: stable
+Components: main
+Architectures: amd64 arm64
+Signed-By: /etc/apt/keyrings/shadowcode-archive-keyring.gpg
+EOF
+sudo apt update && sudo apt install shadow-code
+```
+
+`shadowcode.sources` in the repository root is the same source file.
+
+The keyring is fetched once, over HTTPS, and must be checked against the
+fingerprint in a reviewed copy of the repository: like the AppImage
+installer's trust bundle, a key downloaded beside the packages does not
+authenticate itself. `Signed-By` scopes the key to this one source; it is not
+added to APT's global trusted keys. The repository key is a separate OpenPGP
+key from the Ed25519 publisher key: CI indexes only a `.deb` that already
+passed `verify-native-release.sh` against `release/trust`, then signs
+`InRelease` and `Release.gpg`.
+
+Downgrade and rollback protection comes from APT. It verifies `InRelease` with
+the keyring, checks every index and package against the SHA-256 sums in the
+signed `Release`, and never replaces an installed version with a lower one
+during `apt upgrade`; a downgrade needs an explicit `shadow-code=VERSION` and
+`--allow-downgrades`. Earlier versions stay in the pool so an administrator can
+roll back deliberately. `Release` carries no `Valid-Until` by default, so a
+mirror or network attacker could keep serving an old signed `Release` (a
+freeze); that withholds updates but cannot install anything older than what is
+installed. The repository is published by the release workflow only; nothing
+in ShadowCode adds or contacts it by itself.
+
+`scripts/build-apt-repo.mjs` builds the repository (a plain pool plus
+`Packages`, `Release`, `InRelease` and `Release.gpg`, no reprepro needed) and
+`scripts/test-build-apt-repo.mjs` checks it with a throwaway key, `gpgv` and
+`apt-get` in a private root. Releases currently ship amd64 only; the arm64
+index exists so an arm64 package can be added without changing sources.
 
 ## Verify a release before you ship it
 
@@ -153,7 +208,7 @@ the release notes and what to do next, chosen by how ShadowCode was installed:
 | Installed as | Next step shown |
 | --- | --- |
 | AppImage | Download the AppImage and its four signature files, then run the authenticated installer. The installer verifies the signature before it runs anything. |
-| Debian package | Update through the package manager or the distribution's updates; a `.deb` installed by hand is verified with the trusted verifier and installed with apt. |
+| Debian package | `apt upgrade` from the ShadowCode APT repository, or the distribution's updates; a `.deb` installed by hand is verified with the trusted verifier and installed with apt. |
 | Other system package | Update through the package manager. |
 | Built from source | `git fetch --tags && git checkout vVERSION`, then build. |
 
