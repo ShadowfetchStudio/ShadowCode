@@ -26,7 +26,11 @@ async function fixture(t) {
   const libraryParent = path.join(home, '.local/lib'), library = path.join(libraryParent, 'shadowcode');
   const marker = path.join(root, 'candidate-executed');
   const installer = path.join(bundle, 'scripts/install-appimage.sh');
-  const env = { ...process.env, HOME: home, XDG_DATA_HOME: path.join(home, '.local/share') };
+  // Pin the host to x86_64 so the suite means the same on any runner;
+  // armHost() puts its aarch64 shim ahead of this one.
+  const x86 = path.join(root, 'x86-uname'); await mkdir(x86);
+  await writeFile(path.join(x86, 'uname'), `#!/bin/sh\nif [ "\${1:-}" = -m ]; then echo x86_64; else exec /usr/bin/uname "$@"; fi\n`, { mode: 0o755 });
+  const env = { ...process.env, PATH: `${x86}:${process.env.PATH}`, HOME: home, XDG_DATA_HOME: path.join(home, '.local/share') };
   delete env.SHADOWCODE_SHA256SUMS; delete env.SHADOWCODE_GIT_SHA;
   const run = (args, extra = {}) => spawnSync('/bin/bash', [installer, ...args], { env: { ...env, ...extra }, encoding: 'utf8', timeout: 20000 });
   return { root, bundle, home, key, library, libraryParent, marker, installer, env, run, state: path.join(libraryParent, '.shadowcode-release-state'), journal: path.join(libraryParent, '.shadowcode-install-intent') };
@@ -417,7 +421,7 @@ for (const role of ['deb', 'runtime-sources']) test(`signed ${role} asset never 
 async function armHost(f) {
   const bin = path.join(f.root, 'arm-uname'); await mkdir(bin);
   await writeFile(path.join(bin, 'uname'), `#!/bin/sh\nif [ "\${1:-}" = -m ]; then echo aarch64; else exec /usr/bin/uname "$@"; fi\n`, { mode: 0o755 });
-  return { PATH: `${bin}:${process.env.PATH}` };
+  return { PATH: `${bin}:${f.env.PATH}` };
 }
 test('aarch64 host refuses a signed aarch64 release while the trust policy names only x86_64', async t => {
   const f = await fixture(t), env = await armHost(f), app = await candidate(f, '0.28.0', '', 'aarch64');

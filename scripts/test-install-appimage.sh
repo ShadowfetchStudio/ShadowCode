@@ -8,6 +8,13 @@ SOURCE_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SCRATCH="$(mktemp -d)"
 cleanup() { chmod -R u+w -- "$SCRATCH" 2>/dev/null || true; rm -rf -- "$SCRATCH"; }
 trap cleanup EXIT
+# Pin the host to x86_64 so the suite means the same on any runner; the
+# aarch64 scenario puts its own shim ahead of this one.
+mkdir -p "$SCRATCH/x86-uname"
+printf '#!/bin/sh\nif [ "${1:-}" = -m ]; then echo x86_64; else exec %s "$@"; fi\n' "$(command -v uname)" > "$SCRATCH/x86-uname/uname"
+chmod 755 "$SCRATCH/x86-uname/uname"
+PATH="$SCRATCH/x86-uname:$PATH"
+export PATH
 # Self-contained disposable trusted installer bundle; never provision the checkout.
 ROOT="$SCRATCH/installer"
 mkdir -p "$ROOT/scripts" "$ROOT/assets/icons" "$ROOT/packaging"
