@@ -364,7 +364,13 @@ try {
  await writePrivateSessionReport(session,cleanup||{ok:false,services:[],failures:['Fixture stopped before cleanup']});
 }\n`);
     const env = { ...process.env, PATH:`${directory}/bin:${process.env.PATH}`, SHADOW_X11_ARTIFACTS:path.join(directory,'artifacts') };
-    const result = await execute(process.execPath,[wrapper,process.execPath,path.join(directory,'harness.mjs'),directory],{env,timeout:15000,maxBuffer:1024*1024});
+    const result = await execute(process.execPath,[wrapper,process.execPath,path.join(directory,'harness.mjs'),directory],{env,timeout:15000,maxBuffer:1024*1024}).catch(async error => {
+      // Show the wrapper's own report: stderr alone hides why it failed.
+      const runs=await readdir(path.join(directory,'artifacts')).catch(()=>[]);
+      const reports=await Promise.all(runs.map(run=>readFile(path.join(directory,'artifacts',run,'result.json'),'utf8').catch(e=>String(e))));
+      error.message+=`\nstdout:\n${error.stdout}\nresult.json:\n${reports.join('\n')}`;
+      throw error;
+    });
     const runs=await readdir(path.join(directory,'artifacts')); assert.equal(runs.length,1);
     const report=JSON.parse(await readFile(path.join(directory,'artifacts',runs[0],'result.json'),'utf8')); runtime=report.runtime;
     assert.equal(report.ok,true,result.stdout+'\n'+result.stderr);
