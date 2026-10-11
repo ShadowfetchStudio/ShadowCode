@@ -12,5 +12,12 @@ if [ -n "$shadowcode_gdk_backend" ]; then
     export GDK_BACKEND="$shadowcode_gdk_backend"
 fi
 unset shadowcode_gdk_backend
-export LD_LIBRARY_PATH="$APPDIR/usr/lib:$APPDIR/usr/lib/x86_64-linux-gnu:$APPDIR/usr/lib64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+# The bundler copies host libraries into the Debian multiarch directory of the
+# architecture the AppImage was built on (x86_64 or aarch64).
+shadowcode_multiarch=x86_64-linux-gnu
+if [ -d "$APPDIR/usr/lib/aarch64-linux-gnu" ]; then
+    shadowcode_multiarch=aarch64-linux-gnu
+fi
+export LD_LIBRARY_PATH="$APPDIR/usr/lib:$APPDIR/usr/lib/$shadowcode_multiarch:$APPDIR/usr/lib64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+unset shadowcode_multiarch
 exec "$APPDIR/usr/bin/shadowcode" "$@"

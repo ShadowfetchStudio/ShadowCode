@@ -7,9 +7,14 @@ import { tmpdir } from 'node:os';
 import { spawn, execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { hostArch } from './native-arch.mjs';
+
+// Gate scripts name the packages of the build host's architecture. On x86_64
+// they are byte-identical to the historical scripts (and their digests).
+const ARCH = hostArch();
 
 const version = String.raw`VERSION=$(node -p "require('./src-tauri/tauri.conf.json').version")`;
-const packaged = `${version}\nBINARY="$GITHUB_WORKSPACE/target/release/bundle/appimage/ShadowCode_${'${VERSION}'}_amd64.AppImage"`;
+const packaged = `${version}\nBINARY="$GITHUB_WORKSPACE/target/release/bundle/appimage/ShadowCode_${'${VERSION}'}_${ARCH.appimage}.AppImage"`;
 export const GATES = {
   'release-tests': { script: 'node --test --test-reporter=tap scripts/test-native-release.mjs scripts/test-native-release-verification.mjs scripts/test-publisher-auth.mjs scripts/test-native-release-signing.mjs scripts/test-native-test-session.mjs scripts/test-clean-host-mcp-receipt.mjs scripts/test-clean-host-container.mjs scripts/test-native-app-run.mjs scripts/test-llama-build-inputs.mjs\nnode scripts/test-native-process-ownership.mjs' },
   'release-auth': { script: 'node scripts/check-secrets.mjs\nnode --test --test-reporter=tap scripts/test-native-release-auth.mjs scripts/test-check-secrets.mjs', scope: 'Publisher authentication parser, crypto, replay and private-snapshot fixtures with ephemeral keys; production signing and installer integration are separate.' },
@@ -30,12 +35,12 @@ node --input-type=module -e 'import assert from "node:assert/strict"; import { r
   'managed-runtime': { script: 'bash scripts/build-llama.cpp.sh --no-user-install\nnode --test --test-reporter=tap scripts/test-llama-runtime.mjs' },
   packages: { artifacts: true, script: `${version}\n` + String.raw`node scripts/build-native.mjs
 node --test --test-reporter=tap scripts/test-native-packaging-env.mjs scripts/test-native-deb.mjs
-node scripts/check-native-package.mjs "target/release/bundle/appimage/ShadowCode_${'${VERSION}'}_amd64.AppImage" "target/release/bundle/deb/ShadowCode_${'${VERSION}'}_amd64.deb"
+node scripts/check-native-package.mjs "target/release/bundle/appimage/ShadowCode_${'${VERSION}'}_${ARCH.appimage}.AppImage" "target/release/bundle/deb/ShadowCode_${'${VERSION}'}_${ARCH.deb}.deb"
 node scripts/test-native-runtime-write-errors.mjs
 node scripts/test-native-runtime-sources.mjs
 node scripts/test-native-runtime.mjs` },
   'clean-host-packages': { artifacts: true, unchanged: true, scope: 'Both packages installed or extracted in a network-disabled Debian 13 runtime container; offline CLI status, Debian launcher/icon metadata, packaged MCP stdio initialize/tool discovery and a visible first GUI window under Xvfb. Interactive GUI tasks, physical Wayland, local inference, model downloads and installer rollback remain separate.', script: `${version}\n` + String.raw`docker build -f scripts/clean-host-runtime.Dockerfile -t shadowcode-clean-runtime:ci scripts
-node scripts/test-clean-host-packages.mjs "target/release/bundle/appimage/ShadowCode_${'${VERSION}'}_amd64.AppImage" "target/release/bundle/deb/ShadowCode_${'${VERSION}'}_amd64.deb" artifacts/native-package/SHA256SUMS` },
+node scripts/test-clean-host-packages.mjs "target/release/bundle/appimage/ShadowCode_${'${VERSION}'}_${ARCH.appimage}.AppImage" "target/release/bundle/deb/ShadowCode_${'${VERSION}'}_${ARCH.deb}.deb" artifacts/native-package/SHA256SUMS` },
   'packaged-behavior': { artifacts: true, unchanged: true, scope: 'Packaged fixture behavior on the CI build host; authenticated cloud-consent check is optional and reported separately.', script: `${packaged}\n` + String.raw`SHADOW_DESKTOP_BINARY="$BINARY" SHADOW_CLI_ARGS='["--appimage-extract-and-run"]' node scripts/test-native-cli.mjs
 SHADOW_DESKTOP_BINARY="$BINARY" SHADOW_CLI_ARGS='["--appimage-extract-and-run"]' node scripts/test-native-tui.mjs
 SHADOW_DESKTOP_BINARY="$BINARY" SHADOW_DESKTOP_ARGS='["--appimage-extract-and-run","ui"]' SHADOW_NATIVE_DEFAULT_PROFILE=1 node scripts/run-native-x11.mjs node scripts/test-native-desktop.mjs
@@ -72,7 +77,7 @@ export async function digest(file) {
 export async function packageHashes() {
   const { version: releaseVersion } = JSON.parse(await readFile('src-tauri/tauri.conf.json', 'utf8'));
   const base = 'target/release/bundle';
-  const files = [`${base}/appimage/ShadowCode_${releaseVersion}_amd64.AppImage`, `${base}/appimage/ShadowCode_${releaseVersion}_appimage-runtime-sources.tar.gz`, `${base}/deb/ShadowCode_${releaseVersion}_amd64.deb`];
+  const files = [`${base}/appimage/ShadowCode_${releaseVersion}_${ARCH.appimage}.AppImage`, `${base}/appimage/ShadowCode_${releaseVersion}_${ARCH.runtimeSources}.tar.gz`, `${base}/deb/ShadowCode_${releaseVersion}_${ARCH.deb}.deb`];
   return Object.fromEntries(await Promise.all(files.map(async file => [path.basename(file), await digest(file)])));
 }
 

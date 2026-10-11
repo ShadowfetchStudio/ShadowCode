@@ -6,7 +6,9 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
-import { assetNames, createEnvelope, signEnvelope, verifyBundle, parseEnvelope, parseTrustPolicy, publicKeyIdentity, digestBytes, IDENTITY, LIMITS } from './native-release-auth.mjs';
+import { assetNames, createEnvelope, signEnvelope, verifyBundle, parseEnvelope, parseTrustPolicy, publicKeyIdentity, digestBytes, IDENTITY, LIMITS, TARGETS } from './native-release-auth.mjs';
+
+const ARM = 'aarch64-unknown-linux-gnu';
 
 const verifier = fileURLToPath(new URL('./verify-native-release.sh', import.meta.url));
 function keyPair() {
@@ -15,29 +17,29 @@ function keyPair() {
   const publicPem = publicKey.export({ type: 'spki', format: 'pem' });
   return { privatePem, publicPem, id: publicKeyIdentity(publicPem) };
 }
-async function trustPolicy(directory, keys, { minimumVersion = '0.32.0', minimumEpoch = 1 } = {}) {
+async function trustPolicy(directory, keys, { minimumVersion = '0.32.0', minimumEpoch = 1, target = IDENTITY.target } = {}) {
   await mkdir(directory, { recursive: true });
-  const rows = ['ShadowCode-Release-Trust-v1', `repository=${IDENTITY.repository}`, `repository-id=${IDENTITY.repositoryId}`, `owner-id=${IDENTITY.ownerId}`, `target=${IDENTITY.target}`, `channel=${IDENTITY.channel}`, `minimum-epoch=${minimumEpoch}`, `minimum-version=${minimumVersion}`, 'keys=ed25519-spki-sha256'];
+  const rows = ['ShadowCode-Release-Trust-v1', `repository=${IDENTITY.repository}`, `repository-id=${IDENTITY.repositoryId}`, `owner-id=${IDENTITY.ownerId}`, `target=${target}`, `channel=${IDENTITY.channel}`, `minimum-epoch=${minimumEpoch}`, `minimum-version=${minimumVersion}`, 'keys=ed25519-spki-sha256'];
   for (const key of keys) {
     rows.push(`key=${key.epoch ?? 1}\t${key.id}\t${key.minimum ?? '0.0.0'}\t${key.maximum ?? '999999999.999999999.999999999'}`);
     await writeFile(path.join(directory, `${key.id}.pem`), key.publicPem);
   }
   await writeFile(path.join(directory, 'policy'), `${rows.join('\n')}\n`);
 }
-async function makeBundle(directory, key, { version = '0.32.0', commit = 'a'.repeat(40), epoch = 1, marker } = {}) {
+async function makeBundle(directory, key, { version = '0.32.0', commit = 'a'.repeat(40), epoch = 1, marker, target = IDENTITY.target } = {}) {
   await mkdir(directory, { recursive: true });
   const hashes = {};
-  for (const [role, name] of assetNames(version)) {
+  for (const [role, name] of assetNames(version, target)) {
     const bytes = role === 'appimage' ? Buffer.from(`#!/bin/sh\nprintf executed > '${marker}'\n`) : Buffer.from(`fixture ${role} ${version} ${commit}\n`);
     hashes[name] = digestBytes(bytes);
     await writeFile(path.join(directory, name), bytes, { mode: 0o755 });
   }
   await writeFile(path.join(directory, 'SHA256SUMS'), Object.entries(hashes).map(([name, hash]) => `${hash}  ${name}\n`).join(''));
-  await writeFile(path.join(directory, 'RELEASE-MANIFEST.json'), `${JSON.stringify({ schema: 1, tag: `v${version}`, commit, target: IDENTITY.target, assets: hashes }, null, 2)}\n`);
-  const bytes = await createEnvelope({ bundleDir: directory, version, commit, keyId: key.id, keyEpoch: epoch });
+  await writeFile(path.join(directory, 'RELEASE-MANIFEST.json'), `${JSON.stringify({ schema: 1, tag: `v${version}`, commit, target, assets: hashes }, null, 2)}\n`);
+  const bytes = await createEnvelope({ bundleDir: directory, version, commit, keyId: key.id, keyEpoch: epoch, target });
   await writeFile(path.join(directory, 'RELEASE-AUTH'), bytes);
   await writeFile(path.join(directory, 'RELEASE-AUTH.sig'), signEnvelope(bytes, key.privatePem));
-  return { version, commit, artifact: assetNames(version)[0][1] };
+  return { version, commit, artifact: assetNames(version, target)[0][1] };
 }
 async function fixture(t) {
   const root = await mkdtemp(path.join(tmpdir(), 'shadowcode-auth-test-'));
@@ -345,4 +347,68 @@ test('parser rejects unsupported schemas and signing refuses a different key', a
   assert.throws(() => parseEnvelope(Buffer.from(bytes.toString().replace('Auth-v1', 'Auth-v2'))));
   assert.throws(() => parseTrustPolicy(Buffer.from('ShadowCode-Release-Trust-v2\n')));
   assert.throws(() => signEnvelope(bytes, keyPair().privatePem), /fingerprint mismatch/);
+});
+
+test('x86_64 release names and envelope target are unchanged', () => {
+  assert.equal(IDENTITY.target, 'x86_64-unknown-linux-gnu');
+  assert.deepEqual(assetNames('1.2.3'), [
+    ['appimage', 'ShadowCode_1.2.3_amd64.AppImage'],
+    ['deb', 'ShadowCode_1.2.3_amd64.deb'],
+    ['runtime-sources', 'ShadowCode_1.2.3_appimage-runtime-sources.tar.gz'],
+  ]);
+  assert.deepEqual(assetNames('1.2.3', IDENTITY.target), assetNames('1.2.3'));
+  assert.deepEqual(Object.keys(TARGETS).sort(), [ARM, IDENTITY.target].sort());
+});
+test('aarch64 releases use Tauri and Debian names that cannot collide with x86_64 assets', () => {
+  const arm = assetNames('1.2.3', ARM);
+  assert.deepEqual(arm, [
+    ['appimage', 'ShadowCode_1.2.3_aarch64.AppImage'],
+    ['deb', 'ShadowCode_1.2.3_arm64.deb'],
+    ['runtime-sources', 'ShadowCode_1.2.3_aarch64_appimage-runtime-sources.tar.gz'],
+  ]);
+  const x86 = new Set(assetNames('1.2.3').map(([, name]) => name));
+  assert(arm.every(([, name]) => !x86.has(name)));
+  assert.throws(() => assetNames('1.2.3', 'riscv64gc-unknown-linux-gnu'), /Unsupported release target/);
+});
+test('an aarch64 release verifies in Node and OpenSSL when the policy trusts both targets', async t => {
+  const f = await fixture(t), armDir = path.join(f.root, 'arm');
+  await trustPolicy(f.trustDir, [f.key], { target: `${IDENTITY.target},${ARM}` });
+  const arm = await makeBundle(armDir, f.key, { marker: f.marker, target: ARM });
+  assert.equal(arm.artifact, 'ShadowCode_0.32.0_aarch64.AppImage');
+  const { metadata } = await accepted(f, { bundleDir: armDir, artifact: arm.artifact, stageDir: path.join(f.root, 'arm-stage'), expectedTarget: ARM });
+  assert.equal(metadata.target, ARM);
+  assert.equal(parseEnvelope(await readFile(path.join(armDir, 'RELEASE-AUTH'))).target, ARM);
+  for (const [role, artifact] of assetNames(f.version, ARM)) await accepted(f, { bundleDir: armDir, artifact, stageDir: path.join(f.root, `arm-${role}`) });
+  // The x86_64 release still verifies under the two-target policy.
+  await accepted(f, { stageDir: path.join(f.root, 'x86-stage'), expectedTarget: IDENTITY.target });
+  await assert.rejects(verifyBundle({ ...f, expectedTarget: ARM }), /Unexpected target/);
+  // An x86_64 basename is not an authenticated aarch64 asset.
+  await refused(f, { bundleDir: armDir, artifact: f.artifact, stageDir: path.join(f.root, 'arm-wrong-name') }, /exact authenticated basename/);
+});
+test('an aarch64 release is refused by an x86_64-only trust policy', async t => {
+  const f = await fixture(t), armDir = path.join(f.root, 'arm');
+  const arm = await makeBundle(armDir, f.key, { marker: f.marker, target: ARM });
+  await refused(f, { bundleDir: armDir, artifact: arm.artifact }, /release target is not trusted/);
+  await trustPolicy(f.trustDir, [f.key], { target: ARM });
+  await refused(f, {}, /release target is not trusted/);
+  await accepted(f, { bundleDir: armDir, artifact: arm.artifact });
+});
+test('trust policies refuse unknown, duplicate and empty targets', async t => {
+  const f = await fixture(t);
+  for (const target of ['riscv64gc-unknown-linux-gnu', `${IDENTITY.target},${IDENTITY.target}`, `${IDENTITY.target},`, `,${IDENTITY.target}`, `${IDENTITY.target} ,${ARM}`]) {
+    await trustPolicy(f.trustDir, [f.key], { target });
+    assert.throws(() => parseTrustPolicy(Buffer.from(`ShadowCode-Release-Trust-v1\nrepository=${IDENTITY.repository}\nrepository-id=${IDENTITY.repositoryId}\nowner-id=${IDENTITY.ownerId}\ntarget=${target}\nchannel=stable\nminimum-epoch=1\nminimum-version=0.1.0\nkeys=ed25519-spki-sha256\nkey=1\t${f.key.id}\t0.0.0\t1.0.0\n`)));
+    await refused(f, {}, /wrong trusted target/);
+  }
+});
+test('a signed envelope cannot claim an unsupported target or switch target against accepted history', async t => {
+  const f = await fixture(t);
+  await mutateEnvelope(f, text => text.replace(`target=${IDENTITY.target}`, 'target=riscv64gc-unknown-linux-gnu'));
+  await refused(f, {}, /wrong target/);
+  const g = await fixture(t), previousDir = path.join(g.root, 'previous'), armDir = path.join(g.root, 'arm');
+  await trustPolicy(g.trustDir, [g.key], { target: `${IDENTITY.target},${ARM}` });
+  await makeBundle(previousDir, g.key, { version: '0.31.0', marker: g.marker });
+  const arm = await makeBundle(armDir, g.key, { marker: g.marker, target: ARM });
+  await refused(g, { bundleDir: armDir, artifact: arm.artifact, previousDir }, /release target changed/);
+  await accepted(g, { previousDir });
 });

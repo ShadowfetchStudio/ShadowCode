@@ -19,12 +19,13 @@ import {
   GTK_PLUGIN_SHA256,
   installPinnedGtkPlugin,
 } from "./native-packaging-env.mjs";
+import { hostArch } from "./native-arch.mjs";
 
 const exec = promisify(execFile);
 const root = fileURLToPath(new URL("../", import.meta.url));
 const linuxdeploy = path.join(
   root,
-  "target/.tauri/linuxdeploy-x86_64.AppImage",
+  `target/.tauri/linuxdeploy-${hostArch().arch}.AppImage`,
 );
 const hermesNode = "/usr/local/bin/node";
 const dirtyPath = `${path.dirname(hermesNode)}:/snap/bin:/usr/bin:/bin`;

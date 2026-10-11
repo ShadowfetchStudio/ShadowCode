@@ -25,16 +25,26 @@ spirv_commit=$(sed -n 's/^spirv_headers_commit=//p' tools/llama.cpp.pin)
 llama_commit=$(sed -n 's/^commit=//p' tools/llama.cpp.pin)
 spirv_prefix="$native_cache/spirv-$spirv_commit"
 llama_build="$native_cache/llama-$llama_commit"
-cmake -S tools/spirv-headers -B "$native_cache/spirv-build-$spirv_commit" -G Ninja -DCMAKE_INSTALL_PREFIX="$spirv_prefix"
-cmake --install "$native_cache/spirv-build-$spirv_commit"
+# SHADOWCODE_LLAMA_VULKAN=0 (scripts/build-flatpak.py --cpu-only-llama) is a
+# faster CI build without the Vulkan module; releases always build it.
+llama_vulkan=(
+  -DGGML_VULKAN=ON -DVulkan_GLSLC_EXECUTABLE=/usr/bin/glslc
+  -DCMAKE_PREFIX_PATH="$spirv_prefix"
+  -DCMAKE_C_FLAGS="-isystem $spirv_prefix/include"
+  -DCMAKE_CXX_FLAGS="-isystem $spirv_prefix/include"
+)
+if [[ "${SHADOWCODE_LLAMA_VULKAN:-1}" == 0 ]]; then
+  llama_vulkan=(-DGGML_VULKAN=OFF)
+  llama_build="$llama_build-cpu"
+else
+  cmake -S tools/spirv-headers -B "$native_cache/spirv-build-$spirv_commit" -G Ninja -DCMAKE_INSTALL_PREFIX="$spirv_prefix"
+  cmake --install "$native_cache/spirv-build-$spirv_commit"
+fi
 cmake -S tools/llama.cpp -B "$llama_build" -G Ninja \
   -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON \
   -DLLAMA_BUILD_COMMIT="$llama_commit" \
   -DGGML_BACKEND_DL=ON -DGGML_CPU_ALL_VARIANTS=ON -DGGML_NATIVE=OFF \
-  -DGGML_CUDA=OFF -DGGML_VULKAN=ON -DVulkan_GLSLC_EXECUTABLE=/usr/bin/glslc \
-  -DCMAKE_PREFIX_PATH="$spirv_prefix" \
-  -DCMAKE_C_FLAGS="-isystem $spirv_prefix/include" \
-  -DCMAKE_CXX_FLAGS="-isystem $spirv_prefix/include" \
+  -DGGML_CUDA=OFF "${llama_vulkan[@]}" \
   -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_TOOLS=ON \
   -DLLAMA_BUILD_SERVER=ON -DLLAMA_BUILD_UI=OFF -DLLAMA_USE_PREBUILT_UI=OFF -DLLAMA_CURL=OFF \
   -DCMAKE_INSTALL_RPATH='$ORIGIN' -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
@@ -50,7 +60,7 @@ cp tools/llama.cpp/vendor/cpp-httplib/LICENSE /app/lib/shadowcode/NOTICES/cpp-ht
 sed -n '/This software is available under 2 licenses/,$p' tools/llama.cpp/vendor/stb/stb_image.h > /app/lib/shadowcode/NOTICES/stb_image-LICENSE
 sed -n '/This software is available as a choice of the following licenses/,$p' tools/llama.cpp/vendor/miniaudio/miniaudio.h > /app/lib/shadowcode/NOTICES/miniaudio-LICENSE
 sed -n '1,/For more information, please refer to/p' tools/llama.cpp/vendor/sheredom/subprocess.h > /app/lib/shadowcode/NOTICES/subprocess.h-LICENSE
-cp tools/spirv-headers/LICENSE /app/lib/shadowcode/NOTICES/SPIRV-Headers-LICENSE
+[[ "${SHADOWCODE_LLAMA_VULKAN:-1}" == 0 ]] || cp tools/spirv-headers/LICENSE /app/lib/shadowcode/NOTICES/SPIRV-Headers-LICENSE
 sed -n '/LLM_ARCH_NAMES = {/,/^};/p' tools/llama.cpp/src/llama-arch.cpp | sed -n 's/.*"\([^"]*\)".*/\1/p' > /app/lib/shadowcode/architectures.txt
 
 # Git and Node are fallbacks when a host installation is absent. Host tools

@@ -50,17 +50,26 @@ while IFS=$'\t' read -r name archive directory; do
     done < <(jq -r --arg name "$name" '.packages[] | select(.name == $name) | .notices[]' alpine-sources.json)
 done < <(jq -r '.packages[] | [.name,.archive,.sourceDirectory] | @tsv' alpine-sources.json)
 
+# The container runs natively for the target (docker --platform linux/amd64 or
+# linux/arm64), so the runtime is named after this machine: runtime-x86_64 or
+# runtime-aarch64.
+ARCH="$(uname -m)"
+case "$ARCH" in
+    x86_64|aarch64) ;;
+    *) echo "Unsupported AppImage runtime architecture: $ARCH" >&2; exit 1 ;;
+esac
+
 cd "$RUNTIME_SOURCE"
 printf 'https://github.com/AppImage/type2-runtime/commit/%s\n' "$UPSTREAM_COMMIT" > src/runtime/version
 sed -i 's/-static-pie/-static-pie -Wl,-Map,\/out\/runtime.map/' src/runtime/Makefile
 bash scripts/build-runtime.sh
-cp out/runtime-x86_64 out/runtime-x86_64.debug /out/
+cp "out/runtime-$ARCH" "out/runtime-$ARCH.debug" /out/
 cp /lib/apk/db/installed /out/build-packages.db
 apk info -vv | sort > /out/build-packages.txt
 clang --version > /out/compiler.txt
-readelf -d /out/runtime-x86_64 > /out/runtime-dynamic.txt
+readelf -d "/out/runtime-$ARCH" > /out/runtime-dynamic.txt
 if grep -q NEEDED /out/runtime-dynamic.txt; then
     echo 'The AppImage runtime must link statically.' >&2
     exit 1
 fi
-/out/runtime-x86_64 --appimage-version
+"/out/runtime-$ARCH" --appimage-version

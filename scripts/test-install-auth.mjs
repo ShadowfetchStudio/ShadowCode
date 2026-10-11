@@ -31,9 +31,9 @@ async function fixture(t) {
   const run = (args, extra = {}) => spawnSync('/bin/bash', [installer, ...args], { env: { ...env, ...extra }, encoding: 'utf8', timeout: 20000 });
   return { root, bundle, home, key, library, libraryParent, marker, installer, env, run, state: path.join(libraryParent, '.shadowcode-release-state'), journal: path.join(libraryParent, '.shadowcode-install-intent') };
 }
-async function candidate(f, version = '0.28.0', suffix = '') {
+async function candidate(f, version = '0.28.0', suffix = '', arch = 'amd64') {
   const directory = path.join(f.root, `release-${version}${suffix}`); await mkdir(directory, { recursive: true });
-  const file = path.join(directory, `ShadowCode_${version}_amd64.AppImage`);
+  const file = path.join(directory, `ShadowCode_${version}_${arch}.AppImage`);
   await writeFile(file, `#!/usr/bin/env bash
 set -euo pipefail
 printf '%s\\n' "$0" >> '${f.marker}'
@@ -411,4 +411,33 @@ for (const role of ['deb', 'runtime-sources']) test(`signed ${role} asset never 
   await writeFile(path.join(directory, 'RELEASE-AUTH'), envelope); await writeFile(path.join(directory, 'RELEASE-AUTH.sig'), signEnvelope(envelope, privatePem));
   const result = f.run([target]); refused(result); assert.match(result.stderr, /Only the authenticated AppImage role/);
   await missing(f.marker); await missing(f.state);
+});
+
+// aarch64 hosts: a uname shim selects the host; fixture AppImages are scripts.
+async function armHost(f) {
+  const bin = path.join(f.root, 'arm-uname'); await mkdir(bin);
+  await writeFile(path.join(bin, 'uname'), `#!/bin/sh\nif [ "\${1:-}" = -m ]; then echo aarch64; else exec /usr/bin/uname "$@"; fi\n`, { mode: 0o755 });
+  return { PATH: `${bin}:${process.env.PATH}` };
+}
+test('aarch64 host refuses a signed aarch64 release while the trust policy names only x86_64', async t => {
+  const f = await fixture(t), env = await armHost(f), app = await candidate(f, '0.28.0', '', 'aarch64');
+  const result = f.run([app], env); refused(result); assert.match(result.stderr, /release target is not trusted/);
+  await missing(f.state); await missing(path.join(f.home, 'Applications/ShadowCode.AppImage'));
+  assert.equal((await readFile(f.marker, 'utf8').catch(() => '')), '', 'Unauthenticated candidate executed');
+});
+test('aarch64 host installs the signed aarch64 AppImage under aarch64 names and refuses x86_64', async t => {
+  const f = await fixture(t), env = await armHost(f);
+  await provision(f.bundle, f.key, [IDENTITY.target, 'aarch64-unknown-linux-gnu']);
+  const x86 = await candidate(f, '0.28.0', '-x86');
+  let result = f.run([x86], env); refused(result); assert.match(result.stderr, /Only the authenticated AppImage role/);
+  await missing(f.marker);
+  const arm = await candidate(f, '0.28.0', '', 'aarch64');
+  result = f.run([arm]); refused(result); assert.match(result.stderr, /Only the authenticated AppImage role/);
+  result = f.run([arm], env); passed(result);
+  assert.equal(await readlink(path.join(f.home, 'Applications/ShadowCode.AppImage')), 'ShadowCode-0.28.0-aarch64.AppImage');
+  await missing(path.join(f.home, 'Applications/ShadowCode-0.28.0-x86_64.AppImage'));
+  const next = await candidate(f, '0.28.1', '', 'aarch64');
+  result = f.run([next], env); passed(result);
+  assert.equal(await readlink(path.join(f.home, 'Applications/ShadowCode.AppImage')), 'ShadowCode-0.28.1-aarch64.AppImage');
+  await missing(path.join(f.home, 'Applications/ShadowCode-0.28.0-aarch64.AppImage'));
 });

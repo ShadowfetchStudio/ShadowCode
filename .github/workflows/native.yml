@@ -8,7 +8,24 @@ permissions:
   contents: read
 jobs:
   verify:
-    runs-on: ubuntu-24.04
+    # x86_64 and aarch64 (GitHub's Arm runners) build and qualify natively.
+    # The x86_64 leg keeps its historical artifact names (empty suffix).
+    name: verify (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+            appimage: amd64
+            deb: amd64
+            suffix: ''
+          - arch: aarch64
+            runner: ubuntu-24.04-arm
+            appimage: aarch64
+            deb: arm64
+            suffix: '-aarch64'
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     env:
       RUSTUP_TOOLCHAIN: '1.95.0'
@@ -25,7 +42,7 @@ jobs:
       - name: Native window dependencies
         run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev libasound2-dev patchelf webkit2gtk-driver xvfb appstream dbus-daemon dbus-bin lintian desktop-file-utils
       - name: Test release staging and immutable retry behavior
-        run: node --test scripts/test-native-release.mjs scripts/test-native-release-verification.mjs scripts/test-publisher-auth.mjs scripts/test-native-release-signing.mjs scripts/test-native-test-session.mjs scripts/test-clean-host-mcp-receipt.mjs scripts/test-clean-host-container.mjs scripts/test-native-app-run.mjs scripts/test-llama-build-inputs.mjs && node scripts/test-native-process-ownership.mjs
+        run: node --test scripts/test-native-release.mjs scripts/test-native-release-verification.mjs scripts/test-publisher-auth.mjs scripts/test-native-release-signing.mjs scripts/test-native-test-session.mjs scripts/test-clean-host-mcp-receipt.mjs scripts/test-clean-host-container.mjs scripts/test-native-app-run.mjs scripts/test-llama-build-inputs.mjs scripts/test-native-arch.mjs && node scripts/test-native-process-ownership.mjs
       - name: Verify publisher authentication and private release snapshots
         run: node --test scripts/test-native-release-auth.mjs scripts/test-check-secrets.mjs
       - name: Package version
@@ -50,7 +67,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: built-project-cleanup-diagnostics
+          name: built-project-cleanup-diagnostics${{ matrix.suffix }}
           path: artifacts/built-project-cleanup
       - name: Exercise the native CLI without a display
         run: node scripts/test-native-cli.mjs
@@ -59,7 +76,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
-          name: native-stress-diagnostics
+          name: native-stress-diagnostics${{ matrix.suffix }}
           path: artifacts/native-stress
       - name: Exercise the native terminal through a real PTY
         run: node scripts/test-native-tui.mjs
@@ -74,14 +91,14 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
-          name: native-mcp-server-diagnostics
+          name: native-mcp-server-diagnostics${{ matrix.suffix }}
           path: |
             artifacts/native-mcp-server*
             artifacts/native-mcp-peer
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
-          name: native-cli-diagnostics
+          name: native-cli-diagnostics${{ matrix.suffix }}
           path: |
             artifacts/native-cli
             artifacts/native-tui
@@ -95,7 +112,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
-          name: native-window-diagnostics
+          name: native-window-diagnostics${{ matrix.suffix }}
           path: |
             artifacts/native
             artifacts/native-markdown
@@ -113,7 +130,7 @@ jobs:
             tools/llama.cpp
             tools/spirv-headers
             tools/spirv-headers-prefix
-          key: llama-cpp-${{ runner.os }}-${{ hashFiles('tools/llama.cpp.pin', 'scripts/build-llama.cpp.sh') }}
+          key: llama-cpp-${{ runner.os }}${{ matrix.suffix }}-${{ hashFiles('tools/llama.cpp.pin', 'scripts/build-llama.cpp.sh') }}
       - name: Build the managed llama.cpp runtime (Vulkan + all CPU variants)
         run: bash scripts/build-llama.cpp.sh --no-user-install
       - name: Check the managed runtime packaging steps
@@ -121,11 +138,11 @@ jobs:
       - name: Build native development packages with dependency notices
         run: node scripts/build-native.mjs
       - name: Inspect both packages
-        run: node scripts/check-native-package.mjs "target/release/bundle/appimage/ShadowCode_${VERSION}_amd64.AppImage" "target/release/bundle/deb/ShadowCode_${VERSION}_amd64.deb"
+        run: node scripts/check-native-package.mjs "target/release/bundle/appimage/ShadowCode_${VERSION}_${{ matrix.appimage }}.AppImage" "target/release/bundle/deb/ShadowCode_${VERSION}_${{ matrix.deb }}.deb"
       - name: Build runtime-only clean-host qualification image
         run: docker build -f scripts/clean-host-runtime.Dockerfile -t shadowcode-clean-runtime:ci scripts
       - name: Install and first-launch both packages in an offline clean host
-        run: node scripts/test-clean-host-packages.mjs "target/release/bundle/appimage/ShadowCode_${VERSION}_amd64.AppImage" "target/release/bundle/deb/ShadowCode_${VERSION}_amd64.deb" artifacts/native-package/SHA256SUMS
+        run: node scripts/test-clean-host-packages.mjs "target/release/bundle/appimage/ShadowCode_${VERSION}_${{ matrix.appimage }}.AppImage" "target/release/bundle/deb/ShadowCode_${VERSION}_${{ matrix.deb }}.deb" artifacts/native-package/SHA256SUMS
       - name: Reject AppImage extraction writes that fail
         run: node scripts/test-native-runtime-write-errors.mjs
       - name: Rebuild the shipped runtime sources without network access
@@ -138,58 +155,58 @@ jobs:
           bash scripts/test-install-appimage.sh
       - name: Exercise the packaged CLI without a display
         env:
-          SHADOW_DESKTOP_BINARY: ${{ github.workspace }}/target/release/bundle/appimage/ShadowCode_${{ env.VERSION }}_amd64.AppImage
+          SHADOW_DESKTOP_BINARY: ${{ github.workspace }}/target/release/bundle/appimage/ShadowCode_${{ env.VERSION }}_${{ matrix.appimage }}.AppImage
           SHADOW_CLI_ARGS: '["--appimage-extract-and-run"]'
           SHADOW_CLI_ARTIFACTS: artifacts/native-package/cli
         run: node scripts/test-native-cli.mjs
       - name: Exercise the packaged native terminal
         env:
-          SHADOW_DESKTOP_BINARY: ${{ github.workspace }}/target/release/bundle/appimage/ShadowCode_${{ env.VERSION }}_amd64.AppImage
+          SHADOW_DESKTOP_BINARY: ${{ github.workspace }}/target/release/bundle/appimage/ShadowCode_${{ env.VERSION }}_${{ matrix.appimage }}.AppImage
           SHADOW_CLI_ARGS: '["--appimage-extract-and-run"]'
           SHADOW_TUI_ARTIFACTS: artifacts/native-package/tui
         run: node scripts/test-native-tui.mjs
       - name: Exercise the packaged native window
         env:
-          SHADOW_DESKTOP_BINARY: ${{ github.workspace }}/target/release/bundle/appimage/ShadowCode_${{ env.VERSION }}_amd64.AppImage
+          SHADOW_DESKTOP_BINARY: ${{ github.workspace }}/target/release/bundle/appimage/ShadowCode_${{ env.VERSION }}_${{ matrix.appimage }}.AppImage
           SHADOW_DESKTOP_ARGS: '["--appimage-extract-and-run","ui"]'
           SHADOW_NATIVE_DEFAULT_PROFILE: '1'
           SHADOW_NATIVE_ARTIFACTS: artifacts/native-package/window
         run: node scripts/run-native-x11.mjs node scripts/test-native-desktop.mjs
       - name: Exercise the packaged Markdown worker under its native security policy
         env:
-          SHADOW_DESKTOP_BINARY: ${{ github.workspace }}/target/release/bundle/appimage/ShadowCode_${{ env.VERSION }}_amd64.AppImage
+          SHADOW_DESKTOP_BINARY: ${{ github.workspace }}/target/release/bundle/appimage/ShadowCode_${{ env.VERSION }}_${{ matrix.appimage }}.AppImage
           SHADOW_DESKTOP_ARGS: '["--appimage-extract-and-run"]'
           SHADOW_NATIVE_ARTIFACTS: artifacts/native-package/markdown
         run: node scripts/run-native-x11.mjs node scripts/test-native-markdown.mjs
       - name: Exercise the packaged native MCP server
         env:
-          SHADOW_DESKTOP_BINARY: ${{ github.workspace }}/target/release/bundle/appimage/ShadowCode_${{ env.VERSION }}_amd64.AppImage
+          SHADOW_DESKTOP_BINARY: ${{ github.workspace }}/target/release/bundle/appimage/ShadowCode_${{ env.VERSION }}_${{ matrix.appimage }}.AppImage
           SHADOW_CLI_ARGS: '["--appimage-extract-and-run"]'
           SHADOW_MCP_ARTIFACTS: artifacts/native-package/mcp-server
         run: node scripts/test-native-mcp-server.mjs
       - name: Exercise the packaged native MCP HTTP server
         env:
-          SHADOW_DESKTOP_BINARY: ${{ github.workspace }}/target/release/bundle/appimage/ShadowCode_${{ env.VERSION }}_amd64.AppImage
+          SHADOW_DESKTOP_BINARY: ${{ github.workspace }}/target/release/bundle/appimage/ShadowCode_${{ env.VERSION }}_${{ matrix.appimage }}.AppImage
           SHADOW_CLI_ARGS: '["--appimage-extract-and-run"]'
           SHADOW_MCP_ARTIFACTS: artifacts/native-package/mcp-server-http
           SHADOW_MCP_TRANSPORT: http
         run: node scripts/test-native-mcp-server.mjs
       - name: Verify packaged MCP interoperability with official TypeScript clients
         env:
-          SHADOW_DESKTOP_BINARY: ${{ github.workspace }}/target/release/bundle/appimage/ShadowCode_${{ env.VERSION }}_amd64.AppImage
+          SHADOW_DESKTOP_BINARY: ${{ github.workspace }}/target/release/bundle/appimage/ShadowCode_${{ env.VERSION }}_${{ matrix.appimage }}.AppImage
           SHADOW_CLI_ARGS: '["--appimage-extract-and-run"]'
           SHADOW_MCP_PEER_ARTIFACTS: artifacts/native-package/mcp-peer
         run: node scripts/test-native-mcp-peer.mjs
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
-          name: native-package-diagnostics
+          name: native-package-diagnostics${{ matrix.suffix }}
           path: |
             artifacts/native-package
             artifacts/native-x11
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: native-linux-development
+          name: native-linux-development${{ matrix.suffix }}
           retention-days: 14
           path: |
             target/release/bundle/appimage/*.AppImage

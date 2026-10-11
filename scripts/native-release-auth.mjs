@@ -8,6 +8,13 @@ import path from 'node:path';
 export const IDENTITY = Object.freeze({ repository: 'ShadowfetchStudio/ShadowCode', repositoryId: '1377099349', ownerId: '209457103', target: 'x86_64-unknown-linux-gnu', channel: 'stable' });
 // Releases through 1.0.1 retain their original signed bytes after the rename.
 // Both names require the same pinned repository and owner IDs and trusted key.
+// Signed release targets and their package names. x86_64 names are historical
+// and fixed; aarch64 follows Tauri (AppImage `_aarch64`, Debian `_arm64`) and
+// keeps its runtime sources distinct so both targets fit one GitHub release.
+export const TARGETS = Object.freeze({
+  'x86_64-unknown-linux-gnu': Object.freeze({ appimage: 'amd64', deb: 'amd64', sources: 'appimage-runtime-sources' }),
+  'aarch64-unknown-linux-gnu': Object.freeze({ appimage: 'aarch64', deb: 'arm64', sources: 'aarch64_appimage-runtime-sources' }),
+});
 const REPOSITORY_NAMES = new Set([IDENTITY.repository, 'Shadowfetchapps/ShadowCode']);
 export const LIMITS = Object.freeze({ envelope: 4096, trust: 4096, manifest: 1024 * 1024, checksums: 4096, publicKey: 1024, signature: 64, artifact: 32 * 1024 ** 3, keys: 8 });
 const HEX = /^[a-f0-9]{64}$/;
@@ -37,13 +44,15 @@ export function compareVersions(a, b) {
   for (let i = 0; i < 3; i++) if (left[i] !== right[i]) return left[i] < right[i] ? -1 : 1;
   return 0;
 }
-export function assetNames(version) {
+export function assetNames(version, target = IDENTITY.target) {
   assert.match(version, VERSION, 'Invalid stable version');
   assert.equal(version.trim(), version, 'Version whitespace');
+  assert(Object.hasOwn(TARGETS, target), 'Unsupported release target');
+  const names = TARGETS[target];
   return [
-    ['appimage', `ShadowCode_${version}_amd64.AppImage`],
-    ['deb', `ShadowCode_${version}_amd64.deb`],
-    ['runtime-sources', `ShadowCode_${version}_appimage-runtime-sources.tar.gz`],
+    ['appimage', `ShadowCode_${version}_${names.appimage}.AppImage`],
+    ['deb', `ShadowCode_${version}_${names.deb}.deb`],
+    ['runtime-sources', `ShadowCode_${version}_${names.sources}.tar.gz`],
   ];
 }
 function fixedIdentity(rows, offset = 1) {
@@ -61,13 +70,14 @@ export function parseEnvelope(bytes) {
   assert.equal(field(rows[5], 'tag'), `v${version}`, 'Version/tag mismatch');
   const commit = field(rows[6], 'commit');
   assert.match(commit, /^[a-f0-9]{40}$/);
-  assert.equal(field(rows[7], 'target'), IDENTITY.target, 'Wrong target');
+  const target = field(rows[7], 'target');
+  assert(Object.hasOwn(TARGETS, target), 'Wrong target');
   assert.equal(field(rows[8], 'channel'), IDENTITY.channel, 'Wrong channel');
   const keyId = field(rows[9], 'key-id'), keyEpoch = field(rows[10], 'key-epoch');
   assert.match(keyId, HEX); assert.match(keyEpoch, EPOCH);
   const manifestHash = field(rows[11], 'manifest-sha256'), checksumsHash = field(rows[12], 'checksums-sha256');
   assert.match(manifestHash, HEX); assert.match(checksumsHash, HEX);
-  const assets = assetNames(version).map(([role, name], index) => {
+  const assets = assetNames(version, target).map(([role, name], index) => {
     assert(rows[13 + index].startsWith('asset='), 'Missing asset');
     const parts = rows[13 + index].slice(6).split('\t');
     assert.equal(parts.length, 4, 'Asset field count');
@@ -79,14 +89,17 @@ export function parseEnvelope(bytes) {
     assert.match(parts[3], HEX);
     return { role, name, size, hash: parts[3] };
   });
-  return { version, tag: `v${version}`, commit, keyId, keyEpoch: Number(keyEpoch), manifestHash, checksumsHash, assets, envelopeHash: HASH(bytes) };
+  return { version, tag: `v${version}`, commit, target, keyId, keyEpoch: Number(keyEpoch), manifestHash, checksumsHash, assets, envelopeHash: HASH(bytes) };
 }
 export function parseTrustPolicy(bytes) {
   const rows = lines(bytes, LIMITS.trust, 'Trust policy');
   assert(rows.length >= 10 && rows.length <= 9 + LIMITS.keys, 'Trust policy field count');
   assert.equal(rows[0], 'ShadowCode-Release-Trust-v1', 'Trust policy schema');
   fixedIdentity(rows);
-  assert.equal(field(rows[4], 'target'), IDENTITY.target);
+  // One target, or a comma-separated list of distinct supported targets.
+  const targets = field(rows[4], 'target').split(',');
+  assert(targets.every(target => Object.hasOwn(TARGETS, target)), 'Unsupported trusted target');
+  assert.equal(new Set(targets).size, targets.length, 'Duplicate trusted target');
   assert.equal(field(rows[5], 'channel'), IDENTITY.channel);
   const minimumEpoch = field(rows[6], 'minimum-epoch'), minimumVersion = field(rows[7], 'minimum-version');
   assert.match(minimumEpoch, EPOCH); assert.match(minimumVersion, VERSION);
@@ -101,7 +114,7 @@ export function parseTrustPolicy(bytes) {
     assert(!seen.has(id), 'Duplicate trust key'); seen.add(id);
     return { epoch: Number(epoch), id, minimum, maximum };
   });
-  return { minimumEpoch: Number(minimumEpoch), minimumVersion, keys };
+  return { targets, minimumEpoch: Number(minimumEpoch), minimumVersion, keys };
 }
 export function publicKeyIdentity(pem) {
   const key = createPublicKey(pem);
@@ -142,19 +155,19 @@ async function assetHash(file) {
   } finally { await handle.close(); }
 }
 function canonicalChecksums(assets) { return Buffer.from(assets.map(asset => `${asset.hash}  ${asset.name}\n`).join('')); }
-export async function createEnvelope({ bundleDir, version, commit, keyId, keyEpoch }) {
+export async function createEnvelope({ bundleDir, version, commit, keyId, keyEpoch, target = IDENTITY.target }) {
   const assets = [];
-  for (const [role, name] of assetNames(version)) assets.push({ role, name, ...await assetHash(path.join(bundleDir, name)) });
+  for (const [role, name] of assetNames(version, target)) assets.push({ role, name, ...await assetHash(path.join(bundleDir, name)) });
   const sums = await boundedFile(path.join(bundleDir, 'SHA256SUMS'), LIMITS.checksums);
   assert(sums.equals(canonicalChecksums(assets)), 'Checksums must contain the exact canonical asset set');
   const manifestBytes = await boundedFile(path.join(bundleDir, 'RELEASE-MANIFEST.json'), LIMITS.manifest);
   const manifest = JSON.parse(manifestBytes.toString('utf8'));
   assert(manifestBytes.equals(Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`)), 'Manifest must be canonical JSON without duplicate fields');
   assert.equal(manifest.schema, 1); assert.equal(manifest.tag, `v${version}`);
-  assert.equal(manifest.commit, commit); assert.equal(manifest.target, IDENTITY.target);
+  assert.equal(manifest.commit, commit); assert.equal(manifest.target, target);
   assert.deepEqual(manifest.assets, Object.fromEntries(assets.map(a => [a.name, a.hash])), 'Manifest asset bindings');
   const rows = ['ShadowCode-Release-Auth-v1', `repository=${IDENTITY.repository}`, `repository-id=${IDENTITY.repositoryId}`, `owner-id=${IDENTITY.ownerId}`,
-    `version=${version}`, `tag=v${version}`, `commit=${commit}`, `target=${IDENTITY.target}`, `channel=${IDENTITY.channel}`, `key-id=${keyId}`, `key-epoch=${keyEpoch}`,
+    `version=${version}`, `tag=v${version}`, `commit=${commit}`, `target=${target}`, `channel=${IDENTITY.channel}`, `key-id=${keyId}`, `key-epoch=${keyEpoch}`,
     `manifest-sha256=${HASH(manifestBytes)}`, `checksums-sha256=${HASH(sums)}`,
     ...assets.map(a => `asset=${a.role}\t${a.name}\t${a.size}\t${a.hash}`)];
   const bytes = Buffer.from(`${rows.join('\n')}\n`); parseEnvelope(bytes); return bytes;
@@ -168,6 +181,7 @@ async function verifyEnvelopeInternal({ bytes, signature, trustDir, historical =
   const metadata = parseEnvelope(bytes);
   assert(Buffer.isBuffer(signature) && signature.length === LIMITS.signature, 'Signature must be exactly 64 bytes');
   const trust = parseTrustPolicy(await boundedFile(path.join(trustDir, 'policy'), LIMITS.trust));
+  assert(trust.targets.includes(metadata.target), 'Release target is not trusted');
   const entry = trust.keys.find(key => key.id === metadata.keyId);
   assert(entry && entry.epoch === metadata.keyEpoch, 'Unknown signing key or epoch');
   assert(compareVersions(metadata.version, entry.minimum) >= 0 && compareVersions(metadata.version, entry.maximum) <= 0, 'Outside key version interval');
@@ -187,15 +201,17 @@ export async function verifyEnvelope({ bytes, signature, trustDir }) {
   // Historical floor exceptions are deliberately not exposed as an install API.
   return verifyEnvelopeInternal({ bytes, signature, trustDir });
 }
-export async function verifyBundle({ bundleDir, trustDir, artifact, previousDir, expectedVersion, expectedCommit }) {
+export async function verifyBundle({ bundleDir, trustDir, artifact, previousDir, expectedVersion, expectedCommit, expectedTarget }) {
   assert(trustDir, 'An independently trusted key directory is required');
   const bytes = await boundedFile(path.join(bundleDir, 'RELEASE-AUTH'), LIMITS.envelope);
   const signature = await boundedFile(path.join(bundleDir, 'RELEASE-AUTH.sig'), LIMITS.signature);
   const metadata = await verifyEnvelope({ bytes, signature, trustDir });
   if (expectedVersion !== undefined) assert.equal(metadata.version, expectedVersion, 'Unexpected version');
   if (expectedCommit !== undefined) assert.equal(metadata.commit, expectedCommit, 'Unexpected commit');
+  if (expectedTarget !== undefined) assert.equal(metadata.target, expectedTarget, 'Unexpected target');
   if (previousDir) {
     const previous = await verifyEnvelopeInternal({ bytes: await boundedFile(path.join(previousDir, 'RELEASE-AUTH'), LIMITS.envelope), signature: await boundedFile(path.join(previousDir, 'RELEASE-AUTH.sig'), LIMITS.signature), trustDir, historical: true });
+    assert.equal(metadata.target, previous.target, 'Release target changed');
     assert(metadata.keyEpoch >= previous.keyEpoch, 'Signing epoch rollback');
     const comparison = compareVersions(metadata.version, previous.version);
     assert(comparison >= 0, 'Release downgrade');

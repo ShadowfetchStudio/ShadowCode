@@ -44,6 +44,7 @@ import {
   wrapDescription,
 } from "./native-deb.mjs";
 import { DESKTOP_FILE, METAINFO_FILE } from "./native-desktop-metadata.mjs";
+import { hostArch } from "./native-arch.mjs";
 
 const run = promisify(execFile);
 const root = fileURLToPath(new URL("../", import.meta.url));
@@ -52,6 +53,8 @@ const metainfo = await readFile(
   "utf8",
 );
 const releases = appstreamReleases(metainfo);
+// Package the fixture for the build host, as Tauri does (amd64 or arm64).
+const ARCH = hostArch();
 const version = releases[0].version;
 const notice = await readFile(path.join(root, "NOTICE"), "utf8");
 const iconBytes = await readFile(
@@ -69,7 +72,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 `;
 const TAURI_CONTROL = `Package: shadow-code
 Version: ${version}
-Architecture: amd64
+Architecture: ${ARCH.deb}
 Installed-Size: 1
 Maintainer: Shadowfetch <209457103+ShadowfetchStudio@users.noreply.github.com>
 Priority: optional
@@ -280,7 +283,7 @@ async function fixture(scratch) {
   await put("usr/share/doc/shadowcode/notices/README.txt", "notices\n");
   for (const directory of ["usr", "usr/share", "usr/share/doc"])
     await chmod(path.join(tree, directory), 0o775);
-  const deb = path.join(scratch, `ShadowCode_${version}_amd64.deb`);
+  const deb = path.join(scratch, `ShadowCode_${version}_${ARCH.deb}.deb`);
   await run("dpkg-deb", ["--root-owner-group", "--build", tree, deb]);
 
   const runtime = path.join(scratch, "runtime");
@@ -294,7 +297,7 @@ async function fixture(scratch) {
     LLAMA_LICENSE,
   );
   await copyFile(
-    "/usr/lib/x86_64-linux-gnu/libz.so.1",
+    `/usr/lib/${ARCH.multiarch}/libz.so.1`,
     path.join(runtime, "libggml.so.0.25.0"),
   );
   await chmod(path.join(runtime, "libggml.so.0.25.0"), 0o755);

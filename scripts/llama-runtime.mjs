@@ -219,6 +219,7 @@ export async function copyManagedRuntime(runtime, destination) {
 export const ALLOWED_SYSTEM_LIBRARIES = new Set([
   "linux-vdso.so.1",
   "ld-linux-x86-64.so.2",
+  "ld-linux-aarch64.so.1",
   "libc.so.6",
   "libm.so.6",
   "libdl.so.2",

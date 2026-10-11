@@ -30,6 +30,7 @@ import {
   normalizeDesktopEntry,
 } from "./native-desktop-metadata.mjs";
 import { finishDebianPackage } from "./native-deb.mjs";
+import { hostArch, packageNames } from "./native-arch.mjs";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const packagingPath = applyPackagingPath(root);
 console.log(`Using sanitized packaging PATH: ${packagingPath}`);
@@ -51,11 +52,15 @@ async function command(binary, args, env = {}) {
   });
 }
 const run = (args, env = {}) => command(process.execPath, [cli, ...args], env);
-if (process.platform !== "linux" || process.arch !== "x64")
-  throw new Error("This packaging workflow currently supports Linux x86_64");
+if (process.platform !== "linux")
+  throw new Error("This packaging workflow supports Linux x86_64 and aarch64");
+// Packages are built natively on each architecture (no cross packaging).
+const arch = hostArch();
 const version = JSON.parse(
   await readFile(path.join(root, "src-tauri/tauri.conf.json"), "utf8"),
 ).version;
+const names = packageNames(version, arch.arch);
+console.log(`Packaging for ${arch.arch} (${arch.target})`);
 // Settings › About shows the commit. A distribution building from a source
 // archive without Git history may set SHADOWCODE_COMMIT itself.
 if (!process.env.SHADOWCODE_COMMIT) {
@@ -85,7 +90,7 @@ console.log(
   `Bundling managed llama.cpp ${llama.commit} (${llama.backend}) as /${RUNTIME_LOCATION}`,
 );
 const notices = path.join(root, "target/native-notices");
-const nativeRuntime = await buildRuntime();
+const nativeRuntime = await buildRuntime(arch.arch);
 await applicationNotices(notices, llama);
 const files = {
   "/usr/share/doc/shadowcode/notices": notices,
@@ -145,7 +150,7 @@ try {
       await addRuntimeToDeb(
         path.join(
           root,
-          `target/release/bundle/deb/ShadowCode_${version}_amd64.deb`,
+          `target/release/bundle/deb/${names.deb}`,
         ),
         llama,
         scratch,
@@ -165,7 +170,7 @@ try {
     if (format === "appimage") {
       const appimage = path.join(
         root,
-        `target/release/bundle/appimage/ShadowCode_${version}_amd64.AppImage`,
+        `target/release/bundle/appimage/${names.appimage}`,
       );
       const appdir = path.join(
         root,
@@ -196,14 +201,14 @@ try {
         {
           APPIMAGE_EXTRACT_AND_RUN: "1",
           OUTPUT: repacked,
-          ARCH: "x86_64",
+          ARCH: arch.arch,
           LDAI_RUNTIME_FILE: nativeRuntime.runtime,
         },
       );
       await rename(repacked, appimage);
       const sources = path.join(
         root,
-        `target/release/bundle/appimage/ShadowCode_${version}_appimage-runtime-sources.tar.gz`,
+        `target/release/bundle/appimage/${names.runtimeSources}`,
       );
       const pendingSources = path.join(scratch, path.basename(sources));
       await command("tar", [
@@ -218,7 +223,7 @@ try {
         "build-packages.txt",
         "compiler.txt",
         "runtime-dynamic.txt",
-        "runtime-x86_64.debug",
+        `runtime-${arch.arch}.debug`,
       ]);
       await rename(pendingSources, sources);
     }

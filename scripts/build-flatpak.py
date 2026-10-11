@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import json
 import os
+import platform
 from pathlib import Path
 import shutil
 import subprocess
@@ -16,6 +17,15 @@ import tarfile
 
 ROOT = Path(__file__).resolve().parent.parent
 APP_ID = "com.shadowfetch.shadowcode"
+# Flatpak architecture names; amd64/arm64 are accepted as aliases.
+ARCHES = {"x86_64": "x86_64", "amd64": "x86_64", "aarch64": "aarch64", "arm64": "aarch64"}
+
+
+def host_arch():
+    machine = platform.machine()
+    if machine not in ARCHES:
+        raise SystemExit(f"Unsupported build host architecture: {machine}")
+    return ARCHES[machine]
 
 
 def run(args, **kwargs):
@@ -52,7 +62,12 @@ def main():
     parser.add_argument("--prepare-only", action="store_true")
     parser.add_argument("--install", action="store_true")
     parser.add_argument("--skip-fetch", action="store_true", help="Reuse already prepared locked dependency caches")
+    parser.add_argument("--arch", choices=sorted(ARCHES), help="Flatpak architecture (default: the build host's; x86_64 or aarch64)")
+    parser.add_argument("--state-dir", help="flatpak-builder state/cache directory (default: target/flatpak/state-v2-final)")
+    parser.add_argument("--install-deps-from", metavar="REMOTE", help="Let flatpak-builder install the GNOME SDK and extensions from REMOTE (e.g. flathub)")
+    parser.add_argument("--cpu-only-llama", action="store_true", help="Build the bundled llama.cpp without the Vulkan module (faster CI builds; not for releases)")
     args = parser.parse_args()
+    arch = ARCHES[args.arch] if args.arch else host_arch()
     for tool in ["flatpak", "flatpak-builder", "cargo", "npm", "git"]:
         if shutil.which(tool) is None:
             parser.error(f"Missing build tool: {tool}")
@@ -124,14 +139,20 @@ def main():
     commit = run(["git", "rev-parse", "HEAD"], stdout=subprocess.PIPE).stdout.decode().strip()
     dirty = run(["git", "status", "--porcelain", "--untracked-files=no"], stdout=subprocess.PIPE).stdout.strip()
     manifest["build-options"]["env"]["SHADOWCODE_COMMIT"] = commit + ("-dirty" if dirty else "")
+    if args.cpu_only_llama:
+        manifest["build-options"]["env"]["SHADOWCODE_LLAMA_VULKAN"] = "0"
     generated = work / f"{APP_ID}.json"
     generated.write_text(json.dumps(manifest, indent=2) + "\n")
-    (work / "SOURCE-INPUTS.json").write_text(json.dumps({"version": version, "commit": commit, "dirty": bool(dirty), "sources": sources, "runtime": "org.gnome.Platform//50"}, indent=2) + "\n")
+    (work / "SOURCE-INPUTS.json").write_text(json.dumps({"version": version, "commit": commit, "dirty": bool(dirty), "sources": sources, "runtime": "org.gnome.Platform//50", "arch": arch}, indent=2) + "\n")
     if args.prepare_only:
         return
-    run(["flatpak-builder", "--user", "--disable-rofiles-fuse", "--keep-build-dirs", "--force-clean", "--repo=" + str(work / "repo"), "--state-dir=" + str(work / "state-v2-final"), work / "build", generated])
-    bundle = work / f"ShadowCode_{version}_x86_64.flatpak"
-    run(["flatpak", "build-bundle", "--runtime-repo=https://flathub.org/repo/flathub.flatpakrepo", work / "repo", bundle, APP_ID])
+    state_dir = Path(args.state_dir).expanduser().resolve() if args.state_dir else work / "state-v2-final"
+    builder = ["flatpak-builder", "--user", "--disable-rofiles-fuse", "--keep-build-dirs", "--force-clean", "--arch=" + arch, "--repo=" + str(work / "repo"), "--state-dir=" + str(state_dir)]
+    if args.install_deps_from:
+        builder.append("--install-deps-from=" + args.install_deps_from)
+    run([*builder, work / "build", generated])
+    bundle = work / f"ShadowCode_{version}_{arch}.flatpak"
+    run(["flatpak", "build-bundle", "--arch=" + arch, "--runtime-repo=https://flathub.org/repo/flathub.flatpakrepo", work / "repo", bundle, APP_ID])
     (work / "SHA256SUMS").write_text(hashlib.sha256(bundle.read_bytes()).hexdigest() + "  " + bundle.name + "\n")
     if args.install:
         run(["flatpak", "install", "--user", "--noninteractive", bundle])

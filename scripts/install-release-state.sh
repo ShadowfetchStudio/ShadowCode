@@ -71,7 +71,7 @@ check_legacy_identity() {
   if exists "$APPS/ShadowCode.AppImage"; then
     [[ -L "$APPS/ShadowCode.AppImage" ]] || fail 'Active AppImage is not a supported link.'
     previous=$(readlink -- "$APPS/ShadowCode.AppImage")
-    [[ "$previous" =~ ^ShadowCode-((0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8}))-x86_64\.AppImage$ ]] || fail 'Active AppImage has an unsupported identity.'
+    [[ "$previous" =~ ^ShadowCode-((0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8})\.(0|[1-9][0-9]{0,8}))-${INSTALLED_ARCH}\.AppImage$ ]] || fail 'Active AppImage has an unsupported identity.'
     version=${BASH_REMATCH[1]}
     # This compares data only; no installed executable is queried.
     version_compare "$version" "$FIRST_AUTH_VERSION"
@@ -142,7 +142,7 @@ validate_recovery_state() {
       result=$(validate_receipt "$directory" "$target") || recovery_refusal 'candidate receipt changed'
       [[ "$(runtime_hash "$directory")" == "$record_hash" ]] || recovery_refusal 'candidate receipt bytes changed'
       IFS=$'\t' read -r version _commit _artifact hash <<< "$result"
-      [[ "$candidate" == "ShadowCode-${version}-x86_64.AppImage" && "$candidate_hash" == "$hash" ]] || recovery_refusal 'candidate receipt does not bind AppImage'
+      [[ "$candidate" == "ShadowCode-${version}-${INSTALLED_ARCH}.AppImage" && "$candidate_hash" == "$hash" ]] || recovery_refusal 'candidate receipt does not bind AppImage'
       found=1
     fi
   done

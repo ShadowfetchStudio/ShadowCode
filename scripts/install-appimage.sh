@@ -25,7 +25,7 @@
 set -euo pipefail
 umask 077
 usage() {
-  echo 'Usage: install-appimage.sh /path/to/ShadowCode_VERSION_amd64.AppImage | --recover' >&2
+  echo 'Usage: install-appimage.sh /path/to/ShadowCode_VERSION_amd64.AppImage (x86_64) | ShadowCode_VERSION_aarch64.AppImage (aarch64) | --recover' >&2
   exit 2
 }
 fail() { echo "$*" >&2; exit 1; }
@@ -45,6 +45,14 @@ if [[ "$RECOVER_ONLY" == 1 ]]; then
 else
   [[ -n "$SOURCE_ARG" ]] || usage
 fi
+
+# The host selects the only installable AppImage role and its signed target.
+# x86_64 keeps its historical names (download _amd64, installed -x86_64).
+case "$(uname -m)" in
+  x86_64) HOST_TARGET=x86_64-unknown-linux-gnu PACKAGE_ARCH=amd64 INSTALLED_ARCH=x86_64 ;;
+  aarch64|arm64) HOST_TARGET=aarch64-unknown-linux-gnu PACKAGE_ARCH=aarch64 INSTALLED_ARCH=aarch64 ;;
+  *) fail "ShadowCode AppImages are published for x86_64 and aarch64, not $(uname -m)." ;;
+esac
 
 [[ "$UNVERIFIED" == 0 ]] || fail '--unverified is not supported by this signed-release installer. Publisher signatures are required; unsigned development installation needs a separate isolated development path.'
 
@@ -128,13 +136,13 @@ recover_install() {
     [[ "$(read_field bin-root)" == "$(realpath -- "$BIN")" && "$(read_field applications-root)" == "$(realpath -- "$DATA/applications")" && "$(read_field icons-root)" == "$(realpath -- "$DATA/icons/hicolor/scalable/apps")" ]] || recovery_refusal 'launcher or desktop installation root changed'
   fi
   if [[ "$schema" == 1 ]] && exists "$STATE"; then recovery_refusal 'legacy intent conflicts with authenticated state'; fi
-  [[ "$candidate" =~ ^ShadowCode-[0-9]+\.[0-9]+\.[0-9]+-x86_64\.AppImage$ && "$candidate_hash" =~ ^[a-f0-9]{64}$ && "$new_hash" =~ ^[a-f0-9]{64}$ ]] || recovery_refusal 'invalid candidate identity'
+  [[ "$candidate" =~ ^ShadowCode-[0-9]+\.[0-9]+\.[0-9]+-${INSTALLED_ARCH}\.AppImage$ && "$candidate_hash" =~ ^[a-f0-9]{64}$ && "$new_hash" =~ ^[a-f0-9]{64}$ ]] || recovery_refusal 'invalid candidate identity'
   [[ "$had" =~ ^[01]$ && "$existed" =~ ^[01]$ && "$stage_name" =~ ^\.shadowcode-install\.[A-Za-z0-9]{6}$ ]] || recovery_refusal 'invalid transaction identity'
   [[ ( "$had" == 1 && "$old_hash" =~ ^[a-f0-9]{64}$ ) || ( "$had" == 0 && "$old_hash" == - ) ]] || recovery_refusal 'invalid prior runtime identity'
   if [[ "$prior" == - ]]; then
     [[ "$prior_hash" == - ]] || recovery_refusal 'active AppImage changed'
   else
-    [[ "$prior" =~ ^ShadowCode-[0-9]+\.[0-9]+\.[0-9]+-x86_64\.AppImage$ && "$prior_hash" =~ ^[a-f0-9]{64}$ ]] || recovery_refusal 'invalid prior AppImage identity'
+    [[ "$prior" =~ ^ShadowCode-[0-9]+\.[0-9]+\.[0-9]+-${INSTALLED_ARCH}\.AppImage$ && "$prior_hash" =~ ^[a-f0-9]{64}$ ]] || recovery_refusal 'invalid prior AppImage identity'
     [[ "$(file_hash "$APPS/$prior")" == "$prior_hash" ]] || recovery_refusal 'prior AppImage changed'
   fi
   if exists "$APPS/ShadowCode.AppImage"; then
@@ -246,7 +254,7 @@ DOWNLOAD="$(realpath -- "$SOURCE_ARG")"
 [[ -f "$DOWNLOAD" && ! -L "$DOWNLOAD" ]] || fail 'AppImage not found.'
 SOURCE_DIR="$(dirname "$DOWNLOAD")"
 SOURCE_NAME="$(basename "$DOWNLOAD")"
-[[ "$SOURCE_NAME" =~ ^ShadowCode_[0-9]+\.[0-9]+\.[0-9]+_amd64\.AppImage$ ]] || fail 'Only the authenticated AppImage role can be installed by this script.'
+[[ "$SOURCE_NAME" =~ ^ShadowCode_[0-9]+\.[0-9]+\.[0-9]+_${PACKAGE_ARCH}\.AppImage$ ]] || fail "Only the authenticated AppImage role can be installed by this script (ShadowCode_VERSION_${PACKAGE_ARCH}.AppImage on this $INSTALLED_ARCH machine)."
 STAGE="$(mktemp -d "$(dirname "$LIB")/.shadowcode-install.XXXXXX")"
 VERIFIED="$STAGE/verified-release"
 DEST=''
@@ -355,12 +363,14 @@ SOURCE="$VERIFIED/$SOURCE_NAME"
 ACTUAL="$(file_hash "$SOURCE")" || fail 'Verified AppImage disappeared.'
 VERSION="$(awk -F= '$1 == "version" {print $2}' "$VERIFIED/RELEASE-AUTH")"
 VERIFIED_COMMIT="$(awk -F= '$1 == "commit" {print $2}' "$VERIFIED/RELEASE-AUTH")"
+VERIFIED_TARGET="$(awk -F= '$1 == "target" {print $2}' "$VERIFIED/RELEASE-AUTH")"
+[[ "$VERIFIED_TARGET" == "$HOST_TARGET" ]] || fail "The signed release targets $VERIFIED_TARGET, not this $HOST_TARGET machine."
 version_compare "$VERSION" "$FIRST_AUTH_VERSION"
 (( CMP >= 0 )) || fail 'Signed candidate is before the first authenticated release boundary.'
 chmod 500 "$SOURCE"
 VERSION_LINE="$("$SOURCE" --appimage-extract-and-run --version)" || fail 'The AppImage did not start.'
 [[ "$VERSION_LINE" == "ShadowCode $VERSION" ]] || fail 'The AppImage version differs from its signed release identity.'
-DEST="$APPS/ShadowCode-${VERSION}-x86_64.AppImage"
+DEST="$APPS/ShadowCode-${VERSION}-${INSTALLED_ARCH}.AppImage"
 [[ ! -e "$APPS/ShadowCode.AppImage" || -L "$APPS/ShadowCode.AppImage" ]] || fail 'ShadowCode.AppImage is not a symlink; refusing to replace it.'
 DEST_EXISTED=0
 if [[ -e "$DEST" || -L "$DEST" ]]; then
@@ -395,7 +405,7 @@ RUNTIME_VERSION="$(cd / && env -u LD_LIBRARY_PATH "$NEW_RUNTIME/llama-server" --
 # These are data files, never shell-sourced commands or arbitrary paths.
 PRIOR_HASH=-
 if [[ -n "$PREVIOUS_LINK" ]]; then
-  [[ "$PREVIOUS_LINK" =~ ^ShadowCode-[0-9]+\.[0-9]+\.[0-9]+-x86_64\.AppImage$ ]] \
+  [[ "$PREVIOUS_LINK" =~ ^ShadowCode-[0-9]+\.[0-9]+\.[0-9]+-${INSTALLED_ARCH}\.AppImage$ ]] \
     || fail 'Active AppImage link is not a versioned ShadowCode basename; preserve it and review before installing.'
   PRIOR_HASH="$(file_hash "$APPS/$PREVIOUS_LINK")" || fail 'Prior AppImage cannot be identified.'
 fi
@@ -523,7 +533,7 @@ RUNTIME_REPLACING=0
 LINK_REPLACING=0
 DEST_CREATING=0
 rm -rf -- "$LIB.previous"
-for old in "$APPS"/ShadowCode-*-x86_64.AppImage; do
+for old in "$APPS"/ShadowCode-*-"$INSTALLED_ARCH".AppImage; do
   [[ "$old" == "$DEST" || ! -f "$old" ]] || rm -- "$old"
 done
 command -v update-desktop-database >/dev/null && update-desktop-database "$DATA/applications" || true

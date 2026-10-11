@@ -135,6 +135,66 @@ jobs:
           path: ${{ runner.temp }}/unsigned-release
           if-no-files-found: error
           compression-level: 0
+  # aarch64 packages are built and qualified natively on GitHub's Arm runner
+  # with the same required gates, then retained as an unsigned workflow
+  # artifact. Signing and publication stay x86_64-only until the owner adds
+  # aarch64-unknown-linux-gnu to release/trust/policy (see docs/RELEASING.md).
+  build-aarch64:
+    needs: configuration
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 180
+    env:
+      RUSTUP_TOOLCHAIN: '1.95.0'
+      SHADOWCODE_BUILD_JOBS: '4'
+      SHADOWCODE_REQUIRE_LINTIAN: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - name: Native package dependencies
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev libasound2-dev patchelf webkit2gtk-driver xvfb appstream dbus-daemon dbus-bin lintian desktop-file-utils cmake ninja-build libssl-dev libvulkan-dev glslc spirv-headers
+      - name: Install the pinned Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal --component rustfmt --component clippy
+      - name: Run every required release gate in order on aarch64
+        run: |
+          set -euo pipefail
+          gates=$(node --input-type=module -e "const { REQUIRED_GATES } = await import('./scripts/native-release-verification.mjs'); console.log(REQUIRED_GATES.join(' '))")
+          for gate in $gates; do
+            # The installer gate verifies the checksums the packages gate wrote.
+            if [ "$gate" = installer ]; then cp artifacts/native-package/SHA256SUMS target/release/bundle/SHA256SUMS; fi
+            node scripts/native-release-verification.mjs run "$gate"
+          done
+      - name: Preserve aarch64 qualification diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: native-release-aarch64-diagnostics
+          path: |
+            artifacts/release-verification
+            artifacts/built-project-cleanup
+            artifacts/native
+            artifacts/native-markdown
+            artifacts/native-endurance
+            artifacts/native-x11
+            artifacts/native-package
+      - name: Retain unsigned aarch64 packages with their receipts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: unsigned-aarch64-packages-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          compression-level: 0
+          path: |
+            target/release/bundle/appimage/*_aarch64.AppImage
+            target/release/bundle/appimage/*_aarch64_appimage-runtime-sources.tar.gz
+            target/release/bundle/deb/*_arm64.deb
+            target/release/bundle/SHA256SUMS
+            artifacts/release-verification
+
   sign:
     needs: [configuration, build]
     runs-on: ubuntu-24.04

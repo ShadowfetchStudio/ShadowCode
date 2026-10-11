@@ -8,6 +8,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
+import { hostArch, packageNames } from "./native-arch.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const version = JSON.parse(
@@ -17,7 +18,7 @@ const archive = path.resolve(
   process.argv[2] ||
     path.join(
       root,
-      `target/release/bundle/appimage/ShadowCode_${version}_appimage-runtime-sources.tar.gz`,
+      `target/release/bundle/appimage/${packageNames(version, hostArch().arch).runtimeSources}`,
     ),
 );
 const artifacts = path.resolve(
@@ -98,7 +99,7 @@ try {
   const runtime = path.join(scratch, "runtime");
   await exec(
     engine,
-    ["cp", `${container}:/out/runtime-x86_64`, runtime],
+    ["cp", `${container}:/out/runtime-${hostArch().arch}`, runtime],
     options,
   );
   await exec(
