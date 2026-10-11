@@ -1,3 +1,45 @@
+# ShadowCode 2.1.0
+
+ShadowCode 2.1.0 runs on 64-bit ARM computers, installs and updates from a
+signed APT repository, and its installer now checks that the new version
+starts before it keeps it. The 2.0.0 notes follow below.
+
+## New
+
+- **64-bit ARM.** The AppImage, the Debian package and the Flatpak are built
+  and tested on ARM64 (aarch64) as well as x86_64, and each is signed for its
+  own architecture. Download the files ending in `_aarch64` or `_arm64`.
+- **Updates through APT.** Add the signed ShadowCode repository once and
+  `apt upgrade` keeps ShadowCode current, on both architectures. The README's
+  Debian section shows how, including how to check the repository's key.
+- **An installer that checks before it commits.** The AppImage installer
+  saves a copy of your database, starts the new version and waits for its
+  window. If it hangs, crashes or reports the wrong version, everything is put
+  back as it was, database included.
+- **Model history in the picker.** Each model shows how long tasks took in
+  this project, what they cost when the provider reported it, and how often
+  their checks passed. **Compare history** shows them side by side, and an
+  optional suggestion points to the cheapest model that passed here before.
+  ShadowCode never switches models on its own.
+
+## Fixed
+
+- **The window remembers its size again**, including on Wayland desktops
+  such as KDE Plasma, without growing from launch to launch.
+- **Website allow-list in the Flatpak.** Agent shell commands in the Flatpak
+  can now be limited to the websites you allow; if that can't be set up, the
+  command is refused rather than run unrestricted.
+
+## Download
+
+For x86_64: `ShadowCode_2.1.0_amd64.AppImage`, `ShadowCode_2.1.0_amd64.deb`
+and `ShadowCode_2.1.0_appimage-runtime-sources.tar.gz`, with `SHA256SUMS`,
+`RELEASE-MANIFEST.json`, `RELEASE-AUTH` and `RELEASE-AUTH.sig`. For ARM64 the
+packages end in `_aarch64` (AppImage) or `_arm64` (`.deb`), with signature
+files ending in `-aarch64`. Install the AppImage with the authenticated
+installer described in the [README](../README.md#install); the signature is
+checked before anything runs.
+
 # ShadowCode 2.0.0
 
 Version 2.0.0 adds a source-built Flatpak, closes three reproduced remote-access defects, and updates the affected development dependency. See [Flatpak](FLATPAK.md) for installation, host-tool permissions, and package-specific limits. The source is published in this repository; binary release publication and Flathub submission remain pending. About ShadowCode shows the version, Apache license, publisher, official website, repository, and contributors. The [trademark and branding policy](../TRADEMARKS.md) covers the official identity and permits forks and accurate community attribution. Previous release notes follow.

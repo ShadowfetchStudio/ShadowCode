@@ -70,10 +70,8 @@ The code is open source; the Shadowfetch and ShadowCode product identity is cove
   own terminal, go from commit to pull request, preview the app you're
   building, dictate with your voice, and follow along from your phone.
 
-The source tree is now **2.0.0**, with a locally buildable Flatpak and fixes for private-profile access and secret-file diff redaction. See [Flatpak installation and build instructions](docs/FLATPAK.md). The 2.0.0 source is available here; its Flatpak bundle is a local build and has not been published as a GitHub release or on Flathub.
-
-The last published release, ShadowCode **1.0.1**, is available in [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v1.0.1).
-See the [1.0.1 release notes](docs/RELEASE_NOTES.md) for changes and qualification
+ShadowCode **2.1.0** is available in [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.1.0) for x86_64 and, for the first time, 64-bit ARM, and from the signed APT repository below.
+See the [2.1.0 release notes](docs/RELEASE_NOTES.md) for changes and qualification
 limits, and the [release history](CHANGELOG.md).
 
 ## Install
@@ -89,10 +87,10 @@ the package and use the same installer and verifier commands with the aarch64
 file name. See
 [Distributing](docs/DISTRIBUTING.md#arm64-aarch64).
 Check [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases)
-for published versions. The 1.0.1 packages and checksums are:
+for published versions. The 2.1.0 x86_64 packages and checksums are:
 
-- `ShadowCode_1.0.1_amd64.AppImage`
-- `ShadowCode_1.0.1_amd64.deb`
+- `ShadowCode_2.1.0_amd64.AppImage`
+- `ShadowCode_2.1.0_amd64.deb`
 - `SHA256SUMS`, `RELEASE-MANIFEST.json`, `RELEASE-AUTH` and
   `RELEASE-AUTH.sig` (download these beside the package; the installer checks
   the publisher's signature before running anything)
@@ -118,7 +116,7 @@ bundle and bootstrap requirements.
 From that independently authenticated installer bundle, run:
 
 ```bash
-bash /path/to/trusted-bundle/scripts/install-appimage.sh /path/to/downloads/ShadowCode_1.0.1_amd64.AppImage
+bash /path/to/trusted-bundle/scripts/install-appimage.sh /path/to/downloads/ShadowCode_2.1.0_amd64.AppImage
 ```
 
 The installer takes the AppImage path (or `--recover`), resolves its own trusted
@@ -164,7 +162,7 @@ as `--trust-dir` are not installer options.
   cannot corrupt it.
 
 After obtaining and verifying the intended package, run the AppImage without installing it:
-`./ShadowCode_1.0.1_amd64.AppImage --appimage-extract-and-run`. FUSE is not
+`./ShadowCode_2.1.0_amd64.AppImage --appimage-extract-and-run`. FUSE is not
 required.
 
 ### Debian package
@@ -212,16 +210,16 @@ installed. The repository is published by the release workflow only; nothing
 in ShadowCode adds or contacts it by itself.
 
 To install one release by hand instead, verify the Debian artifact using the independently trusted verifier bundle.
-`verified-deb-1.0.1` must not already exist; install the verified snapshot:
+`verified-deb-2.1.0` must not already exist; install the verified snapshot:
 
 ```bash
 bash /path/to/trusted-bundle/scripts/verify-native-release.sh \
   --bundle-dir /path/to/downloads \
   --trust-dir /path/to/trusted-bundle/release/trust \
-  --artifact ShadowCode_1.0.1_amd64.deb \
-  --stage-dir ./verified-deb-1.0.1 \
-  --expect-version 1.0.1
-sudo apt install ./verified-deb-1.0.1/ShadowCode_1.0.1_amd64.deb
+  --artifact ShadowCode_2.1.0_amd64.deb \
+  --stage-dir ./verified-deb-2.1.0 \
+  --expect-version 2.1.0
+sudo apt install ./verified-deb-2.1.0/ShadowCode_2.1.0_amd64.deb
 ```
 
 A `.deb` installed by hand this way gets no updates and none of the APT

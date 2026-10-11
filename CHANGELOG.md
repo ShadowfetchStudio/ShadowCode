@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.1.0 (unreleased)
+## 2.1.0: ARM64, a signed APT repository and a safer installer
 
 - **Signed APT repository.** Each release's authenticated `.deb` is indexed in
   an APT repository on GitHub Pages (`stable`/`main`, amd64 and arm64), signed
