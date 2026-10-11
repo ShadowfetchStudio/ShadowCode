@@ -1,0 +1,20 @@
+Package: shadow-code
+Version: 2.1.0
+Architecture: amd64
+Installed-Size: 131740
+Maintainer: Shadowfetch <209457103+ShadowfetchStudio@users.noreply.github.com>
+Section: devel
+Priority: optional
+Depends: git, libgomp1, libssl3, libasound2, libwebkit2gtk-4.1-0, libgtk-3-0, libc6 (>= 2.39), libgcc-s1, libstdc++6
+Recommends: libvulkan1, bubblewrap
+Homepage: https://github.com/ShadowfetchStudio/ShadowCode
+Description: Desktop coding agent for local models and your subscriptions
+ ShadowCode runs coding tasks on GGUF models on this computer through a bundled
+ llama.cpp runtime, or through the official Codex, Claude Code, Cursor and Grok
+ command-line tools and the Antigravity agent you are signed in to, or hundreds
+ of OpenRouter models with your own API key, with explicit approvals, durable
+ conversations and Git review.
+Filename: pool/main/s/shadow-code/shadow-code_2.1.0_amd64.deb
+Size: 28999972
+MD5sum: 1e443b678e750e156396124e4342ecc3
+SHA256: 46f9c0d9370fcd2c6571265c72b88f7bdf8cdfb6873bf0727f63f158bfb8f246
