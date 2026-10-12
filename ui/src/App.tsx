@@ -107,7 +107,7 @@ export default function App() {
   const taskRef = useRef("");
   taskRef.current = task;
 
-  const { toasts, toast, dismiss } = useToasts();
+  const { toasts, toast, dismiss, hold } = useToasts();
   const shutdown = useDesktopEvents(toast);
   const [sidebar, setSidebar] = useSidebar();
   const setJobs = useStableCallback((jobs: Job[]) => feed.setJobs(jobs));
@@ -838,7 +838,7 @@ export default function App() {
           targets={pickerTargets}
         />
       )}
-      <Toasts toasts={toasts} onDismiss={dismiss} />
+      <Toasts toasts={toasts} onDismiss={dismiss} onHold={hold} />
       <ZoomStatus notice={appearance.notice} />
       {rewinding.asking && (
         <RewindDialog

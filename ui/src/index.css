@@ -1603,7 +1603,9 @@ button.mini.primary-mini {
   max-width: min(380px, calc(100vw - 32px));
   pointer-events: none;
 }
-.toast button {
+/* A notification takes the pointer so it can wait while pointed at
+   (useToasts); the gaps between notifications stay click-through. */
+.toast {
   pointer-events: auto;
 }
 .toast {

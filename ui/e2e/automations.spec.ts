@@ -159,6 +159,19 @@ test("Delete asks in the app's own dialog", async ({ page }) => {
   ).toHaveLength(1);
 });
 
+test("a notification waits while the pointer is on it", async ({ page }) => {
+  await start(page);
+  await createAutomation(page, "Morning review");
+  // Notifications stay for 5 s, but not while pointed at; afterwards they
+  // finish the time they had left.
+  const toast = page.locator(".toast", { hasText: "Automation created" });
+  await toast.hover();
+  await page.waitForTimeout(6000);
+  await expect(toast).toBeVisible();
+  await page.mouse.move(0, 0);
+  await expect(toast).toHaveCount(0, { timeout: 7000 });
+});
+
 test("starts a task from an issue and offers a pull request that closes it", async ({
   page,
 }) => {
