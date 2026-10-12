@@ -49,6 +49,9 @@ export type FakeOptions = {
   spendLimitOnApi?: boolean;
   /** Tasks on a paid API row meet a busy provider twice before answering. */
   retryOnApi?: boolean;
+  /** Earlier conversations in the project, by title, newest first (s2,
+   * s3, …), all older than the open one. */
+  conversations?: string[];
 };
 
 export function installFakeBackend(options: FakeOptions = {}) {
@@ -761,6 +764,16 @@ export function installFakeBackend(options: FakeOptions = {}) {
       })),
     },
   };
+  (options.conversations || []).forEach((title, i) =>
+    state.sessions.push({
+      id: `s${i + 2}`,
+      workspace,
+      status: "idle",
+      title,
+      updated_at: now() - 60 * (i + 1),
+      target: null,
+    }),
+  );
   if (options.firstRun) {
     state.onboarded = false;
     state.local.models = [];

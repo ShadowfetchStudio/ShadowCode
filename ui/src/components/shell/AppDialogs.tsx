@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ComponentProps, type RefObject } from "react";
-import type { LimitsConfig, Project } from "../../api";
+import type { LimitsConfig, Project, Session } from "../../api";
 import { AllowancePanel, PlanLimitControl } from "../Allowance";
 import type { CompareDialog as CompareDialogComponent } from "../CompareDialog";
 import { ConsentDialog } from "../ConsentDialog";
@@ -12,6 +12,7 @@ import {
   type TrustDialog as TrustDialogComponent,
 } from "../overlays";
 import type { AdvancedTab, SettingsProps, SettingsSection } from "../Settings";
+import { conversationItems, projectItems } from "./paletteJumps";
 import { readyLocalTargets } from "../../lib/allowance";
 import { billingWarning, type PickerTarget } from "../../lib/picker";
 import type { useAllowance } from "../../hooks/useCatalog";
@@ -56,6 +57,8 @@ export function AppDialogs({
   projects,
   workspace,
   onPickProject,
+  sessions,
+  onOpenSession,
 }: {
   overlay: Overlay;
   setOverlay: (overlay: Overlay) => void;
@@ -86,6 +89,10 @@ export function AppDialogs({
   projects: Project[];
   workspace: string;
   onPickProject: (path: string) => void;
+  /** Conversations the palette can open, as the sidebar lists them. */
+  sessions: Session[];
+  /** Opens a conversation as choosing it in the sidebar does. */
+  onOpenSession: (id: string) => void;
 }) {
   const close = () => setOverlay("");
   const openLocal = () => onOpenSettings("local");
@@ -166,7 +173,14 @@ export function AppDialogs({
         />
       )}
       {overlay === "help" && <Help onClose={close} version={version} />}
-      {overlay === "palette" && <Palette items={palette} onClose={close} />}
+      {overlay === "palette" && (
+        <Palette
+          items={palette}
+          conversations={conversationItems(sessions, onOpenSession)}
+          projects={projectItems(projects, onPickProject)}
+          onClose={close}
+        />
+      )}
       {overlay === "project" && (
         <ProjectPicker
           projects={projects}

@@ -615,6 +615,11 @@ export default function App() {
     );
 
   const view = compare.view;
+  /** Choosing a conversation in the sidebar or the command palette. */
+  const openConversation = (id: string) => {
+    compare.setView("chat");
+    void nav.openSession(id);
+  };
   const currentSession = sessions.find((s) => s.id === sessionId);
   const palette = paletteItems({
     newTask: () => void nav.newSession(),
@@ -658,10 +663,7 @@ export default function App() {
           onAction={(action, session, title) =>
             void conversations.act(action, session, title)
           }
-          onSelect={(id) => {
-            compare.setView("chat");
-            void nav.openSession(id);
-          }}
+          onSelect={openConversation}
           onNew={() => void nav.newSession()}
           onProject={(path) => void nav.pickProject(path)}
           onSettings={() => openSettings()}
@@ -927,6 +929,8 @@ export default function App() {
         projects={listedProjects}
         workspace={workspace}
         onPickProject={(path) => void nav.pickProject(path)}
+        sessions={sessions}
+        onOpenSession={openConversation}
       />
     </div>
   );

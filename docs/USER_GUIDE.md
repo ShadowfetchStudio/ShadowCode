@@ -38,6 +38,24 @@ the same three choices until a model is ready.
 The sidebar groups conversations by project. **New task** (`Ctrl+N`) starts a
 new conversation in the current project.
 
+## The command palette
+
+`Ctrl+K` (or the search button at the top right) opens the command palette.
+Type a few letters of what you want: they only need to appear in order, so
+*rev ch* finds **Review changes** and *cmp* finds **Compare models on this
+task**. Matches at the start of words rank first, and the matched letters are
+shown in bold.
+
+- With something typed, the palette also lists **Conversations** whose title
+  matches (up to eight, with their project beside them) and **Projects** to
+  open. Choosing a conversation opens it, just as clicking it in the sidebar
+  does. Conversations without a title yet are not listed.
+- With nothing typed, **Recent** shows the last five commands you ran from
+  the palette on this computer, then every other command.
+- `↑` / `↓` move through the list, `Page Up` / `Page Down` move a page,
+  `Home` / `End` go to the first or last entry, `Enter` runs the highlighted
+  one and `Esc` closes the palette.
+
 ## Edit files and inspect context
 
 Open a file from the project Files list to edit it with code highlighting, line

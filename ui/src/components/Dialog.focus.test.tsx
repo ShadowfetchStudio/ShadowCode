@@ -69,7 +69,7 @@ it("returns focus to the composer after the real autofocus palette closes with E
   const composer = screen.getByRole("textbox", { name: "Message ShadowCode" });
   composer.focus();
   fireEvent.keyDown(composer, { key: "k", ctrlKey: true });
-  const search = screen.getByRole("textbox", { name: "Search commands" });
+  const search = screen.getByRole("combobox", { name: "Search commands" });
   expect(document.activeElement).toBe(search);
   fireEvent.keyDown(search, { key: "Escape" });
   expect(screen.queryByRole("dialog", { name: "Command palette" })).toBeNull();
@@ -88,7 +88,7 @@ it("restores the actual palette opener across repeated StrictMode mounts", () =>
     target.focus();
     if (target === opener) fireEvent.click(opener);
     else fireEvent.keyDown(target, { key: "k", ctrlKey: true });
-    const search = screen.getByRole("textbox", { name: "Search commands" });
+    const search = screen.getByRole("combobox", { name: "Search commands" });
     expect(document.activeElement).toBe(search);
     fireEvent.keyDown(search, { key: "Escape" });
     expect(

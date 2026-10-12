@@ -1,5 +1,5 @@
 import { Dialog } from "./Dialog";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Project } from "../api";
 import { canPickFiles, pickDirectory } from "../lib/transport";
 import { GLOSSARY, GLOSSARY_WORDS } from "../lib/glossary";
@@ -122,73 +122,8 @@ export function Help({
   );
 }
 
-export type PaletteItem = {
-  id: string;
-  label: string;
-  hint?: string;
-  run: () => void;
-};
-
-export function Palette({
-  items,
-  onClose,
-}: {
-  items: PaletteItem[];
-  onClose: () => void;
-}) {
-  const [q, setQ] = useState("");
-  const [index, setIndex] = useState(0);
-  const hits = items.filter((c) =>
-    c.label.toLowerCase().includes(q.toLowerCase()),
-  );
-  useEffect(() => setIndex(0), [q]);
-  return (
-    <Dialog label="Command palette" className="palette" onClose={onClose}>
-      <input
-        autoFocus
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        aria-label="Search commands"
-        placeholder="Type a command…"
-        onKeyDown={(ev) => {
-          if (ev.key === "ArrowDown") {
-            ev.preventDefault();
-            setIndex((i) => Math.min(i + 1, hits.length - 1));
-          }
-          if (ev.key === "ArrowUp") {
-            ev.preventDefault();
-            setIndex((i) => Math.max(i - 1, 0));
-          }
-          if (ev.key === "Enter" && hits[index]) {
-            ev.preventDefault();
-            onClose();
-            hits[index].run();
-          }
-        }}
-      />
-      <div className="palette-list">
-        {hits.map((item, i) => (
-          <button
-            type="button"
-            key={item.id}
-            className={`hit ${i === index ? "on" : ""}`}
-            onMouseEnter={() => setIndex(i)}
-            onClick={() => {
-              onClose();
-              item.run();
-            }}
-          >
-            <span>{item.label}</span>
-            {item.hint && <span className="kbd">{item.hint}</span>}
-          </button>
-        ))}
-        {hits.length === 0 && (
-          <div className="palette-empty">No matching commands.</div>
-        )}
-      </div>
-    </Dialog>
-  );
-}
+// The command palette has its own module; it stays importable from here.
+export { Palette, type PaletteItem } from "./Palette";
 
 export function ProjectPicker({
   projects,
