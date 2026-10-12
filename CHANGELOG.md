@@ -1,5 +1,82 @@
 # Changelog
 
+## 2.2.0 (unreleased)
+
+- **Your own model servers.** **Settings › Accounts › Your own endpoints**
+  connects Ollama, LM Studio, a llama.cpp or vLLM server, xAI, OpenAI or any
+  OpenAI-compatible API. **Find models** lists what the server offers; the
+  models you tick appear in the picker (servers on this computer under *On
+  this computer*, others under *API keys*, off in offline mode) and run with
+  ShadowCode's own agent. **Test** and **Remove** sit beside each one. A typed
+  key is saved on this computer only when you add models, under a name chosen
+  for the service (`api.deepseek.com` uses `DEEPSEEK_API_KEY`), so two services
+  never overwrite each other's key; a remote device never makes the desktop
+  send a saved key to an address it typed. New routes `POST
+  /api/providers/models`, `POST /api/models/endpoints` and `POST
+  /api/models/remove`; `GET /api/picker` lists these rows with `custom: true`.
+- **Settings › Agent.** Steps per task, the token budget and autonomy profile,
+  tool time limit and output size, history shortening and summaries, provider
+  retries, fix attempts, the stuck check, subagent limits, checkpoints and the
+  commands that count as checks can be changed without editing `config.yaml`.
+  Each setting shows what it does, its range and default, and has a Reset;
+  out-of-range values are caught before saving and a refused save shows the
+  engine's reason. Only the settings you changed are saved, so a project's own
+  agent settings are never copied into your profile.
+- **Find in conversation.** `Ctrl+F` (or *Find in conversation* in the command
+  palette) searches the open conversation's prompts, answers and notes, older
+  saved messages included, and shows *3 of 12*. `Enter` / `Shift+Enter` and
+  `F3` / `Shift+F3` step through matches, opening older messages as needed;
+  matches on screen are highlighted (the row is outlined where the webview
+  cannot highlight text). A file editor and the terminal keep their own
+  `Ctrl+F`.
+- **Search finds words in answers.** Task search in the sidebar and the Tasks
+  tab also matches the agent's answers, and a result whose title doesn't show
+  the words shows the message or answer that matched, with the words marked.
+  `GET /api/sessions?q=` rows carry `match: {field, snippet, start, end}`.
+- **A smarter command palette.** `Ctrl+K` matches letters in order, so *rev ch*
+  finds **Review changes**; word starts rank first and matched letters are
+  bold. Typing also lists matching **Conversations** and **Projects** to open,
+  and with nothing typed **Recent** shows the last five commands you ran.
+  Screen readers follow the highlighted entry; `Page Up`/`Page Down` and
+  `Home`/`End` move through the list.
+- **Text size.** `Ctrl+=` (or `Ctrl++`), `Ctrl+-` and `Ctrl+0` zoom the whole
+  window from 80% to 175%, with the new size shown briefly; it is saved as
+  `ui.zoom` and the window reopens at that size. The desktop zooms its webview;
+  in a browser over remote access the terminal and editor still put the
+  pointer on the right text. **Settings › Appearance** gains a Text size
+  control, and theme and text size now change as you pick them: leaving
+  without saving puts back what you had. The palette offers *Theme: same as the
+  system*, *light* and *dark* (the old toggle could never get back to System)
+  and *Zoom in*, *Zoom out* and *Reset zoom*.
+- **Message times.** Prompts and answers show when they were sent, quietly at
+  their edge ("14:32", "Yesterday 14:32", or the date), with the full date and
+  time on hover; a quick reply keeps its time hidden until hovered. Times come
+  from the conversation's record.
+- **All of a tool's output.** Long output in the activity timeline and in hook
+  cards offers **Show all (N lines)** / **Show less** and **Copy**, which copies
+  all of it; very long output shows its last 2,000 lines and says so.
+- **Composer `/` menu.** `Enter` picks the highlighted command, as `Tab` and
+  the `@` menu do, and the next `Enter` sends it. Commands whose name or
+  description contains what you typed follow the name matches.
+- **Notifications wait while you read them.** A notification stays while the
+  pointer is on it or focus is inside it, then finishes its remaining time.
+- **Screen readers hear milestones, not every update.** Only the status bar's
+  state is announced, and the conversation is a named log that isn't read out
+  while it streams. One announcement says when an answer finished, a task
+  failed or stopped, or an action needs approval; approval cards are named for
+  their action.
+- The page title names the open conversation, with a dot while a task runs,
+  so a browser tab on a paired device says what it shows.
+- Deleting an automation asks in the app's own dialog. The drawer's tabs are a
+  tab list (arrow keys, Home/End). *Latest activity* jumps instead of gliding
+  when the system asks for reduced motion.
+- **The theme follows the desktop by default.** `ui.theme` now defaults to
+  `system` in the engine and `config.example.yaml`, as the window and
+  onboarding already assumed; a profile that never chose a theme no longer
+  opens light on a dark desktop. Saved choices are unchanged.
+- `docs/NATIVE_ROUTING.md` no longer points at a *Custom model…* control that
+  does not exist.
+
 ## 2.1.0: ARM64, a signed APT repository and a safer installer
 
 - **Signed APT repository.** Each release's authenticated `.deb` is indexed in
