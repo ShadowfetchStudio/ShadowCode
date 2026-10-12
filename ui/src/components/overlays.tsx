@@ -27,6 +27,7 @@ const SHORTCUT_GROUPS: { label: string; rows: [string, string][] }[] = [
       ["Ctrl+N", "New task"],
       ["Alt+↑ / Alt+↓", "Previous / next conversation"],
       ["Ctrl+Tab", "Back to the last conversation"],
+      ["Ctrl+F", "Find in conversation"],
       ["Ctrl+L", "Focus composer"],
       ["Ctrl+M", "Choose a model"],
       ["Esc", "Close overlay or drawer"],

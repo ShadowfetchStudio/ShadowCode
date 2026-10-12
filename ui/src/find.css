@@ -1,0 +1,76 @@
+/* Find in conversation (Ctrl+F): the bar above the transcript and what it
+   highlights. Colours come from tokens.css, so both themes read. */
+
+.find-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  align-self: flex-end;
+  max-width: calc(100% - 32px);
+  margin: 8px 16px 0;
+  padding: 2px 4px 2px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  font-size: 12px;
+}
+.find-bar:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.find-icon {
+  flex: none;
+  color: var(--muted);
+}
+/* The bar shows focus (its border), so the field itself has no ring. */
+.find-bar .find-input,
+.find-bar .find-input:focus-visible {
+  flex: 1 1 200px;
+  width: 200px;
+  min-width: 0;
+  padding: 5px 6px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  outline: none;
+}
+.find-count {
+  flex: none;
+  min-width: 64px;
+  padding: 0 6px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+.find-searching {
+  flex: none;
+  color: var(--muted);
+}
+.find-error {
+  flex: none;
+  padding: 0 4px;
+  color: var(--danger);
+  white-space: nowrap;
+}
+
+/* Rows find can locate; the wrapper adds no box of its own. */
+.find-row {
+  display: contents;
+}
+/* No highlight API (older WebKitGTK): the current match's row is marked. */
+.find-row[data-find-current="row"] > * {
+  outline: 2px solid var(--warn);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+::highlight(shadow-find) {
+  background-color: color-mix(in srgb, var(--warn) 28%, transparent);
+  color: var(--text);
+}
+::highlight(shadow-find-current) {
+  background-color: var(--warn);
+  color: var(--canvas);
+}

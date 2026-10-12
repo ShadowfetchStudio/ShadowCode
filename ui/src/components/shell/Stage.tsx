@@ -13,6 +13,7 @@ import type { DrawerTab } from "../Drawer";
 import type { AdvancedTab, SettingsSection } from "../Settings";
 import { ChatView } from "./ChatView";
 import { ComposerDock, composerAccess } from "./ComposerDock";
+import { FindBar } from "./FindBar";
 import { StageBanners } from "./StageBanners";
 import { StatusBar } from "./StatusBar";
 import { TranscriptRows, type RowActions } from "./TranscriptRows";
@@ -25,6 +26,7 @@ import type { ComposerExtras } from "../../hooks/useComposerExtras";
 import type { useAllowance } from "../../hooks/useCatalog";
 import type { useCompare } from "../../hooks/useCompare";
 import type { useConversation } from "../../hooks/useConversation";
+import { useFind } from "../../hooks/useFind";
 import type { useJobControls } from "../../hooks/useJobControls";
 import type { useNavigation } from "../../hooks/useNavigation";
 import type { useStickyScroll } from "../../hooks/useStickyScroll";
@@ -109,6 +111,8 @@ export function Stage({
   worktreeBar,
   tryOn,
   onTryOnModel,
+  find: findRequest = 0,
+  onCloseFind = () => undefined,
 }: {
   conversation: ReturnType<typeof useConversation>;
   compare: ReturnType<typeof useCompare>;
@@ -178,6 +182,10 @@ export function Stage({
   /** "Try on…" is choosing a model to continue a stopped task. */
   tryOn?: TryOn | null;
   onTryOnModel?: (targetId: string) => void;
+  /** Find in conversation: 0 while closed; each Ctrl+F changes it, which
+   * focuses the query again. */
+  find?: number;
+  onCloseFind?: () => void;
 }) {
   const { transcript, job, busy, connection, history } = conversation;
   const { switching, sessionId, modelChoice, runningChoice } = nav;
@@ -189,6 +197,19 @@ export function Stage({
     pickerOpen,
   );
   const view = compare.view;
+  const chatHidden = view === "compare" || Boolean(reviewPanel);
+  const find = useFind({
+    open: findRequest > 0,
+    hidden: chatHidden,
+    sessionId,
+    liveItems: conversation.liveItems,
+    liveTaskId: transcript.activeTaskId,
+    queuedTaskIds,
+    history,
+    streamRef: scroll.streamRef,
+    release: scroll.release,
+    onClose: onCloseFind,
+  });
   const locked = busy || submitting || switching || Boolean(shutdown);
   const composerLocked = submitting || switching || Boolean(shutdown);
   const access = composerAccess(cfg, status?.permissions.level, selectedTarget);
@@ -245,6 +266,20 @@ export function Stage({
   ) : undefined;
   return (
     <main className="stage">
+      {findRequest > 0 && !chatHidden && (
+        <FindBar
+          query={find.query}
+          onQuery={find.setQuery}
+          label={find.label}
+          total={find.total}
+          searching={find.searching}
+          error={find.error}
+          focusRequest={findRequest}
+          onNext={find.next}
+          onPrevious={find.previous}
+          onClose={onCloseFind}
+        />
+      )}
       <StageBanners
         attached={Boolean(health?.desktop_attached)}
         limitVendor={transcript.limit?.vendor}
@@ -335,6 +370,7 @@ export function Stage({
               actions={rowActions}
               scrollRef={scroll.streamRef}
               resetKey={`${sessionId}:${history.firstCursor}`}
+              reveal={find.reveal}
             />
           </OpinionContext.Provider>
         }

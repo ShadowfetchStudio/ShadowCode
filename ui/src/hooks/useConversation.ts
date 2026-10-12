@@ -242,6 +242,29 @@ export function useConversation(onComplete: (done?: Job) => void) {
     };
   }, [job?.id, job?.status, streamEpoch]);
 
+  /** Shows the saved page that ends before `before`; `newer` is the stack
+   * "Newer messages" walks back to the latest messages. */
+  const showPage = useCallback(async (before: number, newer: number[]) => {
+    if (!session.current) return;
+    const request = ++historyRequest.current;
+    const selected = session.current;
+    historyPending.current = true;
+    setHistoryLoading(true);
+    setHistoryError("");
+    try {
+      const page = await api.historyPage(selected, before);
+      if (request !== historyRequest.current || selected !== session.current)
+        return;
+      setHistory({ page, state: replay(page.events), before, newer });
+    } catch (error) {
+      if (request === historyRequest.current) setHistoryError(String(error));
+    } finally {
+      if (request === historyRequest.current) {
+        historyPending.current = false;
+        setHistoryLoading(false);
+      }
+    }
+  }, []);
   const pageHistory = useCallback(
     async (direction: "older" | "newer") => {
       if (historyPending.current || !session.current) return;
@@ -253,34 +276,14 @@ export function useConversation(onComplete: (done?: Job) => void) {
         if (direction === "newer") clearHistory();
         return;
       }
-      const request = ++historyRequest.current;
-      const selected = session.current;
-      historyPending.current = true;
-      setHistoryLoading(true);
-      setHistoryError("");
-      try {
-        const page = await api.historyPage(selected, before);
-        if (request !== historyRequest.current || selected !== session.current)
-          return;
-        setHistory({
-          page,
-          state: replay(page.events),
-          before,
-          newer:
-            direction === "older"
-              ? [...(history?.newer || []), history?.before || 0]
-              : (history?.newer || []).slice(0, -1),
-        });
-      } catch (error) {
-        if (request === historyRequest.current) setHistoryError(String(error));
-      } finally {
-        if (request === historyRequest.current) {
-          historyPending.current = false;
-          setHistoryLoading(false);
-        }
-      }
+      await showPage(
+        before,
+        direction === "older"
+          ? [...(history?.newer || []), history?.before || 0]
+          : (history?.newer || []).slice(0, -1),
+      );
     },
-    [history, historyBase, clearHistory],
+    [history, historyBase, clearHistory, showPage],
   );
   const setTranscript = useCallback(
     (update: SetStateAction<Transcript>) => {
@@ -315,7 +318,13 @@ export function useConversation(onComplete: (done?: Job) => void) {
       older: () => pageHistory("older"),
       newer: () => pageHistory("newer"),
       latest: clearHistory,
+      /** The latest messages' window: where saved pages begin. */
+      base: historyBase,
+      /** Opens a saved page directly (Find in conversation). */
+      show: showPage,
     },
+    /** The latest messages, also while a saved page is shown. */
+    liveItems: liveTranscript.items,
     job,
     setJob,
     connection,

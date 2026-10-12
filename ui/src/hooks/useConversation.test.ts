@@ -314,3 +314,35 @@ it("reattaches the same running job after a snapshot and can retain the viewed p
     "New stream",
   ]);
 });
+it("opens a saved page directly, keeping Newer messages and the live items", async () => {
+  vi.mocked(api.historyPage).mockResolvedValue({
+    events: [event(40, "Oldest answer")],
+    first_cursor: 40,
+    event_cursor: 99,
+    has_older: false,
+  });
+  const { result } = renderHook(() => useConversation(vi.fn()));
+  act(() => result.current.load(detail(), null));
+  expect(result.current.history.base).toEqual({
+    first_cursor: 200,
+    has_older: true,
+  });
+  // Find in conversation opens the second saved page without the first.
+  await act(async () => {
+    await result.current.history.show(100, [0, 200]);
+  });
+  expect(api.historyPage).toHaveBeenCalledTimes(1);
+  expect(api.historyPage).toHaveBeenCalledWith("session", 100);
+  expect(result.current.history.firstCursor).toBe(40);
+  expect(result.current.transcript.items[0].text).toBe("Oldest answer");
+  expect(result.current.liveItems[0].text).toBe("Recent answer");
+  vi.mocked(api.historyPage).mockResolvedValue(page);
+  await act(async () => {
+    await result.current.history.newer();
+  });
+  expect(api.historyPage).toHaveBeenLastCalledWith("session", 200);
+  await act(async () => {
+    await result.current.history.newer();
+  });
+  expect(result.current.history.viewing).toBe(false);
+});

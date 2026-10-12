@@ -14,6 +14,7 @@ export type PaletteActions = {
   stop: () => void;
   toggleTheme: () => void;
   help: () => void;
+  find: () => void;
 };
 
 /** The command palette (Ctrl+K) entries, in display order. */
@@ -31,6 +32,12 @@ export function paletteItems(a: PaletteActions): PaletteItem[] {
       label: "Open project",
       hint: "Ctrl+P",
       run: a.openProject,
+    },
+    {
+      id: "find",
+      label: "Find in conversation",
+      hint: "Ctrl+F",
+      run: a.find,
     },
     { id: "changes", label: "Review changes", run: () => a.panel("changes") },
     {

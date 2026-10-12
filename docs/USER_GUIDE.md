@@ -1100,6 +1100,13 @@ Subscription CLIs use their own sandboxes, not this one.
   starts a new conversation at a response. A very long page shows its latest
   150 items first; **Show … earlier items** adds more without moving what
   you are reading.
+- **Find in conversation** (`Ctrl+F`, or *Find in conversation* in the
+  `Ctrl+K` command palette) searches the whole conversation's prompts,
+  answers and notes, older messages included, ignoring case, and shows
+  *3 of 12*. `Enter` / `Shift+Enter` (or `F3` / `Shift+F3`) go to the next or
+  previous match, opening older messages and earlier items as needed; every
+  match on screen is highlighted. `Esc` closes it. In a file editor or the
+  terminal, `Ctrl+F` stays theirs.
 - **Interrupted tasks.** If ShadowCode exits during a task, the task is marked
   *interrupted*. **Continue task** writes a recovery request for you. Shell
   commands and file edits are never replayed automatically.

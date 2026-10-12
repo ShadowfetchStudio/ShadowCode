@@ -370,16 +370,27 @@ const TranscriptRow = memo(function TranscriptRow({
       <AgentAnswer item={item} forkDisabled={forkDisabled} actions={actions} />
     );
   if (stranded)
-    return (
+    node = (
       <div>
         {node}
         <ActivityTimeline activity={activity} />
       </div>
     );
-  if (timelineHere)
-    return (
+  else if (timelineHere)
+    node = (
       <div className="msg-with-activity">
         <ActivityTimeline activity={activity} withSummary />
+        {node}
+      </div>
+    );
+  // Find in conversation locates prompts, answers and notes by their key.
+  // `display: contents` keeps the wrapper out of the layout.
+  if (
+    !queued &&
+    (item.kind === "user" || item.kind === "agent" || item.kind === "note")
+  )
+    return (
+      <div className="find-row" data-find-row={rowKey}>
         {node}
       </div>
     );
@@ -401,6 +412,7 @@ export function TranscriptRows({
   actions,
   scrollRef,
   resetKey,
+  reveal,
 }: {
   items: ChatItem[];
   activity: Record<string, TaskActivity>;
@@ -414,6 +426,8 @@ export function TranscriptRows({
   scrollRef: RefObject<HTMLDivElement | null>;
   /** Changes when another conversation or history page opens. */
   resetKey: string;
+  /** A row Find in conversation is showing: earlier rows render down to it. */
+  reveal?: string;
 }) {
   const rows = useMemo(
     () =>
@@ -430,6 +444,12 @@ export function TranscriptRows({
     el.scrollTop += el.scrollHeight - anchor.current;
     anchor.current = null;
   }, [shown, scrollRef]);
+  const revealAt = reveal ? rows.findIndex((row) => row.key === reveal) : -1;
+  if (revealAt >= 0 && revealAt < rows.length - shown)
+    setLimit({
+      key: resetKey,
+      rows: Math.ceil((rows.length - revealAt) / ROW_WINDOW) * ROW_WINDOW,
+    });
   const start = Math.max(0, rows.length - shown);
   // Second opinions about a task follow the task's last row.
   const lastOfTask = useMemo(() => {

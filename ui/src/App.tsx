@@ -93,6 +93,8 @@ export default function App() {
   const [panel, setPanel] = useState<DrawerTab | null>(null);
   const [diffPath, setDiffPath] = useState("");
   const [overlay, setOverlay] = useState<Overlay>("");
+  /** Find in conversation: 0 while closed, bumped by each Ctrl+F. */
+  const [find, setFind] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const allowanceReturn = useRef(false);
   const promptRef = useRef<HTMLTextAreaElement>(null);
@@ -457,6 +459,7 @@ export default function App() {
     inWorktree: Boolean(worktree.task),
   });
 
+  const closeFind = useStableCallback(() => setFind(0));
   const shortcuts: Record<ShortcutAction, () => void> = {
     "close-overlay": () => setOverlay(""),
     "close-trust": () => nav.setTrust(null),
@@ -474,6 +477,7 @@ export default function App() {
     stop: () => void controls.stop(),
     export: () => exportSession(),
     help: () => setOverlay("help"),
+    find: () => setFind((n) => n + 1),
     "previous-conversation": conversations.previous,
     "next-conversation": conversations.next,
     "recent-conversation": conversations.recent,
@@ -646,6 +650,7 @@ export default function App() {
         .then(ws.reloadConfig)
         .catch((e) => toast(String(e), "err")),
     help: () => setOverlay("help"),
+    find: () => setFind((n) => n + 1),
   });
 
   return (
@@ -722,6 +727,8 @@ export default function App() {
           setTryOn(null);
           if (pending) void actions.tryOnModel(id, pending);
         }}
+        find={find}
+        onCloseFind={closeFind}
         selectedTarget={selectedTarget}
         queuedJobs={queuedJobs}
         queuedTaskIds={queuedTaskIds}

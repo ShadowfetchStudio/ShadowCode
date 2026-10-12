@@ -8,6 +8,8 @@ export function installFakePerformance(options: {
   initialReplyChars?: number;
   intervalMs?: number;
   initialReplyText?: string;
+  /** Events in the conversation's latest window (history pages stay 128). */
+  windowEvents?: number;
 }) {
   const scope = window as any;
   const inner = scope.__SHADOW_TEST_TRANSPORT__;
@@ -42,9 +44,9 @@ export function installFakePerformance(options: {
   let timer: ReturnType<typeof setInterval> | undefined;
   let job: any = null;
   let fragments = 0;
-  const page = (through: number) => {
+  const page = (through: number, size = pageSize) => {
     const events = saved.slice(
-      Math.max(0, Math.min(count, through) - pageSize),
+      Math.max(0, Math.min(count, through) - size),
       Math.min(count, through),
     );
     return {
@@ -98,7 +100,7 @@ export function installFakePerformance(options: {
         path === `/api/sessions/${session.id}/activate`
       ) {
         const result = await inner.request(fullPath, method, body);
-        const latest = page(count);
+        const latest = page(count, options.windowEvents ?? pageSize);
         return record(fullPath, {
           ...result,
           events: latest.events,

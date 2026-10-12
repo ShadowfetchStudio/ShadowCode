@@ -33,6 +33,7 @@ it("the command palette reaches every drawer panel and Settings page", () => {
     stop: vi.fn(),
     toggleTheme: vi.fn(),
     help: vi.fn(),
+    find: vi.fn(),
   };
   const items = paletteItems(actions);
   items.forEach((item) => item.run());

@@ -28,6 +28,7 @@ export type ShortcutAction =
   | "stop"
   | "export"
   | "help"
+  | "find"
   | "previous-conversation"
   | "next-conversation"
   | "recent-conversation";
@@ -83,6 +84,9 @@ export function shortcutFor(
   if (mod && key === "l") return "focus";
   if (mod && key === ".") return "stop";
   if (mod && e.shiftKey && key === "e") return "export";
+  // Find in conversation. A code editor's own find (Ctrl+F) handles the key
+  // first, and a terminal keeps it (above).
+  if (mod && !e.shiftKey && !e.altKey && key === "f") return "find";
   // Conversations: Alt+↑/↓ previous/next in the sidebar, Ctrl+Tab the one
   // opened before this one.
   if (e.altKey && !mod && key === "arrowup") return "previous-conversation";
