@@ -60,7 +60,7 @@ test("reviews the staged changes before a commit, with consent for a cloud revie
     .click();
   await drawer(page)
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Git" })
+    .getByRole("tab", { name: "Git" })
     .click();
   const panel = drawer(page);
   await panel.getByRole("button", { name: "Stage all" }).click();

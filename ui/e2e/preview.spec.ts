@@ -89,7 +89,7 @@ async function openPreview(page: Page) {
   await page.getByRole("button", { name: "Review changes" }).click();
   await drawer(page)
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Preview" })
+    .getByRole("tab", { name: "Preview" })
     .click();
   await preview(page)
     .getByRole("button", { name: /localhost:5173/ })

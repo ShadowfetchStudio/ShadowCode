@@ -230,7 +230,7 @@ test("drawer tabs keep the terminal, the open file and the commit message", asyn
   await page.getByRole("button", { name: "Review changes" }).click();
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   const tab = (name: string) =>
-    drawer.locator(".drawer-tabs").getByRole("button", { name });
+    drawer.locator(".drawer-tabs").getByRole("tab", { name });
   await drawer.getByPlaceholder("Commit message").fill("Fix the add function");
   await tab("Terminal").click();
   const shell = drawer.getByRole("group", { name: "Terminal 1" });
@@ -271,7 +271,7 @@ test("keeps an unsaved file draft and reviews an agent edit before saving", asyn
   await page.getByRole("button", { name: "Review changes" }).click();
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   const tab = (name: string) =>
-    drawer.locator(".drawer-tabs").getByRole("button", { name });
+    drawer.locator(".drawer-tabs").getByRole("tab", { name });
   await tab("Files").click();
   await drawer.getByRole("button", { name: "README.md", exact: true }).click();
   const editor = drawer.getByRole("textbox", { name: "Edit README.md" });
@@ -325,7 +325,7 @@ test("indents and outdents selected file lines in the rendered editor", async ({
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   await drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" })
+    .getByRole("tab", { name: "Files" })
     .click();
   await drawer.getByRole("button", { name: "README.md", exact: true }).click();
   const editor = drawer.getByRole("textbox", { name: "Edit README.md" });
@@ -350,7 +350,7 @@ test("recovers an unsaved editor draft after window reload and clears it after s
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   const files = drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" });
+    .getByRole("tab", { name: "Files" });
   await files.click();
   await drawer.getByRole("button", { name: "README.md", exact: true }).click();
   const editor = drawer.getByRole("textbox", { name: "Edit README.md" });
@@ -408,7 +408,7 @@ test("waits for an in-flight recovery write before discarding its draft", async 
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   await drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" })
+    .getByRole("tab", { name: "Files" })
     .click();
   await drawer.getByRole("button", { name: "README.md", exact: true }).click();
   await page.evaluate(() => {
@@ -444,7 +444,7 @@ test("waits for an in-flight recovery write before discarding its draft", async 
   await page.getByRole("button", { name: "Review changes" }).click();
   await drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" })
+    .getByRole("tab", { name: "Files" })
     .click();
   await expect(
     drawer.getByRole("button", { name: "Open README.md, unsaved" }),
@@ -458,7 +458,7 @@ test("coalesces superseded recovery drafts behind an in-flight write", async ({
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   await drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" })
+    .getByRole("tab", { name: "Files" })
     .click();
   await drawer.getByRole("button", { name: "README.md", exact: true }).click();
   await page.evaluate(() => {
@@ -509,7 +509,7 @@ test("starts a fresh recovery revision after saving a file and editing again", a
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   await drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" })
+    .getByRole("tab", { name: "Files" })
     .click();
   await drawer.getByRole("button", { name: "README.md", exact: true }).click();
   const editor = drawer.getByRole("textbox", { name: "Edit README.md" });
@@ -546,7 +546,7 @@ test("reviews a competing window's recovery draft before choosing either version
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   await drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" })
+    .getByRole("tab", { name: "Files" })
     .click();
   await drawer.getByRole("button", { name: "README.md", exact: true }).click();
   const editor = drawer.getByRole("textbox", { name: "Edit README.md" });
@@ -607,7 +607,7 @@ test("shows and retries a failed recovery cleanup after file save", async ({
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   await drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" })
+    .getByRole("tab", { name: "Files" })
     .click();
   await drawer.getByRole("button", { name: "README.md", exact: true }).click();
   await page.evaluate(() => {
@@ -1363,7 +1363,7 @@ test("requires open editor drafts to be saved before Compare snapshots the proje
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   await drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" })
+    .getByRole("tab", { name: "Files" })
     .click();
   await drawer.getByRole("button", { name: "README.md", exact: true }).click();
   const editor = drawer.getByRole("textbox", { name: "Edit README.md" });

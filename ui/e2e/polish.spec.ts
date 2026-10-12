@@ -199,7 +199,30 @@ test("the drawer keeps Close on its tab row and the Tasks panel is keyboard frie
           .size,
     );
   expect(rows).toBe(1);
-  await drawer.getByRole("button", { name: "Tasks", exact: true }).click();
+  // The tabs are one tab stop; the arrows, Home and End move between them
+  // and Enter opens the focused one.
+  const tabs = drawer.getByRole("tablist", { name: "Panels" });
+  const tab = (name: string) => tabs.getByRole("tab", { name, exact: true });
+  await expect(tab("Changes")).toHaveAttribute("aria-selected", "true");
+  await expect(drawer.getByRole("tabpanel", { name: "Changes" })).toBeVisible();
+  await tab("Changes").focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(tab("Git")).toBeFocused();
+  await expect(tab("Git")).toHaveAttribute("aria-selected", "false");
+  await page.keyboard.press("End");
+  await expect(tab("Tools")).toBeFocused();
+  await page.keyboard.press("Home");
+  await expect(tab("Changes")).toBeFocused();
+  await page.keyboard.press("ArrowLeft");
+  await page.keyboard.press("ArrowLeft");
+  await expect(tab("Tasks")).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(tab("Tasks")).toHaveAttribute("aria-selected", "true");
+  await expect(drawer.getByRole("tabpanel", { name: "Tasks" })).toBeVisible();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  await expect(tab("Tasks")).toBeFocused();
+  await drawer.getByRole("tab", { name: "Tasks", exact: true }).click();
   const search = drawer.getByRole("textbox", { name: "Search tasks" });
   await expect(search).toBeVisible();
   await expect(drawer).not.toContainText("session");

@@ -47,7 +47,7 @@ async function openFile(page: Page, path: string) {
     await page.getByRole("button", { name: "Review changes" }).click();
   await drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" })
+    .getByRole("tab", { name: "Files" })
     .click();
   await drawer.getByRole("button", { name: path, exact: true }).click();
   const editor = drawer.getByRole("textbox", {

@@ -33,7 +33,7 @@ const fakeLog = (page: Page) =>
 const drawer = (page: Page) =>
   page.getByRole("complementary", { name: "Drawer" });
 const tab = (page: Page, name: string) =>
-  drawer(page).locator(".drawer-tabs").getByRole("button", { name });
+  drawer(page).locator(".drawer-tabs").getByRole("tab", { name });
 
 async function openDrawer(page: Page, name: string) {
   await page.getByRole("button", { name: "Review changes" }).click();
