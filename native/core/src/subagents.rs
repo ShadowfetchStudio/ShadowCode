@@ -97,6 +97,38 @@ impl SubagentsConfig {
     }
 }
 
+/// Check a `subagents:` change before it is saved. Loading stays lenient
+/// (out-of-range values are clamped, see [`SubagentsConfig::from_config`]) so
+/// an existing file never stops the engine from starting; a new value that
+/// would be clamped or ignored is refused instead.
+pub fn validate_change(value: &Value) -> Result<()> {
+    let Some(object) = value.as_object() else {
+        bail!(
+            "subagents must be a group of settings, for example `subagents: {{max_parallel: 4}}`"
+        );
+    };
+    for (key, item) in object {
+        let (min, max) = match key.as_str() {
+            "enabled" => {
+                ensure!(item.is_boolean(), "subagents.enabled must be true or false");
+                continue;
+            }
+            "max_parallel" => (1, 8),
+            "max_depth" => (0, 3),
+            "max_turns" => (1, 200),
+            "max_per_task" => (1, 64),
+            _ => bail!(
+                "subagents.{key} is not a setting; use enabled, max_parallel, max_depth, max_turns or max_per_task"
+            ),
+        };
+        ensure!(
+            item.as_u64().is_some_and(|n| (min..=max).contains(&n)),
+            "subagents.{key} must be a whole number from {min} to {max}; found {item}"
+        );
+    }
+    Ok(())
+}
+
 /// Tools a child may use. Deny wins; an empty allow list allows everything
 /// its permissions allow. `mcp__server` in a list covers that server's tools.
 #[derive(Clone, Debug, Default)]
@@ -1309,5 +1341,33 @@ mod cloud_consent_tests {
         );
         assert!(refused.contains("the review role cannot run"), "{refused}");
         assert!(refused.contains("Plan → Implement → Review"), "{refused}");
+    }
+}
+
+#[cfg(test)]
+mod validate_change_tests {
+    use super::validate_change;
+    use serde_json::json;
+
+    #[test]
+    fn saved_subagent_settings_are_checked_by_name_type_and_range() {
+        validate_change(&json!({})).unwrap();
+        validate_change(&json!({
+            "enabled": false, "max_parallel": 8, "max_depth": 0,
+            "max_turns": 200, "max_per_task": 1
+        }))
+        .unwrap();
+        for (bad, says) in [
+            (json!(4), "must be a group"),
+            (json!({"enabled": "yes"}), "true or false"),
+            (json!({"max_parallel": 0}), "from 1 to 8; found 0"),
+            (json!({"max_depth": 4}), "from 0 to 3"),
+            (json!({"max_turns": 2.5}), "whole number"),
+            (json!({"max_per_task": "16"}), "whole number"),
+            (json!({"max_paralel": 4}), "is not a setting"),
+        ] {
+            let error = validate_change(&bad).unwrap_err().to_string();
+            assert!(error.contains(says), "{bad}: {error}");
+        }
     }
 }

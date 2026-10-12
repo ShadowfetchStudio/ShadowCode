@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Check, ListChecks, LoaderCircle, X } from "lucide-react";
 import type { PlanStep } from "../../api";
 import type { Toast } from "../../hooks/useToasts";
@@ -68,42 +69,86 @@ export function TaskPlan({ plan }: { plan: PlanStep[] }) {
 export function Toasts({
   toasts,
   onDismiss,
+  onHold,
 }: {
   toasts: Toast[];
   onDismiss: (id: number) => void;
+  /** Pause (true) or resume (false) a notification's countdown. */
+  onHold?: (id: number, held: boolean) => void;
 }) {
   return (
     <div className="toasts" aria-live="polite">
       {toasts.map((t) => (
-        <div
-          key={t.id}
-          className={`toast ${t.kind}`}
-          role={t.kind === "err" ? "alert" : "status"}
-          aria-live={t.kind === "err" ? "assertive" : "polite"}
-        >
-          <span>{t.text}</span>
-          {t.action && (
-            <button
-              type="button"
-              className="mini toast-action"
-              onClick={() => {
-                onDismiss(t.id);
-                t.action?.run();
-              }}
-            >
-              {t.action.label}
-            </button>
-          )}
-          <button
-            type="button"
-            className="icon-btn"
-            aria-label="Dismiss notification"
-            onClick={() => onDismiss(t.id)}
-          >
-            <X size={13} aria-hidden="true" />
-          </button>
-        </div>
+        <ToastItem key={t.id} toast={t} onDismiss={onDismiss} onHold={onHold} />
       ))}
+    </div>
+  );
+}
+
+/** One notification. It stays while the pointer is over it or focus is
+ * inside it (reading it, or reaching Undo by keyboard), and counts down
+ * again once both have left. */
+function ToastItem({
+  toast: t,
+  onDismiss,
+  onHold,
+}: {
+  toast: Toast;
+  onDismiss: (id: number) => void;
+  onHold?: (id: number, held: boolean) => void;
+}) {
+  const pointer = useRef(false);
+  const focus = useRef(false);
+  const hold = useRef(onHold);
+  hold.current = onHold;
+  const sync = () => hold.current?.(t.id, pointer.current || focus.current);
+  // Pushed out by newer notifications while held: nothing reports leaving
+  // it, so let its countdown finish.
+  useEffect(() => () => hold.current?.(t.id, false), [t.id]);
+  return (
+    <div
+      className={`toast ${t.kind}`}
+      role={t.kind === "err" ? "alert" : "status"}
+      aria-live={t.kind === "err" ? "assertive" : "polite"}
+      onPointerEnter={() => {
+        pointer.current = true;
+        sync();
+      }}
+      onPointerLeave={() => {
+        pointer.current = false;
+        sync();
+      }}
+      onFocus={() => {
+        focus.current = true;
+        sync();
+      }}
+      onBlur={(e) => {
+        if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+        focus.current = false;
+        sync();
+      }}
+    >
+      <span>{t.text}</span>
+      {t.action && (
+        <button
+          type="button"
+          className="mini toast-action"
+          onClick={() => {
+            onDismiss(t.id);
+            t.action?.run();
+          }}
+        >
+          {t.action.label}
+        </button>
+      )}
+      <button
+        type="button"
+        className="icon-btn"
+        aria-label="Dismiss notification"
+        onClick={() => onDismiss(t.id)}
+      >
+        <X size={13} aria-hidden="true" />
+      </button>
     </div>
   );
 }

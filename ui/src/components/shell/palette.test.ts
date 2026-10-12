@@ -7,6 +7,7 @@ const SETTINGS_SECTIONS = [
   "accounts",
   "local",
   "roles",
+  "agent",
   "code",
   "rules",
   "voice",
@@ -30,8 +31,10 @@ it("the command palette reaches every drawer panel and Settings page", () => {
     settings: (section) => sections.push(section || "accounts"),
     exportTask: vi.fn(),
     stop: vi.fn(),
-    toggleTheme: vi.fn(),
+    theme: vi.fn(),
+    zoom: vi.fn(),
     help: vi.fn(),
+    find: vi.fn(),
   };
   const items = paletteItems(actions);
   items.forEach((item) => item.run());

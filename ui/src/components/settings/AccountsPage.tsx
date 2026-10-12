@@ -25,6 +25,7 @@ import {
   usageLabel,
 } from "../../lib/picker";
 import { SpendingLimits } from "./SpendingLimits";
+import { EndpointsCard, isEndpointProvider } from "./EndpointsCard";
 
 const ORDER = ["codex", "claude", "cursor", "antigravity", "grok"];
 
@@ -63,7 +64,8 @@ export function sourceHost(source: string): string {
 /** Settings › Accounts: the official CLI of each subscription, its sign-in
  * state, models and usage. Sign-in and sign-out run the vendors' own commands.
  * Antigravity's agent server is downloaded here, only when the user chooses
- * Install. API keys (OpenRouter, billed per token) follow in their own card. */
+ * Install. API keys (OpenRouter, billed per token) and the user's own
+ * OpenAI-compatible endpoints follow in their own cards. */
 export function AccountsPage({
   focusVendor,
   offline = false,
@@ -709,6 +711,12 @@ export function AccountsPage({
       <OpenRouterCard
         focus={focusVendor === "openrouter"}
         checks={checks}
+        onChanged={onChanged}
+        onToast={onToast}
+      />
+      <EndpointsCard
+        focus={isEndpointProvider(focusVendor)}
+        offline={offline}
         onChanged={onChanged}
         onToast={onToast}
       />

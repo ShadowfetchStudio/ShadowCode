@@ -12,13 +12,19 @@ import { useRef, useState } from "react";
 const mocks = vi.hoisted(() => ({ agents: vi.fn(), mentions: vi.fn() }));
 vi.mock("../api", () => ({ api: mocks }));
 
-import { Composer } from "./Composer";
+import { Composer, type SlashCommand } from "./Composer";
 import { EffortControl, ModeToggle } from "./ComposerModes";
 import { usePromptHistory } from "../hooks/useComposerExtras";
 import { pushHistory } from "../lib/promptHistory";
 import type { Mention } from "../lib/mentions";
 
-function Harness({ onSubmit = () => {} }: { onSubmit?: () => void }) {
+function Harness({
+  onSubmit = () => {},
+  commands = [],
+}: {
+  onSubmit?: () => void;
+  commands?: SlashCommand[];
+}) {
   const [task, setTask] = useState("");
   const [mentions, setMentions] = useState<Mention[]>([]);
   const promptRef = useRef<HTMLTextAreaElement | null>(null);
@@ -37,7 +43,7 @@ function Harness({ onSubmit = () => {} }: { onSubmit?: () => void }) {
         attachDisabled={false}
         picker={null}
         controls={null}
-        commands={[]}
+        commands={commands}
         placeholder=""
         hint=""
         busy={false}
@@ -130,6 +136,90 @@ describe("composer @ menu", () => {
     fireEvent.keyDown(field(), { key: "Escape" });
     expect(screen.queryByRole("listbox", { name: "Mentions" })).toBeNull();
     expect(screen.getByTestId("task").textContent).toBe("see @sr");
+  });
+});
+
+describe("composer / menu", () => {
+  const commands: SlashCommand[] = [
+    { name: "help", description: "List native commands", arg_spec: "" },
+    {
+      name: "status",
+      description: "Show the selected model and active work",
+      arg_spec: "",
+    },
+    { name: "model", description: "Show or select a model", arg_spec: "[id]" },
+    { name: "models", description: "List registered models", arg_spec: "" },
+    { name: "review", description: "Review project changes", arg_spec: "" },
+  ];
+  const hits = () =>
+    within(screen.getByRole("listbox", { name: "Slash commands" }))
+      .getAllByRole("option")
+      .map((option) => option.querySelector("strong")?.textContent);
+
+  it("lists name matches first, then names and descriptions containing the text", () => {
+    render(<Harness commands={commands} />);
+    typed("/mod");
+    expect(hits()).toEqual(["/model", "/models", "/status"]);
+    typed("/view");
+    expect(hits()).toEqual(["/review"]);
+    typed("/zzz");
+    expect(screen.getByText("No matching commands")).toBeTruthy();
+  });
+
+  it("Enter picks the highlighted command; the next Enter sends", () => {
+    const submit = vi.fn();
+    render(<Harness commands={commands} onSubmit={submit} />);
+    typed("/mod");
+    fireEvent.keyDown(field(), { key: "ArrowDown" });
+    fireEvent.keyDown(field(), { key: "ArrowDown" });
+    fireEvent.keyDown(field(), { key: "ArrowUp" });
+    fireEvent.keyDown(field(), { key: "Enter" });
+    expect(submit).not.toHaveBeenCalled();
+    // A command without arguments gets no trailing space.
+    expect(screen.getByTestId("task").textContent).toBe("/models");
+    expect(
+      screen.queryByRole("listbox", { name: "Slash commands" }),
+    ).toBeNull();
+    fireEvent.keyDown(field(), { key: "Enter" });
+    expect(submit).toHaveBeenCalledTimes(1);
+    // Tab still picks, and a command that takes arguments gets a space.
+    typed("/mo");
+    fireEvent.keyDown(field(), { key: "Tab" });
+    expect(screen.getByTestId("task").textContent).toBe("/model ");
+    // Nothing to pick: Enter sends what was typed.
+    typed("/zzz");
+    fireEvent.keyDown(field(), { key: "Enter" });
+    expect(submit).toHaveBeenCalledTimes(2);
+  });
+
+  it("points the field at the menu and its highlighted command", () => {
+    render(<Harness commands={commands} />);
+    expect(field().getAttribute("aria-controls")).toBeNull();
+    expect(field().getAttribute("aria-autocomplete")).toBe("list");
+    typed("/mod");
+    const menu = screen.getByRole("listbox", { name: "Slash commands" });
+    expect(field().getAttribute("aria-controls")).toBe(menu.id);
+    const active = () =>
+      document.getElementById(field().getAttribute("aria-activedescendant")!);
+    expect(active()?.getAttribute("aria-selected")).toBe("true");
+    expect(active()?.textContent).toContain("/model");
+    fireEvent.keyDown(field(), { key: "ArrowDown" });
+    expect(active()?.textContent).toContain("/models");
+    fireEvent.keyDown(field(), { key: "Escape" });
+    expect(field().getAttribute("aria-controls")).toBeNull();
+    expect(field().getAttribute("aria-activedescendant")).toBeNull();
+  });
+
+  it("points the field at the @ menu while it is open", async () => {
+    render(<Harness />);
+    typed("Explain @app");
+    const menu = await screen.findByRole("listbox", { name: "Mentions" });
+    await within(menu).findByRole("option", { name: /src\/app\.ts/ });
+    expect(field().getAttribute("aria-controls")).toBe(menu.id);
+    expect(
+      document.getElementById(field().getAttribute("aria-activedescendant")!)
+        ?.textContent,
+    ).toContain("src/app.ts");
   });
 });
 

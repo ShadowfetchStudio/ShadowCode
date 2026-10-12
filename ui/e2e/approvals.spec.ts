@@ -73,6 +73,50 @@ test("a risky command is explained, tagged and never offered Always allow", asyn
   await expect(card).toHaveCount(0);
 });
 
+test("a new approval is announced once and its card is named for the action", async ({
+  page,
+}) => {
+  const milestones = page.locator(".milestones");
+  await expect(milestones).toHaveAttribute("aria-live", "polite");
+  // The conversation is a named log that does not read out streaming text,
+  // and the status bar only announces its state.
+  await expect(page.getByRole("log", { name: "Conversation" })).toHaveAttribute(
+    "aria-live",
+    "off",
+  );
+  await expect(page.locator("footer.statusline")).not.toHaveAttribute(
+    "aria-live",
+  );
+  await expect(page.locator("footer.statusline [aria-live]")).toHaveText(
+    "Ready",
+  );
+  await page.evaluate(() =>
+    (window as unknown as Fake).__SHADOW_FAKE__.requestApproval({
+      command: "npm test",
+      preview: { kind: "command", command: "npm test", cwd: "/work/demo" },
+    }),
+  );
+  const card = page.getByRole("group", {
+    name: "Approval needed: npm test",
+  });
+  await expect(card).toBeVisible();
+  await expect(milestones).toHaveText("Approval needed: npm test");
+  // Later reads of the same pending approval say nothing new.
+  await page.evaluate(() =>
+    (window as unknown as Fake).__SHADOW_FAKE__.requestApproval({
+      command: "cargo build",
+      preview: { kind: "command", command: "cargo build", cwd: "/work/demo" },
+    }),
+  );
+  await expect(milestones.locator("p")).toHaveText([
+    "Approval needed: npm test",
+    "Approval needed: cargo build",
+  ]);
+  await card.getByRole("button", { name: "Deny", exact: true }).click();
+  await expect(card).toHaveCount(0);
+  await expect(milestones.locator("p")).toHaveCount(2);
+});
+
 test("Always allow here remembers the command, and Settings removes it", async ({
   page,
 }) => {

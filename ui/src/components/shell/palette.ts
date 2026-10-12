@@ -12,8 +12,14 @@ export type PaletteActions = {
   settings: (section?: SettingsSection, advanced?: AdvancedTab) => void;
   exportTask: (format: "md" | "json") => void;
   stop: () => void;
-  toggleTheme: () => void;
+  /** Saves `ui.theme`: "system", "light" or "dark". */
+  theme: (theme: string) => void;
+  /** The saved theme, marked "In use". */
+  themeInUse?: string;
+  /** One size larger (1), smaller (-1) or back to 100% (0). */
+  zoom: (direction: 1 | -1 | 0) => void;
   help: () => void;
+  find: () => void;
 };
 
 /** The command palette (Ctrl+K) entries, in display order. */
@@ -31,6 +37,12 @@ export function paletteItems(a: PaletteActions): PaletteItem[] {
       label: "Open project",
       hint: "Ctrl+P",
       run: a.openProject,
+    },
+    {
+      id: "find",
+      label: "Find in conversation",
+      hint: "Ctrl+F",
+      run: a.find,
     },
     { id: "changes", label: "Review changes", run: () => a.panel("changes") },
     {
@@ -67,6 +79,11 @@ export function paletteItems(a: PaletteActions): PaletteItem[] {
       id: "roles",
       label: "Roles · a model to plan, implement, review and explore",
       run: () => a.settings("roles"),
+    },
+    {
+      id: "agent",
+      label: "Agent · limits, retries, subagents and checks",
+      run: () => a.settings("agent"),
     },
     {
       id: "code",
@@ -153,10 +170,35 @@ export function paletteItems(a: PaletteActions): PaletteItem[] {
       hint: "Ctrl+,",
       run: () => a.settings(),
     },
+    ...(
+      [
+        ["system", "Theme: same as the system"],
+        ["light", "Theme: light"],
+        ["dark", "Theme: dark"],
+      ] as const
+    ).map(([theme, label]) => ({
+      id: `theme-${theme}`,
+      label,
+      hint: a.themeInUse === theme ? "In use" : undefined,
+      run: () => a.theme(theme),
+    })),
     {
-      id: "theme",
-      label: "Toggle light / dark appearance",
-      run: a.toggleTheme,
+      id: "zoom-in",
+      label: "Zoom in · larger text",
+      hint: "Ctrl+=",
+      run: () => a.zoom(1),
+    },
+    {
+      id: "zoom-out",
+      label: "Zoom out · smaller text",
+      hint: "Ctrl+-",
+      run: () => a.zoom(-1),
+    },
+    {
+      id: "zoom-reset",
+      label: "Reset zoom to 100%",
+      hint: "Ctrl+0",
+      run: () => a.zoom(0),
     },
     { id: "help", label: "Keyboard shortcuts", hint: "?", run: a.help },
     { id: "glossary", label: "Help: words you'll see", run: a.help },

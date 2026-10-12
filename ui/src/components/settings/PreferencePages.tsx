@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
 import { api, type AlwaysAllowed } from "../../api";
+import type { AppearanceControls } from "../../hooks/useAppearance";
+import {
+  DEFAULT_ZOOM,
+  ZOOM_STEPS,
+  normalizeZoom,
+  zoomPercent,
+} from "../../lib/zoom";
 import { GitHooksSetting } from "./GitHooksSetting";
 import { NotificationFields, notifyPrefs } from "./NotificationFields";
 import {
@@ -8,6 +15,7 @@ import {
   sandboxValues,
 } from "./SandboxSettings";
 import "../../tools.css";
+import "../../appearance.css";
 
 type Save = (values: Record<string, unknown>) => Promise<void>;
 
@@ -258,21 +266,42 @@ export function PermissionsPage({
   );
 }
 
-/** Settings › Appearance. Saves only the ui group. */
+/** Settings › Appearance. Saves only the ui group. Theme and text size show
+ * as they are picked; leaving the page or Settings without saving goes back
+ * to the saved ones (`appearance.preview(null)`). */
 export function AppearancePage({
   cfg,
+  appearance,
   onSave,
 }: {
   cfg: Record<string, unknown>;
+  /** The window's saved theme and size, and its live preview. */
+  appearance?: AppearanceControls;
   onSave: Save;
 }) {
   const ui = (cfg.ui || {}) as Record<string, unknown>;
-  const [theme, setTheme] = useState(String(ui.theme || "system"));
+  const [theme, setTheme] = useState(
+    () => appearance?.theme ?? String(ui.theme || "system"),
+  );
+  const [zoom, setZoom] = useState(
+    () => appearance?.zoom ?? normalizeZoom(ui.zoom),
+  );
   const [notify, setNotify] = useState(() => notifyPrefs(ui));
   const [saving, setSaving] = useState(false);
+  const preview = appearance?.preview;
+  useEffect(() => () => preview?.(null), [preview]);
+  const pick = (next: { theme?: string; zoom?: number }) => {
+    const shown = { theme, zoom, ...next };
+    setTheme(shown.theme);
+    setZoom(shown.zoom);
+    preview?.(shown);
+  };
   return (
     <section className="settings-page">
       <h3>Appearance</h3>
+      <p className="hint">
+        Theme and text size change as you choose them. Save keeps them.
+      </p>
       <fieldset className="seg-field">
         <legend>Theme</legend>
         <div className="seg" role="radiogroup" aria-label="Theme">
@@ -287,12 +316,47 @@ export function AppearancePage({
               aria-checked={theme === id}
               key={id}
               className={theme === id ? "on" : ""}
-              onClick={() => setTheme(id)}
+              onClick={() => pick({ theme: id })}
             >
               {label}
             </button>
           ))}
         </div>
+      </fieldset>
+      <fieldset className="seg-field">
+        <legend>Text size</legend>
+        <div className="text-size-row">
+          <div
+            className="seg text-size-steps"
+            role="radiogroup"
+            aria-label="Text size"
+          >
+            {ZOOM_STEPS.map((step) => (
+              <button
+                type="button"
+                role="radio"
+                aria-checked={zoom === step}
+                key={step}
+                className={zoom === step ? "on" : ""}
+                onClick={() => pick({ zoom: step })}
+              >
+                {zoomPercent(step)}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="ghost"
+            disabled={zoom === DEFAULT_ZOOM}
+            onClick={() => pick({ zoom: DEFAULT_ZOOM })}
+          >
+            Reset to 100%
+          </button>
+        </div>
+        <p className="hint">
+          Ctrl+= and Ctrl+- change it anywhere in the window, and Ctrl+0 resets
+          it.
+        </p>
       </fieldset>
       <NotificationFields value={notify} onChange={setNotify} />
       <div className="row end settings-foot">
@@ -302,9 +366,13 @@ export function AppearancePage({
           disabled={saving}
           onClick={() => {
             setSaving(true);
-            void onSave({ ui: { theme, ...notify } }).finally(() =>
-              setSaving(false),
-            );
+            // A remote browser keeps its own size; the desktop's stays.
+            const keep = appearance?.keepZoom;
+            keep?.(zoom);
+            const values = keep
+              ? { theme, ...notify }
+              : { theme, zoom, ...notify };
+            void onSave({ ui: values }).finally(() => setSaving(false));
           }}
         >
           {saving ? "Saving…" : "Save"}

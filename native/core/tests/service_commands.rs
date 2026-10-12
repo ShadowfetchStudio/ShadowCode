@@ -1353,6 +1353,52 @@ async fn session_listing_and_literal_search_work_after_tasks_are_saved() {
     .unwrap();
     assert_eq!(found["sessions"].as_array().unwrap().len(), 1);
     assert_eq!(found["sessions"][0]["id"], plain["id"]);
+    // The prompt that matched is shown, with the match marked.
+    let hit = &found["sessions"][0]["match"];
+    assert_eq!(hit["field"], "prompt");
+    assert_eq!(hit["snippet"], "Find the archived needle");
+    assert_eq!(hit["start"], 9);
+    assert_eq!(hit["end"], 24);
+
+    // The agent's answers are searched too.
+    let store = service.engine.store();
+    let task = store
+        .create_task(special["id"].as_str().unwrap(), "Tidy the parser")
+        .unwrap();
+    store
+        .finish_task(
+            &task,
+            "completed",
+            "Moved the TOML reader into its own module and added tests.",
+            &json!({}),
+        )
+        .unwrap();
+    let found = call(
+        &service,
+        "GET",
+        "/api/sessions?q=toml%20reader",
+        Value::Null,
+    )
+    .await
+    .unwrap();
+    let sessions = found["sessions"].as_array().unwrap();
+    assert_eq!(sessions.len(), 1);
+    assert_eq!(sessions[0]["id"], special["id"]);
+    assert_eq!(sessions[0]["match"]["field"], "answer");
+    assert_eq!(
+        sessions[0]["match"]["snippet"],
+        "Moved the TOML reader into its own module and added tests."
+    );
+    // A title match needs no excerpt; no search, no excerpts.
+    let found = call(&service, "GET", "/api/sessions?q=Literal", Value::Null)
+        .await
+        .unwrap();
+    assert!(found["sessions"][0].get("match").is_none());
+    assert!(all["sessions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|s| s.get("match").is_none()));
 }
 
 #[tokio::test]

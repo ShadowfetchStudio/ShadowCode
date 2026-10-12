@@ -28,14 +28,18 @@ export function applyInitialTheme() {
   applyTheme(resolveTheme(readStore(THEME_KEY)));
 }
 
-/** Applies the saved preference whenever it changes. `undefined` means the
- * config has not loaded yet, so the theme chosen at startup stays. The
- * document follows system changes only while the preference is "system".
- * Re-reading an unchanged config does not re-apply it. */
-export function useTheme(preference: string | undefined) {
+/** Applies the preference whenever it changes and remembers `saved` for the
+ * next start (a preview passes the saved theme, so an unsaved choice is
+ * never remembered). `undefined` means the config has not loaded yet, so
+ * the theme chosen at startup stays. The document follows system changes
+ * only while the preference is "system". Re-reading an unchanged config
+ * does not re-apply it. */
+export function useTheme(preference: string | undefined, saved = preference) {
+  useEffect(() => {
+    if (saved !== undefined) writeStore(THEME_KEY, saved);
+  }, [saved]);
   useEffect(() => {
     if (preference === undefined) return;
-    writeStore(THEME_KEY, preference);
     const media = window.matchMedia?.("(prefers-color-scheme: dark)");
     const apply = () => applyTheme(resolveTheme(preference, media?.matches));
     apply();

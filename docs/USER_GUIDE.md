@@ -38,6 +38,24 @@ the same three choices until a model is ready.
 The sidebar groups conversations by project. **New task** (`Ctrl+N`) starts a
 new conversation in the current project.
 
+## The command palette
+
+`Ctrl+K` (or the search button at the top right) opens the command palette.
+Type a few letters of what you want: they only need to appear in order, so
+*rev ch* finds **Review changes** and *cmp* finds **Compare models on this
+task**. Matches at the start of words rank first, and the matched letters are
+shown in bold.
+
+- With something typed, the palette also lists **Conversations** whose title
+  matches (up to eight, with their project beside them) and **Projects** to
+  open. Choosing a conversation opens it, just as clicking it in the sidebar
+  does. Conversations without a title yet are not listed.
+- With nothing typed, **Recent** shows the last five commands you ran from
+  the palette on this computer, then every other command.
+- `↑` / `↓` move through the list, `Page Up` / `Page Down` move a page,
+  `Home` / `End` go to the first or last entry, `Enter` runs the highlighted
+  one and `Esc` closes the palette.
+
 ## Edit files and inspect context
 
 Open a file from the project Files list to edit it with code highlighting, line
@@ -72,6 +90,7 @@ groups:
 - **API keys**: OpenRouter models, billed per token to your OpenRouter
   account. Add a key in **Settings › Accounts › OpenRouter**; until then the
   group offers *Add an OpenRouter API key…*. See [OpenRouter](OPENROUTER.md).
+  Models from your own cloud endpoints (below) join this group too.
 
 Each row shows Local or Cloud, its availability, a *Vision* or *Chat only*
 badge where it applies, and its usage line. Search filters rows. Vendors with
@@ -86,6 +105,27 @@ A row that isn't ready still opens something useful: *Sign in* opens
 
 ShadowCode stores the choice for the conversation and uses it as the project's
 default for new conversations.
+
+### Your own endpoints
+
+**Settings › Accounts › Your own endpoints** connects any server that speaks
+the OpenAI chat API: Ollama, LM Studio, a llama.cpp or vLLM server, xAI, OpenAI,
+or another compatible service. Choose **Add an endpoint…**, pick the server
+(its usual address is filled in), type an API key if it needs one, and choose
+**Find models**. Tick the models you want and choose **Add to the picker**.
+
+- A server on this computer joins **On this computer**; any other joins
+  **API keys** and is off in offline mode. Tasks on them run ShadowCode's own
+  agent, with the same tools, permissions and approvals as local models.
+- A typed key is saved on this computer only when you add models, under a
+  name chosen for the address (`api.deepseek.com` uses `DEEPSEEK_API_KEY`),
+  so two services never overwrite each other's key. **More options** changes
+  the name and marks models that can read images.
+- If a server doesn't list its models, add one by its exact name.
+- **Test** sends one short message and shows how long the answer took.
+  **Remove** takes a model out of the picker; its saved key stays.
+- Cloud endpoints bill you directly. ShadowCode shows a cost only when the
+  server reports one.
 
 ### How each model did in this project
 
@@ -135,7 +175,10 @@ non-default reasoning effort stays marked on the **More** button.
   and how the selected vendor applies it.
 - **Slash commands.** Type `/` to browse them. `/plan` and `/review` start
   read-only tasks. `/model` opens the picker. Claude Code commands in
-  `.claude/commands/` appear here too.
+  `.claude/commands/` appear here too. Commands whose names start with what
+  you typed come first, then ones whose name or description contains it.
+  `↑`/`↓` move through the list; `Enter` or `Tab` puts the highlighted
+  command in the composer, and the next `Enter` sends it.
 - **Agents.** Start a message with `@explore`, `@plan`, `@review`, `@general`
   or a project agent's name to run that subagent first. Type `@` to list them.
 - **Files and folders.** Type `@` anywhere, then part of a path, to pick a
@@ -174,6 +217,15 @@ Hover a message you sent for its actions:
 - **Retry** sends the same message again in this conversation.
 - **Copy** copies the text. Answers have **Copy** and **Fork from here**.
 
+Each message and answer shows when it was sent, small at its edge: *14:32*
+today, *Yesterday 14:32*, the date and time earlier this year (*3 Oct,
+09:15*) and only the date before that, in your system's time format. Hover
+it for the full date and time. A reply that follows
+within a few minutes keeps its time out of the way until you hover the
+message, so a quick exchange shows the time once. Times come from the
+conversation's record, so a fork keeps the original times; a message with
+no recorded time shows none.
+
 ## Watch it work
 
 A note above the answer names the model that ran, for example
@@ -184,6 +236,16 @@ searching, editing, running commands, waiting for approval, web sources and
 verification. Expand an item to see its output. Vendor tool names (for example
 Codex command executions, or Claude's `Bash` and `Edit`) are grouped the same
 way as ShadowCode's own tools.
+
+Long output shows its start; **Show all (N lines)** shows the rest and
+**Show less** folds it again. Very long output shows its last 2,000 lines
+(and says so), which keeps the window responsive. **Copy**, in the corner of
+the output when you hover or tab to it, copies all of it, including any part
+not shown.
+
+With a screen reader, the answer is not read out while it streams. Instead
+ShadowCode says when the answer has finished, when a task failed or was
+stopped, and when an action needs your approval.
 
 ### Approvals
 
@@ -261,7 +323,8 @@ at once. Each run shows as a card in the conversation; click it for the
 result and changed files, or **Open transcript** for its own conversation.
 A write subagent's changes reach your project only when the main agent
 applies its diff, with your usual edit approval. Approvals a subagent needs
-appear in this conversation, labelled with its name.
+appear in this conversation, labelled with its name. How many run at once,
+how many a task may start and their step limit are in **Settings › Agent**.
 
 ### Roles: a model for each step
 
@@ -324,8 +387,9 @@ reply.
   approvals, without selecting a model or sending another model request.
   Your unsent message stays in the composer. Output and a new check result
   appear in the conversation; earlier results remain in history. Commands
-  have a five-minute maximum, or your shorter configured tool timeout. A
-  passing exit code confirms that check, not every requirement of the task.
+  have a five-minute maximum, or your shorter tool time limit (**Settings ›
+  Agent**). A passing exit code confirms that check, not every requirement
+  of the task.
 - **Review changes** appears only when files changed. It opens the task's
   review across the whole window: only the files this task changed, each
   compared with how it was before the task. Files are grouped riskiest
@@ -358,9 +422,10 @@ reply.
   subscription turn, ShadowCode takes a checkpoint of the project. In a Git
   repository it is a hidden commit under `refs/shadowcode/checkpoints/`; your
   branch, index and staged changes are untouched. In a folder without Git it
-  is a copy, for folders up to 5,000 files and 64 MB. A larger folder
-  shows *Rewind does not cover this command*. Stop the task first (for a
-  subscription, wait for the turn to end). Rewind asks first and lists the
+  is a copy, for folders up to 5,000 files and 64 MB (change both in
+  **Settings › Agent**). A larger folder shows *Rewind does not cover this
+  command*. Stop the task first (for a subscription, wait for the turn to
+  end). Rewind asks first and lists the
   files that will change. Afterwards a divider marks the conversation
   (*Rewound to here · 2 files restored*) and the notification offers
   **Undo**, which puts the files back as they were just before the rewind
@@ -792,6 +857,39 @@ and `.env` files suggest. Nothing runs until you save it.
   again, unless you closed it yourself (`Ctrl+B`).
 - `Alt+↑` / `Alt+↓` open the previous or next conversation in the list;
   `Ctrl+Tab` goes back to the one you had open before.
+- **Search tasks** finds words in conversation titles, in your messages and
+  in the agent's answers. When the title doesn't show the words, the result
+  shows the message or answer that matched, with the words highlighted.
+- The page title names the open conversation (*Fix the login form —
+  ShadowCode*), with a dot in front while a task runs in it, so a browser
+  tab on a paired device (see [Use it from your phone](#use-it-from-your-phone))
+  says which conversation it shows.
+
+## Appearance and text size
+
+**Settings › Appearance** chooses the theme (*System* follows your
+computer's light or dark setting) and the text size, from 80% to 175%. Both
+change as you pick them, so you see the result before you keep it: **Save**
+keeps them, and leaving the page or Settings without saving puts back what
+you had. **Reset to 100%** goes back to the normal size.
+
+A phone or browser using remote access keeps its own text size, starting at
+100%: changing it there never changes the desktop's, and the desktop's never
+changes it.
+
+Anywhere in the window:
+
+- `Ctrl+=` (or `Ctrl++`) makes everything larger, `Ctrl+-` smaller, and
+  `Ctrl+0` goes back to 100%. The new size shows for a moment at the top
+  right and is saved straight away.
+- Inside a terminal these keys belong to the shell, and in a dialog to the
+  dialog.
+- The command palette (`Ctrl+K`) has *Theme: same as the system*, *Theme:
+  light* and *Theme: dark*, and *Zoom in*, *Zoom out* and *Reset zoom to
+  100%*.
+
+The keyboard shortcuts (`?`) list these keys too. The theme and size are
+part of your settings, so a browser using remote access gets them as well.
 
 ## Notifications
 
@@ -840,6 +938,46 @@ own context), marked *reported by …*. `est.` means the cost was worked out
 from the model's prices; models on this computer show `$0 · local`. Click it
 for input, output and cached tokens, cost, model requests and the last
 compaction.
+
+## Agent settings
+
+**Settings › Agent** changes how ShadowCode's own agent works with models on
+this computer, API and OpenRouter models, without editing `config.yaml`.
+Each setting says what it does, its range and its default. **Reset** puts
+one setting back and **Reset all to defaults** the whole page; nothing
+changes until you **Save**. A value out of range is marked under its field
+and Save waits until it's fixed. If ShadowCode still refuses a save, the
+reason is shown above Save.
+
+- **Limits.** Steps per task (64 by default), the token budget per task
+  (1,000,000), the autonomy profile, how long one tool call may run (60
+  seconds), how much of a tool's output the agent reads (256,000 bytes), and
+  whether read-only tools of one turn run together. A profile can lower the
+  token budget, never raise it: *Conservative* stops a task at 64,000
+  tokens, *Normal* at 1,000,000 and *Extended* at 4,000,000; *Unlimited* and
+  *Custom* use the budget as set.
+- **Long conversations.** When history is shortened (at 0.7, 70% of the
+  context), whether the model summarizes what was removed, and how long to
+  wait for that summary.
+- **Recovery.** Provider retries and the wait before the first one, how many
+  times a task is sent back when it stopped without doing or checking the
+  work, and the pause when the agent seems stuck.
+- **Subagents.** Whether the agent may start subagents, how many run at once
+  (4) and per task (16), how deep they nest (1: no grandchildren; 0 turns
+  them off), and the step limit of one whose definition sets none (24).
+- **Checkpoints.** Checkpoints before shell commands and before subscription
+  turns (both on; Rewind needs them), how many are kept per repository
+  (200), and the largest folder without Git that is copied (5,000 files,
+  64 MB).
+- **Checks.** Commands that count as checks of a task's work when they run
+  exactly as written in the project folder, such as `cargo test --offline`.
+  They ask for approval like any command, and ShadowCode never runs them on
+  its own. See [verification receipts](VERIFICATION_RECEIPTS.md).
+
+The page saves only the settings you changed. Subscriptions use only its
+checkpoint settings. A trusted project can change Limits, Long conversations
+and Recovery for itself in `.shadow/config/config.yaml` (the `agent` group).
+To edit by hand, every key is in [config.example.yaml](../config.example.yaml).
 
 ## Code intelligence
 
@@ -1014,6 +1152,13 @@ Subscription CLIs use their own sandboxes, not this one.
   starts a new conversation at a response. A very long page shows its latest
   150 items first; **Show … earlier items** adds more without moving what
   you are reading.
+- **Find in conversation** (`Ctrl+F`, or *Find in conversation* in the
+  `Ctrl+K` command palette) searches the whole conversation's prompts,
+  answers and notes, older messages included, ignoring case, and shows
+  *3 of 12*. `Enter` / `Shift+Enter` (or `F3` / `Shift+F3`) go to the next or
+  previous match, opening older messages and earlier items as needed; every
+  match on screen is highlighted. `Esc` closes it. In a file editor or the
+  terminal, `Ctrl+F` stays theirs.
 - **Interrupted tasks.** If ShadowCode exits during a task, the task is marked
   *interrupted*. **Continue task** writes a recovery request for you. Shell
   commands and file edits are never replayed automatically.
@@ -1030,7 +1175,8 @@ Subscription CLIs use their own sandboxes, not this one.
   stays in the conversation, so later messages start from it. For models with
   less than 8K of context, or when the summary fails or takes longer than a
   minute, a built-in digest is used instead. The full history always stays in
-  the app. Turn summaries off with `agent.summary_compaction: false`.
+  the app. Turn summaries off in **Settings › Agent**
+  (`agent.summary_compaction: false`).
 - **Shorten on purpose, keep what matters.** Type `/compact` to shorten the
   conversation when you send your next message, however long it is: every
   earlier step except the latest answer becomes the summary. Type
@@ -1045,7 +1191,7 @@ Subscription CLIs use their own sandboxes, not this one.
   files and **Only change these**) or **Stop**. Tasks nobody can answer the
   card for (automations, subagents, and tasks started from an editor or the
   terminal UI) don't pause: the agent is told to try another way. Turn it
-  off with `agent.stuck_check: false`.
+  off in **Settings › Agent** (`agent.stuck_check: false`).
 - **Heads-ups when a task finishes.** If a task skipped or deleted tests,
   removed assertions, changed CI or hook settings, switched off a lint or
   type check in the code, or rewrote test snapshots, the conversation says
@@ -1058,15 +1204,17 @@ Subscription CLIs use their own sandboxes, not this one.
   about file by file, so the conversation names any other file a command
   changed. Subscriptions can't be stopped mid-turn, so after each turn the
   conversation names any file they changed elsewhere; **Review** can undo
-  it. This check needs project checkpoints (`checkpoints.shell` for
-  commands, `checkpoints.vendor` for subscriptions, both on by default).
+  it. This check needs project checkpoints (**Settings › Agent ›
+  Checkpoints**: `checkpoints.shell` for commands, `checkpoints.vendor` for
+  subscriptions, both on by default).
   Without one, for example in a large folder that isn't under Git, the
   conversation says the commands or the turn weren't checked.
 - **Busy or dropped providers.** A request that fails with a rate limit, an
   overloaded or failing provider, or a connection that drops mid-answer is
-  sent again, up to three times (`agent.model_retries`), waiting longer each
-  time or as long as the provider asks. The conversation shows it, for
-  example *Provider busy, retrying (2 of 5) in 4 s…*, and then *The provider
+  sent again, up to three times (**Provider retries** in **Settings ›
+  Agent**, `agent.model_retries`), waiting longer each time or as long as
+  the provider asks. The conversation shows it, for
+  example *Provider busy, retrying (2 of 3) in 4 s…*, and then *The provider
   was busy; it answered after 2 retries.* A reply that was cut off is thrown
   away and replaced; tools only run after a complete reply, so nothing runs
   twice. Errors such as a wrong key or an unknown model are shown at once. If

@@ -206,9 +206,9 @@ never uses it once a turn has started or when images are attached.
   changed although the agent didn't report editing them (a command it ran,
   or another program). Changes you make outside ShadowCode's editor during
   the turn can't be told apart from the agent's and are rewound with them.
-  The vendor's own conversation isn't told about a rewind. Set
-  `checkpoints.vendor: false` to turn this off (the editor then waits for
-  the turn to end).
+  The vendor's own conversation isn't told about a rewind. To turn this off,
+  clear **Before subscription turns** in **Settings › Agent › Checkpoints**
+  (`checkpoints.vendor: false`); the editor then waits for the turn to end.
 - **Usage.** Tokens and cost the CLI reports are counted once per model call,
   and also when the turn fails, hits the plan limit or is stopped.
 - **Switching providers.** A move between providers hands over at most 12,000

@@ -346,6 +346,50 @@ export type OpenRouterStatus = {
   activity_url: string;
 };
 
+/** The OpenAI-compatible servers a user can add (docs/API_CONTRACT.md,
+ * "Your own endpoints"). */
+export type EndpointProvider =
+  "ollama" | "local" | "llamacpp" | "vllm" | "grok" | "openai_compatible";
+
+export type EndpointRequest = {
+  provider: EndpointProvider;
+  /** A bare host gains `/v1`; empty means the preset's address. */
+  endpoint?: string;
+  /** Typed in the form; sent as a bearer token, saved only when adding. */
+  api_key?: string;
+  /** The name the key is saved under; empty means the engine's default. */
+  api_key_env?: string;
+};
+
+/** POST /api/providers/models: what one server lists. Nothing is saved. */
+export type EndpointModels = {
+  ok: boolean;
+  provider: EndpointProvider;
+  label: string;
+  /** Normalized address, as it will be saved. */
+  endpoint: string;
+  api_key_env: string;
+  /** A key is already saved under `api_key_env`. */
+  key_saved: boolean;
+  /** The server runs on this computer. */
+  local: boolean;
+  models: {
+    id: string;
+    name: string;
+    size_bytes: number;
+    context_limit: number;
+    detail: string;
+  }[];
+};
+
+/** POST /api/models/test: one short completion (45 s limit). */
+export type ModelTest = {
+  ok: boolean;
+  reply?: string;
+  error?: string | null;
+  latency_ms: number;
+};
+
 /** GET /api/allowance: how much each way of running a model has left, only
  * from what each source reports (no estimates). */
 export type AllowanceState =
@@ -693,6 +737,17 @@ export type Session = {
   worktree_task?: string | null;
   /** The project a worktree conversation belongs to (listed under it). */
   worktree_source?: string | null;
+  /** Search results only: the prompt or answer that matched, unless the
+   * title already shows the words. */
+  match?: SessionMatch;
+};
+/** An excerpt around a task-search match; `start`/`end` are character
+ * (code point) offsets of the matched words in `snippet`. */
+export type SessionMatch = {
+  field: "prompt" | "answer";
+  snippet: string;
+  start: number;
+  end: number;
 };
 export type SessionDetail = Session & {
   /** The open worktree task this conversation runs in (as last saved). */
@@ -1810,6 +1865,25 @@ export const api = {
     send<OpenRouterStatus>("/api/openrouter/key", "POST", { api_key: "" }),
   refreshOpenrouter: () =>
     send<OpenRouterStatus>("/api/openrouter/refresh", "POST", {}),
+  /** Your own endpoints: the models one server lists (nothing is saved). */
+  endpointModels: (request: EndpointRequest) =>
+    send<EndpointModels>("/api/providers/models", "POST", request),
+  /** Adds models of one server to the picker and saves a typed key. */
+  addEndpointModels: (
+    request: EndpointRequest & { models: string[]; vision?: boolean },
+  ) =>
+    send<{ ok: boolean; models: { default: string; name: string }[] }>(
+      "/api/models/endpoints",
+      "POST",
+      request,
+    ),
+  /** Removes a model added for an endpoint; its saved key stays. */
+  removeEndpointModel: (id: string) =>
+    send<{ ok: boolean; removed: number }>("/api/models/remove", "POST", {
+      id,
+    }),
+  testModel: (id: string) =>
+    send<ModelTest>("/api/models/test", "POST", { id }),
   localModels: () => get<LocalCatalog>("/api/local-models"),
   addLocalModel: (path: string) =>
     send<{ ok: boolean; local_engine?: LocalCatalog }>(

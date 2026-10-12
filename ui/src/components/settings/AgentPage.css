@@ -1,0 +1,84 @@
+/* Settings › Agent. */
+.agent-group {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.agent-group legend {
+  padding: 0;
+  margin: 10px 0 2px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.agent-group > .hint {
+  margin: 0 0 4px;
+}
+.agent-field {
+  margin: 4px 0 6px;
+}
+.agent-field .hint,
+.agent-field .agent-error {
+  margin: 0;
+  font-size: 12px;
+}
+.agent-field > .agent-input-row .check {
+  margin: 0;
+}
+.agent-input-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+.agent-page .field .agent-input-row input,
+.agent-page .field .agent-input-row select {
+  width: auto;
+  flex: 0 1 220px;
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+}
+.agent-page .field .agent-input-row select {
+  flex-basis: 320px;
+}
+.agent-unit {
+  color: var(--muted);
+  font-size: 12px;
+}
+.agent-page input[aria-invalid="true"],
+.agent-page select[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+.agent-checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.agent-checks input {
+  flex: 1 1 260px;
+  min-width: 0;
+  font-family: var(--mono);
+  font-size: 12px;
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+}
+.agent-checks input:focus {
+  border-color: var(--border-strong);
+  background: var(--surface);
+}
+.agent-checks .agent-error {
+  margin: 4px 0 0;
+  font-size: 12px;
+}
+.agent-foot-note {
+  margin: 0 auto 0 0;
+}

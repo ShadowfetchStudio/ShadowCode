@@ -146,9 +146,14 @@ export function ChatView({
   onToast: (text: string, kind?: ToastKind) => void;
 }) {
   const since = job?.started_at;
+  // A named log that is not live: streaming answers would be read out word
+  // by word. Milestones (Stage) announces when an answer finishes.
   return (
     <div
       className="chat-stream"
+      role="log"
+      aria-label="Conversation"
+      aria-live="off"
       hidden={hidden}
       ref={streamRef}
       onScroll={onScroll}
@@ -227,7 +232,7 @@ export function ChatView({
           <ApprovalCard key={a.id} approval={a} onDecide={onDecide} />
         ))}
         {working && !switching && (
-          <div className="working" role="status" aria-live="polite">
+          <div className="working">
             <ActivityTimeline
               activity={activity}
               jobStatus={job?.status}

@@ -12,9 +12,10 @@ import { BootScreen, Toasts } from "./components/shell/Chrome";
 import { composerAccess } from "./components/shell/ComposerDock";
 import { AppDialogs, type Overlay } from "./components/shell/AppDialogs";
 import { paletteItems } from "./components/shell/palette";
+import { ZoomStatus } from "./components/shell/ZoomStatus";
 import { useConversation } from "./hooks/useConversation";
 import { useToasts } from "./hooks/useToasts";
-import { useTheme } from "./hooks/useTheme";
+import { useAppearance } from "./hooks/useAppearance";
 import { useFeed } from "./hooks/useFeed";
 import { useShortcuts, type ShortcutAction } from "./hooks/useShortcuts";
 import { useWorkspace } from "./hooks/useWorkspace";
@@ -39,7 +40,11 @@ import { useConversationEdits } from "./hooks/useConversationEdits";
 import { RewindDialog } from "./components/RewindDialog";
 import { useNavigation } from "./hooks/useNavigation";
 import { useJobControls } from "./hooks/useJobControls";
-import { useDesktopEvents, useSidebar } from "./hooks/useWindow";
+import {
+  useDesktopEvents,
+  useSidebar,
+  useWindowTitle,
+} from "./hooks/useWindow";
 import { useRowActions } from "./hooks/useRowActions";
 import { useRunCheck } from "./hooks/useRunCheck";
 import { useConversationBadges } from "./hooks/useConversationBadges";
@@ -93,6 +98,8 @@ export default function App() {
   const [panel, setPanel] = useState<DrawerTab | null>(null);
   const [diffPath, setDiffPath] = useState("");
   const [overlay, setOverlay] = useState<Overlay>("");
+  /** Find in conversation: 0 while closed, bumped by each Ctrl+F. */
+  const [find, setFind] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const allowanceReturn = useRef(false);
   const promptRef = useRef<HTMLTextAreaElement>(null);
@@ -100,7 +107,7 @@ export default function App() {
   const taskRef = useRef("");
   taskRef.current = task;
 
-  const { toasts, toast, dismiss } = useToasts();
+  const { toasts, toast, dismiss, hold } = useToasts();
   const shutdown = useDesktopEvents(toast);
   const [sidebar, setSidebar] = useSidebar();
   const setJobs = useStableCallback((jobs: Job[]) => feed.setJobs(jobs));
@@ -114,11 +121,12 @@ export default function App() {
     void allowance.reload();
   };
   const memory = useDrawerMemory(workspace);
-  useTheme(
-    ws.configLoaded
-      ? String((cfg.ui as { theme?: string } | undefined)?.theme || "system")
-      : undefined,
-  );
+  const appearance = useAppearance({
+    cfg,
+    loaded: ws.configLoaded,
+    reloadConfig: ws.reloadConfig,
+    toast,
+  });
 
   function openSettings(
     section: SettingsSection = "accounts",
@@ -303,9 +311,6 @@ export default function App() {
     }
   }, [transcript.usageVersion, reloadPicker, reloadAllowance]);
   useEffect(() => {
-    document.title = `${busy ? "● " : ""}ShadowCode`;
-  }, [busy]);
-  useEffect(() => {
     const key = draftKey(sessionId, workspace);
     const timer = setTimeout(() => {
       if (isSessionCommand(task)) return;
@@ -387,6 +392,11 @@ export default function App() {
       writeStore(draftKey(sessionId, workspace), null);
     },
   });
+  // The window names the open conversation, as the top bar does.
+  useWindowTitle(
+    sessions.find((s) => s.id === sessionId)?.title || compare.laneOf?.title,
+    busy,
+  );
   // A worktree conversation belongs to its project.
   const projectPath = worktree.task?.workspace || compare.projectPath;
   const listedProjects = ws.projects.filter(
@@ -457,6 +467,7 @@ export default function App() {
     inWorktree: Boolean(worktree.task),
   });
 
+  const closeFind = useStableCallback(() => setFind(0));
   const shortcuts: Record<ShortcutAction, () => void> = {
     "close-overlay": () => setOverlay(""),
     "close-trust": () => nav.setTrust(null),
@@ -474,6 +485,10 @@ export default function App() {
     stop: () => void controls.stop(),
     export: () => exportSession(),
     help: () => setOverlay("help"),
+    find: () => setFind((n) => n + 1),
+    "zoom-in": () => appearance.zoom(1),
+    "zoom-out": () => appearance.zoom(-1),
+    "zoom-reset": () => appearance.zoom(0),
     "previous-conversation": conversations.previous,
     "next-conversation": conversations.next,
     "recent-conversation": conversations.recent,
@@ -615,6 +630,11 @@ export default function App() {
     );
 
   const view = compare.view;
+  /** Choosing a conversation in the sidebar or the command palette. */
+  const openConversation = (id: string) => {
+    compare.setView("chat");
+    void nav.openSession(id);
+  };
   const currentSession = sessions.find((s) => s.id === sessionId);
   const palette = paletteItems({
     newTask: () => void nav.newSession(),
@@ -628,19 +648,11 @@ export default function App() {
       openSettings(section, advanced ? { advanced } : {}),
     exportTask: exportSession,
     stop: () => void controls.stop(),
-    toggleTheme: () =>
-      void api
-        .saveConfig({
-          ui: {
-            theme:
-              document.documentElement.dataset.theme === "dark"
-                ? "light"
-                : "dark",
-          },
-        })
-        .then(ws.reloadConfig)
-        .catch((e) => toast(String(e), "err")),
+    theme: appearance.setTheme,
+    themeInUse: appearance.theme,
+    zoom: appearance.zoom,
     help: () => setOverlay("help"),
+    find: () => setFind((n) => n + 1),
   });
 
   return (
@@ -658,10 +670,7 @@ export default function App() {
           onAction={(action, session, title) =>
             void conversations.act(action, session, title)
           }
-          onSelect={(id) => {
-            compare.setView("chat");
-            void nav.openSession(id);
-          }}
+          onSelect={openConversation}
           onNew={() => void nav.newSession()}
           onProject={(path) => void nav.pickProject(path)}
           onSettings={() => openSettings()}
@@ -720,6 +729,8 @@ export default function App() {
           setTryOn(null);
           if (pending) void actions.tryOnModel(id, pending);
         }}
+        find={find}
+        onCloseFind={closeFind}
         selectedTarget={selectedTarget}
         queuedJobs={queuedJobs}
         queuedTaskIds={queuedTaskIds}
@@ -827,7 +838,8 @@ export default function App() {
           targets={pickerTargets}
         />
       )}
-      <Toasts toasts={toasts} onDismiss={dismiss} />
+      <Toasts toasts={toasts} onDismiss={dismiss} onHold={hold} />
+      <ZoomStatus notice={appearance.notice} />
       {rewinding.asking && (
         <RewindDialog
           paths={rewinding.asking.paths}
@@ -889,13 +901,15 @@ export default function App() {
                 onChanged: () => void roles.reload(),
               }
             : undefined,
-          onSave: async (values) => {
+          appearance: appearance.controls,
+          onSave: async (values, options) => {
             try {
               await api.saveConfig(values);
               await ws.reloadConfig();
               void picker.reload();
               toast("Settings saved", "ok");
             } catch (e) {
+              if (options?.rethrow) throw e;
               toast(String(e), "err");
             }
           },
@@ -927,6 +941,8 @@ export default function App() {
         projects={listedProjects}
         workspace={workspace}
         onPickProject={(path) => void nav.pickProject(path)}
+        sessions={sessions}
+        onOpenSession={openConversation}
       />
     </div>
   );

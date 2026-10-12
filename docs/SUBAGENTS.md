@@ -45,7 +45,8 @@ conversation. It can start one, or several at once with `tasks`.
   vendor CLI subagent's process.
 - **Limits.** At most 4 subagents run at the same time, and one task can start
   16 in total. Subagents cannot start their own subagents. A subagent stops
-  after its step limit (the definition's `max_turns`, or 24).
+  after its step limit (the definition's `max_turns`, or 24). These are the
+  defaults; change them in **Settings › Agent › Subagents**.
 - **Models.** A subagent uses, in order: the model the call names, its
   definition's `model`, its role's model (`explore`, `plan`, `review`, and
   write agents as `implement`), or the parent task's model. Any picker id
@@ -279,7 +280,8 @@ the agent; you can still run it with `/skill <name>`.
 
 ## Settings
 
-`config.yaml`:
+**Settings › Agent › Subagents** changes the `subagents` group, with each
+setting's range and default. By hand, in `config.yaml`:
 
 ```yaml
 subagents:

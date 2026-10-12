@@ -662,11 +662,48 @@ impl Store {
             FROM sessions s WHERE (? IS NULL OR s.workspace=?
                 OR EXISTS(SELECT 1 FROM session_meta w WHERE w.session_id=s.id AND w.key='worktree_source' AND w.value=?))
             AND (s.title LIKE ? ESCAPE '!' OR s.workspace LIKE ? ESCAPE '!'
-            OR EXISTS(SELECT 1 FROM tasks t WHERE t.session_id=s.id AND t.prompt LIKE ? ESCAPE '!'))
+            OR EXISTS(SELECT 1 FROM tasks t WHERE t.session_id=s.id
+                AND (t.prompt LIKE ? ESCAPE '!' OR t.summary LIKE ? ESCAPE '!')))
             AND (? OR NOT EXISTS(SELECT 1 FROM session_meta c WHERE c.session_id=s.id AND c.key='compare_id'))
             AND (? OR NOT EXISTS(SELECT 1 FROM session_meta a WHERE a.session_id=s.id AND a.key='subagent_parent'))
             AND NOT EXISTS(SELECT 1 FROM session_meta o WHERE o.session_id=s.id AND o.key='second_opinion')
-            ORDER BY s.updated_at DESC LIMIT ?", params![workspace.map(|p|p.to_string_lossy()),workspace.map(|p|p.to_string_lossy()),workspace.map(|p|p.to_string_lossy()),needle,needle,needle,include_compare,include_subagents,limit.clamp(1,10000)])
+            ORDER BY s.updated_at DESC LIMIT ?", params![workspace.map(|p|p.to_string_lossy()),workspace.map(|p|p.to_string_lossy()),workspace.map(|p|p.to_string_lossy()),needle,needle,needle,needle,include_compare,include_subagents,limit.clamp(1,10000)])
+        .and_then(|mut rows| {
+            let search = search.trim();
+            if search.is_empty() {
+                return Ok(rows);
+            }
+            // Where a conversation matched, unless its title already shows
+            // it: the newest prompt or answer containing the words.
+            for row in &mut rows {
+                let title = row["title"].as_str().unwrap_or("");
+                if find_ignoring_ascii_case(title, search).is_some() {
+                    continue;
+                }
+                let sid = row["id"].as_str().unwrap_or("").to_owned();
+                let hit = self.query(
+                    "SELECT prompt,summary FROM tasks WHERE session_id=?
+                     AND (prompt LIKE ? ESCAPE '!' OR summary LIKE ? ESCAPE '!')
+                     ORDER BY created_at DESC LIMIT 1",
+                    params![sid, needle, needle],
+                )?;
+                if let Some(task) = hit.first() {
+                    let found = ["prompt", "summary"].into_iter().find_map(|field| {
+                        let text = task[field].as_str()?;
+                        Some((field, search_snippet(text, search)?))
+                    });
+                    if let Some((field, (snippet, start, end))) = found {
+                        row["match"] = json!({
+                            "field": if field == "prompt" { "prompt" } else { "answer" },
+                            "snippet": snippet,
+                            "start": start,
+                            "end": end,
+                        });
+                    }
+                }
+            }
+            Ok(rows)
+        })
     }
     /// Move a conversation to another folder (a worktree task's conversation
     /// returns to its project when the worktree is removed). The vendor CLI
@@ -1448,6 +1485,10 @@ impl Store {
             params![model["id"].as_str().context("Model ID required")?,model["name"].as_str().context("Model name required")?,model["provider"].as_str().context("Provider required")?,model["endpoint"].as_str().unwrap_or(""),model["context_limit"].as_u64().unwrap_or(128000),model.get("metadata").unwrap_or(&json!({})).to_string()])?;
         Ok(())
     }
+    /// Removes one registry model; true when a row was deleted.
+    pub fn delete_model(&self, id: &str) -> Result<bool> {
+        Ok(self.execute("DELETE FROM models WHERE id=?", [id])? > 0)
+    }
     pub fn upsert_detected_model(&self, model: &Value) -> Result<()> {
         self.execute("INSERT INTO models(id,name,provider,endpoint,context_limit,metadata) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET context_limit=CASE WHEN json_extract(models.metadata,'$.api_key_env') IS NULL THEN excluded.context_limit ELSE models.context_limit END,metadata=json_patch(models.metadata,excluded.metadata) WHERE models.name=excluded.name AND models.provider=excluded.provider AND models.endpoint=excluded.endpoint",
             params![model["id"].as_str().context("Model ID required")?,model["name"].as_str().context("Model name required")?,model["provider"].as_str().context("Provider required")?,model["endpoint"].as_str().context("Endpoint required")?,model["context_limit"].as_u64().context("Context limit required")?,model["metadata"].to_string()])?;
@@ -1653,6 +1694,72 @@ fn finish_task_on(
         params![now(), total.to_string(), sid],
     )?;
     Ok(sid)
+}
+
+/// Byte offset of `needle` in `text`, comparing ASCII letters without case
+/// (as SQLite's `LIKE` does).
+fn find_ignoring_ascii_case(text: &str, needle: &str) -> Option<usize> {
+    let (hay, pin) = (text.as_bytes(), needle.as_bytes());
+    if pin.is_empty() || pin.len() > hay.len() {
+        return None;
+    }
+    (0..=hay.len() - pin.len()).find(|&i| hay[i..i + pin.len()].eq_ignore_ascii_case(pin))
+}
+
+/// A short excerpt of `text` around the first match of `needle`, on one
+/// line, with "…" where it was cut, and the match's position in it
+/// (characters, start and end).
+fn search_snippet(text: &str, needle: &str) -> Option<(String, usize, usize)> {
+    const BEFORE: usize = 40;
+    const AFTER: usize = 80;
+    let at = find_ignoring_ascii_case(text, needle)?;
+    let end = at + needle.len();
+    let mut from = text[..at]
+        .char_indices()
+        .rev()
+        .nth(BEFORE - 1)
+        .map_or(0, |(i, _)| i);
+    // Start at a word when the cut lands inside one.
+    if from > 0 {
+        if let Some(space) = text[from..at].find(char::is_whitespace) {
+            from += space;
+        }
+    }
+    let to = text[end..]
+        .char_indices()
+        .nth(AFTER)
+        .map_or(text.len(), |(i, _)| end + i);
+    // Runs of spaces and line breaks become one space.
+    let flat = |part: &str| {
+        let mut out = String::with_capacity(part.len());
+        for c in part.chars() {
+            if !c.is_whitespace() {
+                out.push(c);
+            } else if !out.ends_with(' ') {
+                out.push(' ');
+            }
+        }
+        out
+    };
+    let lead = flat(&text[from..at]);
+    let lead = if from == 0 {
+        lead.trim_start().to_owned()
+    } else {
+        format!("…{}", lead.trim_start())
+    };
+    let hit = flat(&text[at..end]);
+    let tail = flat(&text[end..to]);
+    let tail = if to == text.len() {
+        tail.trim_end().to_owned()
+    } else {
+        format!("{}…", tail.trim_end())
+    };
+    let begin = lead.chars().count();
+    Some((
+        format!("{lead}{hit}{tail}"),
+        begin,
+        begin + hit.chars().count(),
+    ))
 }
 
 #[cfg(test)]
@@ -2159,5 +2266,37 @@ mod verification_tests {
         assert_eq!(result["verified"], false);
         assert_eq!(result["claim"], "model_claim");
         assert_eq!(result["final_assessment"], "not_completed");
+    }
+}
+
+#[cfg(test)]
+mod search_tests {
+    #[test]
+    fn search_snippets_show_the_match_in_context() {
+        let (snippet, start, end) = super::search_snippet("Fixed the Login bug", "login").unwrap();
+        assert_eq!(snippet, "Fixed the Login bug");
+        assert_eq!(&snippet[start..end], "Login");
+        let long = format!(
+            "{} the parser now reads\n\n  nested tables {}",
+            "word ".repeat(30),
+            "tail ".repeat(40)
+        );
+        let (snippet, start, end) = super::search_snippet(&long, "NESTED").unwrap();
+        assert!(
+            snippet.starts_with('…') && snippet.ends_with('…'),
+            "{snippet}"
+        );
+        assert!(
+            snippet.contains("parser now reads nested tables"),
+            "{snippet}"
+        );
+        let chars: Vec<char> = snippet.chars().collect();
+        assert_eq!(chars[start..end].iter().collect::<String>(), "nested");
+        // Character offsets stay right after multi-byte text.
+        let (snippet, start, end) =
+            super::search_snippet("Größe: ändern Sie die Datei", "datei").unwrap();
+        let chars: Vec<char> = snippet.chars().collect();
+        assert_eq!(chars[start..end].iter().collect::<String>(), "Datei");
+        assert!(super::search_snippet("nothing here", "absent").is_none());
     }
 }

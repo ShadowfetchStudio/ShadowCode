@@ -466,8 +466,10 @@ need a Unix build. ShadowCode 1.x ships for Linux, where all of them exist.
 | `POST` | `/api/mcp/servers/delete` | stable | allowed | [Extensions](#extensions) |
 | `POST` | `/api/memory` | stable | allowed | [Slash commands and memory](#slash-commands-and-memory) |
 | `GET` | `/api/models` | stable | allowed | [Accounts and models](#accounts-and-models) |
+| `POST` | `/api/models/endpoints` | stable | allowed | [Accounts and models](#accounts-and-models) |
 | `GET` | `/api/models/outcomes` | experimental | allowed | [Accounts and models](#accounts-and-models) |
 | `POST` | `/api/models/register` | stable | allowed | [Accounts and models](#accounts-and-models) |
+| `POST` | `/api/models/remove` | stable | allowed | [Accounts and models](#accounts-and-models) |
 | `POST` | `/api/models/select` | stable | allowed | [Accounts and models](#accounts-and-models) |
 | `POST` | `/api/models/test` | stable | allowed | [Accounts and models](#accounts-and-models) |
 | `GET` | `/api/onboarding` | stable | allowed | [Settings and health](#settings-and-health) |
@@ -493,6 +495,7 @@ need a Unix build. ShadowCode 1.x ships for Linux, where all of them exist.
 | `POST` | `/api/projects/trust` | stable | allowed | [Conversations](#conversations) |
 | `GET` | `/api/providers` | experimental | allowed | [Accounts and models](#accounts-and-models) |
 | `GET` | `/api/providers/detect` | experimental | allowed | [Accounts and models](#accounts-and-models) |
+| `POST` | `/api/providers/models` | stable | allowed | [Accounts and models](#accounts-and-models) |
 | `GET` | `/api/remote` | stable | refused | [Remote access](#remote-access) |
 | `PUT` | `/api/remote` | stable | refused | [Remote access](#remote-access) |
 | `POST` | `/api/remote/devices/revoke` | stable | refused | [Remote access](#remote-access) |
@@ -644,7 +647,12 @@ SessionRow = Session + {compare_id, compare_lane, worktree_task, worktree_source
 
 - `GET /api/sessions?q=&workspace=&limit=&include_compare=&include_subagents=`
   → `{sessions: SessionRow[]}`, newest `updated_at` first. `q` matches the
-  title, folder or any task prompt. `limit` default 100, max 10 000.
+  title, folder, any task prompt or any task's answer (`summary`), ignoring
+  the case of ASCII letters. With `q`, a row whose title does not contain it
+  carries `match: {field: "prompt"|"answer", snippet, start, end}`: an
+  excerpt (about 40 characters before and 80 after, on one line, `…` where
+  cut) of the newest prompt or answer that matched, with the match at
+  character offsets `start`–`end`. `limit` default 100, max 10 000.
   Compare lanes and subagent conversations are hidden unless
   `include_compare=true|1` / `include_subagents=true|1`. `workspace=<project>`
   also lists conversations running in that project's worktree tasks.
@@ -1907,7 +1915,10 @@ See [SUBAGENTS.md](SUBAGENTS.md).
 - `GET /api/config` → the effective configuration for the selected project
   plus derived, read-only fields:
   `permissions.vendor_notes: {native, codex, claude, cursor, grok, antigravity, network}`
-  and `network.offline`. Sections: `model`, `permissions`, `agent`, `ui`,
+  and `network.offline`, plus `agent_profile` (the profile's own `agent`
+  values, which `PUT` saves) and `agent_project` (the `agent` keys a trusted
+  project's `.shadow/config/config.yaml` changes, with the values it uses;
+  `{}` when none). `PUT` returns both too. Sections: `model`, `permissions`, `agent`, `ui`,
   `onboarding`, `routing`, `mcp`, `hooks`, `verification`,
   `trusted_workspaces`, `guardian`, `cli_agents`, `local_engine`, `network`,
   `sandbox`, `checkpoints`, `limits`, `updates`, and, when saved, `code_intel`
@@ -2308,6 +2319,40 @@ Row = {id: "cli:<vendor>"|"openrouter"|"local", kind: "subscription"|"api_key"|"
 - `GET /api/providers` (experimental) → `{providers}`: provider presets with
   `running` from detection. `GET /api/providers/detect?refresh=1`
   (experimental) → `{providers}`: local servers found (cached 30 s).
+
+### Your own endpoints
+
+OpenAI-compatible servers the user adds (Ollama, LM Studio, a llama.cpp or
+vLLM server, xAI, OpenAI or any compatible API). `provider` is one of
+`ollama`, `local` (LM Studio), `llamacpp`, `vllm`, `grok` or
+`openai_compatible`. An `endpoint` given as a bare host gains `/v1`; one
+with a user name, password, query or fragment is refused. `api_key_env`
+defaults to the preset's key name, and for `openai_compatible` on a named
+host to `<DOMAIN>_API_KEY` (`api.deepseek.com` → `DEEPSEEK_API_KEY`;
+`api.openai.com` → `OPENAI_API_KEY`).
+
+- `POST /api/providers/models {provider, endpoint?, api_key?, api_key_env?}`
+  → `{ok, provider, label, endpoint, api_key_env, key_saved, local, models:
+  [{id, name, size_bytes, context_limit, capabilities, detail}]}`: the models
+  the server lists (`/api/tags` for Ollama, otherwise `GET {endpoint}/models`;
+  10 s, at most 2 MB). Nothing is saved. The typed `api_key` is sent as a
+  bearer token; without one the saved key is used, except from a remote
+  device. Offline, only servers on this computer are reached.
+- `POST /api/models/endpoints {provider, endpoint?, models: [name], api_key?,
+  api_key_env?, context_limit?, vision?}` → `{ok, models: [ModelConfig]}`:
+  registers each model (id `model:<hash>` of provider, endpoint and name) and
+  saves a typed `api_key` under `api_key_env`. At most 100 models per call.
+- `POST /api/models/remove {id}` → `{ok, removed}`: removes a model added for
+  an endpoint (and older registry rows for the same server and model). The
+  `model:` default in `config.yaml` and other registry rows are refused.
+  Saved keys are kept.
+
+`GET /api/picker` lists these models with `custom: true` and their
+`endpoint`. A model on this computer (loopback) is a `local` row named
+`<model> · This computer`; any other is an `api` row (`inference: "cloud"`,
+billed by the provider, `unavailable` offline). A row whose key was saved
+and is now missing is `sign_in`. Tasks on them run ShadowCode's own agent
+loop.
 
 ### Local models
 

@@ -230,7 +230,7 @@ test("drawer tabs keep the terminal, the open file and the commit message", asyn
   await page.getByRole("button", { name: "Review changes" }).click();
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   const tab = (name: string) =>
-    drawer.locator(".drawer-tabs").getByRole("button", { name });
+    drawer.locator(".drawer-tabs").getByRole("tab", { name });
   await drawer.getByPlaceholder("Commit message").fill("Fix the add function");
   await tab("Terminal").click();
   const shell = drawer.getByRole("group", { name: "Terminal 1" });
@@ -271,7 +271,7 @@ test("keeps an unsaved file draft and reviews an agent edit before saving", asyn
   await page.getByRole("button", { name: "Review changes" }).click();
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   const tab = (name: string) =>
-    drawer.locator(".drawer-tabs").getByRole("button", { name });
+    drawer.locator(".drawer-tabs").getByRole("tab", { name });
   await tab("Files").click();
   await drawer.getByRole("button", { name: "README.md", exact: true }).click();
   const editor = drawer.getByRole("textbox", { name: "Edit README.md" });
@@ -325,7 +325,7 @@ test("indents and outdents selected file lines in the rendered editor", async ({
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   await drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" })
+    .getByRole("tab", { name: "Files" })
     .click();
   await drawer.getByRole("button", { name: "README.md", exact: true }).click();
   const editor = drawer.getByRole("textbox", { name: "Edit README.md" });
@@ -350,7 +350,7 @@ test("recovers an unsaved editor draft after window reload and clears it after s
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   const files = drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" });
+    .getByRole("tab", { name: "Files" });
   await files.click();
   await drawer.getByRole("button", { name: "README.md", exact: true }).click();
   const editor = drawer.getByRole("textbox", { name: "Edit README.md" });
@@ -408,7 +408,7 @@ test("waits for an in-flight recovery write before discarding its draft", async 
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   await drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" })
+    .getByRole("tab", { name: "Files" })
     .click();
   await drawer.getByRole("button", { name: "README.md", exact: true }).click();
   await page.evaluate(() => {
@@ -444,7 +444,7 @@ test("waits for an in-flight recovery write before discarding its draft", async 
   await page.getByRole("button", { name: "Review changes" }).click();
   await drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" })
+    .getByRole("tab", { name: "Files" })
     .click();
   await expect(
     drawer.getByRole("button", { name: "Open README.md, unsaved" }),
@@ -458,7 +458,7 @@ test("coalesces superseded recovery drafts behind an in-flight write", async ({
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   await drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" })
+    .getByRole("tab", { name: "Files" })
     .click();
   await drawer.getByRole("button", { name: "README.md", exact: true }).click();
   await page.evaluate(() => {
@@ -509,7 +509,7 @@ test("starts a fresh recovery revision after saving a file and editing again", a
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   await drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" })
+    .getByRole("tab", { name: "Files" })
     .click();
   await drawer.getByRole("button", { name: "README.md", exact: true }).click();
   const editor = drawer.getByRole("textbox", { name: "Edit README.md" });
@@ -546,7 +546,7 @@ test("reviews a competing window's recovery draft before choosing either version
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   await drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" })
+    .getByRole("tab", { name: "Files" })
     .click();
   await drawer.getByRole("button", { name: "README.md", exact: true }).click();
   const editor = drawer.getByRole("textbox", { name: "Edit README.md" });
@@ -607,7 +607,7 @@ test("shows and retries a failed recovery cleanup after file save", async ({
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   await drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" })
+    .getByRole("tab", { name: "Files" })
     .click();
   await drawer.getByRole("button", { name: "README.md", exact: true }).click();
   await page.evaluate(() => {
@@ -949,6 +949,58 @@ test("settings sections are accessible and trap focus", async ({ page }) => {
   await expect(page.locator(".sidebar")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
+});
+
+test("Latest activity jumps instead of gliding when motion is reduced", async ({
+  page,
+}) => {
+  await runLocalTask(page, "Fix the add function");
+  // A short window, so the finished task scrolls.
+  await page.setViewportSize({ width: 1000, height: 480 });
+  const stream = page.locator(".chat-stream");
+  // Record how the page asks the conversation to scroll.
+  await stream.evaluate((el) => {
+    const asked: (string | undefined)[] = [];
+    (window as unknown as { __scrolls: typeof asked }).__scrolls = asked;
+    const scrollTo = el.scrollTo.bind(el) as (o: ScrollToOptions) => void;
+    el.scrollTo = ((options: ScrollToOptions) => {
+      asked.push(options.behavior);
+      scrollTo(options);
+    }) as typeof el.scrollTo;
+  });
+  const asked = () =>
+    page.evaluate(
+      () => (window as unknown as { __scrolls: string[] }).__scrolls,
+    );
+  const latest = page.getByRole("button", { name: "Latest activity" });
+  for (const [motion, behavior] of [
+    ["reduce", "auto"],
+    ["no-preference", "smooth"],
+  ] as const) {
+    await page.emulateMedia({ reducedMotion: motion });
+    await stream.evaluate((el) => el.scrollTo({ top: 0 }));
+    await latest.click();
+    await expect(latest).toHaveCount(0);
+    expect((await asked()).at(-1)).toBe(behavior);
+    // A smooth scroll is still gliding when the button goes; let it land,
+    // or it carries on past the next scroll to the top.
+    await expect
+      .poll(() =>
+        stream.evaluate(
+          (el) => el.scrollHeight - el.scrollTop - el.clientHeight,
+        ),
+      )
+      .toBeLessThan(2);
+  }
+  // Reduced motion lands at the bottom at once.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await stream.evaluate((el) => el.scrollTo({ top: 0 }));
+  await latest.click();
+  expect(
+    await stream.evaluate(
+      (el) => el.scrollHeight - el.scrollTop - el.clientHeight,
+    ),
+  ).toBeLessThan(2);
 });
 
 test("the window works at its 520 px minimum width", async ({ page }) => {
@@ -1320,7 +1372,7 @@ test("requires open editor drafts to be saved before Compare snapshots the proje
   const drawer = page.getByRole("complementary", { name: "Drawer" });
   await drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" })
+    .getByRole("tab", { name: "Files" })
     .click();
   await drawer.getByRole("button", { name: "README.md", exact: true }).click();
   const editor = drawer.getByRole("textbox", { name: "Edit README.md" });

@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import { Copy, Pencil, RotateCcw } from "lucide-react";
 import type { ChatItem } from "./cards";
+import { MessageTime } from "./MessageTime";
 
 type UserItem = Extract<ChatItem, { kind: "user" }>;
 
@@ -11,6 +12,7 @@ type UserItem = Extract<ChatItem, { kind: "user" }>;
 export function UserMessage({
   item,
   disabled,
+  quietTime,
   onEditResend,
   onRetry,
   onCopy,
@@ -18,6 +20,8 @@ export function UserMessage({
   item: UserItem;
   /** A task is running or being sent. */
   disabled: boolean;
+  /** The message before it already shows about the same time. */
+  quietTime?: boolean;
   onEditResend: (item: UserItem, text: string, undoFiles: boolean) => void;
   onRetry: (text: string) => void;
   onCopy: (text: string) => void;
@@ -99,39 +103,42 @@ export function UserMessage({
           <div className="bubble">{item.text}</div>
         )}
         {!editing && (
-          <div
-            className="message-actions"
-            role="group"
-            aria-label="Message actions"
-          >
-            <button
-              type="button"
-              className="icon-btn"
-              aria-label="Edit and resend"
-              title={
-                disabled
-                  ? "Available when the task finishes"
-                  : "Edit and resend in a new conversation"
-              }
-              disabled={disabled || !item.eventId}
-              onClick={() => {
-                setText(item.text);
-                setEditing(true);
-              }}
+          <div className="message-meta">
+            <div
+              className="message-actions"
+              role="group"
+              aria-label="Message actions"
             >
-              <Pencil size={13} aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              className="icon-btn"
-              aria-label="Retry"
-              title="Send this message again"
-              disabled={disabled}
-              onClick={() => onRetry(item.text)}
-            >
-              <RotateCcw size={13} aria-hidden="true" />
-            </button>
-            <CopyButton text={item.text} onCopy={onCopy} />
+              <button
+                type="button"
+                className="icon-btn"
+                aria-label="Edit and resend"
+                title={
+                  disabled
+                    ? "Available when the task finishes"
+                    : "Edit and resend in a new conversation"
+                }
+                disabled={disabled || !item.eventId}
+                onClick={() => {
+                  setText(item.text);
+                  setEditing(true);
+                }}
+              >
+                <Pencil size={13} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                className="icon-btn"
+                aria-label="Retry"
+                title="Send this message again"
+                disabled={disabled}
+                onClick={() => onRetry(item.text)}
+              >
+                <RotateCcw size={13} aria-hidden="true" />
+              </button>
+              <CopyButton text={item.text} onCopy={onCopy} />
+            </div>
+            <MessageTime ts={item.ts} quiet={quietTime} />
           </div>
         )}
       </div>

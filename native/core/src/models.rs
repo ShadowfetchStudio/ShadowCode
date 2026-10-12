@@ -1276,64 +1276,159 @@ pub fn presets() -> Vec<Value> {
     .collect()
 }
 
-pub async fn detect() -> Vec<Value> {
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_millis(1200))
-        .redirect(reqwest::redirect::Policy::none())
-        .build()
-        .expect("TLS client");
-    futures_util::future::join_all(["ollama","local","llamacpp","vllm"].into_iter().map(|provider|{
-        let client=client.clone();async move {
-            let preset=preset(provider);let base=preset["endpoint"].as_str().unwrap_or("");
-            let url=if provider=="ollama"{format!("{}/api/tags",base.trim_end_matches("/v1"))}else{format!("{base}/models")};
-            let start=std::time::Instant::now();
-            let result: Result<Value> = async {
-                let response = client.get(url).send().await?.error_for_status()?;
-                let mut stream = response.bytes_stream();
-                let mut bytes = Vec::new();
-                while let Some(chunk) = stream.next().await {
-                    let chunk = chunk?;
-                    ensure!(bytes.len() + chunk.len() <= 2_000_000, "Model list exceeded 2 MB");
-                    bytes.extend_from_slice(&chunk);
+/// The base URL a compatible server is called at: trimmed, without a
+/// trailing `/`, and with `/v1` added when only a host was given (Ollama,
+/// LM Studio, llama.cpp, vLLM, OpenAI and xAI all serve the API there).
+/// Addresses with a user name or password, a query or a fragment are refused
+/// so a key never ends up in `config.yaml` or the model registry.
+pub fn normalize_endpoint(endpoint: &str) -> Result<String> {
+    let trimmed = endpoint.trim();
+    let mut url = reqwest::Url::parse(trimmed).with_context(|| {
+        format!("Enter a web address such as http://127.0.0.1:11434/v1; found {trimmed:?}")
+    })?;
+    ensure!(
+        matches!(url.scheme(), "http" | "https") && url.host_str().is_some(),
+        "The address must start with http:// or https://"
+    );
+    ensure!(
+        url.username().is_empty() && url.password().is_none(),
+        "Remove the user name or password from the address; enter the API key in its own field"
+    );
+    ensure!(
+        url.query().is_none() && url.fragment().is_none(),
+        "Remove the ?query or #fragment from the address"
+    );
+    if matches!(url.path(), "" | "/") {
+        url.set_path("/v1");
+    }
+    Ok(url.to_string().trim_end_matches('/').to_owned())
+}
+
+/// Where a server lists its models: Ollama's own `/api/tags` (with sizes and
+/// details) beside its `/v1` API, every other server the OpenAI-style
+/// `/models`.
+fn models_url(provider: &str, base: &str) -> String {
+    let base = base.trim_end_matches('/');
+    if provider == "ollama" {
+        format!("{}/api/tags", base.trim_end_matches("/v1"))
+    } else {
+        format!("{base}/models")
+    }
+}
+
+/// The models one compatible server offers, from its model list (at most
+/// 2 MB). `key` is sent as a bearer token when the server needs one.
+pub async fn list_models(
+    client: &reqwest::Client,
+    provider: &str,
+    base: &str,
+    key: Option<&str>,
+) -> Result<Vec<Value>> {
+    let mut request = client.get(models_url(provider, base));
+    if let Some(key) = key.filter(|key| !key.is_empty()) {
+        request = request.bearer_auth(key);
+    }
+    let response = request.send().await.map_err(|error| {
+        anyhow::anyhow!(
+            "Could not reach {base}: {}",
+            if error.is_timeout() {
+                "it did not answer in time".to_owned()
+            } else if error.is_connect() {
+                "nothing is listening there, or the network refused the connection".to_owned()
+            } else {
+                error.without_url().to_string()
+            }
+        )
+    })?;
+    let status = response.status();
+    if !status.is_success() {
+        bail!(
+            "{base} answered {}{}",
+            status.as_u16(),
+            http_hint(status.as_u16(), is_loopback_endpoint(base))
+        );
+    }
+    let mut stream = response.bytes_stream();
+    let mut bytes = Vec::new();
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk?;
+        ensure!(
+            bytes.len() + chunk.len() <= 2_000_000,
+            "Model list exceeded 2 MB"
+        );
+        bytes.extend_from_slice(&chunk);
+    }
+    let value: Value = serde_json::from_slice(&bytes).context("The model list was not JSON")?;
+    let empty = Vec::new();
+    let rows = value[if provider == "ollama" {
+        "models"
+    } else {
+        "data"
+    }]
+    .as_array()
+    .unwrap_or(&empty);
+    Ok(rows
+        .iter()
+        .filter_map(|m| {
+            let name = if provider == "ollama" {
+                m["name"].as_str()
+            } else {
+                m["id"].as_str()
+            }?;
+            let mut caps = serde_json::Map::new();
+            caps.insert("completion".into(), Value::Bool(true));
+            if let Some(list) = m.get("capabilities").and_then(Value::as_array) {
+                for item in list {
+                    if let Some(s) = item.as_str() {
+                        caps.insert(s.to_string(), Value::Bool(true));
+                    }
                 }
-                Ok(serde_json::from_slice(&bytes)?)
-            }.await;
+            }
+            Some(json!({
+                "id": name,
+                "name": name,
+                "size_bytes": m["size"].as_u64().unwrap_or(0),
+                "context_limit": m.pointer("/details/context_length").and_then(Value::as_u64).unwrap_or(0),
+                "capabilities": Value::Object(caps),
+                "detail": m.pointer("/details/parameter_size").and_then(Value::as_str).unwrap_or("")
+            }))
+        })
+        .collect())
+}
+
+/// A client for model lists: short timeouts, no redirects, and no proxy for
+/// servers on this computer.
+pub fn list_client(base: &str, timeout: Duration) -> Result<reqwest::Client> {
+    let mut builder = reqwest::Client::builder()
+        .timeout(timeout)
+        .redirect(reqwest::redirect::Policy::none());
+    if is_loopback_endpoint(base) {
+        builder = builder.no_proxy();
+    }
+    Ok(builder.build()?)
+}
+
+pub async fn detect() -> Vec<Value> {
+    futures_util::future::join_all(["ollama", "local", "llamacpp", "vllm"].into_iter().map(
+        |provider| async move {
+            let preset = preset(provider);
+            let base = preset["endpoint"].as_str().unwrap_or("");
+            let start = std::time::Instant::now();
+            let result = match list_client(base, Duration::from_millis(1200)) {
+                Ok(client) => list_models(&client, provider, base, None).await,
+                Err(error) => Err(error),
+            };
             match result {
-                Ok(value)=>{
-                    let empty=Vec::new();let rows=value[if provider=="ollama"{"models"}else{"data"}].as_array().unwrap_or(&empty);
-                    let models: Vec<_> = rows
-                        .iter()
-                        .filter_map(|m| {
-                            let name = if provider == "ollama" {
-                                m["name"].as_str()
-                            } else {
-                                m["id"].as_str()
-                            }?;
-                            let mut caps = serde_json::Map::new();
-                            caps.insert("completion".into(), Value::Bool(true));
-                            if let Some(list) = m.get("capabilities").and_then(Value::as_array) {
-                                for item in list {
-                                    if let Some(s) = item.as_str() {
-                                        caps.insert(s.to_string(), Value::Bool(true));
-                                    }
-                                }
-                            }
-                            Some(json!({
-                                "id": name,
-                                "name": name,
-                                "size_bytes": m["size"].as_u64().unwrap_or(0),
-                                "context_limit": m.pointer("/details/context_length").and_then(Value::as_u64).unwrap_or(0),
-                                "capabilities": Value::Object(caps),
-                                "detail": m.pointer("/details/parameter_size").and_then(Value::as_str).unwrap_or("")
-                            }))
-                        })
-                        .collect();
+                Ok(models) => {
                     json!({"provider":provider,"label":preset["label"],"endpoint":base,"running":true,"latency_ms":start.elapsed().as_millis(),"detail":format!("{} models available",models.len()),"models":models})
                 }
-                Err(_)=>json!({"provider":provider,"label":preset["label"],"endpoint":base,"running":false,"latency_ms":start.elapsed().as_millis(),"models":[],"detail":"Not reachable"}),
+                Err(_) => {
+                    json!({"provider":provider,"label":preset["label"],"endpoint":base,"running":false,"latency_ms":start.elapsed().as_millis(),"models":[],"detail":"Not reachable"})
+                }
             }
-        }
-    })).await
+        },
+    ))
+    .await
 }
 
 #[cfg(test)]
@@ -1366,6 +1461,34 @@ mod tests {
         assert!(!provider_error_detail(leaked.as_bytes(), false)
             .unwrap_or_default()
             .contains(&key));
+    }
+
+    #[test]
+    fn endpoints_are_normalized_and_secrets_stay_out_of_them() {
+        assert_eq!(
+            normalize_endpoint(" http://127.0.0.1:11434 ").unwrap(),
+            "http://127.0.0.1:11434/v1"
+        );
+        assert_eq!(
+            normalize_endpoint("https://api.openai.com/v1/").unwrap(),
+            "https://api.openai.com/v1"
+        );
+        assert_eq!(
+            normalize_endpoint("https://api.groq.com/openai/v1").unwrap(),
+            "https://api.groq.com/openai/v1"
+        );
+        assert!(normalize_endpoint("api.openai.com").is_err());
+        assert!(normalize_endpoint("ftp://example.com").is_err());
+        assert!(normalize_endpoint("https://me:secret@example.com/v1").is_err());
+        assert!(normalize_endpoint("https://example.com/v1?key=secret").is_err());
+        assert_eq!(
+            models_url("ollama", "http://127.0.0.1:11434/v1"),
+            "http://127.0.0.1:11434/api/tags"
+        );
+        assert_eq!(
+            models_url("vllm", "http://127.0.0.1:8000/v1/"),
+            "http://127.0.0.1:8000/v1/models"
+        );
     }
 
     #[test]

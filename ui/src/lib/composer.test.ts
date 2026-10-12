@@ -13,6 +13,7 @@ import {
   stepHistory,
 } from "./promptHistory";
 import { purposeFor, readEffort, supportsEffort, writeEffort } from "./effort";
+import { matchSlashCommands } from "./slashCommands";
 import {
   countChanges,
   highlight,
@@ -53,6 +54,35 @@ describe("mentions", () => {
     expect(removeMentionText("Explain @src/app.ts now", chips[0])).toBe(
       "Explain now",
     );
+  });
+});
+
+describe("slash commands", () => {
+  const command = (name: string, description = "") => ({
+    name,
+    description,
+    arg_spec: "",
+  });
+  const names = (query: string, limit?: number) =>
+    matchSlashCommands(
+      [
+        command("run", "Run a command and report its output"),
+        command("review", "Review project changes"),
+        command("preview", "Open the Preview tab"),
+        command("rewind", "Go back to an earlier point"),
+        command("diff", "Show pending changes"),
+      ],
+      query,
+      limit,
+    ).map((c) => c.name);
+
+  it("ranks name prefixes, then names, then descriptions containing the text", () => {
+    expect(names("re")).toEqual(["review", "rewind", "preview", "run"]);
+    expect(names("CHANGES")).toEqual(["review", "diff"]);
+    expect(names("view")).toEqual(["review", "preview"]);
+    expect(names("")).toHaveLength(5);
+    expect(names("", 2)).toEqual(["run", "review"]);
+    expect(names("nothing")).toEqual([]);
   });
 });
 

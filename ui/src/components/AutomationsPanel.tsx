@@ -26,6 +26,7 @@ import {
 import { forgeApi } from "../lib/forge";
 import { isReady, type PickerTarget } from "../lib/picker";
 import { Empty } from "./cards";
+import { ConfirmDialog } from "./ConfirmDialog";
 import "../tools.css";
 
 type Toast = (text: string, kind?: "ok" | "err" | "info") => void;
@@ -49,6 +50,7 @@ export function AutomationsPanel({
   const [history, setHistory] = useState<string>("");
   const [runs, setRuns] = useState<AutomationRun[]>([]);
   const [pending, setPending] = useState("");
+  const [deleting, setDeleting] = useState<Automation | null>(null);
   const [repo, setRepo] = useState(false);
   const [now, setNow] = useState(nowSeconds);
 
@@ -248,15 +250,7 @@ export function AutomationsPanel({
                 type="button"
                 className="mini danger-text"
                 disabled={busy || Boolean(a.running_run)}
-                onClick={() => {
-                  if (
-                    !window.confirm(
-                      `Delete the automation "${a.name}" and its history? Conversations it created stay.`,
-                    )
-                  )
-                    return;
-                  void act(a.id, "delete", () => automationsApi.remove(a.id));
-                }}
+                onClick={() => setDeleting(a)}
               >
                 Delete
               </button>
@@ -267,6 +261,26 @@ export function AutomationsPanel({
           </article>
         );
       })}
+      {deleting && (
+        <ConfirmDialog
+          title="Delete this automation?"
+          confirmLabel="Delete automation"
+          danger
+          onCancel={() => setDeleting(null)}
+          onConfirm={async () => {
+            await act(deleting.id, "delete", async () => {
+              await automationsApi.remove(deleting.id);
+              toast("Automation deleted", "ok");
+            });
+            setDeleting(null);
+          }}
+        >
+          <p>
+            “{deleting.name}” and its run history are removed. Conversations it
+            created stay.
+          </p>
+        </ConfirmDialog>
+      )}
     </div>
   );
 }

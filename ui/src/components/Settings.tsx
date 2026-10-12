@@ -7,16 +7,19 @@ import { VoicePage } from "./settings/VoicePage";
 import { LocalModelsPage } from "./settings/LocalModelsPage";
 import { AppearancePage, PermissionsPage } from "./settings/PreferencePages";
 import { AdvancedPage, type AdvancedTab } from "./settings/AdvancedPage";
+import { AgentPage } from "./settings/AgentPage";
 import { RemotePage } from "./settings/RemotePage";
 import { AboutPage } from "./settings/AboutPage";
 import { DataPage } from "./settings/DataPage";
 import { RolesPage, type RolesPageProps } from "./settings/RolesPage";
 import { RulesPage } from "./settings/RulesPage";
+import type { AppearanceControls } from "../hooks/useAppearance";
 
 export type SettingsSection =
   | "accounts"
   | "local"
   | "roles"
+  | "agent"
   | "code"
   | "rules"
   | "voice"
@@ -32,6 +35,7 @@ const SECTIONS: { id: SettingsSection; label: string }[] = [
   { id: "accounts", label: "Accounts" },
   { id: "local", label: "Local models" },
   { id: "roles", label: "Roles" },
+  { id: "agent", label: "Agent" },
   { id: "code", label: "Code intelligence" },
   { id: "rules", label: "Rules & skills" },
   { id: "voice", label: "Voice" },
@@ -42,6 +46,10 @@ const SECTIONS: { id: SettingsSection; label: string }[] = [
   { id: "advanced", label: "Advanced" },
   { id: "about", label: "About" },
 ];
+
+/** `rethrow`: the page shows a refused save itself, so `onSave` rejects
+ * with the engine's error instead of showing it as a toast. */
+export type SaveOptions = { rethrow?: boolean };
 
 /** Settings. Each page saves only its own configuration group. */
 export type SettingsProps = {
@@ -54,7 +62,10 @@ export type SettingsProps = {
   sessionId: string;
   busy: boolean;
   onClose: () => void;
-  onSave: (values: Record<string, unknown>) => Promise<void>;
+  onSave: (
+    values: Record<string, unknown>,
+    options?: SaveOptions,
+  ) => Promise<void>;
   /** Accounts or local models changed: the picker reloads its rows. */
   onCatalogChanged: () => void;
   /** A free model finished downloading on the Local models page. */
@@ -68,6 +79,8 @@ export type SettingsProps = {
   planLimit?: ReactNode;
   /** Roles › the open project and conversation. */
   roles?: RolesPageProps;
+  /** Appearance › the window's theme and text size, previewed live. */
+  appearance?: AppearanceControls;
 };
 
 export function Settings({
@@ -89,6 +102,7 @@ export function Settings({
   onUseSkill,
   planLimit,
   roles,
+  appearance,
 }: SettingsProps) {
   const [section, setSection] = useState<SettingsSection>(initialSection);
   const [advanced, setAdvanced] = useState<AdvancedTab>(initialAdvanced);
@@ -136,6 +150,7 @@ export function Settings({
               <p className="hint">Open a project to choose its roles.</p>
             </section>
           ))}
+        {section === "agent" && <AgentPage cfg={cfg} onSave={onSave} />}
         {section === "code" && <CodeIntelPage onToast={onToast} />}
         {section === "rules" && <RulesPage onToast={onToast} />}
         {section === "voice" && <VoicePage onToast={onToast} />}
@@ -143,7 +158,7 @@ export function Settings({
           <PermissionsPage cfg={cfg} onSave={onSave} />
         )}
         {section === "appearance" && (
-          <AppearancePage cfg={cfg} onSave={onSave} />
+          <AppearancePage cfg={cfg} appearance={appearance} onSave={onSave} />
         )}
         {section === "remote" && <RemotePage onToast={onToast} />}
         {section === "data" && <DataPage onToast={onToast} />}

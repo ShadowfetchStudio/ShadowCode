@@ -20,6 +20,7 @@ import { api, type Job, type Project, type Session } from "../api";
 import { BADGE_LABELS, projectOf, type Badge } from "../lib/badges";
 import { readPins, writePins } from "../lib/storage";
 import { ConversationMenu, type ConversationAction } from "./ConversationMenu";
+import { SearchSnippet } from "./SearchSnippet";
 
 /** Projects and their recent conversations, with per-conversation badges
  * (running, needs approval, failed, finished-unread) and a right-click menu
@@ -204,7 +205,14 @@ export function Sidebar({
           ) : (
             <MessageSquare size={14} />
           )}
-          <span className="task-title">{title}</span>
+          {s.match ? (
+            <span className="task-title-block">
+              <span className="task-title">{title}</span>
+              <SearchSnippet match={s.match} />
+            </span>
+          ) : (
+            <span className="task-title">{title}</span>
+          )}
           {badge === "unread" && (
             <span
               className="unread-dot"

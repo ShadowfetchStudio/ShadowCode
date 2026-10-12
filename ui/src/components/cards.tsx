@@ -4,6 +4,7 @@ import type { SubagentRun } from "../lib/subagents";
 import type { TaskMode } from "../lib/effort";
 import { readableError } from "../lib/transport";
 import { Markdown } from "./Markdown";
+import { ToolOutput } from "./ToolOutput";
 
 /** Every row carries a React `key` that survives updates (lib/rowKeys). */
 export type ChatItem = (
@@ -29,6 +30,8 @@ export type ChatItem = (
       /** A follow-up ShadowCode wrote after a plan limit: "auto" when the
        * engine started it, "manual" when the user chose Continue on …. */
       continued?: "auto" | "manual";
+      /** When it was sent: its recording event's `ts` (seconds). */
+      ts?: number;
     }
   | {
       kind: "note";
@@ -144,6 +147,8 @@ export type ChatItem = (
       eventId?: number;
       taskId?: string;
       live?: boolean;
+      /** When it was given: its latest text event's `ts` (seconds). */
+      ts?: number;
     }
   | {
       kind: "tool";
@@ -235,10 +240,11 @@ export const OpCard = memo(function OpCard({
       {open && (
         <div className="op-body">
           {item.fullOutput ? (
-            <pre className="op-full">
-              {item.fullOutput.slice(0, 4000)}
-              {item.fullOutput.length > 4000 ? "\n… (truncated)" : ""}
-            </pre>
+            <ToolOutput
+              className="op-full"
+              text={item.fullOutput}
+              name={item.headline || item.tool}
+            />
           ) : (
             <p className="hint op-none">No output.</p>
           )}

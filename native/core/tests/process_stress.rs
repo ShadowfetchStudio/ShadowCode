@@ -117,7 +117,11 @@ async fn a_detached_pipe_cannot_hang_completion() {
     let root = tempfile::tempdir().unwrap();
     let result = run(
         ProcessSpec::shell(
-            "setsid sh -c 'echo $$ > escaped.pid; sleep 8' & sleep .1; printf done",
+            // Exit only once the child has left the shell's process group
+            // (it writes its pid after setsid); a fixed pause could end the
+            // shell first on a slow runner, and the group kill took it too.
+            "setsid sh -c 'echo $$ > escaped.pid; sleep 8' & \
+             while [ ! -s escaped.pid ]; do sleep .02; done; printf done",
             root.path().into(),
             Duration::from_secs(3),
         ),

@@ -1479,24 +1479,61 @@ button.mini.primary-mini {
   max-height: 360px;
   overflow: auto;
 }
+.palette-group-label {
+  padding: 8px 12px 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
 .palette .hit {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 8px;
   width: 100%;
   text-align: left;
   padding: 8px 12px;
   border-radius: var(--radius-sm);
   color: var(--text);
+  cursor: pointer;
 }
-.palette .hit:hover,
+.palette .hit > svg {
+  flex: none;
+  color: var(--muted);
+}
+/* The option under the keyboard (and the pointer): the field keeps focus,
+   so this is the focus indicator. */
 .palette .hit.on {
-  background: var(--hover);
+  background: var(--accent-soft);
+}
+.palette-label,
+.palette-detail {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.palette-detail {
+  flex: 1;
+  color: var(--muted);
+  font-size: 12px;
+}
+.palette .hit .kbd {
+  flex: none;
+  margin-left: auto;
+}
+/* Matched letters: bold as well as coloured, so the match does not rely on
+   colour alone. */
+.palette-match {
+  color: var(--accent);
+  font-weight: 650;
 }
 .palette-empty {
   padding: 10px 12px;
   color: var(--muted);
   font-size: 12px;
+}
+.palette-empty:empty {
+  padding: 0;
 }
 
 .settings {
@@ -1566,7 +1603,9 @@ button.mini.primary-mini {
   max-width: min(380px, calc(100vw - 32px));
   pointer-events: none;
 }
-.toast button {
+/* A notification takes the pointer so it can wait while pointed at
+   (useToasts); the gaps between notifications stay click-through. */
+.toast {
   pointer-events: auto;
 }
 .toast {

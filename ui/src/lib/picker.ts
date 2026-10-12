@@ -73,6 +73,10 @@ export type PickerTarget = {
   is_default?: boolean;
   usage?: UsageSnapshot | null;
   local?: LocalDetail;
+  /** One of the user's own OpenAI-compatible endpoints (Settings ›
+   * Accounts › Your own endpoints), with the address it calls. */
+  custom?: boolean;
+  endpoint?: string;
 };
 
 export const UNKNOWN_USAGE = "Usage unavailable · Open provider usage";
@@ -100,7 +104,16 @@ export const isApiKey = (target: PickerTarget) =>
 
 /** Vendors whose product name is not the first part of the row name
  * (OpenRouter rows are named after the model: "Qwen: Qwen3 Coder"). */
-const VENDOR_LABELS: Record<string, string> = { openrouter: "OpenRouter" };
+const VENDOR_LABELS: Record<string, string> = {
+  openrouter: "OpenRouter",
+  // The user's own endpoints (models::preset in the engine). LM Studio's
+  // provider id is "local", the key every row on this computer shares.
+  ollama: "Ollama",
+  llamacpp: "llama.cpp",
+  vllm: "vLLM",
+  grok: "xAI",
+  openai_compatible: "OpenAI-compatible",
+};
 
 /** The row name without the " · This computer" suffix, for places that
  * already carry a Local badge next to it (the composer trigger). */

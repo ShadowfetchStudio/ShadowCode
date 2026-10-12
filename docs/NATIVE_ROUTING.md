@@ -58,8 +58,8 @@ private secret storage; they are not included in task routing events.
 
 Use registry IDs for API configuration. A bare model name is accepted only when
 it resolves unambiguously, unless it is already an exact saved ID. Add a model
-through **Custom model…** or configure it in Settings before assigning it to a
-route. The native service also supports `POST /api/models/register` through IPC
+through **Settings › Accounts › Your own endpoints** (any OpenAI-compatible
+server) or `shadowcode models --use` before assigning it to a route. The native service also supports `POST /api/models/register` through IPC
 for integrations that need to register a model without changing the default.
 
 ## Changes and failures

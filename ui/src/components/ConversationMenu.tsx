@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Download, GitFork, Pencil, Pin, Trash2 } from "lucide-react";
+import { cssZoom } from "../hooks/useZoom";
 
 export type ConversationAction =
   "rename" | "pin" | "fork" | "export" | "delete";
@@ -44,8 +45,11 @@ export function ConversationMenu({
     ["export", "Export…", Download],
     ["delete", "Delete…", Trash2],
   ];
-  const left = Math.min(x, window.innerWidth - 200);
-  const top = Math.min(y, window.innerHeight - 220);
+  // The pointer is in window pixels; under CSS zoom (a plain browser, see
+  // useZoom) the menu is placed in zoomed ones.
+  const zoom = cssZoom();
+  const left = Math.min(x / zoom, window.innerWidth / zoom - 200);
+  const top = Math.min(y / zoom, window.innerHeight / zoom - 220);
   return (
     <div
       ref={menu}

@@ -37,6 +37,7 @@ import {
   type Attachment,
 } from "../lib/attachments";
 import type { ContextAttachment } from "../lib/pendingAttachments";
+import { matchSlashCommands } from "../lib/slashCommands";
 import { ContextChips } from "./ContextChips";
 import { ContextInventory } from "./ContextInventory";
 
@@ -134,9 +135,8 @@ export function Composer({
   const [slashOpen, setSlashOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [contextInventoryOpen, setContextInventoryOpen] = useState(false);
-  const hits = slashOpen
-    ? commands.filter((c) => c.name.startsWith(task.slice(1))).slice(0, 8)
-    : [];
+  const hits = slashOpen ? matchSlashCommands(commands, task.slice(1)) : [];
+  const activeSlash = Math.min(slashIndex, Math.max(0, hits.length - 1));
   // The @ menu: `@name` at the start of a message names a subagent;
   // `@path` anywhere attaches a project file or folder.
   const [caret, setCaret] = useState(task.length);
@@ -191,6 +191,15 @@ export function Composer({
     setMentionIndex(0);
     moveCaret(next.caret);
   };
+  /** Click, Tab and Enter all put the command in the field and close the
+   * menu; the next Enter sends it. */
+  const pickSlash = (command: SlashCommand) => {
+    const text = `/${command.name}${command.arg_spec ? " " : ""}`;
+    onTask(text);
+    setSlashOpen(false);
+    setSlashIndex(0);
+    moveCaret(text.length);
+  };
   const trackCaret = (el: HTMLTextAreaElement) =>
     setCaret(el.selectionStart ?? el.value.length);
   useEffect(() => {
@@ -229,20 +238,22 @@ export function Composer({
         />
       )}
       {slashOpen && (
-        <div className="slash-menu" role="listbox" aria-label="Slash commands">
+        <div
+          className="slash-menu"
+          id="slash-commands"
+          role="listbox"
+          aria-label="Slash commands"
+        >
           {hits.length ? (
             hits.map((c, i) => (
               <div
                 role="option"
-                aria-selected={i === slashIndex}
-                className={`slash-hit ${i === slashIndex ? "on" : ""}`}
+                id={`slash-${i}`}
+                aria-selected={i === activeSlash}
+                className={`slash-hit ${i === activeSlash ? "on" : ""}`}
                 key={c.name}
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  onTask(`/${c.name}${c.arg_spec ? " " : ""}`);
-                  setSlashOpen(false);
-                  promptRef.current?.focus();
-                }}
+                onClick={() => pickSlash(c)}
               >
                 <strong>/{c.name}</strong>
                 <span>{c.description}</span>
@@ -339,9 +350,16 @@ export function Composer({
         )}
         <textarea
           ref={promptRef}
-          aria-autocomplete={onMention ? "list" : undefined}
+          aria-autocomplete={onMention || commands.length ? "list" : undefined}
+          aria-controls={
+            menuOpen ? "mention-menu" : slashOpen ? "slash-commands" : undefined
+          }
           aria-activedescendant={
-            menuOpen && options.length ? `mention-${activeMention}` : undefined
+            menuOpen && options.length
+              ? `mention-${activeMention}`
+              : slashOpen && hits.length
+                ? `slash-${activeSlash}`
+                : undefined
           }
           aria-label="Message ShadowCode"
           aria-describedby={sendBlocked ? "composer-blocked" : undefined}
@@ -394,15 +412,20 @@ export function Composer({
                 e.preventDefault();
                 setSlashIndex(
                   (i) =>
-                    (i + (e.key === "ArrowDown" ? 1 : hits.length - 1)) %
+                    (Math.min(i, hits.length - 1) +
+                      (e.key === "ArrowDown" ? 1 : hits.length - 1)) %
                     hits.length,
                 );
                 return;
               }
-              if (e.key === "Tab") {
+              // Enter picks like Tab (as in the @ menu): sending "/rev"
+              // half-typed would run an unknown command.
+              if (
+                e.key === "Tab" ||
+                (e.key === "Enter" && !e.nativeEvent.isComposing)
+              ) {
                 e.preventDefault();
-                onTask(`/${hits[slashIndex].name} `);
-                setSlashOpen(false);
+                pickSlash(hits[activeSlash]);
                 return;
               }
             }

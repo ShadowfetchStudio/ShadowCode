@@ -34,6 +34,7 @@ import {
   scheduledResumeText,
 } from "./spending";
 import { modeOfJob } from "./effort";
+import { eventTime } from "./messageTime";
 
 const ROUTE_PRODUCTS: Record<string, string> = {
   "cli:codex": "Codex",
@@ -178,13 +179,16 @@ function objectFields(value: unknown): Record<string, unknown> | undefined {
 
 /** A prompt bubble. A follow-up written after a plan limit is labelled as
  * such: "manual" when it answers an open "Continue on …" card (which it
- * closes), otherwise "auto" (the engine started it). */
+ * closes), otherwise "auto" (the engine started it). The bubble keeps the
+ * recording event's id and time. */
 function userItem(
   items: ChatItem[],
   text: string,
   taskId: string,
-  eventId?: number,
+  event: EventRow,
 ): { items: ChatItem[]; item: ChatItem } {
+  const eventId = event.id;
+  const ts = eventTime(event.ts);
   // A later message answers an out-of-memory card: its actions are done.
   const memory = lastIndex(
     items,
@@ -198,7 +202,7 @@ function userItem(
     };
   }
   if (!CONTINUATION.test(text))
-    return { items, item: { kind: "user", text, taskId, eventId } };
+    return { items, item: { kind: "user", text, taskId, eventId, ts } };
   const ask = lastIndex(
     items,
     (item) => item.kind === "limit" && item.mode === "ask" && !item.resolved,
@@ -206,7 +210,7 @@ function userItem(
   if (ask < 0)
     return {
       items,
-      item: { kind: "user", text, taskId, eventId, continued: "auto" },
+      item: { kind: "user", text, taskId, eventId, ts, continued: "auto" },
     };
   const next = [...items];
   next[ask] = {
@@ -215,7 +219,7 @@ function userItem(
   };
   return {
     items: next,
-    item: { kind: "user", text, taskId, eventId, continued: "manual" },
+    item: { kind: "user", text, taskId, eventId, ts, continued: "manual" },
   };
 }
 
@@ -826,7 +830,7 @@ export function applyEvent(state: Transcript, event: EventRow): Transcript {
     ];
   }
   if (event.type === "user.message") {
-    const next = userItem(items, text, taskId, event.id);
+    const next = userItem(items, text, taskId, event);
     items = [...next.items, next.item];
     if (!activeTaskId) stage = "QUEUED";
     const mentions = mentionsFrom(p.mentions);
@@ -839,7 +843,7 @@ export function applyEvent(state: Transcript, event: EventRow): Transcript {
       : undefined;
     const created = pending
       ? { items, item: pending }
-      : userItem(items, String(p.task || ""), taskId, event.id);
+      : userItem(items, String(p.task || ""), taskId, event);
     // A "Continue on …" card is only an offer until other work starts.
     items = [
       ...created.items
@@ -982,6 +986,12 @@ export function applyEvent(state: Transcript, event: EventRow): Transcript {
           event.type === "model.delta" && p.complete !== false
             ? event.id
             : undefined,
+        // When its latest text arrived: the final reply's time once it is
+        // complete. Merged stream fragments (lib/jobEvents) keep the last
+        // fragment's time, so a compacted replay reads the same.
+        ts:
+          eventTime(event.ts) ??
+          (previous?.kind === "agent" ? previous.ts : undefined),
       };
       items = [...items];
       if (index < 0) items.push(next);
@@ -1194,6 +1204,7 @@ export function applyEvent(state: Transcript, event: EventRow): Transcript {
           kind: "agent",
           taskId,
           text,
+          ts: eventTime(event.ts),
           ...(request?.kind === "user" ? { request: request.text } : {}),
           who: p.cancelled
             ? "Stopped"

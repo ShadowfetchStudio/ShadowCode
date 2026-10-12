@@ -28,6 +28,10 @@ export type ShortcutAction =
   | "stop"
   | "export"
   | "help"
+  | "find"
+  | "zoom-in"
+  | "zoom-out"
+  | "zoom-reset"
   | "previous-conversation"
   | "next-conversation"
   | "recent-conversation";
@@ -72,6 +76,11 @@ export function shortcutFor(
   // Dialogs own the keyboard while they are open.
   if (open.overlay || open.trust || open.consent || open.onboarding)
     return null;
+  // Text size, as in a browser: Ctrl+= or Ctrl++ (with Shift or on the
+  // keypad), Ctrl+- and Ctrl+0.
+  if (mod && !e.altKey && (key === "=" || key === "+")) return "zoom-in";
+  if (mod && !e.altKey && (key === "-" || key === "_")) return "zoom-out";
+  if (mod && !e.altKey && key === "0") return "zoom-reset";
   if (mod && key === "k") return "palette";
   if (mod && key === "b" && !e.shiftKey) return "sidebar";
   if (mod && e.shiftKey && key === "b") return "changes";
@@ -83,6 +92,9 @@ export function shortcutFor(
   if (mod && key === "l") return "focus";
   if (mod && key === ".") return "stop";
   if (mod && e.shiftKey && key === "e") return "export";
+  // Find in conversation. A code editor's own find (Ctrl+F) handles the key
+  // first, and a terminal keeps it (above).
+  if (mod && !e.shiftKey && !e.altKey && key === "f") return "find";
   // Conversations: Alt+↑/↓ previous/next in the sidebar, Ctrl+Tab the one
   // opened before this one.
   if (e.altKey && !mod && key === "arrowup") return "previous-conversation";

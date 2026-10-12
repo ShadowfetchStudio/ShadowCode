@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { api, type Session } from "../api";
 import { Empty } from "./cards";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { SearchSnippet } from "./SearchSnippet";
 import { relativeTime } from "../lib/picker";
 import { TerminalPanel } from "./TerminalPanel";
 import type { ToolsView } from "./ToolsTab";
@@ -111,23 +112,54 @@ export function Drawer({
   targets?: PickerTarget[];
 }) {
   const tool = isToolTab(tab) ? tab : null;
+  const selected = tool ? "tools" : tab;
   useEffect(() => {
     if (tool) onMemory("toolsView", tool);
   }, [tool, onMemory]);
   return (
     <aside className="drawer" aria-label="Drawer">
       <div className="drawer-tabs">
-        {/* The tabs wrap inside their own group so Close stays on the first
+        {/* The tabs wrap inside their own list so Close stays on the first
             row, at the top right, whatever the drawer's width. */}
-        <div className="drawer-tab-list" role="group" aria-label="Panels">
+        <div
+          className="drawer-tab-list"
+          role="tablist"
+          aria-label="Panels"
+          onKeyDown={(e) => {
+            const tabs = Array.from(
+              e.currentTarget.querySelectorAll<HTMLElement>('[role="tab"]'),
+            );
+            const at = tabs.indexOf(e.target as HTMLElement);
+            const next =
+              e.key === "ArrowRight"
+                ? (at + 1) % tabs.length
+                : e.key === "ArrowLeft"
+                  ? (at - 1 + tabs.length) % tabs.length
+                  : e.key === "Home"
+                    ? 0
+                    : e.key === "End"
+                      ? tabs.length - 1
+                      : -1;
+            if (at < 0 || next < 0) return;
+            // Arrows only move focus; Enter or Space opens the tab. Opening
+            // every tab passed on the way would start a terminal or a
+            // preview the reader never asked for.
+            e.preventDefault();
+            tabs[next].focus();
+          }}
+        >
           {DRAWER_TABS.map((t) => {
-            const on = t.id === "tools" ? Boolean(tool) : tab === t.id;
+            const on = t.id === selected;
             return (
               <button
                 type="button"
                 key={t.id}
+                id={`drawer-tab-${t.id}`}
                 className={on ? "on" : ""}
-                aria-pressed={on}
+                role="tab"
+                aria-selected={on}
+                aria-controls="drawer-panel"
+                tabIndex={on ? 0 : -1}
                 onClick={() =>
                   onTab(t.id === "tools" ? memory.toolsView || "goals" : t.id)
                 }
@@ -147,7 +179,12 @@ export function Drawer({
           <X size={16} aria-hidden="true" />
         </button>
       </div>
-      <div className="drawer-body">
+      <div
+        className="drawer-body"
+        id="drawer-panel"
+        role="tabpanel"
+        aria-labelledby={`drawer-tab-${selected}`}
+      >
         {tab === "sessions" && (
           <SessionsTab
             sessions={sessions}
@@ -388,6 +425,7 @@ function SessionsTab({
                     {title}
                     {s.parent_id ? " ↳" : ""}
                   </strong>
+                  {s.match && <SearchSnippet match={s.match} />}
                   <span>
                     {s.updated_at
                       ? `Updated ${relativeTime(s.updated_at)}`

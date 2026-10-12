@@ -30,6 +30,42 @@ const BACKGROUND_LABELS = new Map([
 /** Diff lines the card shows before "Show all". */
 export const PREVIEW_LINES = 14;
 
+/** Whether the approval changes files, and what it does in its own words:
+ * file tools report their tool name as the "command", and what they do is
+ * in the reason ("Write hello.txt"). */
+function actionOf(approval: Approval) {
+  const tool = approval.tool || "";
+  const preview = approval.preview || null;
+  const fileChange =
+    FILE_TOOLS.has(tool) ||
+    preview?.kind === "files" ||
+    preview?.kind === "move" ||
+    preview?.kind === "folder";
+  const command =
+    approval.command && approval.command !== tool ? approval.command : "";
+  const main = fileChange ? approval.reason || command : command;
+  return { fileChange, main };
+}
+
+/** The action in a few words ("npm test", "Write notes.txt"): the card's
+ * accessible name and what the conversation announces when it appears. */
+export function approvalSummary(approval: Approval): string {
+  const preview = approval.preview || null;
+  const text =
+    preview?.kind === "command"
+      ? preview.command
+      : preview?.kind === "move"
+        ? `Move ${preview.from} → ${preview.to}`
+        : preview?.kind === "folder"
+          ? `Create folder ${preview.path}`
+          : actionOf(approval).main ||
+            approval.reason ||
+            approval.tool ||
+            "an action";
+  const line = text.replace(/\s+/g, " ").trim();
+  return line.length > 100 ? `${line.slice(0, 99)}…` : line;
+}
+
 const STATUS: Record<string, string> = {
   added: "New file",
   deleted: "Deleted",
@@ -152,24 +188,18 @@ export const ApprovalCard = memo(function ApprovalCard({
   const [note, setNote] = useState("");
   const tool = approval.tool || "";
   const preview = approval.preview || null;
-  // File tools report their tool name as the "command"; what they do is in
-  // the reason ("Write hello.txt").
-  const fileChange =
-    FILE_TOOLS.has(tool) ||
-    preview?.kind === "files" ||
-    preview?.kind === "move" ||
-    preview?.kind === "folder";
-  const command =
-    approval.command && approval.command !== tool ? approval.command : "";
-  const main = fileChange ? approval.reason || command : command;
+  const { fileChange, main } = actionOf(approval);
   const detail = main === approval.reason ? "" : approval.reason;
   const decide = (answer: ApprovalDecision) => onDecide(approval.id, answer);
+  // Named for what it would do, so several cards (and a screen reader
+  // moving into one) tell themselves apart; the question describes it.
   return (
     <div
       className="approval"
       data-approval-id={approval.id}
       role="group"
-      aria-labelledby={`${uid}-title`}
+      aria-label={`Approval needed: ${approvalSummary(approval)}`}
+      aria-describedby={`${uid}-title`}
     >
       <div className="approval-head">
         <span className="approval-kind">

@@ -50,6 +50,10 @@ impl Engine {
                 Check::Reached(kind, limit) => (kind, limit),
             };
             if meter.stopped().is_some() {
+                // Stop ends the task as cancelled. The answer wakes this gate
+                // before `decide_spending` cancels the task, so cancel here
+                // too rather than finish as a failure.
+                running.cancel.cancel();
                 bail!("{}", crate::spending::stopped_summary(kind));
             }
             if meter.is_unattended() {

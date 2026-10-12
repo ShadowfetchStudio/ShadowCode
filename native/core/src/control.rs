@@ -303,10 +303,12 @@ pub fn sweep_stale_sockets(directory: &Path, keep: &Path, min_age: Duration) -> 
         let Ok(before) = fs::symlink_metadata(&path) else {
             continue;
         };
+        // A time just ahead of `now` (clock steps, timestamp granularity)
+        // counts as age zero rather than as never old enough.
         let old_enough = before
             .modified()
             .ok()
-            .and_then(|m| now.duration_since(m).ok())
+            .map(|m| now.duration_since(m).unwrap_or(Duration::ZERO))
             .is_some_and(|age| age >= min_age);
         if !before.file_type().is_socket() || before.uid() != uid() || !old_enough {
             continue;
@@ -588,6 +590,13 @@ mod tests {
         drop(StdListener::bind(&foreign_name).unwrap());
         let _live = StdListener::bind(&live).unwrap();
         fs::write(&not_socket, b"x").unwrap();
+        // Another test forking at the moment of bind can hold a copy of a
+        // listener until its child execs; wait until both are really closed.
+        let started = std::time::Instant::now();
+        while !(socket_refuses(&dead) && socket_refuses(&own)) {
+            assert!(started.elapsed() < Duration::from_secs(10));
+            std::thread::sleep(Duration::from_millis(20));
+        }
 
         // Young sockets are left alone (an engine may be between bind and listen).
         assert!(sweep_stale_sockets(dir.path(), &own, Duration::from_secs(3600)).is_empty());
@@ -604,5 +613,48 @@ mod tests {
         assert!(foreign_name.exists() && not_socket.exists());
         assert!(socket_refuses(&own));
         assert!(!socket_refuses(&live));
+    }
+
+    #[test]
+    fn a_socket_dated_ahead_of_the_clock_counts_as_age_zero() {
+        use std::os::unix::ffi::OsStrExt;
+        let dir = tempfile::tempdir().unwrap();
+        let dead = dir.path().join(format!("{}.sock", "a".repeat(32)));
+        let own = dir.path().join(format!("{}.sock", "c".repeat(32)));
+        drop(StdListener::bind(&dead).unwrap());
+        let started = std::time::Instant::now();
+        while !socket_refuses(&dead) {
+            assert!(started.elapsed() < Duration::from_secs(10));
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        // Date the dead socket a minute ahead of now.
+        let ahead = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            + Duration::from_secs(60);
+        let stamp = libc::timespec {
+            tv_sec: ahead.as_secs() as libc::time_t,
+            tv_nsec: 0,
+        };
+        let path = std::ffi::CString::new(dead.as_os_str().as_bytes()).unwrap();
+        // SAFETY: a valid C path and two initialised timespecs.
+        let set = unsafe {
+            libc::utimensat(
+                libc::AT_FDCWD,
+                path.as_ptr(),
+                [stamp, stamp].as_ptr(),
+                libc::AT_SYMLINK_NOFOLLOW,
+            )
+        };
+        assert_eq!(set, 0, "{}", std::io::Error::last_os_error());
+
+        // Any real minimum age still leaves it alone; zero sweeps it.
+        assert!(sweep_stale_sockets(dir.path(), &own, Duration::from_secs(1)).is_empty());
+        assert!(dead.exists());
+        assert_eq!(
+            sweep_stale_sockets(dir.path(), &own, Duration::ZERO),
+            vec![dead.clone()]
+        );
+        assert!(!dead.exists());
     }
 }

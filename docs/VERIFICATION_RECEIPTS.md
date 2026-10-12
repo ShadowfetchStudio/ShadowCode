@@ -15,7 +15,8 @@ originating project/conversation prevents stale submission or attachment.
 
 A command is a configured check only when it is launched through the existing explicit test-task action, exactly matches a command discovered from project manifests in the project root, or exactly matches a user-configured `verification.commands` entry in application configuration. Execution still uses the existing trust, shell approval, sandbox, and lifecycle-hook path. Merely containing `test`, `lint`, or a runner name is not sufficient. Options and subdirectory commands that do not exactly match remain ordinary execution evidence; they can be run explicitly as checks through the test-task action.
 
-The optional application configuration field is:
+The optional application configuration field is edited under **Checks** in
+**Settings › Agent**, or by hand:
 
 ```yaml
 verification:

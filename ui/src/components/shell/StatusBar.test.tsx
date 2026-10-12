@@ -43,3 +43,23 @@ it("never says Ready when the engine did not answer", () => {
   expect(screen.getByRole("contentinfo").textContent).toContain("Ready");
   expect(screen.getByRole("contentinfo").textContent).toContain("v0.33.1");
 });
+
+it("announces the state only, not the allowance or context figures", () => {
+  const { rerender } = render(
+    <StatusBar {...base} branch="main" context={<span>12% context</span>} />,
+  );
+  const bar = screen.getByRole("contentinfo");
+  expect(bar.hasAttribute("aria-live")).toBe(false);
+  const live = Array.from(bar.querySelectorAll("[aria-live]"));
+  expect(live.map((el) => el.textContent)).toEqual(["Ready"]);
+  expect(live[0].getAttribute("aria-live")).toBe("polite");
+  rerender(
+    <StatusBar
+      {...base}
+      busy
+      branch="main"
+      context={<span>12% context</span>}
+    />,
+  );
+  expect(live[0].textContent).toBe("Working");
+});

@@ -480,7 +480,8 @@ async fn reset_moves_everything_aside_and_keeps_backups_worktrees_and_downloads(
     assert!(!p.paths.secrets_file().exists());
     assert!(!p.paths.data.join("webview").exists());
     assert!(!p.paths.state.join("ui.log").exists());
-    assert_eq!(Config::load(&p.paths, None).unwrap().ui["theme"], "light");
+    // The default theme again (it follows the desktop).
+    assert_eq!(Config::load(&p.paths, None).unwrap().ui["theme"], "system");
     // Kept in place.
     assert_eq!(backups(&p.paths).len(), 1);
     for kept in ["local-models", "managed-worktrees"] {

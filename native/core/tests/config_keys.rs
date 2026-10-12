@@ -370,3 +370,76 @@ fn a_bad_value_sent_by_settings_names_its_key() {
     );
     runtime.block_on(service.engine.shutdown()).unwrap();
 }
+
+#[test]
+fn a_saved_subagent_setting_out_of_range_is_refused_but_an_old_file_still_loads() {
+    let root = tempfile::tempdir().unwrap();
+    let paths = AppPaths::isolated(root.path()).unwrap();
+    // Saving: refused, and nothing is written.
+    let error = Config::patch(
+        &paths,
+        serde_json::json!({"subagents": {"max_parallel": 20}}),
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(error.contains("from 1 to 8"), "{error}");
+    Config::patch(
+        &paths,
+        serde_json::json!({"subagents": {"max_parallel": 6}}),
+    )
+    .unwrap();
+    assert_eq!(
+        SubagentsConfig::from_config(&Config::load(&paths, None).unwrap()).max_parallel,
+        6
+    );
+    // A file written before the check still loads, clamped as before.
+    let file = paths.config_file();
+    let text = std::fs::read_to_string(&file)
+        .unwrap()
+        .replace("max_parallel: 6", "max_parallel: 20");
+    std::fs::write(&file, text).unwrap();
+    let config = Config::load(&paths, None).unwrap();
+    assert_eq!(SubagentsConfig::from_config(&config).max_parallel, 8);
+}
+
+#[test]
+fn settings_see_the_profile_agent_values_and_what_the_project_changes() {
+    use shadowcode_core::service::{Request, Service};
+    let root = tempfile::tempdir().unwrap();
+    let paths = AppPaths::isolated(&root.path().join("profile")).unwrap();
+    let project = root.path().join("project");
+    fs::create_dir_all(project.join(".shadow/config")).unwrap();
+    fs::write(
+        project.join(".shadow/config/config.yaml"),
+        "agent:\n  max_steps: 200\n",
+    )
+    .unwrap();
+    let project = project.canonicalize().unwrap();
+    Config::patch(&paths, json!({"trusted_workspaces": [project]})).unwrap();
+    let service = Service::open(paths, Some(project)).unwrap();
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+    let call = |method: &str, body: Value| {
+        runtime
+            .block_on(service.dispatch(Request {
+                method: method.into(),
+                path: "/api/config".into(),
+                body,
+            }))
+            .unwrap()
+    };
+    let view = call("GET", Value::Null);
+    // The project's value is what tasks use; the profile's is what Settings saves.
+    assert_eq!(view["agent"]["max_steps"], 200);
+    assert_eq!(view["agent_profile"]["max_steps"], 64);
+    assert_eq!(view["agent_project"], json!({"max_steps": 200}));
+    let saved = call("PUT", json!({"values": {"agent": {"max_steps": 80}}}));
+    assert_eq!(saved["agent_profile"]["max_steps"], 80);
+    assert_eq!(saved["agent_project"], json!({"max_steps": 200}));
+    let view = call("GET", Value::Null);
+    assert_eq!(view["agent_profile"]["max_steps"], 80);
+    assert_eq!(view["agent"]["max_steps"], 200);
+    runtime.block_on(service.engine.shutdown()).unwrap();
+}

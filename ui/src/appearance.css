@@ -1,0 +1,37 @@
+/* Text size ---------------------------------------------------------------- */
+/* The size for a moment after a zoom key: under the header, out of the way of
+   the notifications in the middle, and never in the way of a click. */
+.zoom-status {
+  position: fixed;
+  top: 62px;
+  right: 20px;
+  z-index: 40;
+  padding: 6px 12px;
+  border-radius: var(--pill);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-2);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+}
+.zoom-status[data-shown] {
+  opacity: 1;
+}
+.zoom-status:empty {
+  padding: 0;
+  border: 0;
+}
+
+/* Settings › Appearance: seven sizes wrap in a narrow window. */
+.text-size-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.text-size-steps {
+  flex-wrap: wrap;
+}

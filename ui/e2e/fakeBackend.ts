@@ -49,6 +49,15 @@ export type FakeOptions = {
   spendLimitOnApi?: boolean;
   /** Tasks on a paid API row meet a busy provider twice before answering. */
   retryOnApi?: boolean;
+  /** Earlier conversations in the project, by title, newest first (s2,
+   * s3, …), all older than the open one. */
+  conversations?: string[];
+  /** The `ui` settings group survives a reload of the window, as the
+   * engine's config file does (kept in this tab's session storage). */
+  keepUi?: boolean;
+  /** Tasks first search the project and find this many matches (a long
+   * tool output). */
+  searchHits?: number;
 };
 
 export function installFakeBackend(options: FakeOptions = {}) {
@@ -365,10 +374,41 @@ export function installFakeBackend(options: FakeOptions = {}) {
         },
       },
       network: { mode: options.network || "online" },
-      ui: { theme: "light", notify: true },
+      ui: {
+        theme: "light",
+        notify: true,
+        ...(options.keepUi
+          ? JSON.parse(sessionStorage.getItem("shadow-fake-config-ui") || "{}")
+          : {}),
+      },
       cli_agents: { enabled: true },
       guardian: { enabled: false, interval_sec: 3600 },
       limits: { on_limit: "local", fallback_model: "" },
+      // The engine's defaults (config.rs). `subagents` is returned only
+      // once it has been saved; until then the engine uses its defaults.
+      agent: {
+        max_steps: 64,
+        tool_timeout_sec: 60,
+        parallel_reads: true,
+        compact_ratio: 0.7,
+        model_retries: 3,
+        retry_backoff_sec: 1.0,
+        max_fix_retries: 3,
+        max_output_bytes: 256_000,
+        max_task_tokens: 1_000_000,
+        autonomy_profile: "normal",
+        summary_compaction: true,
+        summary_timeout_sec: 60,
+        stuck_check: true,
+      },
+      checkpoints: {
+        shell: true,
+        vendor: true,
+        keep: 200,
+        max_copy_files: 5000,
+        max_copy_bytes: 67_108_864,
+      },
+      verification: { commands: [] as string[] },
     },
     vendors: {
       codex: {
@@ -630,6 +670,10 @@ export function installFakeBackend(options: FakeOptions = {}) {
         : null) as null | Json,
       fetched_at: (options.openrouterKey ? now() - 600 : null) as null | number,
     },
+    /** Your own endpoints (POST /api/models/endpoints): registered models
+     * and the keys saved for them (never served back). */
+    endpoints: [] as Json[],
+    endpointKeys: {} as Record<string, string>,
     /** Paid-model spending today (GET /api/spending). */
     spentToday: 0.42,
     jobs: [] as Json[],
@@ -757,6 +801,16 @@ export function installFakeBackend(options: FakeOptions = {}) {
       })),
     },
   };
+  (options.conversations || []).forEach((title, i) =>
+    state.sessions.push({
+      id: `s${i + 2}`,
+      workspace,
+      status: "idle",
+      title,
+      updated_at: now() - 60 * (i + 1),
+      target: null,
+    }),
+  );
   if (options.firstRun) {
     state.onboarded = false;
     state.local.models = [];
@@ -1033,6 +1087,113 @@ export function installFakeBackend(options: FakeOptions = {}) {
       },
     };
   }
+  /** Two servers the endpoint form can reach: Ollama on this computer
+   * (no key) and a cloud API that wants `sk-example-good`. */
+  const endpointServers: Record<string, { key: string; models: string[] }> = {
+    "http://127.0.0.1:11434/v1": {
+      key: "",
+      models: ["qwen3-coder:30b", "gemma4:12b"],
+    },
+    "https://api.example.com/v1": {
+      key: "sk-example-good",
+      models: ["example-coder", "example-mini"],
+    },
+  };
+  const endpointLabels: Record<string, string> = {
+    ollama: "Ollama",
+    local: "LM Studio / local",
+    llamacpp: "llama.cpp",
+    vllm: "vLLM",
+    grok: "Grok / xAI",
+    openai_compatible: "OpenAI-compatible",
+  };
+  function endpointAddress(raw: string) {
+    let url: URL;
+    try {
+      url = new URL(String(raw || "").trim());
+    } catch {
+      throw new Error(
+        JSON.stringify({
+          error: `Enter a web address such as http://127.0.0.1:11434/v1; found ${JSON.stringify(raw)}`,
+        }),
+      );
+    }
+    if (url.pathname === "/" || url.pathname === "") url.pathname = "/v1";
+    return url.toString().replace(/\/$/, "");
+  }
+  function endpointKeyName(provider: string, endpoint: string) {
+    if (provider === "grok") return "XAI_API_KEY";
+    if (provider === "ollama") return "OLLAMA_API_KEY";
+    if (provider !== "openai_compatible") return "OPENAI_API_KEY";
+    const host = new URL(endpoint).hostname;
+    const labels = host.split(".");
+    if (labels.length < 2 || /^[\d.]+$/.test(host)) return "OPENAI_API_KEY";
+    return `${labels[labels.length - 2].toUpperCase()}_API_KEY`;
+  }
+  function endpointRow(m: Json) {
+    const url = new URL(m.endpoint);
+    const local = ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname);
+    const offline = state.config.network?.mode === "offline";
+    const missingKey = m.key_required && !state.endpointKeys[m.api_key_env];
+    return {
+      id: m.id,
+      provider: m.provider,
+      account: "",
+      model: m.name,
+      route: "native",
+      group: local ? "local" : "api",
+      name: local ? `${m.name} · This computer` : m.name,
+      subtitle: `${endpointLabels[m.provider] || "OpenAI-compatible"} · ${url.host}`,
+      inference: local ? "local" : "cloud",
+      availability:
+        offline && !local ? "unavailable" : missingKey ? "sign_in" : "ready",
+      availability_label:
+        offline && !local
+          ? "Unavailable"
+          : missingKey
+            ? "Add API key"
+            : "Ready",
+      reason:
+        offline && !local
+          ? "Offline mode: only models on this computer run"
+          : missingKey
+            ? `Add the API key for ${url.host} in Settings › Accounts`
+            : "",
+      featured: false,
+      vision: Boolean(m.vision),
+      tools: true,
+      is_default: false,
+      usage: local
+        ? {
+            ...unknownUsage,
+            state: "local",
+            label: "Runs on this computer · No subscription quota",
+          }
+        : {
+            ...unknownUsage,
+            state: "api_key",
+            label: "Your endpoint · billed by the provider",
+          },
+      endpoint: m.endpoint,
+      custom: true,
+    };
+  }
+  function endpointTarget(body: Json) {
+    const provider = String(body?.provider || "");
+    if (!endpointLabels[provider])
+      throw new Error(
+        JSON.stringify({
+          error:
+            "Choose a provider: Ollama, LM Studio, llama.cpp, vLLM, xAI or OpenAI-compatible",
+        }),
+      );
+    const endpoint = endpointAddress(body?.endpoint);
+    const keyName =
+      String(body?.api_key_env || "").trim() ||
+      endpointKeyName(provider, endpoint);
+    return { provider, endpoint, keyName };
+  }
+
   function pickerTargets() {
     const rows: Json[] = [];
     for (const [key, v] of Object.entries(state.vendors) as [string, Json][]) {
@@ -1041,6 +1202,7 @@ export function installFakeBackend(options: FakeOptions = {}) {
       else rows.push(vendorRow(key, v));
     }
     for (const m of openrouterModels) rows.push(openrouterRow(m));
+    for (const m of state.endpoints) rows.push(endpointRow(m));
     for (const m of state.local.models as Json[])
       rows.push({
         id: m.id,
@@ -1219,7 +1381,8 @@ export function installFakeBackend(options: FakeOptions = {}) {
     state.cursor += 1;
     state.events.push({
       id: state.cursor,
-      ts: now(),
+      // Seconds with a fraction, as the engine records events.
+      ts: Date.now() / 1000,
       type,
       payload,
       session_id: sessionId,
@@ -1313,6 +1476,40 @@ export function installFakeBackend(options: FakeOptions = {}) {
             ],
           ]
         : [];
+    /** A search with many matches first (searchHits), shaped as the
+     * engine's search_text result. */
+    const searchOutput = {
+      matches: Array.from({ length: options.searchHits || 0 }, (_, i) => ({
+        path: `src/module${Math.floor(i / 10)}.ts`,
+        line: (i % 10) + 1,
+        text: `export const add${i} = (a, b) => a + b;`,
+      })),
+      truncated: false,
+      scanned: options.searchHits || 0,
+    };
+    const searchSteps: [string, Json][] = options.searchHits
+      ? [
+          [
+            "tool.started",
+            {
+              tool: "search_text",
+              call_id: "c0",
+              arguments: { query: "export const add" },
+            },
+          ],
+          [
+            "tool.completed",
+            {
+              tool: "search_text",
+              call_id: "c0",
+              success: true,
+              output: searchOutput,
+              output_preview: JSON.stringify(searchOutput).slice(0, 2000),
+              arguments: { query: "export const add" },
+            },
+          ],
+        ]
+      : [];
     const steps: [string, Json][] = [
       ...(local && options.localStartup
         ? ([
@@ -1387,6 +1584,7 @@ export function installFakeBackend(options: FakeOptions = {}) {
               },
         },
       ],
+      ...searchSteps,
       [
         "tool.started",
         { tool: "read_file", call_id: "c1", arguments: { path: "src/app.ts" } },
@@ -2805,6 +3003,11 @@ export function installFakeBackend(options: FakeOptions = {}) {
         const values = body.values || {};
         for (const [k, v] of Object.entries(values))
           state.config[k] = { ...(state.config[k] || {}), ...(v as Json) };
+        if (options.keepUi)
+          sessionStorage.setItem(
+            "shadow-fake-config-ui",
+            JSON.stringify(state.config.ui),
+          );
       }
       return state.config;
     }
@@ -3071,6 +3274,102 @@ export function installFakeBackend(options: FakeOptions = {}) {
       state.openrouter.fetched_at = now();
       return openrouterStatus();
     }
+    if (path === "/api/providers/models" && method === "POST") {
+      const { provider, endpoint, keyName } = endpointTarget(body);
+      const server = endpointServers[endpoint];
+      const local = endpoint.startsWith("http://127.0.0.1");
+      if (state.config.network?.mode === "offline" && !local)
+        throw new Error(
+          JSON.stringify({
+            error: "Offline mode: only servers on this computer can be reached",
+          }),
+        );
+      if (!server)
+        throw new Error(
+          JSON.stringify({
+            error: `Could not reach ${endpoint}: nothing is listening there, or the network refused the connection`,
+          }),
+        );
+      const typed = String(body?.api_key || "").trim();
+      const key = typed || state.endpointKeys[keyName] || "";
+      if (server.key && key !== server.key)
+        throw new Error(
+          JSON.stringify({
+            error: `${endpoint} answered 401; check the API key`,
+          }),
+        );
+      return {
+        ok: true,
+        provider,
+        label: endpointLabels[provider],
+        endpoint,
+        api_key_env: keyName,
+        key_saved: Boolean(state.endpointKeys[keyName]),
+        local,
+        models: server.models.map((id) => ({
+          id,
+          name: id,
+          size_bytes: 0,
+          context_limit: 0,
+          capabilities: { completion: true },
+          detail: "",
+        })),
+      };
+    }
+    if (path === "/api/models/endpoints" && method === "POST") {
+      const { provider, endpoint, keyName } = endpointTarget(body);
+      const names = [
+        ...new Set(
+          ((body?.models || []) as string[])
+            .map((n) => String(n).trim())
+            .filter(Boolean),
+        ),
+      ];
+      if (!names.length)
+        throw new Error(JSON.stringify({ error: "Choose at least one model" }));
+      const typed = String(body?.api_key || "").trim();
+      if (typed) state.endpointKeys[keyName] = typed;
+      const added = names.map((name) => {
+        const id = `model:${provider}:${endpoint}:${name}`;
+        const model = {
+          id,
+          provider,
+          endpoint,
+          name,
+          api_key_env: keyName,
+          key_required: Boolean(state.endpointKeys[keyName]),
+          vision: body?.vision === true,
+        };
+        state.endpoints = [
+          ...state.endpoints.filter((m: Json) => m.id !== id),
+          model,
+        ];
+        return {
+          default: id,
+          name,
+          provider,
+          endpoint,
+          api_key_env: keyName,
+        };
+      });
+      return { ok: true, models: added };
+    }
+    if (path === "/api/models/remove" && method === "POST") {
+      const before = state.endpoints.length;
+      state.endpoints = state.endpoints.filter((m: Json) => m.id !== body?.id);
+      if (state.endpoints.length === before)
+        throw new Error(
+          JSON.stringify({ error: "That model is not in the registry" }),
+        );
+      return { ok: true, removed: 1 };
+    }
+    if (path === "/api/models/test" && method === "POST")
+      return {
+        ok: true,
+        reply: "I can respond.",
+        latency_ms: 420,
+        capabilities: { completion: true },
+      };
     if (path === "/api/openrouter/refresh" && method === "POST") {
       state.openrouter.fetched_at = now();
       return openrouterStatus();
@@ -3167,13 +3466,50 @@ export function installFakeBackend(options: FakeOptions = {}) {
       return { ok: true, local_engine: state.local };
     if (path === "/api/sessions" && method === "GET") {
       const all = ["true", "1"].includes(q.get("include_compare") || "");
+      const search = (q.get("q") || "").trim().toLowerCase();
+      // Like the engine: titles, prompts and answers; an excerpt of the
+      // newest prompt or answer that matched unless the title shows it.
+      const found = (s: Json) => {
+        if (!search) return { ok: true };
+        if (
+          String(s.title || "")
+            .toLowerCase()
+            .includes(search)
+        )
+          return { ok: true };
+        for (const job of [...state.jobs].reverse()) {
+          if (job.session_id !== s.id) continue;
+          for (const [field, text] of [
+            ["prompt", job.task],
+            ["answer", job.result?.summary ?? job.summary],
+          ] as [string, string | undefined][]) {
+            const at = String(text || "")
+              .toLowerCase()
+              .indexOf(search);
+            if (at < 0) continue;
+            return {
+              ok: true,
+              match: {
+                field,
+                snippet: String(text),
+                start: at,
+                end: at + search.length,
+              },
+            };
+          }
+        }
+        return { ok: false };
+      };
       return {
         sessions: state.sessions
           .filter((s: Json) => all || !s.compare_id)
-          .map((s: Json) => ({
+          .map((s: Json): { s: Json; hit: Json } => ({ s, hit: found(s) }))
+          .filter(({ hit }: { hit: Json }) => hit.ok)
+          .map(({ s, hit }: { s: Json; hit: Json }) => ({
             ...s,
             compare_id: s.compare_id || null,
             compare_lane: s.compare_lane || null,
+            ...(hit.match ? { match: hit.match } : {}),
           })),
       };
     }
@@ -3992,7 +4328,31 @@ export function installFakeBackend(options: FakeOptions = {}) {
       }
       return { ...approval, pending: false };
     }
-    if (path === "/api/commands") return { commands: [] };
+    if (path === "/api/commands")
+      // A few of the engine's built-ins, in its order, for the / menu.
+      return {
+        commands: [
+          ["help", "List native commands and project workflows", ""],
+          [
+            "status",
+            "Show the selected model, permissions, and active work",
+            "",
+          ],
+          ["model", "Show or select a registered model", "[id]"],
+          ["models", "List registered and detected models", ""],
+          ["plan", "Plan a task with read-only tools", "<task>"],
+          ["review", "Review project changes with read-only tools", "[focus]"],
+          ["diff", "Show pending changes", "[path]"],
+          ["new", "Start a new conversation", ""],
+        ].map(([name, description, arg_spec]) => ({
+          name,
+          description,
+          arg_spec,
+          alias: "",
+          source: "builtin",
+          kind: "builtin",
+        })),
+      };
     if (path === "/api/workspace/git") {
       const lane = laneFor(state.selected);
       return {

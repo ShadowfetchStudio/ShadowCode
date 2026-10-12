@@ -71,9 +71,20 @@ impl Advisory {
             path,
         };
         lock.validate()?;
-        lock.file
-            .try_lock_exclusive()
-            .with_context(|| busy.to_owned())?;
+        // A process forking at this moment holds a copy of the previous
+        // owner's descriptor until it execs, which takes milliseconds; only a
+        // lock still held after a short wait belongs to another owner.
+        let mut waited = 0;
+        loop {
+            match lock.file.try_lock_exclusive() {
+                Ok(()) => break,
+                Err(error) if waited < 20 && error.kind() == std::io::ErrorKind::WouldBlock => {
+                    waited += 1;
+                    std::thread::sleep(std::time::Duration::from_millis(25));
+                }
+                Err(error) => return Err(anyhow::Error::new(error).context(busy.to_owned())),
+            }
+        }
         lock.validate()?;
         Ok(lock)
     }
