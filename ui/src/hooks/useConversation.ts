@@ -19,6 +19,7 @@ import {
   type Transcript,
 } from "../lib/transcript";
 import { jobEvents } from "../lib/jobEvents";
+import { eventTime } from "../lib/messageTime";
 import { isActive } from "../lib/jobs";
 export { isActive } from "../lib/jobs";
 
@@ -89,6 +90,7 @@ export function useConversation(onComplete: (done?: Job) => void) {
             kind: "agent",
             text: active.summary,
             who: outcomeLabel(active.status),
+            ts: eventTime(active.finished_at),
             key: `outcome:${active.id}`,
           });
       }
@@ -153,6 +155,7 @@ export function useConversation(onComplete: (done?: Job) => void) {
             kind: "agent",
             text: done.summary,
             who: outcomeLabel(done.status),
+            ts: eventTime(done.finished_at),
             key: `outcome:${done.id}`,
           });
         return {

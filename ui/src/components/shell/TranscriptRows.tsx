@@ -18,6 +18,8 @@ import { SpendLimitCard } from "../SpendLimitCard";
 import { StuckCard, type StuckAction } from "../StuckCard";
 import { Markdown } from "../Markdown";
 import { CopyButton, UserMessage } from "../MessageActions";
+import { MessageTime } from "../MessageTime";
+import { quietTimes } from "../../lib/messageTime";
 import { SubagentCard } from "../SubagentCard";
 import { FailureHelp } from "../FailureHelp";
 import {
@@ -166,10 +168,12 @@ type AgentItem = Extract<ChatItem, { kind: "agent" }>;
 function AgentAnswer({
   item,
   forkDisabled,
+  quietTime,
   actions,
 }: {
   item: AgentItem;
   forkDisabled: boolean;
+  quietTime: boolean;
   actions: RowActions;
 }) {
   const ask = useAskOpen();
@@ -198,29 +202,36 @@ function AgentAnswer({
         />
       )}
       {!item.live && (
-        <div className="agent-actions" role="group" aria-label="Answer actions">
-          <CopyButton
-            text={item.text}
-            onCopy={actions.onCopy}
-            label="Copy answer"
-          />
-          {item.taskId && (
-            <AskAnotherModelButton
-              taskId={item.taskId}
-              open={ask.open}
-              onOpen={ask.toggle}
+        <div className="message-meta">
+          <MessageTime ts={item.ts} quiet={quietTime} />
+          <div
+            className="agent-actions"
+            role="group"
+            aria-label="Answer actions"
+          >
+            <CopyButton
+              text={item.text}
+              onCopy={actions.onCopy}
+              label="Copy answer"
             />
-          )}
-          {item.eventId && (
-            <button
-              type="button"
-              className="ghost fork-action"
-              disabled={forkDisabled}
-              onClick={() => actions.onFork(item.eventId!)}
-            >
-              Fork from here
-            </button>
-          )}
+            {item.taskId && (
+              <AskAnotherModelButton
+                taskId={item.taskId}
+                open={ask.open}
+                onOpen={ask.toggle}
+              />
+            )}
+            {item.eventId && (
+              <button
+                type="button"
+                className="ghost fork-action"
+                disabled={forkDisabled}
+                onClick={() => actions.onFork(item.eventId!)}
+              >
+                Fork from here
+              </button>
+            )}
+          </div>
         </div>
       )}
       {ask.open && item.taskId && (
@@ -243,6 +254,7 @@ const TranscriptRow = memo(function TranscriptRow({
   fallback,
   locked,
   forkDisabled,
+  quietTime,
   actions,
 }: Omit<Row, "key"> & {
   rowKey: string;
@@ -250,6 +262,8 @@ const TranscriptRow = memo(function TranscriptRow({
   fallback: Fallback | null;
   locked: boolean;
   forkDisabled: boolean;
+  /** Its time shows on hover only (lib/messageTime `quietTimes`). */
+  quietTime: boolean;
   actions: RowActions;
 }) {
   let node: ReactNode = null;
@@ -360,6 +374,7 @@ const TranscriptRow = memo(function TranscriptRow({
       <UserMessage
         item={item}
         disabled={forkDisabled}
+        quietTime={quietTime}
         onEditResend={actions.onEditResend}
         onRetry={actions.onRetry}
         onCopy={actions.onCopy}
@@ -367,7 +382,12 @@ const TranscriptRow = memo(function TranscriptRow({
     );
   else
     node = (
-      <AgentAnswer item={item} forkDisabled={forkDisabled} actions={actions} />
+      <AgentAnswer
+        item={item}
+        forkDisabled={forkDisabled}
+        quietTime={quietTime}
+        actions={actions}
+      />
     );
   if (stranded)
     node = (
@@ -458,6 +478,17 @@ export function TranscriptRows({
       if (row.item.taskId) last.set(row.item.taskId, row.key);
     return new Set(last.values());
   }, [rows]);
+  // The first message on screen always shows its time.
+  const quiet = useMemo(
+    () =>
+      quietTimes(
+        rows
+          .slice(start)
+          .filter((row) => !row.queued)
+          .map((row) => row.item),
+      ),
+    [rows, start],
+  );
   return (
     <>
       {start > 0 && (
@@ -505,6 +536,7 @@ export function TranscriptRows({
                 ? forkDisabled
                 : false
             }
+            quietTime={quiet.has(row.item)}
             actions={actions}
           />
           {row.item.taskId && lastOfTask.has(row.key) && (

@@ -11,6 +11,7 @@ import remarkGfm from "remark-gfm";
 import { Check, Copy } from "lucide-react";
 import { parsedTreePlugin, type MarkdownTree } from "../lib/markdownTree";
 import { markdownWorkerQueue } from "../lib/markdownWorker";
+import { useCopyFeedback } from "../hooks/useCopyFeedback";
 
 // Providers may send a response up to 16 MiB. Rendering all of that as one
 // Markdown tree can make the desktop unresponsive, while the durable event and
@@ -40,25 +41,19 @@ export function safeMarkdownHref(href?: string): string | undefined {
 }
 
 function CodeBlock({ children, ...props }: ComponentPropsWithoutRef<"pre">) {
-  const [copied, setCopied] = useState(false);
+  const [copied, copy] = useCopyFeedback();
   return (
     <div className="code-block">
       <button
         type="button"
         className="copy-code"
         aria-label={copied ? "Code copied" : "Copy code"}
-        onClick={async (e) => {
-          const text =
+        onClick={(e) =>
+          void copy(
             e.currentTarget.parentElement?.querySelector("pre")?.textContent ||
-            "";
-          try {
-            await navigator.clipboard.writeText(text);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1800);
-          } catch {
-            setCopied(false);
-          }
-        }}
+              "",
+          )
+        }
       >
         {copied ? <Check size={14} /> : <Copy size={14} />}
         {copied ? "Copied" : "Copy"}

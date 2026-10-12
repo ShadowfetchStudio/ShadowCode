@@ -40,7 +40,11 @@ import { useConversationEdits } from "./hooks/useConversationEdits";
 import { RewindDialog } from "./components/RewindDialog";
 import { useNavigation } from "./hooks/useNavigation";
 import { useJobControls } from "./hooks/useJobControls";
-import { useDesktopEvents, useSidebar } from "./hooks/useWindow";
+import {
+  useDesktopEvents,
+  useSidebar,
+  useWindowTitle,
+} from "./hooks/useWindow";
 import { useRowActions } from "./hooks/useRowActions";
 import { useRunCheck } from "./hooks/useRunCheck";
 import { useConversationBadges } from "./hooks/useConversationBadges";
@@ -307,9 +311,6 @@ export default function App() {
     }
   }, [transcript.usageVersion, reloadPicker, reloadAllowance]);
   useEffect(() => {
-    document.title = `${busy ? "● " : ""}ShadowCode`;
-  }, [busy]);
-  useEffect(() => {
     const key = draftKey(sessionId, workspace);
     const timer = setTimeout(() => {
       if (isSessionCommand(task)) return;
@@ -391,6 +392,11 @@ export default function App() {
       writeStore(draftKey(sessionId, workspace), null);
     },
   });
+  // The window names the open conversation, as the top bar does.
+  useWindowTitle(
+    sessions.find((s) => s.id === sessionId)?.title || compare.laneOf?.title,
+    busy,
+  );
   // A worktree conversation belongs to its project.
   const projectPath = worktree.task?.workspace || compare.projectPath;
   const listedProjects = ws.projects.filter(

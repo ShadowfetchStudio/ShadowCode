@@ -76,3 +76,25 @@ export function useSidebar() {
   }, []);
   return [sidebar, setSidebar] as const;
 }
+
+/** "<conversation> — ShadowCode", or plain "ShadowCode" with no
+ * conversation open; "● " in front while a task runs. */
+export function windowTitle(
+  conversation: string | undefined,
+  busy: boolean,
+): string {
+  const name = conversation?.replace(/\s+/g, " ").trim();
+  return `${busy ? "● " : ""}${name ? `${name} — ` : ""}ShadowCode`;
+}
+
+/** Keeps the document title in step with the open conversation, so a
+ * browser tab (remote access) or a shell that passes the title on names it. */
+export function useWindowTitle(
+  conversation: string | undefined,
+  busy: boolean,
+) {
+  const title = windowTitle(conversation, busy);
+  useEffect(() => {
+    document.title = title;
+  }, [title]);
+}

@@ -55,6 +55,9 @@ export type FakeOptions = {
   /** The `ui` settings group survives a reload of the window, as the
    * engine's config file does (kept in this tab's session storage). */
   keepUi?: boolean;
+  /** Tasks first search the project and find this many matches (a long
+   * tool output). */
+  searchHits?: number;
 };
 
 export function installFakeBackend(options: FakeOptions = {}) {
@@ -1378,7 +1381,8 @@ export function installFakeBackend(options: FakeOptions = {}) {
     state.cursor += 1;
     state.events.push({
       id: state.cursor,
-      ts: now(),
+      // Seconds with a fraction, as the engine records events.
+      ts: Date.now() / 1000,
       type,
       payload,
       session_id: sessionId,
@@ -1472,6 +1476,40 @@ export function installFakeBackend(options: FakeOptions = {}) {
             ],
           ]
         : [];
+    /** A search with many matches first (searchHits), shaped as the
+     * engine's search_text result. */
+    const searchOutput = {
+      matches: Array.from({ length: options.searchHits || 0 }, (_, i) => ({
+        path: `src/module${Math.floor(i / 10)}.ts`,
+        line: (i % 10) + 1,
+        text: `export const add${i} = (a, b) => a + b;`,
+      })),
+      truncated: false,
+      scanned: options.searchHits || 0,
+    };
+    const searchSteps: [string, Json][] = options.searchHits
+      ? [
+          [
+            "tool.started",
+            {
+              tool: "search_text",
+              call_id: "c0",
+              arguments: { query: "export const add" },
+            },
+          ],
+          [
+            "tool.completed",
+            {
+              tool: "search_text",
+              call_id: "c0",
+              success: true,
+              output: searchOutput,
+              output_preview: JSON.stringify(searchOutput).slice(0, 2000),
+              arguments: { query: "export const add" },
+            },
+          ],
+        ]
+      : [];
     const steps: [string, Json][] = [
       ...(local && options.localStartup
         ? ([
@@ -1546,6 +1584,7 @@ export function installFakeBackend(options: FakeOptions = {}) {
               },
         },
       ],
+      ...searchSteps,
       [
         "tool.started",
         { tool: "read_file", call_id: "c1", arguments: { path: "src/app.ts" } },

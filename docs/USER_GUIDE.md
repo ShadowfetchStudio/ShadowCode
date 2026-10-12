@@ -214,6 +214,15 @@ Hover a message you sent for its actions:
 - **Retry** sends the same message again in this conversation.
 - **Copy** copies the text. Answers have **Copy** and **Fork from here**.
 
+Each message and answer shows when it was sent, small at its edge: *14:32*
+today, *Yesterday 14:32*, the date and time earlier this year (*3 Oct,
+09:15*) and only the date before that, in your system's time format. Hover
+it for the full date and time. A reply that follows
+within a few minutes keeps its time out of the way until you hover the
+message, so a quick exchange shows the time once. Times come from the
+conversation's record, so a fork keeps the original times; a message with
+no recorded time shows none.
+
 ## Watch it work
 
 A note above the answer names the model that ran, for example
@@ -224,6 +233,12 @@ searching, editing, running commands, waiting for approval, web sources and
 verification. Expand an item to see its output. Vendor tool names (for example
 Codex command executions, or Claude's `Bash` and `Edit`) are grouped the same
 way as ShadowCode's own tools.
+
+Long output shows its start; **Show all (N lines)** shows the rest and
+**Show less** folds it again. Very long output shows its last 2,000 lines
+(and says so), which keeps the window responsive. **Copy**, in the corner of
+the output when you hover or tab to it, copies all of it, including any part
+not shown.
 
 ### Approvals
 
@@ -838,6 +853,10 @@ and `.env` files suggest. Nothing runs until you save it.
 - **Search tasks** finds words in conversation titles, in your messages and
   in the agent's answers. When the title doesn't show the words, the result
   shows the message or answer that matched, with the words highlighted.
+- The page title names the open conversation (*Fix the login form —
+  ShadowCode*), with a dot in front while a task runs in it, so a browser
+  tab on a paired device (see [Use it from your phone](#use-it-from-your-phone))
+  says which conversation it shows.
 
 ## Appearance and text size
 

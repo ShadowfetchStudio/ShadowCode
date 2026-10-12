@@ -5,6 +5,7 @@ import {
   type TaskActivity,
   type TimelineStep,
 } from "../lib/activity";
+import { ToolOutput } from "./ToolOutput";
 
 /** One compact timeline for a task. Every step is backed by recorded events
  * and expands to the real tool calls and their output. Memoized: a task's
@@ -122,10 +123,10 @@ function Step({
                       : "done"}
             </span>
             {call.output && (
-              <pre>
-                {call.output.slice(0, 4000)}
-                {call.output.length > 4000 ? "\n… (truncated)" : ""}
-              </pre>
+              <ToolOutput
+                text={call.output}
+                name={call.command || call.path || call.label}
+              />
             )}
           </li>
         ))}
