@@ -5,6 +5,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { AutomationEditor, AutomationsPanel } from "./AutomationsPanel";
 import {
@@ -245,4 +246,63 @@ it("lists automations with their next time, runs one now and shows history", asy
   expect(text(history)).toContain("temporary worktree was removed");
   fireEvent.click(screen.getByRole("button", { name: "Open conversation" }));
   expect(open).toHaveBeenCalledWith("s9");
+});
+
+it("asks in the app's own dialog before deleting an automation", async () => {
+  // The old window.confirm would answer "no" here.
+  const confirm = vi.fn(() => false);
+  vi.stubGlobal("confirm", confirm);
+  const now = Date.now() / 1000;
+  const row: Automation = {
+    ...defaultDraft(true),
+    name: "Nightly tests",
+    prompt: "Run the tests",
+    id: "a1",
+    workspace: "/work/demo",
+    paused: false,
+    next_run_at: now + 600,
+    created_at: 1,
+    updated_at: 1,
+    description: "Every day at 02:00",
+    running_run: null,
+    last_run: null,
+  };
+  const listed = (automations: Automation[]) => ({
+    workspace: "/work/demo",
+    automations,
+    scheduler: true,
+    now,
+  });
+  mocked.list.mockResolvedValue(listed([row]));
+  mocked.remove.mockImplementation(async () => {
+    mocked.list.mockResolvedValue(listed([]));
+    return { ok: true };
+  });
+  const toast = vi.fn();
+  render(<AutomationsPanel toast={toast} onOpenSession={() => undefined} />);
+  const card = await screen.findByRole("article", { name: "Nightly tests" });
+  const remove = within(card).getByRole("button", { name: "Delete" });
+  // Cancel keeps it.
+  fireEvent.click(remove);
+  const dialog = screen.getByRole("dialog", {
+    name: "Delete this automation?",
+  });
+  expect(text(dialog)).toContain("“Nightly tests” and its run history");
+  expect(text(dialog)).toContain("Conversations it created stay.");
+  fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(mocked.remove).not.toHaveBeenCalled();
+  // Confirming deletes it.
+  fireEvent.click(remove);
+  fireEvent.click(
+    within(screen.getByRole("dialog")).getByRole("button", {
+      name: "Delete automation",
+    }),
+  );
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  expect(mocked.remove).toHaveBeenCalledWith("a1");
+  expect(toast).toHaveBeenCalledWith("Automation deleted", "ok");
+  expect(await screen.findByText("No automations yet")).toBeTruthy();
+  expect(confirm).not.toHaveBeenCalled();
+  vi.unstubAllGlobals();
 });

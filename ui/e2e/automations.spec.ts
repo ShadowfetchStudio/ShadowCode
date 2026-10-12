@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 import { installFakeBackend } from "./fakeBackend";
 import { installFakeTools } from "./fakeTools";
 
@@ -115,6 +116,47 @@ test("creates an automation, runs it now and shows its history", async ({
   await expect(card).toContainText("Paused");
   await card.getByRole("button", { name: "Resume" }).click();
   await expect(card).toContainText("Next: in 30 min");
+});
+
+async function createAutomation(page: Page, name: string) {
+  const tools = await openTool(page, "Automations");
+  await tools.getByRole("button", { name: "New automation" }).click();
+  const form = tools.getByRole("form", { name: "New automation" });
+  await form.getByLabel("Name").fill(name);
+  await form.getByLabel("What should it do?").fill("Review the commits.");
+  await form.getByRole("button", { name: "Create automation" }).click();
+  return tools;
+}
+
+test("Delete asks in the app's own dialog", async ({ page }) => {
+  await start(page);
+  const tools = await createAutomation(page, "Morning review");
+  const card = tools.getByRole("article", { name: "Morning review" });
+  await card.getByRole("button", { name: "Delete" }).click();
+  const confirm = page.getByRole("dialog", {
+    name: "Delete this automation?",
+  });
+  await expect(confirm).toContainText(
+    "“Morning review” and its run history are removed.",
+  );
+  const axe = await new AxeBuilder({ page })
+    .include('[role="dialog"]')
+    .withTags(["wcag2a", "wcag2aa"])
+    .analyze();
+  expect(axe.violations).toEqual([]);
+  await confirm.getByRole("button", { name: "Cancel" }).click();
+  await expect(confirm).toHaveCount(0);
+  await expect(card).toBeVisible();
+  await card.getByRole("button", { name: "Delete" }).click();
+  await confirm.getByRole("button", { name: "Delete automation" }).click();
+  await expect(card).toHaveCount(0);
+  await expect(page.getByText("Automation deleted")).toBeVisible();
+  await expect(tools.getByText("No automations yet")).toBeVisible();
+  expect(
+    (await fakeLog(page)).filter(
+      (r) => r.method === "DELETE" && r.path.startsWith("/api/automations/"),
+    ),
+  ).toHaveLength(1);
 });
 
 test("starts a task from an issue and offers a pull request that closes it", async ({
