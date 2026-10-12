@@ -167,7 +167,7 @@ guardian:
   allow_prepare_patch: false
 
 ui:
-  theme: light            # system | light | dark
+  theme: system           # system (follow the desktop) | light | dark
   notify: true            # desktop notifications at all
   notify_approval: true   # a task asks for approval
   notify_failed: true     # a task failed

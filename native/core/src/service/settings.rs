@@ -197,7 +197,7 @@ impl Service {
             };
             cfg.permissions.approve_shell = true;
             cfg.ui["theme"] = json!(if body.theme.is_empty() {
-                "light"
+                "system"
             } else {
                 body.theme.as_str()
             });
