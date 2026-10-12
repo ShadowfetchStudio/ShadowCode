@@ -982,6 +982,15 @@ test("Latest activity jumps instead of gliding when motion is reduced", async ({
     await latest.click();
     await expect(latest).toHaveCount(0);
     expect((await asked()).at(-1)).toBe(behavior);
+    // A smooth scroll is still gliding when the button goes; let it land,
+    // or it carries on past the next scroll to the top.
+    await expect
+      .poll(() =>
+        stream.evaluate(
+          (el) => el.scrollHeight - el.scrollTop - el.clientHeight,
+        ),
+      )
+      .toBeLessThan(2);
   }
   // Reduced motion lands at the bottom at once.
   await page.emulateMedia({ reducedMotion: "reduce" });
