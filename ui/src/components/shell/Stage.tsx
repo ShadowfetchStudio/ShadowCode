@@ -14,6 +14,7 @@ import type { AdvancedTab, SettingsSection } from "../Settings";
 import { ChatView } from "./ChatView";
 import { ComposerDock, composerAccess } from "./ComposerDock";
 import { FindBar } from "./FindBar";
+import { Milestones } from "./Milestones";
 import { StageBanners } from "./StageBanners";
 import { StatusBar } from "./StatusBar";
 import { TranscriptRows, type RowActions } from "./TranscriptRows";
@@ -383,6 +384,8 @@ export function Stage({
         busy={busy}
         onToast={toast}
       />
+      {/* Outside the conversation, so Compare and Review still hear it. */}
+      <Milestones job={job} approvals={approvals} />
       {view === "chat" &&
         !reviewPanel &&
         (!scroll.atBottom || history.viewing) && (

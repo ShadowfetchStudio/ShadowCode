@@ -243,6 +243,10 @@ Long output shows its start; **Show all (N lines)** shows the rest and
 the output when you hover or tab to it, copies all of it, including any part
 not shown.
 
+With a screen reader, the answer is not read out while it streams. Instead
+ShadowCode says when the answer has finished, when a task failed or was
+stopped, and when an action needs your approval.
+
 ### Approvals
 
 When the agent wants to do something that needs permission, an approval card

@@ -39,11 +39,13 @@ export function StatusBar({
   version: string;
 }) {
   return (
-    <footer className="statusline" aria-live="polite">
+    <footer className="statusline">
       <span
         className={`status-dot ${busy ? "active" : !connected ? "offline" : ""}`}
       />
-      <span className="status-label">
+      {/* Only the state is live: allowance and context figures change all
+          the time and would be read out with every update. */}
+      <span className="status-label" aria-live="polite" aria-atomic="true">
         {busy
           ? paused
             ? "Paused"

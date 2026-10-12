@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Approval } from "../api";
-import { ApprovalCard, PREVIEW_LINES } from "./ApprovalCard";
+import { ApprovalCard, PREVIEW_LINES, approvalSummary } from "./ApprovalCard";
 
 afterEach(cleanup);
 
@@ -186,5 +186,64 @@ describe("ApprovalCard", () => {
     expect(
       screen.queryByRole("button", { name: "Always allow here" }),
     ).toBeNull();
+  });
+
+  it("is named for the action it would allow", () => {
+    const { rerender } = render(
+      <ApprovalCard approval={edit()} onDecide={vi.fn()} />,
+    );
+    const card = screen.getByRole("group", {
+      name: "Approval needed: Write notes.txt",
+    });
+    expect(card.getAttribute("aria-describedby")).toBeTruthy();
+    expect(
+      document.getElementById(card.getAttribute("aria-describedby")!)
+        ?.textContent,
+    ).toBe("Allow this change?");
+    rerender(
+      <ApprovalCard
+        approval={{
+          id: "a2",
+          tool: "exec",
+          command: "npm   test\n--watch=false",
+          preview: {
+            kind: "command",
+            command: "npm   test\n--watch=false",
+            cwd: "/work/demo",
+          },
+        }}
+        onDecide={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByRole("group", {
+        name: "Approval needed: npm test --watch=false",
+      }),
+    ).toBeTruthy();
+  });
+
+  it("summarizes moves, folders and long commands in a few words", () => {
+    const base = { id: "a1", tool: "move_file" };
+    expect(
+      approvalSummary({
+        ...base,
+        preview: { kind: "move", from: "a.ts", to: "b.ts" },
+      }),
+    ).toBe("Move a.ts → b.ts");
+    expect(
+      approvalSummary({
+        ...base,
+        tool: "create_directory",
+        preview: { kind: "folder", path: "docs" },
+      }),
+    ).toBe("Create folder docs");
+    const long = approvalSummary({
+      ...base,
+      tool: "exec",
+      command: "x".repeat(300),
+    });
+    expect(long).toHaveLength(100);
+    expect(long.endsWith("…")).toBe(true);
+    expect(approvalSummary({ id: "a1" })).toBe("an action");
   });
 });

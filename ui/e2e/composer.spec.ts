@@ -143,6 +143,39 @@ test("/ menu: Enter picks the highlighted command, the next Enter runs it", asyn
   await expect(options.locator("strong")).toHaveText(["/review"]);
 });
 
+test("screen readers hear when an answer finishes, a task fails or is stopped", async ({
+  page,
+}) => {
+  const said = page.locator(".milestones p");
+  await chooseLocal(page);
+  await runTask(page, "Fix the add function");
+  await expect(said.last()).toHaveText("Answer finished");
+  await page.evaluate(() => {
+    (window as unknown as Fake).__SHADOW_FAKE__.state.failNext =
+      "Model provider returned HTTP 500";
+  });
+  await prompt(page).fill("Try once more");
+  await send(page).click();
+  await expect(said.last()).toHaveText("Task failed", { timeout: 15000 });
+  // Held mid-way, then stopped.
+  await page.evaluate(() => {
+    const { state } = (window as unknown as Fake).__SHADOW_FAKE__;
+    state.held = state.jobs.map((j: { session_id: string }) => j.session_id);
+  });
+  await prompt(page).fill("Keep going");
+  await send(page).click();
+  await page.getByRole("button", { name: "Stop task" }).click();
+  await page.evaluate(() => {
+    (window as unknown as Fake).__SHADOW_FAKE__.state.held = [];
+  });
+  await expect(said.last()).toHaveText("Task stopped", { timeout: 15000 });
+  expect(await said.allTextContents()).toEqual([
+    "Answer finished",
+    "Task failed",
+    "Task stopped",
+  ]);
+});
+
 test("Only change these limits edits to the mentioned files", async ({
   page,
 }) => {
