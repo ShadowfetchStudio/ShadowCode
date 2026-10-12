@@ -207,16 +207,18 @@ test("the command palette reaches every theme and the text size", async ({
     await page.keyboard.press("Control+k");
     const palette = page.getByRole("dialog", { name: "Command palette" });
     await palette
-      .getByRole("textbox", { name: "Search commands" })
+      .getByRole("combobox", { name: "Search commands" })
       .fill(command);
     await page.keyboard.press("Enter");
     await expect(palette).toHaveCount(0);
   };
   await page.keyboard.press("Control+k");
   const palette = page.getByRole("dialog", { name: "Command palette" });
-  await palette.getByRole("textbox", { name: "Search commands" }).fill("Theme");
+  await palette
+    .getByRole("combobox", { name: "Search commands" })
+    .fill("Theme");
   const entry = (name: string) =>
-    palette.getByRole("button", { name: new RegExp(`^Theme: ${name}`) });
+    palette.getByRole("option", { name: `Theme: ${name}`, exact: true });
   await expect(entry("same as the system")).toBeVisible();
   await expect(entry("dark")).toBeVisible();
   await expect(entry("light")).toContainText("In use");
