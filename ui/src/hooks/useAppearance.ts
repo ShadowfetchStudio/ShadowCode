@@ -4,7 +4,9 @@ import { DEFAULT_ZOOM, normalizeZoom, stepZoom } from "../lib/zoom";
 import { useStableCallback } from "./useStableCallback";
 import { useTheme } from "./useTheme";
 import type { ToastKind } from "./useToasts";
-import { applyZoom, currentZoom, useZoom } from "./useZoom";
+import { readStore } from "../lib/storage";
+import { transportKind } from "../lib/transport";
+import { ZOOM_KEY, applyZoom, currentZoom, useZoom } from "./useZoom";
 
 /** Choices on Settings › Appearance that are shown but not saved yet. */
 export type AppearancePreview = { theme: string; zoom: number };
@@ -15,6 +17,9 @@ export type AppearanceControls = {
   theme: string;
   zoom: number;
   preview: (next: AppearancePreview | null) => void;
+  /** Set when this browser keeps its own text size (remote access): saving
+   * Appearance hands the size here instead of to the shared config. */
+  keepZoom?: (zoom: number) => void;
 };
 
 /** A zoom key was pressed: the size to show for a moment. `id` changes on
@@ -42,7 +47,17 @@ export function useAppearance({
 }) {
   const ui = (cfg.ui || {}) as { theme?: unknown; zoom?: unknown };
   const savedTheme = loaded ? String(ui.theme || "system") : undefined;
-  const configZoom = loaded ? normalizeZoom(ui.zoom) : undefined;
+  // A phone or browser using remote access keeps its own text size in its
+  // own storage, starting at 100%; `ui.zoom` is the desktop's.
+  const [local] = useState(() => transportKind() === "remote");
+  const [localZoom, setLocalZoom] = useState(() =>
+    normalizeZoom(readStore(ZOOM_KEY)),
+  );
+  const configZoom = local
+    ? localZoom
+    : loaded
+      ? normalizeZoom(ui.zoom)
+      : undefined;
   // A size from the keyboard wins over the config until its save is read
   // back, so a slower reload of an earlier step never undoes a later one.
   const [chosen, setChosen] = useState<number | null>(null);
@@ -64,6 +79,10 @@ export function useAppearance({
     if (next === from) return;
     // Applied now, not after the render, so a fast second press steps on.
     applyZoom(next);
+    if (local) {
+      setLocalZoom(next);
+      return;
+    }
     setChosen(next);
     const run = ++generation.current;
     clearTimeout(timer.current);
@@ -94,6 +113,7 @@ export function useAppearance({
     theme: savedTheme ?? "system",
     zoom: savedZoom ?? currentZoom(),
     preview: setPreview,
+    keepZoom: local ? setLocalZoom : undefined,
   };
   return { theme: controls.theme, zoom, setTheme, notice, controls };
 }

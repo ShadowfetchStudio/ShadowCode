@@ -366,9 +366,13 @@ export function AppearancePage({
           disabled={saving}
           onClick={() => {
             setSaving(true);
-            void onSave({ ui: { theme, zoom, ...notify } }).finally(() =>
-              setSaving(false),
-            );
+            // A remote browser keeps its own size; the desktop's stays.
+            const keep = appearance?.keepZoom;
+            keep?.(zoom);
+            const values = keep
+              ? { theme, ...notify }
+              : { theme, zoom, ...notify };
+            void onSave({ ui: values }).finally(() => setSaving(false));
           }}
         >
           {saving ? "Saving…" : "Save"}

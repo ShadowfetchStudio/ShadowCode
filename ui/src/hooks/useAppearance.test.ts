@@ -138,3 +138,30 @@ it("the palette saves a theme, System included", async () => {
   expect(reloadConfig).toHaveBeenCalledOnce();
   expect(result.current.theme).toBe("system");
 });
+
+it("a browser using remote access keeps its own text size and never saves it", async () => {
+  vi.doMock("../lib/transport", () => ({ transportKind: () => "remote" }));
+  try {
+    // The desktop uses 150%; this phone starts at 100%.
+    const { result, wait } = await mount({ theme: "light", zoom: 1.5 });
+    expect(zoom()).toBe("1");
+    expect(result.current.controls.zoom).toBe(1);
+    act(() => result.current.zoom(1));
+    expect(zoom()).toBe("1.1");
+    await wait();
+    expect(saveConfig).not.toHaveBeenCalled();
+    expect(localStorage.getItem("shadow:zoom")).toBe("1.1");
+    // Settings › Appearance hands its size here instead of to the config.
+    act(() => result.current.controls.keepZoom?.(1.25));
+    expect(zoom()).toBe("1.25");
+    expect(localStorage.getItem("shadow:zoom")).toBe("1.25");
+  } finally {
+    vi.doUnmock("../lib/transport");
+  }
+});
+
+it("the desktop shares its text size through the config, as before", async () => {
+  const { result } = await mount({ theme: "light", zoom: 1.5 });
+  expect(zoom()).toBe("1.5");
+  expect(result.current.controls.keepZoom).toBeUndefined();
+});

@@ -64,3 +64,24 @@ it("without the window's controls it starts from the config", () => {
   expect(radio("Theme", "Dark").getAttribute("aria-checked")).toBe("true");
   expect(radio("Text size", "125%").getAttribute("aria-checked")).toBe("true");
 });
+
+it("in a browser that keeps its own text size, Save keeps the size here and shares only the rest", () => {
+  const keepZoom = vi.fn();
+  const onSave = vi.fn(async () => undefined);
+  render(
+    <AppearancePage
+      cfg={{ ui: { theme: "light", zoom: 1.5, notify: false } }}
+      appearance={{ theme: "light", zoom: 1, preview: vi.fn(), keepZoom }}
+      onSave={onSave}
+    />,
+  );
+  expect(radio("Text size", "100%").getAttribute("aria-checked")).toBe("true");
+  fireEvent.click(radio("Text size", "125%"));
+  fireEvent.click(screen.getByRole("button", { name: "Save" }));
+  expect(keepZoom).toHaveBeenCalledWith(1.25);
+  const saved = (onSave.mock.calls as unknown[][])[0][0] as {
+    ui: Record<string, unknown>;
+  };
+  expect(saved.ui.theme).toBe("light");
+  expect(saved.ui).not.toHaveProperty("zoom");
+});

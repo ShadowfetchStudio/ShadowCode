@@ -873,6 +873,10 @@ change as you pick them, so you see the result before you keep it: **Save**
 keeps them, and leaving the page or Settings without saving puts back what
 you had. **Reset to 100%** goes back to the normal size.
 
+A phone or browser using remote access keeps its own text size, starting at
+100%: changing it there never changes the desktop's, and the desktop's never
+changes it.
+
 Anywhere in the window:
 
 - `Ctrl+=` (or `Ctrl++`) makes everything larger, `Ctrl+-` smaller, and

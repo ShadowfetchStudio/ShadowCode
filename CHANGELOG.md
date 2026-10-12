@@ -43,7 +43,9 @@
   window from 80% to 175%, with the new size shown briefly; it is saved as
   `ui.zoom` and the window reopens at that size. The desktop zooms its webview;
   in a browser over remote access the terminal and editor still put the
-  pointer on the right text. **Settings › Appearance** gains a Text size
+  pointer on the right text. A phone or browser using remote access keeps its
+  own size in its own storage, starting at 100%, and never changes the
+  desktop's. **Settings › Appearance** gains a Text size
   control, and theme and text size now change as you pick them: leaving
   without saving puts back what you had. The palette offers *Theme: same as the
   system*, *light* and *dark* (the old toggle could never get back to System)
