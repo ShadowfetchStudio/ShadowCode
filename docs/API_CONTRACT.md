@@ -647,7 +647,12 @@ SessionRow = Session + {compare_id, compare_lane, worktree_task, worktree_source
 
 - `GET /api/sessions?q=&workspace=&limit=&include_compare=&include_subagents=`
   → `{sessions: SessionRow[]}`, newest `updated_at` first. `q` matches the
-  title, folder or any task prompt. `limit` default 100, max 10 000.
+  title, folder, any task prompt or any task's answer (`summary`), ignoring
+  the case of ASCII letters. With `q`, a row whose title does not contain it
+  carries `match: {field: "prompt"|"answer", snippet, start, end}`: an
+  excerpt (about 40 characters before and 80 after, on one line, `…` where
+  cut) of the newest prompt or answer that matched, with the match at
+  character offsets `start`–`end`. `limit` default 100, max 10 000.
   Compare lanes and subagent conversations are hidden unless
   `include_compare=true|1` / `include_subagents=true|1`. `workspace=<project>`
   also lists conversations running in that project's worktree tasks.

@@ -334,3 +334,31 @@
   flex-direction: column;
   gap: 2px;
 }
+
+/* Task search: the prompt or answer that matched, under the title. */
+.task-title-block {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+.search-snippet {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+  white-space: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+.search-snippet-field {
+  color: var(--text-2);
+}
+.search-snippet mark {
+  background: var(--accent-soft);
+  color: var(--text);
+  border-radius: 3px;
+  padding: 0 1px;
+}

@@ -737,6 +737,17 @@ export type Session = {
   worktree_task?: string | null;
   /** The project a worktree conversation belongs to (listed under it). */
   worktree_source?: string | null;
+  /** Search results only: the prompt or answer that matched, unless the
+   * title already shows the words. */
+  match?: SessionMatch;
+};
+/** An excerpt around a task-search match; `start`/`end` are character
+ * (code point) offsets of the matched words in `snippet`. */
+export type SessionMatch = {
+  field: "prompt" | "answer";
+  snippet: string;
+  start: number;
+  end: number;
 };
 export type SessionDetail = Session & {
   /** The open worktree task this conversation runs in (as last saved). */

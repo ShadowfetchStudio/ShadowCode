@@ -814,6 +814,9 @@ and `.env` files suggest. Nothing runs until you save it.
   again, unless you closed it yourself (`Ctrl+B`).
 - `Alt+↑` / `Alt+↓` open the previous or next conversation in the list;
   `Ctrl+Tab` goes back to the one you had open before.
+- **Search tasks** finds words in conversation titles, in your messages and
+  in the agent's answers. When the title doesn't show the words, the result
+  shows the message or answer that matched, with the words highlighted.
 
 ## Notifications
 

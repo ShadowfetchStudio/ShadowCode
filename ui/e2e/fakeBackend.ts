@@ -3375,13 +3375,50 @@ export function installFakeBackend(options: FakeOptions = {}) {
       return { ok: true, local_engine: state.local };
     if (path === "/api/sessions" && method === "GET") {
       const all = ["true", "1"].includes(q.get("include_compare") || "");
+      const search = (q.get("q") || "").trim().toLowerCase();
+      // Like the engine: titles, prompts and answers; an excerpt of the
+      // newest prompt or answer that matched unless the title shows it.
+      const found = (s: Json) => {
+        if (!search) return { ok: true };
+        if (
+          String(s.title || "")
+            .toLowerCase()
+            .includes(search)
+        )
+          return { ok: true };
+        for (const job of [...state.jobs].reverse()) {
+          if (job.session_id !== s.id) continue;
+          for (const [field, text] of [
+            ["prompt", job.task],
+            ["answer", job.result?.summary ?? job.summary],
+          ] as [string, string | undefined][]) {
+            const at = String(text || "")
+              .toLowerCase()
+              .indexOf(search);
+            if (at < 0) continue;
+            return {
+              ok: true,
+              match: {
+                field,
+                snippet: String(text),
+                start: at,
+                end: at + search.length,
+              },
+            };
+          }
+        }
+        return { ok: false };
+      };
       return {
         sessions: state.sessions
           .filter((s: Json) => all || !s.compare_id)
-          .map((s: Json) => ({
+          .map((s: Json): { s: Json; hit: Json } => ({ s, hit: found(s) }))
+          .filter(({ hit }: { hit: Json }) => hit.ok)
+          .map(({ s, hit }: { s: Json; hit: Json }) => ({
             ...s,
             compare_id: s.compare_id || null,
             compare_lane: s.compare_lane || null,
+            ...(hit.match ? { match: hit.match } : {}),
           })),
       };
     }

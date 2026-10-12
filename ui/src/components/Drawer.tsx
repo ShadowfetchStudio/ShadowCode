@@ -3,6 +3,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { api, type Session } from "../api";
 import { Empty } from "./cards";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { SearchSnippet } from "./SearchSnippet";
 import { relativeTime } from "../lib/picker";
 import { TerminalPanel } from "./TerminalPanel";
 import type { ToolsView } from "./ToolsTab";
@@ -388,6 +389,7 @@ function SessionsTab({
                     {title}
                     {s.parent_id ? " ↳" : ""}
                   </strong>
+                  {s.match && <SearchSnippet match={s.match} />}
                   <span>
                     {s.updated_at
                       ? `Updated ${relativeTime(s.updated_at)}`
