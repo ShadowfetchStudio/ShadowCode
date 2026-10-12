@@ -69,6 +69,11 @@ export function paletteItems(a: PaletteActions): PaletteItem[] {
       run: () => a.settings("roles"),
     },
     {
+      id: "agent",
+      label: "Agent · limits, retries, subagents and checks",
+      run: () => a.settings("agent"),
+    },
+    {
       id: "code",
       label: "Code intelligence · language servers and search",
       run: () => a.settings("code"),

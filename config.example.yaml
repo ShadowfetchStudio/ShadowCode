@@ -60,6 +60,7 @@ sandbox:
     - .deno
 
 # Project checkpoints around shell commands and subscription turns (Rewind).
+# Settings › Agent edits these.
 checkpoints:
   shell: true
   vendor: true
@@ -82,6 +83,7 @@ spending:
 logging:
   level: info
 
+# ShadowCode's own agent (Settings › Agent edits these).
 agent:
   max_steps: 64           # model turns per task, 1-1000
   tool_timeout_sec: 60    # 1-3600
@@ -157,6 +159,7 @@ hooks:
   approved: []            # {workspace, path, hash}
 
 # Exact checks a task may run to verify its work (shell policy still applies).
+# Settings › Agent › Checks edits the list.
 verification:
   commands: []
 
@@ -176,6 +179,7 @@ ui:
   notify_sound: false     # ask the notification server to play its sound
 
 # Subagents: children a task starts with `spawn_agent` (native loop only).
+# Settings › Agent edits these.
 subagents:
   enabled: true
   max_parallel: 4         # children of one task running at once, 1-8

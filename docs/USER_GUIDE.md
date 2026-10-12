@@ -301,7 +301,8 @@ at once. Each run shows as a card in the conversation; click it for the
 result and changed files, or **Open transcript** for its own conversation.
 A write subagent's changes reach your project only when the main agent
 applies its diff, with your usual edit approval. Approvals a subagent needs
-appear in this conversation, labelled with its name.
+appear in this conversation, labelled with its name. How many run at once,
+how many a task may start and their step limit are in **Settings › Agent**.
 
 ### Roles: a model for each step
 
@@ -364,8 +365,9 @@ reply.
   approvals, without selecting a model or sending another model request.
   Your unsent message stays in the composer. Output and a new check result
   appear in the conversation; earlier results remain in history. Commands
-  have a five-minute maximum, or your shorter configured tool timeout. A
-  passing exit code confirms that check, not every requirement of the task.
+  have a five-minute maximum, or your shorter tool time limit (**Settings ›
+  Agent**). A passing exit code confirms that check, not every requirement
+  of the task.
 - **Review changes** appears only when files changed. It opens the task's
   review across the whole window: only the files this task changed, each
   compared with how it was before the task. Files are grouped riskiest
@@ -398,9 +400,10 @@ reply.
   subscription turn, ShadowCode takes a checkpoint of the project. In a Git
   repository it is a hidden commit under `refs/shadowcode/checkpoints/`; your
   branch, index and staged changes are untouched. In a folder without Git it
-  is a copy, for folders up to 5,000 files and 64 MB. A larger folder
-  shows *Rewind does not cover this command*. Stop the task first (for a
-  subscription, wait for the turn to end). Rewind asks first and lists the
+  is a copy, for folders up to 5,000 files and 64 MB (change both in
+  **Settings › Agent**). A larger folder shows *Rewind does not cover this
+  command*. Stop the task first (for a subscription, wait for the turn to
+  end). Rewind asks first and lists the
   files that will change. Afterwards a divider marks the conversation
   (*Rewound to here · 2 files restored*) and the notification offers
   **Undo**, which puts the files back as they were just before the rewind
@@ -884,6 +887,46 @@ from the model's prices; models on this computer show `$0 · local`. Click it
 for input, output and cached tokens, cost, model requests and the last
 compaction.
 
+## Agent settings
+
+**Settings › Agent** changes how ShadowCode's own agent works with models on
+this computer, API and OpenRouter models, without editing `config.yaml`.
+Each setting says what it does, its range and its default. **Reset** puts
+one setting back and **Reset all to defaults** the whole page; nothing
+changes until you **Save**. A value out of range is marked under its field
+and Save waits until it's fixed. If ShadowCode still refuses a save, the
+reason is shown above Save.
+
+- **Limits.** Steps per task (64 by default), the token budget per task
+  (1,000,000), the autonomy profile, how long one tool call may run (60
+  seconds), how much of a tool's output the agent reads (256,000 bytes), and
+  whether read-only tools of one turn run together. A profile can lower the
+  token budget, never raise it: *Conservative* stops a task at 64,000
+  tokens, *Normal* at 1,000,000 and *Extended* at 4,000,000; *Unlimited* and
+  *Custom* use the budget as set.
+- **Long conversations.** When history is shortened (at 0.7, 70% of the
+  context), whether the model summarizes what was removed, and how long to
+  wait for that summary.
+- **Recovery.** Provider retries and the wait before the first one, how many
+  times a task is sent back when it stopped without doing or checking the
+  work, and the pause when the agent seems stuck.
+- **Subagents.** Whether the agent may start subagents, how many run at once
+  (4) and per task (16), how deep they nest (1: no grandchildren; 0 turns
+  them off), and the step limit of one whose definition sets none (24).
+- **Checkpoints.** Checkpoints before shell commands and before subscription
+  turns (both on; Rewind needs them), how many are kept per repository
+  (200), and the largest folder without Git that is copied (5,000 files,
+  64 MB).
+- **Checks.** Commands that count as checks of a task's work when they run
+  exactly as written in the project folder, such as `cargo test --offline`.
+  They ask for approval like any command, and ShadowCode never runs them on
+  its own. See [verification receipts](VERIFICATION_RECEIPTS.md).
+
+The page saves only the settings you changed. Subscriptions use only its
+checkpoint settings. A trusted project can change Limits, Long conversations
+and Recovery for itself in `.shadow/config/config.yaml` (the `agent` group).
+To edit by hand, every key is in [config.example.yaml](../config.example.yaml).
+
 ## Code intelligence
 
 With a local or OpenRouter model, ShadowCode helps the agent understand the
@@ -1073,7 +1116,8 @@ Subscription CLIs use their own sandboxes, not this one.
   stays in the conversation, so later messages start from it. For models with
   less than 8K of context, or when the summary fails or takes longer than a
   minute, a built-in digest is used instead. The full history always stays in
-  the app. Turn summaries off with `agent.summary_compaction: false`.
+  the app. Turn summaries off in **Settings › Agent**
+  (`agent.summary_compaction: false`).
 - **Shorten on purpose, keep what matters.** Type `/compact` to shorten the
   conversation when you send your next message, however long it is: every
   earlier step except the latest answer becomes the summary. Type
@@ -1088,7 +1132,7 @@ Subscription CLIs use their own sandboxes, not this one.
   files and **Only change these**) or **Stop**. Tasks nobody can answer the
   card for (automations, subagents, and tasks started from an editor or the
   terminal UI) don't pause: the agent is told to try another way. Turn it
-  off with `agent.stuck_check: false`.
+  off in **Settings › Agent** (`agent.stuck_check: false`).
 - **Heads-ups when a task finishes.** If a task skipped or deleted tests,
   removed assertions, changed CI or hook settings, switched off a lint or
   type check in the code, or rewrote test snapshots, the conversation says
@@ -1101,14 +1145,16 @@ Subscription CLIs use their own sandboxes, not this one.
   about file by file, so the conversation names any other file a command
   changed. Subscriptions can't be stopped mid-turn, so after each turn the
   conversation names any file they changed elsewhere; **Review** can undo
-  it. This check needs project checkpoints (`checkpoints.shell` for
-  commands, `checkpoints.vendor` for subscriptions, both on by default).
+  it. This check needs project checkpoints (**Settings › Agent ›
+  Checkpoints**: `checkpoints.shell` for commands, `checkpoints.vendor` for
+  subscriptions, both on by default).
   Without one, for example in a large folder that isn't under Git, the
   conversation says the commands or the turn weren't checked.
 - **Busy or dropped providers.** A request that fails with a rate limit, an
   overloaded or failing provider, or a connection that drops mid-answer is
-  sent again, up to three times (`agent.model_retries`), waiting longer each
-  time or as long as the provider asks. The conversation shows it, for
+  sent again, up to three times (**Provider retries** in **Settings ›
+  Agent**, `agent.model_retries`), waiting longer each time or as long as
+  the provider asks. The conversation shows it, for
   example *Provider busy, retrying (2 of 5) in 4 s…*, and then *The provider
   was busy; it answered after 2 retries.* A reply that was cut off is thrown
   away and replaced; tools only run after a complete reply, so nothing runs

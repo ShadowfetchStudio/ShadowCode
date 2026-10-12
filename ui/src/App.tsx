@@ -891,13 +891,14 @@ export default function App() {
                 onChanged: () => void roles.reload(),
               }
             : undefined,
-          onSave: async (values) => {
+          onSave: async (values, options) => {
             try {
               await api.saveConfig(values);
               await ws.reloadConfig();
               void picker.reload();
               toast("Settings saved", "ok");
             } catch (e) {
+              if (options?.rethrow) throw e;
               toast(String(e), "err");
             }
           },

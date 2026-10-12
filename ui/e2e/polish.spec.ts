@@ -28,6 +28,7 @@ test.afterEach(async ({ page }) => {
 const SECTIONS = [
   "Accounts",
   "Local models",
+  "Agent",
   "Code intelligence",
   "Rules & skills",
   "Voice",

@@ -7,6 +7,7 @@ const SETTINGS_SECTIONS = [
   "accounts",
   "local",
   "roles",
+  "agent",
   "code",
   "rules",
   "voice",

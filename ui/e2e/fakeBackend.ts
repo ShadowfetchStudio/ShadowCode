@@ -372,6 +372,31 @@ export function installFakeBackend(options: FakeOptions = {}) {
       cli_agents: { enabled: true },
       guardian: { enabled: false, interval_sec: 3600 },
       limits: { on_limit: "local", fallback_model: "" },
+      // The engine's defaults (config.rs). `subagents` is returned only
+      // once it has been saved; until then the engine uses its defaults.
+      agent: {
+        max_steps: 64,
+        tool_timeout_sec: 60,
+        parallel_reads: true,
+        compact_ratio: 0.7,
+        model_retries: 3,
+        retry_backoff_sec: 1.0,
+        max_fix_retries: 3,
+        max_output_bytes: 256_000,
+        max_task_tokens: 1_000_000,
+        autonomy_profile: "normal",
+        summary_compaction: true,
+        summary_timeout_sec: 60,
+        stuck_check: true,
+      },
+      checkpoints: {
+        shell: true,
+        vendor: true,
+        keep: 200,
+        max_copy_files: 5000,
+        max_copy_bytes: 67_108_864,
+      },
+      verification: { commands: [] as string[] },
     },
     vendors: {
       codex: {
