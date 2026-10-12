@@ -1155,7 +1155,7 @@ Subscription CLIs use their own sandboxes, not this one.
   sent again, up to three times (**Provider retries** in **Settings ›
   Agent**, `agent.model_retries`), waiting longer each time or as long as
   the provider asks. The conversation shows it, for
-  example *Provider busy, retrying (2 of 5) in 4 s…*, and then *The provider
+  example *Provider busy, retrying (2 of 3) in 4 s…*, and then *The provider
   was busy; it answered after 2 retries.* A reply that was cut off is thrown
   away and replaced; tools only run after a complete reply, so nothing runs
   twice. Errors such as a wrong key or an unknown model are shown at once. If
