@@ -839,6 +839,28 @@ and `.env` files suggest. Nothing runs until you save it.
   in the agent's answers. When the title doesn't show the words, the result
   shows the message or answer that matched, with the words highlighted.
 
+## Appearance and text size
+
+**Settings › Appearance** chooses the theme (*System* follows your
+computer's light or dark setting) and the text size, from 80% to 175%. Both
+change as you pick them, so you see the result before you keep it: **Save**
+keeps them, and leaving the page or Settings without saving puts back what
+you had. **Reset to 100%** goes back to the normal size.
+
+Anywhere in the window:
+
+- `Ctrl+=` (or `Ctrl++`) makes everything larger, `Ctrl+-` smaller, and
+  `Ctrl+0` goes back to 100%. The new size shows for a moment at the top
+  right and is saved straight away.
+- Inside a terminal these keys belong to the shell, and in a dialog to the
+  dialog.
+- The command palette (`Ctrl+K`) has *Theme: same as the system*, *Theme:
+  light* and *Theme: dark*, and *Zoom in*, *Zoom out* and *Reset zoom to
+  100%*.
+
+The keyboard shortcuts (`?`) list these keys too. The theme and size are
+part of your settings, so a browser using remote access gets them as well.
+
 ## Notifications
 
 When the window is in the background, or the task is in another

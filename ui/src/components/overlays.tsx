@@ -34,6 +34,14 @@ const SHORTCUT_GROUPS: { label: string; rows: [string, string][] }[] = [
     ],
   },
   {
+    label: "Text size",
+    rows: [
+      ["Ctrl+=", "Zoom in (larger text)"],
+      ["Ctrl+-", "Zoom out (smaller text)"],
+      ["Ctrl+0", "Reset to 100%"],
+    ],
+  },
+  {
     label: "Other",
     rows: [
       ["Ctrl+,", "Settings"],

@@ -12,9 +12,10 @@ import { BootScreen, Toasts } from "./components/shell/Chrome";
 import { composerAccess } from "./components/shell/ComposerDock";
 import { AppDialogs, type Overlay } from "./components/shell/AppDialogs";
 import { paletteItems } from "./components/shell/palette";
+import { ZoomStatus } from "./components/shell/ZoomStatus";
 import { useConversation } from "./hooks/useConversation";
 import { useToasts } from "./hooks/useToasts";
-import { useTheme } from "./hooks/useTheme";
+import { useAppearance } from "./hooks/useAppearance";
 import { useFeed } from "./hooks/useFeed";
 import { useShortcuts, type ShortcutAction } from "./hooks/useShortcuts";
 import { useWorkspace } from "./hooks/useWorkspace";
@@ -116,11 +117,12 @@ export default function App() {
     void allowance.reload();
   };
   const memory = useDrawerMemory(workspace);
-  useTheme(
-    ws.configLoaded
-      ? String((cfg.ui as { theme?: string } | undefined)?.theme || "system")
-      : undefined,
-  );
+  const appearance = useAppearance({
+    cfg,
+    loaded: ws.configLoaded,
+    reloadConfig: ws.reloadConfig,
+    toast,
+  });
 
   function openSettings(
     section: SettingsSection = "accounts",
@@ -478,6 +480,9 @@ export default function App() {
     export: () => exportSession(),
     help: () => setOverlay("help"),
     find: () => setFind((n) => n + 1),
+    "zoom-in": () => appearance.zoom(1),
+    "zoom-out": () => appearance.zoom(-1),
+    "zoom-reset": () => appearance.zoom(0),
     "previous-conversation": conversations.previous,
     "next-conversation": conversations.next,
     "recent-conversation": conversations.recent,
@@ -637,18 +642,9 @@ export default function App() {
       openSettings(section, advanced ? { advanced } : {}),
     exportTask: exportSession,
     stop: () => void controls.stop(),
-    toggleTheme: () =>
-      void api
-        .saveConfig({
-          ui: {
-            theme:
-              document.documentElement.dataset.theme === "dark"
-                ? "light"
-                : "dark",
-          },
-        })
-        .then(ws.reloadConfig)
-        .catch((e) => toast(String(e), "err")),
+    theme: appearance.setTheme,
+    themeInUse: appearance.theme,
+    zoom: appearance.zoom,
     help: () => setOverlay("help"),
     find: () => setFind((n) => n + 1),
   });
@@ -837,6 +833,7 @@ export default function App() {
         />
       )}
       <Toasts toasts={toasts} onDismiss={dismiss} />
+      <ZoomStatus notice={appearance.notice} />
       {rewinding.asking && (
         <RewindDialog
           paths={rewinding.asking.paths}
@@ -898,6 +895,7 @@ export default function App() {
                 onChanged: () => void roles.reload(),
               }
             : undefined,
+          appearance: appearance.controls,
           onSave: async (values, options) => {
             try {
               await api.saveConfig(values);

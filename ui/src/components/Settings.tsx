@@ -13,6 +13,7 @@ import { AboutPage } from "./settings/AboutPage";
 import { DataPage } from "./settings/DataPage";
 import { RolesPage, type RolesPageProps } from "./settings/RolesPage";
 import { RulesPage } from "./settings/RulesPage";
+import type { AppearanceControls } from "../hooks/useAppearance";
 
 export type SettingsSection =
   | "accounts"
@@ -78,6 +79,8 @@ export type SettingsProps = {
   planLimit?: ReactNode;
   /** Roles › the open project and conversation. */
   roles?: RolesPageProps;
+  /** Appearance › the window's theme and text size, previewed live. */
+  appearance?: AppearanceControls;
 };
 
 export function Settings({
@@ -99,6 +102,7 @@ export function Settings({
   onUseSkill,
   planLimit,
   roles,
+  appearance,
 }: SettingsProps) {
   const [section, setSection] = useState<SettingsSection>(initialSection);
   const [advanced, setAdvanced] = useState<AdvancedTab>(initialAdvanced);
@@ -154,7 +158,7 @@ export function Settings({
           <PermissionsPage cfg={cfg} onSave={onSave} />
         )}
         {section === "appearance" && (
-          <AppearancePage cfg={cfg} onSave={onSave} />
+          <AppearancePage cfg={cfg} appearance={appearance} onSave={onSave} />
         )}
         {section === "remote" && <RemotePage onToast={onToast} />}
         {section === "data" && <DataPage onToast={onToast} />}

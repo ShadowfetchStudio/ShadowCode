@@ -29,6 +29,9 @@ export type ShortcutAction =
   | "export"
   | "help"
   | "find"
+  | "zoom-in"
+  | "zoom-out"
+  | "zoom-reset"
   | "previous-conversation"
   | "next-conversation"
   | "recent-conversation";
@@ -73,6 +76,11 @@ export function shortcutFor(
   // Dialogs own the keyboard while they are open.
   if (open.overlay || open.trust || open.consent || open.onboarding)
     return null;
+  // Text size, as in a browser: Ctrl+= or Ctrl++ (with Shift or on the
+  // keypad), Ctrl+- and Ctrl+0.
+  if (mod && !e.altKey && (key === "=" || key === "+")) return "zoom-in";
+  if (mod && !e.altKey && (key === "-" || key === "_")) return "zoom-out";
+  if (mod && !e.altKey && key === "0") return "zoom-reset";
   if (mod && key === "k") return "palette";
   if (mod && key === "b" && !e.shiftKey) return "sidebar";
   if (mod && e.shiftKey && key === "b") return "changes";

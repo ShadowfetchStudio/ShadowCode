@@ -12,6 +12,18 @@ import {
   terminalApi,
   type TerminalChunk,
 } from "../lib/terminal";
+import { cssZoom, onCssZoom } from "../hooks/useZoom";
+
+const FONT_SIZE = 12.5;
+
+/** xterm.js maps the pointer with window coordinates over cell sizes it
+ * measured unzoomed, so under a CSS-zoomed root (a plain browser) clicks
+ * and selections would land on the wrong cells. The terminal undoes the
+ * zoom on its own box and scales its font instead; the desktop's webview
+ * zoom needs neither (the CSS zoom is 1 there). */
+function unzoom(element: HTMLElement, zoom: number) {
+  element.style.zoom = zoom === 1 ? "" : String(1 / zoom);
+}
 
 function theme(): ITheme {
   const css = getComputedStyle(document.documentElement);
@@ -52,13 +64,14 @@ export function TerminalView({
       cursorBlink: true,
       fontFamily:
         css.getPropertyValue("--mono").trim() || "ui-monospace, monospace",
-      fontSize: 12.5,
+      fontSize: FONT_SIZE * cssZoom(),
       scrollback: 5000,
       allowProposedApi: false,
       theme: theme(),
     });
     const fit = new FitAddon();
     term.loadAddon(fit);
+    unzoom(element, cssZoom());
     term.open(element);
     const input = inputQueue(
       (data) => terminalApi.input(id, data),
@@ -98,6 +111,11 @@ export function TerminalView({
     });
     const observer = new ResizeObserver(() => refit());
     observer.observe(element);
+    const stopZoom = onCssZoom((zoom) => {
+      unzoom(element, zoom);
+      term.options.fontSize = FONT_SIZE * zoom;
+      refit();
+    });
     const recolour = new MutationObserver(() => {
       term.options.theme = theme();
     });
@@ -108,6 +126,7 @@ export function TerminalView({
     term.focus();
     return () => {
       stopWakeups();
+      stopZoom();
       observer.disconnect();
       recolour.disconnect();
       reader.stop();
@@ -121,7 +140,6 @@ export function TerminalView({
   return (
     <div
       className="terminal-screen"
-      ref={host}
       data-terminal={id}
       role="group"
       aria-label={title}
@@ -130,6 +148,8 @@ export function TerminalView({
           e.currentTarget.querySelector("textarea") as HTMLElement | null
         )?.focus()
       }
-    />
+    >
+      <div ref={host} style={{ height: "100%" }} />
+    </div>
   );
 }

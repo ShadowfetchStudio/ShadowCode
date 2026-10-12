@@ -52,6 +52,9 @@ export type FakeOptions = {
   /** Earlier conversations in the project, by title, newest first (s2,
    * s3, …), all older than the open one. */
   conversations?: string[];
+  /** The `ui` settings group survives a reload of the window, as the
+   * engine's config file does (kept in this tab's session storage). */
+  keepUi?: boolean;
 };
 
 export function installFakeBackend(options: FakeOptions = {}) {
@@ -368,7 +371,13 @@ export function installFakeBackend(options: FakeOptions = {}) {
         },
       },
       network: { mode: options.network || "online" },
-      ui: { theme: "light", notify: true },
+      ui: {
+        theme: "light",
+        notify: true,
+        ...(options.keepUi
+          ? JSON.parse(sessionStorage.getItem("shadow-fake-config-ui") || "{}")
+          : {}),
+      },
       cli_agents: { enabled: true },
       guardian: { enabled: false, interval_sec: 3600 },
       limits: { on_limit: "local", fallback_model: "" },
@@ -2955,6 +2964,11 @@ export function installFakeBackend(options: FakeOptions = {}) {
         const values = body.values || {};
         for (const [k, v] of Object.entries(values))
           state.config[k] = { ...(state.config[k] || {}), ...(v as Json) };
+        if (options.keepUi)
+          sessionStorage.setItem(
+            "shadow-fake-config-ui",
+            JSON.stringify(state.config.ui),
+          );
       }
       return state.config;
     }
