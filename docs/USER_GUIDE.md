@@ -175,7 +175,10 @@ non-default reasoning effort stays marked on the **More** button.
   and how the selected vendor applies it.
 - **Slash commands.** Type `/` to browse them. `/plan` and `/review` start
   read-only tasks. `/model` opens the picker. Claude Code commands in
-  `.claude/commands/` appear here too.
+  `.claude/commands/` appear here too. Commands whose names start with what
+  you typed come first, then ones whose name or description contains it.
+  `↑`/`↓` move through the list; `Enter` or `Tab` puts the highlighted
+  command in the composer, and the next `Enter` sends it.
 - **Agents.** Start a message with `@explore`, `@plan`, `@review`, `@general`
   or a project agent's name to run that subagent first. Type `@` to list them.
 - **Files and folders.** Type `@` anywhere, then part of a path, to pick a

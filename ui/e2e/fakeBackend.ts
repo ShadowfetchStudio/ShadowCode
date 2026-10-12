@@ -4328,7 +4328,31 @@ export function installFakeBackend(options: FakeOptions = {}) {
       }
       return { ...approval, pending: false };
     }
-    if (path === "/api/commands") return { commands: [] };
+    if (path === "/api/commands")
+      // A few of the engine's built-ins, in its order, for the / menu.
+      return {
+        commands: [
+          ["help", "List native commands and project workflows", ""],
+          [
+            "status",
+            "Show the selected model, permissions, and active work",
+            "",
+          ],
+          ["model", "Show or select a registered model", "[id]"],
+          ["models", "List registered and detected models", ""],
+          ["plan", "Plan a task with read-only tools", "<task>"],
+          ["review", "Review project changes with read-only tools", "[focus]"],
+          ["diff", "Show pending changes", "[path]"],
+          ["new", "Start a new conversation", ""],
+        ].map(([name, description, arg_spec]) => ({
+          name,
+          description,
+          arg_spec,
+          alias: "",
+          source: "builtin",
+          kind: "builtin",
+        })),
+      };
     if (path === "/api/workspace/git") {
       const lane = laneFor(state.selected);
       return {

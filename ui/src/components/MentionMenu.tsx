@@ -108,6 +108,7 @@ export function MentionMenu({
   return (
     <div
       className="slash-menu mention-menu"
+      id="mention-menu"
       role="listbox"
       aria-label="Mentions"
     >
