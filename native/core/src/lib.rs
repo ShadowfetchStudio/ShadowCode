@@ -21,6 +21,7 @@ pub mod context;
 pub mod control;
 pub mod data;
 pub mod effort;
+pub mod endpoints;
 pub mod engine;
 pub mod events;
 pub mod flatpak;

@@ -1448,6 +1448,10 @@ impl Store {
             params![model["id"].as_str().context("Model ID required")?,model["name"].as_str().context("Model name required")?,model["provider"].as_str().context("Provider required")?,model["endpoint"].as_str().unwrap_or(""),model["context_limit"].as_u64().unwrap_or(128000),model.get("metadata").unwrap_or(&json!({})).to_string()])?;
         Ok(())
     }
+    /// Removes one registry model; true when a row was deleted.
+    pub fn delete_model(&self, id: &str) -> Result<bool> {
+        Ok(self.execute("DELETE FROM models WHERE id=?", [id])? > 0)
+    }
     pub fn upsert_detected_model(&self, model: &Value) -> Result<()> {
         self.execute("INSERT INTO models(id,name,provider,endpoint,context_limit,metadata) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET context_limit=CASE WHEN json_extract(models.metadata,'$.api_key_env') IS NULL THEN excluded.context_limit ELSE models.context_limit END,metadata=json_patch(models.metadata,excluded.metadata) WHERE models.name=excluded.name AND models.provider=excluded.provider AND models.endpoint=excluded.endpoint",
             params![model["id"].as_str().context("Model ID required")?,model["name"].as_str().context("Model name required")?,model["provider"].as_str().context("Provider required")?,model["endpoint"].as_str().context("Endpoint required")?,model["context_limit"].as_u64().context("Context limit required")?,model["metadata"].to_string()])?;

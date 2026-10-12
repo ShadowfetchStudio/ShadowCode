@@ -206,6 +206,40 @@ describe("grouping", () => {
     expect(vendorLabel(qwen)).toBe("OpenRouter");
   });
 
+  it("puts your own endpoints with local models or API rows, named after their server", () => {
+    const local = row({
+      id: "model:aaa",
+      provider: "ollama",
+      group: "local",
+      inference: "local",
+      name: "qwen3-coder:30b · This computer",
+      subtitle: "Ollama · 127.0.0.1:11434",
+      custom: true,
+    });
+    const cloud = row({
+      id: "model:bbb",
+      provider: "openai_compatible",
+      group: "api",
+      name: "deepseek-chat",
+      subtitle: "OpenAI-compatible · api.deepseek.com",
+      availability: "sign_in",
+      availability_label: "Add API key",
+      custom: true,
+    });
+    const groups = groupTargets([local, cloud]);
+    expect(groups.local).toEqual([local]);
+    expect(groups.api).toEqual([cloud]);
+    expect(groups.subscriptions).toEqual([]);
+    expect(vendorLabel(cloud)).toBe("OpenAI-compatible");
+    expect(vendorKey(local)).toBe("local");
+    expect(matchesQuery(cloud, "deepseek")).toBe(true);
+    // A missing key sends the user to Accounts, where the endpoint card is.
+    expect(rowAction(cloud)).toEqual({
+      kind: "connect",
+      vendor: "openai_compatible",
+    });
+  });
+
   it("collapses OpenRouter to one section and searches name, slug and subtitle", () => {
     const rows = Array.from({ length: 40 }, (_, i) =>
       openrouter(`vendor/model-${i}`, `Vendor: Model ${i}`),

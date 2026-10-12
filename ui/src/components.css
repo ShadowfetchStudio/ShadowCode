@@ -2208,3 +2208,76 @@ div.activity-step {
     grid-template-columns: 1fr;
   }
 }
+/* Accounts › Your own endpoints. */
+.endpoint-rows {
+  list-style: none;
+  margin: 2px 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.endpoint-rows li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+}
+.endpoint-rows li > p {
+  flex-basis: 100%;
+}
+.endpoint-row-name {
+  display: grid;
+  min-width: 0;
+  flex: 1 1 220px;
+}
+.endpoint-row-name strong {
+  overflow-wrap: anywhere;
+}
+.endpoint-row-name small {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.endpoint-row-actions {
+  gap: 4px;
+}
+.endpoint-test-ok {
+  color: var(--text-2);
+}
+.endpoint-form,
+.endpoint-models {
+  display: grid;
+  gap: 8px;
+}
+.endpoint-form h5 {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+.endpoint-models {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  margin: 0;
+}
+.endpoint-models legend {
+  color: var(--text-2);
+  font-size: 12.5px;
+  padding: 0 4px;
+}
+.endpoint-models .check {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.endpoint-advanced summary {
+  cursor: pointer;
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.endpoint-advanced[open] {
+  display: grid;
+  gap: 8px;
+}
+.endpoint-manual .row input {
+  flex: 1;
+}

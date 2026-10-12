@@ -630,6 +630,10 @@ export function installFakeBackend(options: FakeOptions = {}) {
         : null) as null | Json,
       fetched_at: (options.openrouterKey ? now() - 600 : null) as null | number,
     },
+    /** Your own endpoints (POST /api/models/endpoints): registered models
+     * and the keys saved for them (never served back). */
+    endpoints: [] as Json[],
+    endpointKeys: {} as Record<string, string>,
     /** Paid-model spending today (GET /api/spending). */
     spentToday: 0.42,
     jobs: [] as Json[],
@@ -1033,6 +1037,113 @@ export function installFakeBackend(options: FakeOptions = {}) {
       },
     };
   }
+  /** Two servers the endpoint form can reach: Ollama on this computer
+   * (no key) and a cloud API that wants `sk-example-good`. */
+  const endpointServers: Record<string, { key: string; models: string[] }> = {
+    "http://127.0.0.1:11434/v1": {
+      key: "",
+      models: ["qwen3-coder:30b", "gemma4:12b"],
+    },
+    "https://api.example.com/v1": {
+      key: "sk-example-good",
+      models: ["example-coder", "example-mini"],
+    },
+  };
+  const endpointLabels: Record<string, string> = {
+    ollama: "Ollama",
+    local: "LM Studio / local",
+    llamacpp: "llama.cpp",
+    vllm: "vLLM",
+    grok: "Grok / xAI",
+    openai_compatible: "OpenAI-compatible",
+  };
+  function endpointAddress(raw: string) {
+    let url: URL;
+    try {
+      url = new URL(String(raw || "").trim());
+    } catch {
+      throw new Error(
+        JSON.stringify({
+          error: `Enter a web address such as http://127.0.0.1:11434/v1; found ${JSON.stringify(raw)}`,
+        }),
+      );
+    }
+    if (url.pathname === "/" || url.pathname === "") url.pathname = "/v1";
+    return url.toString().replace(/\/$/, "");
+  }
+  function endpointKeyName(provider: string, endpoint: string) {
+    if (provider === "grok") return "XAI_API_KEY";
+    if (provider === "ollama") return "OLLAMA_API_KEY";
+    if (provider !== "openai_compatible") return "OPENAI_API_KEY";
+    const host = new URL(endpoint).hostname;
+    const labels = host.split(".");
+    if (labels.length < 2 || /^[\d.]+$/.test(host)) return "OPENAI_API_KEY";
+    return `${labels[labels.length - 2].toUpperCase()}_API_KEY`;
+  }
+  function endpointRow(m: Json) {
+    const url = new URL(m.endpoint);
+    const local = ["127.0.0.1", "localhost", "[::1]"].includes(url.hostname);
+    const offline = state.config.network?.mode === "offline";
+    const missingKey = m.key_required && !state.endpointKeys[m.api_key_env];
+    return {
+      id: m.id,
+      provider: m.provider,
+      account: "",
+      model: m.name,
+      route: "native",
+      group: local ? "local" : "api",
+      name: local ? `${m.name} · This computer` : m.name,
+      subtitle: `${endpointLabels[m.provider] || "OpenAI-compatible"} · ${url.host}`,
+      inference: local ? "local" : "cloud",
+      availability:
+        offline && !local ? "unavailable" : missingKey ? "sign_in" : "ready",
+      availability_label:
+        offline && !local
+          ? "Unavailable"
+          : missingKey
+            ? "Add API key"
+            : "Ready",
+      reason:
+        offline && !local
+          ? "Offline mode: only models on this computer run"
+          : missingKey
+            ? `Add the API key for ${url.host} in Settings › Accounts`
+            : "",
+      featured: false,
+      vision: Boolean(m.vision),
+      tools: true,
+      is_default: false,
+      usage: local
+        ? {
+            ...unknownUsage,
+            state: "local",
+            label: "Runs on this computer · No subscription quota",
+          }
+        : {
+            ...unknownUsage,
+            state: "api_key",
+            label: "Your endpoint · billed by the provider",
+          },
+      endpoint: m.endpoint,
+      custom: true,
+    };
+  }
+  function endpointTarget(body: Json) {
+    const provider = String(body?.provider || "");
+    if (!endpointLabels[provider])
+      throw new Error(
+        JSON.stringify({
+          error:
+            "Choose a provider: Ollama, LM Studio, llama.cpp, vLLM, xAI or OpenAI-compatible",
+        }),
+      );
+    const endpoint = endpointAddress(body?.endpoint);
+    const keyName =
+      String(body?.api_key_env || "").trim() ||
+      endpointKeyName(provider, endpoint);
+    return { provider, endpoint, keyName };
+  }
+
   function pickerTargets() {
     const rows: Json[] = [];
     for (const [key, v] of Object.entries(state.vendors) as [string, Json][]) {
@@ -1041,6 +1152,7 @@ export function installFakeBackend(options: FakeOptions = {}) {
       else rows.push(vendorRow(key, v));
     }
     for (const m of openrouterModels) rows.push(openrouterRow(m));
+    for (const m of state.endpoints) rows.push(endpointRow(m));
     for (const m of state.local.models as Json[])
       rows.push({
         id: m.id,
@@ -3071,6 +3183,102 @@ export function installFakeBackend(options: FakeOptions = {}) {
       state.openrouter.fetched_at = now();
       return openrouterStatus();
     }
+    if (path === "/api/providers/models" && method === "POST") {
+      const { provider, endpoint, keyName } = endpointTarget(body);
+      const server = endpointServers[endpoint];
+      const local = endpoint.startsWith("http://127.0.0.1");
+      if (state.config.network?.mode === "offline" && !local)
+        throw new Error(
+          JSON.stringify({
+            error: "Offline mode: only servers on this computer can be reached",
+          }),
+        );
+      if (!server)
+        throw new Error(
+          JSON.stringify({
+            error: `Could not reach ${endpoint}: nothing is listening there, or the network refused the connection`,
+          }),
+        );
+      const typed = String(body?.api_key || "").trim();
+      const key = typed || state.endpointKeys[keyName] || "";
+      if (server.key && key !== server.key)
+        throw new Error(
+          JSON.stringify({
+            error: `${endpoint} answered 401; check the API key`,
+          }),
+        );
+      return {
+        ok: true,
+        provider,
+        label: endpointLabels[provider],
+        endpoint,
+        api_key_env: keyName,
+        key_saved: Boolean(state.endpointKeys[keyName]),
+        local,
+        models: server.models.map((id) => ({
+          id,
+          name: id,
+          size_bytes: 0,
+          context_limit: 0,
+          capabilities: { completion: true },
+          detail: "",
+        })),
+      };
+    }
+    if (path === "/api/models/endpoints" && method === "POST") {
+      const { provider, endpoint, keyName } = endpointTarget(body);
+      const names = [
+        ...new Set(
+          ((body?.models || []) as string[])
+            .map((n) => String(n).trim())
+            .filter(Boolean),
+        ),
+      ];
+      if (!names.length)
+        throw new Error(JSON.stringify({ error: "Choose at least one model" }));
+      const typed = String(body?.api_key || "").trim();
+      if (typed) state.endpointKeys[keyName] = typed;
+      const added = names.map((name) => {
+        const id = `model:${provider}:${endpoint}:${name}`;
+        const model = {
+          id,
+          provider,
+          endpoint,
+          name,
+          api_key_env: keyName,
+          key_required: Boolean(state.endpointKeys[keyName]),
+          vision: body?.vision === true,
+        };
+        state.endpoints = [
+          ...state.endpoints.filter((m: Json) => m.id !== id),
+          model,
+        ];
+        return {
+          default: id,
+          name,
+          provider,
+          endpoint,
+          api_key_env: keyName,
+        };
+      });
+      return { ok: true, models: added };
+    }
+    if (path === "/api/models/remove" && method === "POST") {
+      const before = state.endpoints.length;
+      state.endpoints = state.endpoints.filter((m: Json) => m.id !== body?.id);
+      if (state.endpoints.length === before)
+        throw new Error(
+          JSON.stringify({ error: "That model is not in the registry" }),
+        );
+      return { ok: true, removed: 1 };
+    }
+    if (path === "/api/models/test" && method === "POST")
+      return {
+        ok: true,
+        reply: "I can respond.",
+        latency_ms: 420,
+        capabilities: { completion: true },
+      };
     if (path === "/api/openrouter/refresh" && method === "POST") {
       state.openrouter.fetched_at = now();
       return openrouterStatus();

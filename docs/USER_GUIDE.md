@@ -72,6 +72,7 @@ groups:
 - **API keys**: OpenRouter models, billed per token to your OpenRouter
   account. Add a key in **Settings › Accounts › OpenRouter**; until then the
   group offers *Add an OpenRouter API key…*. See [OpenRouter](OPENROUTER.md).
+  Models from your own cloud endpoints (below) join this group too.
 
 Each row shows Local or Cloud, its availability, a *Vision* or *Chat only*
 badge where it applies, and its usage line. Search filters rows. Vendors with
@@ -86,6 +87,27 @@ A row that isn't ready still opens something useful: *Sign in* opens
 
 ShadowCode stores the choice for the conversation and uses it as the project's
 default for new conversations.
+
+### Your own endpoints
+
+**Settings › Accounts › Your own endpoints** connects any server that speaks
+the OpenAI chat API: Ollama, LM Studio, a llama.cpp or vLLM server, xAI, OpenAI,
+or another compatible service. Choose **Add an endpoint…**, pick the server
+(its usual address is filled in), type an API key if it needs one, and choose
+**Find models**. Tick the models you want and choose **Add to the picker**.
+
+- A server on this computer joins **On this computer**; any other joins
+  **API keys** and is off in offline mode. Tasks on them run ShadowCode's own
+  agent, with the same tools, permissions and approvals as local models.
+- A typed key is saved on this computer only when you add models, under a
+  name chosen for the address (`api.deepseek.com` uses `DEEPSEEK_API_KEY`),
+  so two services never overwrite each other's key. **More options** changes
+  the name and marks models that can read images.
+- If a server doesn't list its models, add one by its exact name.
+- **Test** sends one short message and shows how long the answer took.
+  **Remove** takes a model out of the picker; its saved key stays.
+- Cloud endpoints bill you directly. ShadowCode shows a cost only when the
+  server reports one.
 
 ### How each model did in this project
 

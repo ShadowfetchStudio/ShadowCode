@@ -109,6 +109,7 @@ impl Service {
             }
             ("GET", "/api/models/outcomes") => self.model_outcomes(call).await,
             ("POST", "/api/models/test") => self.test_model(&call.body).await,
+            ("POST", "/api/providers/models") => self.endpoint_models(&call.body).await,
             _ => self.blocking(call, Self::model_routes_sync).await,
         }
     }
@@ -160,6 +161,8 @@ impl Service {
                 let cfg = self.config()?;
                 Ok(json!({"ok":true,"local_engine":local_catalog(&cfg)}))
             }
+            ("POST", "/api/models/endpoints") => self.add_endpoint_models(&call.body),
+            ("POST", "/api/models/remove") => self.remove_endpoint_model(body.id.as_str()),
             ("POST", "/api/models/register" | "/api/models/select") => {
                 let cfg = self.config()?;
                 let model = if !call.text("provider").is_empty() {
@@ -323,6 +326,21 @@ impl Service {
             key_set,
             offline,
         ));
+        // The user's own compatible endpoints. Each key name is looked up
+        // once, since a saved key may live in the system keyring.
+        let registry = model_registry::catalog(&self.engine.store(), &cfg.model)?;
+        let keys = std::cell::RefCell::new(HashMap::<String, bool>::new());
+        targets.extend(crate::endpoints::picker_rows(
+            &registry,
+            &cfg.model.default,
+            offline,
+            |name| {
+                *keys
+                    .borrow_mut()
+                    .entry(name.to_owned())
+                    .or_insert_with(|| matches!(config::secret(paths, name), Ok(Some(_))))
+            },
+        ));
         // Project last: provider observations may change while the local or
         // OpenRouter catalog is being read. Both vendor views must agree, and
         // an obsolete per-probe return must not overwrite a newer snapshot.
@@ -342,6 +360,141 @@ impl Service {
             "local_engine": local,
             "generated_at": crate::now(),
         }))
+    }
+    /// The provider, normalized address and key name of a request for one
+    /// of the user's compatible endpoints.
+    fn endpoint_target(&self, body: &Value) -> Result<(String, String, String)> {
+        let text = |key: &str| body[key].as_str().unwrap_or("").trim();
+        let provider = text("provider");
+        ensure!(
+            crate::endpoints::PROVIDERS.contains(&provider),
+            "Choose a provider: Ollama, LM Studio, llama.cpp, vLLM, xAI or OpenAI-compatible"
+        );
+        let preset = models::preset(provider);
+        let typed = text("endpoint");
+        let endpoint = models::normalize_endpoint(if typed.is_empty() {
+            preset["endpoint"].as_str().unwrap_or("")
+        } else {
+            typed
+        })?;
+        let key_env = match text("api_key_env") {
+            "" => crate::endpoints::key_name(provider, &endpoint),
+            name => name.to_owned(),
+        };
+        ensure!(
+            config::valid_secret_name(&key_env),
+            "The key name must be letters, digits and _, such as OPENAI_API_KEY"
+        );
+        Ok((provider.to_owned(), endpoint, key_env))
+    }
+    /// POST /api/providers/models {provider, endpoint?, api_key?,
+    /// api_key_env?}: the models one compatible server offers. Nothing is
+    /// saved. The key typed in the form is used, else (on this computer's
+    /// window only) the one saved under the key name, so a remote device
+    /// never sends a saved key to an address it chose.
+    async fn endpoint_models(&self, body: &Value) -> Result<Value> {
+        let (provider, endpoint, key_env) = self.endpoint_target(body)?;
+        let local = models::is_loopback_endpoint(&endpoint);
+        ensure!(
+            local || !self.config()?.offline(),
+            "Offline mode: only servers on this computer can be reached"
+        );
+        let saved = config::secret(self.engine.paths(), &key_env)?;
+        let key = match body["api_key"].as_str().map(str::trim) {
+            Some(typed) if !typed.is_empty() => Some(typed.to_owned()),
+            _ if self.remote_device => None,
+            _ => saved.clone(),
+        };
+        let client = models::list_client(&endpoint, Duration::from_secs(10))?;
+        let models = models::list_models(&client, &provider, &endpoint, key.as_deref()).await?;
+        Ok(json!({
+            "ok": true,
+            "provider": provider,
+            "label": models::preset(&provider)["label"],
+            "endpoint": endpoint,
+            "api_key_env": key_env,
+            "key_saved": saved.is_some(),
+            "local": local,
+            "models": models,
+        }))
+    }
+    /// POST /api/models/endpoints {provider, endpoint?, models: [name],
+    /// api_key?, api_key_env?, context_limit?, vision?}: adds models of one
+    /// compatible server to the registry, so the picker lists them, and
+    /// saves a typed key under `api_key_env`. Answers the added models.
+    fn add_endpoint_models(&self, body: &Value) -> Result<Value> {
+        let (provider, endpoint, key_env) = self.endpoint_target(body)?;
+        let mut names: Vec<String> = Vec::new();
+        for name in body["models"].as_array().into_iter().flatten() {
+            let name = name.as_str().unwrap_or("").trim();
+            if !name.is_empty() && !names.iter().any(|seen| seen == name) {
+                names.push(name.to_owned());
+            }
+        }
+        ensure!(!names.is_empty(), "Choose at least one model");
+        ensure!(names.len() <= 100, "Add at most 100 models at a time");
+        let paths = self.engine.paths();
+        let key = body["api_key"].as_str().unwrap_or("").trim();
+        if !key.is_empty() {
+            config::set_secret(paths, &key_env, key)?;
+        }
+        // With a key the server needs one: the row asks for it if it is
+        // removed later. Without one (Ollama, a server on the LAN) it never does.
+        let key_required = config::secret(paths, &key_env)?.is_some();
+        let context_limit =
+            model_registry::recommended_context(&provider, body["context_limit"].as_u64());
+        let mut extra = json!({"key_required": key_required, "added_in": "settings"});
+        if let Some(vision) = body["vision"].as_bool() {
+            extra["capabilities"] = json!({"completion": true, "vision": vision});
+        }
+        let mut added = Vec::new();
+        for name in names {
+            let model = ModelConfig {
+                default: model_registry::model_id(&provider, &endpoint, &name),
+                name,
+                provider: provider.clone(),
+                endpoint: endpoint.clone(),
+                api_key_env: key_env.clone(),
+                keep_alive: "30m".into(),
+                context_limit,
+            };
+            model_registry::validate(&model)?;
+            self.check_model_identity(&model)?;
+            self.register_with(&model, &extra)?;
+            added.push(model);
+        }
+        Ok(json!({"ok": true, "models": added}))
+    }
+    /// POST /api/models/remove {id}: removes a model added for one of the
+    /// user's endpoints, with any older registry row for the same server and
+    /// model. A saved key stays (another model may use it).
+    fn remove_endpoint_model(&self, id: &str) -> Result<Value> {
+        let cfg = self.config()?;
+        ensure!(
+            id != cfg.model.default,
+            "This model is the default in config.yaml (model:); change that first"
+        );
+        let store = self.engine.store();
+        let rows = store.models()?;
+        let row = rows
+            .iter()
+            .find(|row| row["id"] == id)
+            .context("That model is not in the registry")?;
+        ensure!(
+            crate::endpoints::is_endpoint_row(row),
+            "Only models added for your own endpoints can be removed here"
+        );
+        let target = model_registry::from_row(row)?;
+        let mut removed = 0;
+        for row in &rows {
+            let same = crate::endpoints::is_endpoint_row(row)
+                && model_registry::from_row(row)
+                    .is_ok_and(|model| model_registry::same_target(&model, &target));
+            if same && row["id"] != json!(cfg.model.default) {
+                removed += usize::from(store.delete_model(row["id"].as_str().unwrap_or(""))?);
+            }
+        }
+        Ok(json!({"ok": true, "removed": removed}))
     }
     pub(super) fn model_from_body(&self, body: &Value, fallback: &ModelConfig) -> ModelConfig {
         let provider = body["provider"]
@@ -418,6 +571,11 @@ impl Service {
         }
     }
     pub(super) fn register(&self, model: &ModelConfig) -> Result<()> {
+        self.register_with(model, &json!({}))
+    }
+    /// `register`, with extra metadata fields (`extra`'s keys replace the
+    /// stored ones).
+    fn register_with(&self, model: &ModelConfig, extra: &Value) -> Result<()> {
         model_registry::validate(model)?;
         let store = self.engine.store();
         let mut metadata = store
@@ -433,6 +591,9 @@ impl Service {
             .unwrap_or(json!({}));
         metadata["api_key_env"] = json!(model.api_key_env);
         metadata["keep_alive"] = json!(model.keep_alive);
+        for (key, value) in extra.as_object().into_iter().flatten() {
+            metadata[key] = value.clone();
+        }
         store.upsert_model(&json!({"id":model.default,"name":model.name,"provider":model.provider,"endpoint":model.endpoint,"context_limit":model.context_limit,"metadata":metadata}))
     }
     pub(super) fn check_model_identity(&self, model: &ModelConfig) -> Result<()> {
