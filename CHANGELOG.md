@@ -80,6 +80,12 @@
   misspelled, the wrong type or out of range (for example `max_parallel: 20`)
   is refused with the allowed range, instead of being clamped or ignored
   without a word. A `config.yaml` saved earlier still loads as before.
+- **Settings › Agent shows what it saves.** It showed the open project's own
+  `agent` values (from `.shadow/config/config.yaml`) as if they were the
+  profile's, while saving to the profile. It now shows and compares against
+  the profile's values and notes under a setting when the project uses
+  another, for example "This project uses 200.". `GET`/`PUT /api/config`
+  return `agent_profile` and `agent_project` for this.
 - **Stop at a spending limit** always ends the task as *cancelled*; it could
   end as *failed* when the answer reached the task before the engine did.
 

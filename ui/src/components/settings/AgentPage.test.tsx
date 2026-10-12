@@ -255,3 +255,33 @@ it("is a Settings section", () => {
   ).toBe("page");
   expect(screen.getByRole("heading", { name: "Agent" })).toBeTruthy();
 });
+
+it("shows the profile's own values and notes the ones the open project changes", async () => {
+  const onSave = vi.fn(async () => {});
+  // The open project sets 200 steps and turns parallel reads off for itself.
+  const cfg = {
+    ...CFG,
+    agent: { ...CFG.agent, max_steps: 200, parallel_reads: false },
+    agent_profile: CFG.agent,
+    agent_project: { max_steps: 200, parallel_reads: false },
+  };
+  render(<AgentPage cfg={cfg} onSave={onSave} />);
+  const steps = input("Steps per task");
+  expect(steps.value).toBe("64");
+  expect(describedBy(steps)).toContain("This project uses 200.");
+  expect(input("Run read-only tools of one turn together").checked).toBe(true);
+  expect(
+    describedBy(input("Run read-only tools of one turn together")),
+  ).toContain("This project uses off.");
+  expect(describedBy(input("Tool time limit"))).not.toContain("This project");
+  // Nothing changed against the profile, so there is nothing to save; a
+  // change is measured against the profile too.
+  expect(saveButton().disabled).toBe(true);
+  fireEvent.change(steps, { target: { value: "80" } });
+  fireEvent.click(saveButton());
+  await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+  expect(onSave).toHaveBeenCalledWith(
+    { agent: { max_steps: 80 } },
+    expect.anything(),
+  );
+});

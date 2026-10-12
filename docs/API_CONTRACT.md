@@ -1915,7 +1915,10 @@ See [SUBAGENTS.md](SUBAGENTS.md).
 - `GET /api/config` → the effective configuration for the selected project
   plus derived, read-only fields:
   `permissions.vendor_notes: {native, codex, claude, cursor, grok, antigravity, network}`
-  and `network.offline`. Sections: `model`, `permissions`, `agent`, `ui`,
+  and `network.offline`, plus `agent_profile` (the profile's own `agent`
+  values, which `PUT` saves) and `agent_project` (the `agent` keys a trusted
+  project's `.shadow/config/config.yaml` changes, with the values it uses;
+  `{}` when none). `PUT` returns both too. Sections: `model`, `permissions`, `agent`, `ui`,
   `onboarding`, `routing`, `mcp`, `hooks`, `verification`,
   `trusted_workspaces`, `guardian`, `cli_agents`, `local_engine`, `network`,
   `sandbox`, `checkpoints`, `limits`, `updates`, and, when saved, `code_intel`

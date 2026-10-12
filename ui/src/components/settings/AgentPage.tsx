@@ -15,6 +15,8 @@ import {
   formatNumber,
   parsed,
   profileCapNote,
+  profileView,
+  projectNote,
   rangeText,
   type AgentField,
   type Draft,
@@ -41,8 +43,10 @@ export function AgentPage({
   onSave: Save;
 }) {
   const uid = useId().replace(/:/g, "");
-  const [draft, setDraft] = useState<Draft>(() => draftFrom(cfg));
-  const [checks, setChecks] = useState<string[]>(() => checksFrom(cfg));
+  // Show and save the profile's values; a project's own ones are noted.
+  const saved = profileView(cfg);
+  const [draft, setDraft] = useState<Draft>(() => draftFrom(saved));
+  const [checks, setChecks] = useState<string[]>(() => checksFrom(saved));
   const [saving, setSaving] = useState(false);
   const [refused, setRefused] = useState("");
   const [refusedField, setRefusedField] = useState<string | null>(null);
@@ -57,7 +61,7 @@ export function AgentPage({
     Object.values(errors).filter(Boolean).length +
     checkProblems.rows.filter(Boolean).length +
     (checkProblems.list ? 1 : 0);
-  const patch = agentPatch(cfg, draft, checks);
+  const patch = agentPatch(saved, draft, checks);
   const changed = Object.keys(patch).length > 0;
   const defaults = defaultDraft();
   const atDefaults =
@@ -142,7 +146,12 @@ export function AgentPage({
           {section.intro && <p className="hint">{section.intro}</p>}
           {section.fields.map((field) => {
             const id = fieldId(field);
-            const note = id === "agent.max_task_tokens" ? capNote : "";
+            const note = [
+              id === "agent.max_task_tokens" ? capNote : "",
+              projectNote(cfg, field),
+            ]
+              .filter(Boolean)
+              .join(" ");
             return (
               <FieldRow
                 key={id}
@@ -352,6 +361,11 @@ function FieldRow({
           {resetButton}
         </div>
         {hint}
+        {note && (
+          <p className="warn-text agent-error" id={noteId}>
+            {note}
+          </p>
+        )}
       </div>
     );
   return (

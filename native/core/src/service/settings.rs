@@ -51,7 +51,13 @@ impl Service {
                     json!({"ok":true,"app":"ShadowCode","version":crate::VERSION,"workspace":self.workspace()?,"model":cfg.model,"onboarding":cfg.onboarding,"trusted":cfg.is_trusted(&self.workspace()?),"permissions":cfg.permissions,"provider":{"ok":cfg.model.provider!="mock","name":cfg.model.provider,"detail":provider_detail},"runtime":"rust","cli_agents":cfg.cli_agents}),
                 )
             }
-            ("GET", "/api/config") => config_view(&self.config()?),
+            ("GET", "/api/config") => {
+                let merged = self.config()?;
+                let profile = Config::load(self.engine.paths(), None)?;
+                let mut view = config_view(&merged)?;
+                agent_layers(&mut view, &profile, &merged);
+                Ok(view)
+            }
             ("PUT", "/api/config") => self.save_config(call),
             ("GET", "/api/routing") => {
                 let cfg = self.config()?;
@@ -174,7 +180,9 @@ impl Service {
             .vendors()
             .configure(&cfg.cli_agents, cfg.offline());
         self.register(&cfg.model)?;
-        config_view(&cfg)
+        let mut view = config_view(&cfg)?;
+        agent_layers(&mut view, &cfg, &self.config()?);
+        Ok(view)
     }
     /// POST /api/onboarding: save the first-run choices, trust the chosen
     /// folder and open a conversation in it.
@@ -232,6 +240,24 @@ impl Service {
 
 /// GET/PUT /api/config response: the saved configuration plus what the
 /// permission modes mean for each vendor runtime.
+/// Settings › Agent shows and saves the profile's `agent` values, while a
+/// trusted project may change some of them for itself. `agent_profile` holds
+/// the saved values and `agent_project` the keys the open project changes,
+/// with the values it uses.
+fn agent_layers(view: &mut Value, profile: &Config, merged: &Config) {
+    let saved = json!(profile.agent);
+    let used = json!(merged.agent);
+    let project: serde_json::Map<String, Value> = used
+        .as_object()
+        .into_iter()
+        .flatten()
+        .filter(|(key, value)| saved.get(key.as_str()) != Some(value))
+        .map(|(key, value)| (key.clone(), value.clone()))
+        .collect();
+    view["agent_profile"] = saved;
+    view["agent_project"] = Value::Object(project);
+}
+
 pub(super) fn config_view(cfg: &Config) -> Result<Value> {
     let mut value = json!(cfg);
     value["permissions"]["vendor_notes"] = permissions::vendor_notes(cfg);

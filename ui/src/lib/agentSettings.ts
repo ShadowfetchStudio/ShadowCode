@@ -470,6 +470,29 @@ export function agentPatch(
   return patch;
 }
 
+/** The configuration as Settings › Agent shows and saves it: the profile's
+ * own `agent` values (`agent_profile`), not the ones an open project changes
+ * for itself. */
+export function profileView(
+  cfg: Record<string, unknown>,
+): Record<string, unknown> {
+  const saved = groupOf(cfg, "agent_profile");
+  return "agent_profile" in cfg ? { ...cfg, agent: saved } : cfg;
+}
+
+/** "This project uses 40." when the open project changes this field. */
+export function projectNote(
+  cfg: Record<string, unknown>,
+  field: AgentField,
+): string {
+  if (field.group !== "agent") return "";
+  const value = groupOf(cfg, "agent_project")[field.key];
+  if (value === undefined || value === null) return "";
+  const shown =
+    typeof value === "boolean" ? (value ? "on" : "off") : String(value);
+  return `This project uses ${shown}.`;
+}
+
 /** The field a refused save names (`agent.max_steps must be …`). */
 export function fieldNamedIn(message: string): string | null {
   for (const field of AGENT_FIELDS)
