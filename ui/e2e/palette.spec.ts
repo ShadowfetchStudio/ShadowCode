@@ -38,8 +38,8 @@ const group = (page: Page, name: string) =>
 const panel = (page: Page, name: string) =>
   page
     .getByRole("complementary", { name: "Drawer" })
-    .getByRole("group", { name: "Panels" })
-    .getByRole("button", { name, exact: true });
+    .getByRole("tablist", { name: "Panels" })
+    .getByRole("tab", { name, exact: true });
 
 async function openPalette(page: Page) {
   await page.keyboard.press("Control+k");
@@ -103,7 +103,7 @@ test("finds commands by letters in order, emphasises the match and runs the best
   await search(page).fill("rev ch");
   await page.keyboard.press("Enter");
   await expect(palette(page)).toHaveCount(0);
-  await expect(panel(page, "Changes")).toHaveAttribute("aria-pressed", "true");
+  await expect(panel(page, "Changes")).toHaveAttribute("aria-selected", "true");
 });
 
 test("opens a conversation by name, as choosing it in the sidebar does", async ({
@@ -152,7 +152,7 @@ test("the commands run last come first when nothing is typed, after a reload too
   await openPalette(page);
   await page.keyboard.type("brow fi");
   await page.keyboard.press("Enter");
-  await expect(panel(page, "Files")).toHaveAttribute("aria-pressed", "true");
+  await expect(panel(page, "Files")).toHaveAttribute("aria-selected", "true");
 
   await page.reload();
   await expect(
@@ -222,5 +222,5 @@ test("arrows, Page Up/Down and Home/End move the active option and keep it in vi
   await openPalette(page);
   await palette(page).getByRole("option", { name: "Browse files" }).click();
   await expect(palette(page)).toHaveCount(0);
-  await expect(panel(page, "Files")).toHaveAttribute("aria-pressed", "true");
+  await expect(panel(page, "Files")).toHaveAttribute("aria-selected", "true");
 });

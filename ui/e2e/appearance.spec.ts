@@ -310,7 +310,7 @@ test("zoomed with CSS, the terminal and the editor put the pointer on the right 
   // The editor: a click before "beta" puts the cursor there.
   await drawer
     .locator(".drawer-tabs")
-    .getByRole("button", { name: "Files" })
+    .getByRole("tab", { name: "Files" })
     .click();
   await drawer.getByRole("button", { name: "README.md", exact: true }).click();
   const editor = drawer.getByRole("textbox", { name: "Edit README.md" });
