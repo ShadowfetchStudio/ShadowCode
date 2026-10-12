@@ -443,7 +443,8 @@ impl Service {
         let key_required = config::secret(paths, &key_env)?.is_some();
         let context_limit =
             model_registry::recommended_context(&provider, body["context_limit"].as_u64());
-        let mut extra = json!({"key_required": key_required, "added_in": "settings"});
+        let mut extra =
+            json!({"key_required": key_required, "added_in": crate::endpoints::ADDED_IN});
         if let Some(vision) = body["vision"].as_bool() {
             extra["capabilities"] = json!({"completion": true, "vision": vision});
         }

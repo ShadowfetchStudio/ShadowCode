@@ -387,6 +387,17 @@ async fn endpoint_requests_are_checked_before_anything_is_sent() {
     )
     .await
     .is_err());
+    // The config.yaml fallback model is registered by the engine itself; it
+    // is not one of the user's endpoint rows.
+    Config::patch(
+        &paths,
+        json!({"model": {"provider":"local","endpoint":"http://127.0.0.1:9/v1","name":"fixture","context_limit":16384}}),
+    )
+    .unwrap();
+    let models = call(&service, "GET", "/api/models?detect=false", Value::Null)
+        .await
+        .unwrap();
+    assert!(endpoint_rows(&json!({"targets": models["picker"]})).is_empty());
     // Offline: only servers on this computer can be reached.
     Config::patch(&paths, json!({"network": {"mode": "offline"}})).unwrap();
     assert!(refuse(

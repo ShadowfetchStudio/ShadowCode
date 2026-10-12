@@ -1,9 +1,11 @@
 //! The user's own OpenAI-compatible endpoints (Ollama, LM Studio, a llama.cpp
 //! or vLLM server, OpenAI, xAI or any compatible API) as composer picker
-//! rows. They are registry models the user added (Settings › Accounts, or
-//! `shadowcode models --use`); a model a detection probe merely found is not
-//! listed until it is added. Tasks on these rows run ShadowCode's own agent
-//! loop through `model_registry::resolve`, like any registered model.
+//! rows. They are the registry models the user added in Settings › Accounts
+//! (`POST /api/models/endpoints` marks them `added_in: "settings"`). Other
+//! registry rows stay out: the `model:` fallback in config.yaml, which the
+//! engine registers on its own, and models a detection probe merely found.
+//! Tasks on these rows run ShadowCode's own agent loop through
+//! `model_registry::resolve`, like any registered model.
 use crate::{
     config::{runs_on_this_computer, ModelConfig},
     model_registry, models,
@@ -20,17 +22,15 @@ pub const PROVIDERS: &[&str] = &[
     "grok",
 ];
 
-/// A registry row the user added for a compatible endpoint: a known provider,
-/// an address, and the key name a registration always records. Rows found
-/// only by detection have no key name; the managed local runtime has no
-/// address.
+/// The `metadata.added_in` of models added in Settings.
+pub const ADDED_IN: &str = "settings";
+
+/// A registry row the user added for a compatible endpoint in Settings: a
+/// known provider and an address (the managed local runtime has none).
 pub fn is_endpoint_row(row: &Value) -> bool {
     PROVIDERS.contains(&row["provider"].as_str().unwrap_or(""))
         && !row["endpoint"].as_str().unwrap_or("").is_empty()
-        && row
-            .pointer("/metadata/api_key_env")
-            .and_then(Value::as_str)
-            .is_some()
+        && row.pointer("/metadata/added_in") == Some(&json!(ADDED_IN))
 }
 
 /// "127.0.0.1:11434", "api.openai.com": where the row sends its requests.
@@ -201,17 +201,23 @@ mod tests {
 
     #[test]
     fn only_rows_the_user_added_are_endpoints() {
-        let added = json!({"api_key_env": "OLLAMA_API_KEY"});
+        let added = json!({"api_key_env": "OLLAMA_API_KEY", "added_in": "settings"});
         assert!(is_endpoint_row(&row(
             "ollama",
             "http://127.0.0.1:11434/v1",
             added.clone()
         )));
-        // Found by detection only: no key name recorded.
+        // Found by detection only, or registered by the engine itself (the
+        // config.yaml fallback): not the user's endpoint rows.
         assert!(!is_endpoint_row(&row(
             "ollama",
             "http://127.0.0.1:11434/v1",
             json!({"detected": true})
+        )));
+        assert!(!is_endpoint_row(&row(
+            "local",
+            "http://127.0.0.1:1234/v1",
+            json!({"api_key_env": "OPENAI_API_KEY", "keep_alive": "30m"})
         )));
         // The managed runtime and other row kinds are listed elsewhere.
         assert!(!is_endpoint_row(&row("llamacpp", "", added.clone())));
@@ -229,12 +235,12 @@ mod tests {
             row(
                 "ollama",
                 "http://127.0.0.1:11434/v1",
-                json!({"api_key_env": "OLLAMA_API_KEY"}),
+                json!({"api_key_env": "OLLAMA_API_KEY", "added_in": "settings"}),
             ),
             row(
                 "openai_compatible",
                 "https://api.deepseek.com/v1",
-                json!({"api_key_env": "DEEPSEEK_API_KEY", "key_required": true, "capabilities": {"vision": true}}),
+                json!({"api_key_env": "DEEPSEEK_API_KEY", "added_in": "settings", "key_required": true, "capabilities": {"vision": true}}),
             ),
         ];
         let picked = picker_rows(&rows, "", false, |_| true);
@@ -265,12 +271,12 @@ mod tests {
             row(
                 "ollama",
                 "http://127.0.0.1:11434/v1",
-                json!({"api_key_env": "OLLAMA_API_KEY"}),
+                json!({"api_key_env": "OLLAMA_API_KEY", "added_in": "settings"}),
             ),
             row(
                 "grok",
                 "https://api.x.ai/v1",
-                json!({"api_key_env": "XAI_API_KEY", "key_required": true}),
+                json!({"api_key_env": "XAI_API_KEY", "added_in": "settings", "key_required": true}),
             ),
         ];
         let offline = picker_rows(&rows, "", true, |_| true);
