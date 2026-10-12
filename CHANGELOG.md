@@ -76,6 +76,12 @@
   opens light on a dark desktop. Saved choices are unchanged.
 - `docs/NATIVE_ROUTING.md` no longer points at a *Custom model…* control that
   does not exist.
+- **Subagent settings are checked when saved.** A `subagents` value that is
+  misspelled, the wrong type or out of range (for example `max_parallel: 20`)
+  is refused with the allowed range, instead of being clamped or ignored
+  without a word. A `config.yaml` saved earlier still loads as before.
+- **Stop at a spending limit** always ends the task as *cancelled*; it could
+  end as *failed* when the answer reached the task before the engine did.
 
 ## 2.1.0: ARM64, a signed APT repository and a safer installer
 

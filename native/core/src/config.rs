@@ -606,6 +606,9 @@ impl Config {
     }
     pub fn patch(paths: &AppPaths, values: Value) -> Result<Self> {
         ensure!(values.is_object(), "Configuration patch must be an object");
+        if let Some(subagents) = values.get("subagents") {
+            crate::subagents::validate_change(subagents)?;
+        }
         Self::update(paths, |config| {
             let mut current = serde_json::to_value(&*config)?;
             merge(&mut current, values);

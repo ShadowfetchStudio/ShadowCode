@@ -121,6 +121,9 @@ impl Service {
         {
             values["permissions"]["approve_shell"] = json!(true);
         }
+        if let Some(subagents) = values.get("subagents") {
+            crate::subagents::validate_change(subagents)?;
+        }
         let cfg = Config::update(self.engine.paths(), |cfg| {
             // Settings use the provider's model name as `default`. Give
             // that configuration a stable identity before saving it.

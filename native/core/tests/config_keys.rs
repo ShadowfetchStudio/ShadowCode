@@ -370,3 +370,34 @@ fn a_bad_value_sent_by_settings_names_its_key() {
     );
     runtime.block_on(service.engine.shutdown()).unwrap();
 }
+
+#[test]
+fn a_saved_subagent_setting_out_of_range_is_refused_but_an_old_file_still_loads() {
+    let root = tempfile::tempdir().unwrap();
+    let paths = AppPaths::isolated(root.path()).unwrap();
+    // Saving: refused, and nothing is written.
+    let error = Config::patch(
+        &paths,
+        serde_json::json!({"subagents": {"max_parallel": 20}}),
+    )
+    .unwrap_err()
+    .to_string();
+    assert!(error.contains("from 1 to 8"), "{error}");
+    Config::patch(
+        &paths,
+        serde_json::json!({"subagents": {"max_parallel": 6}}),
+    )
+    .unwrap();
+    assert_eq!(
+        SubagentsConfig::from_config(&Config::load(&paths, None).unwrap()).max_parallel,
+        6
+    );
+    // A file written before the check still loads, clamped as before.
+    let file = paths.config_file();
+    let text = std::fs::read_to_string(&file)
+        .unwrap()
+        .replace("max_parallel: 6", "max_parallel: 20");
+    std::fs::write(&file, text).unwrap();
+    let config = Config::load(&paths, None).unwrap();
+    assert_eq!(SubagentsConfig::from_config(&config).max_parallel, 8);
+}
