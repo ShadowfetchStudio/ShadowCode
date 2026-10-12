@@ -5,6 +5,7 @@ import {
   useState,
   type UIEvent,
 } from "react";
+import { scrollBehavior } from "../lib/motion";
 
 /** The conversation follows new content while the reader is at the bottom
  * (within 100 px) and stays put once they scroll up. Browsing saved history
@@ -63,7 +64,7 @@ export function useStickyScroll({
     stick.current = true;
     streamRef.current?.scrollTo({
       top: streamRef.current.scrollHeight,
-      behavior: "smooth",
+      behavior: scrollBehavior(),
     });
   }, []);
   return { streamRef, atBottom, pin, release, onScroll, jumpToLatest };

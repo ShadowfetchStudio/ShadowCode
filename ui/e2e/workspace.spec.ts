@@ -951,6 +951,49 @@ test("settings sections are accessible and trap focus", async ({ page }) => {
   await expect(dialog).toHaveCount(0);
 });
 
+test("Latest activity jumps instead of gliding when motion is reduced", async ({
+  page,
+}) => {
+  await runLocalTask(page, "Fix the add function");
+  // A short window, so the finished task scrolls.
+  await page.setViewportSize({ width: 1000, height: 480 });
+  const stream = page.locator(".chat-stream");
+  // Record how the page asks the conversation to scroll.
+  await stream.evaluate((el) => {
+    const asked: (string | undefined)[] = [];
+    (window as unknown as { __scrolls: typeof asked }).__scrolls = asked;
+    const scrollTo = el.scrollTo.bind(el) as (o: ScrollToOptions) => void;
+    el.scrollTo = ((options: ScrollToOptions) => {
+      asked.push(options.behavior);
+      scrollTo(options);
+    }) as typeof el.scrollTo;
+  });
+  const asked = () =>
+    page.evaluate(
+      () => (window as unknown as { __scrolls: string[] }).__scrolls,
+    );
+  const latest = page.getByRole("button", { name: "Latest activity" });
+  for (const [motion, behavior] of [
+    ["reduce", "auto"],
+    ["no-preference", "smooth"],
+  ] as const) {
+    await page.emulateMedia({ reducedMotion: motion });
+    await stream.evaluate((el) => el.scrollTo({ top: 0 }));
+    await latest.click();
+    await expect(latest).toHaveCount(0);
+    expect((await asked()).at(-1)).toBe(behavior);
+  }
+  // Reduced motion lands at the bottom at once.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await stream.evaluate((el) => el.scrollTo({ top: 0 }));
+  await latest.click();
+  expect(
+    await stream.evaluate(
+      (el) => el.scrollHeight - el.scrollTop - el.clientHeight,
+    ),
+  ).toBeLessThan(2);
+});
+
 test("the window works at its 520 px minimum width", async ({ page }) => {
   await page.setViewportSize({ width: 520, height: 800 });
   await expect(page.locator(".sidebar")).toHaveCount(0);
