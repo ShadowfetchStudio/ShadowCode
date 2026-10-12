@@ -590,6 +590,13 @@ mod tests {
         drop(StdListener::bind(&foreign_name).unwrap());
         let _live = StdListener::bind(&live).unwrap();
         fs::write(&not_socket, b"x").unwrap();
+        // Another test forking at the moment of bind can hold a copy of a
+        // listener until its child execs; wait until both are really closed.
+        let started = std::time::Instant::now();
+        while !(socket_refuses(&dead) && socket_refuses(&own)) {
+            assert!(started.elapsed() < Duration::from_secs(10));
+            std::thread::sleep(Duration::from_millis(20));
+        }
 
         // Young sockets are left alone (an engine may be between bind and listen).
         assert!(sweep_stale_sockets(dir.path(), &own, Duration::from_secs(3600)).is_empty());
@@ -615,6 +622,11 @@ mod tests {
         let dead = dir.path().join(format!("{}.sock", "a".repeat(32)));
         let own = dir.path().join(format!("{}.sock", "c".repeat(32)));
         drop(StdListener::bind(&dead).unwrap());
+        let started = std::time::Instant::now();
+        while !socket_refuses(&dead) {
+            assert!(started.elapsed() < Duration::from_secs(10));
+            std::thread::sleep(Duration::from_millis(20));
+        }
         // Date the dead socket a minute ahead of now.
         let ahead = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
