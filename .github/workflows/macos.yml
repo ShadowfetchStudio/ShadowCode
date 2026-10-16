@@ -1,7 +1,7 @@
 name: macOS
-# The macOS port (docs/MACOS_PORT_ESTIMATE.md), phase 1: the whole workspace
-# must keep compiling on macOS, with clippy warnings as errors. Tests join
-# this job as the port makes them pass; nothing here is packaged or signed.
+# The macOS port (docs/MACOS_PORT_ESTIMATE.md): the whole workspace must keep
+# compiling on macOS with clippy warnings as errors, and the tests that pass
+# there must keep passing. Nothing here is packaged or signed.
 on:
   push:
     branches: [main]
@@ -34,3 +34,5 @@ jobs:
       - run: npm --prefix ui ci
       - run: npm --prefix ui run build
       - run: cargo +1.95.0 clippy --workspace --all-targets --locked -- -D warnings
+      # Phase 2: engine unit tests pass on macOS; integration tests join later.
+      - run: cargo +1.95.0 test -p shadowcode-core --lib --locked
