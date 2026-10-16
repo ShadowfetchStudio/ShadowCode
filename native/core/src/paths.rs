@@ -130,6 +130,30 @@ impl AppPaths {
         })
     }
 }
+/// A path naming the directory held open as `fd`. Linux names the
+/// descriptor itself; macOS has no /proc and asks the kernel for the
+/// directory's current path, so callers that later act through the held
+/// descriptor fail closed if the directory moved in between.
+pub(crate) fn held_directory(fd: std::os::fd::RawFd) -> Result<PathBuf> {
+    #[cfg(target_os = "linux")]
+    {
+        Ok(PathBuf::from(format!("/proc/self/fd/{fd}")))
+    }
+    #[cfg(target_os = "macos")]
+    {
+        use std::os::unix::ffi::OsStrExt;
+        let mut buffer = vec![0u8; libc::PATH_MAX as usize];
+        // SAFETY: F_GETPATH writes at most PATH_MAX bytes, NUL-terminated.
+        let rc = unsafe { libc::fcntl(fd, libc::F_GETPATH, buffer.as_mut_ptr()) };
+        anyhow::ensure!(
+            rc != -1,
+            "Could not name a held directory: {}",
+            std::io::Error::last_os_error()
+        );
+        let end = buffer.iter().position(|b| *b == 0).unwrap_or(buffer.len());
+        Ok(PathBuf::from(std::ffi::OsStr::from_bytes(&buffer[..end])))
+    }
+}
 
 /// Restrict only application-owned leaves, not the user's XDG base or an
 /// existing --profile parent. Use the opened directory for validation/chmod so

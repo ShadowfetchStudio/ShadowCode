@@ -1791,13 +1791,16 @@ mod profile_admission {
             .await
             .unwrap();
         let records = paths.data.join("managed-worktrees/records");
+        // Records name checkouts by their real path (macOS: /private/var).
+        let checkouts = paths
+            .data
+            .join("managed-worktrees/checkouts")
+            .canonicalize()
+            .unwrap();
         for _ in 0..62 {
             let mut pending = first.clone();
             pending.id = shadowcode_core::id();
-            pending.path = paths
-                .data
-                .join("managed-worktrees/checkouts")
-                .join(&pending.id);
+            pending.path = checkouts.join(&pending.id);
             pending.branch = format!("shadowcode/{}", pending.id);
             pending.state = "creating".into();
             pending.detail =

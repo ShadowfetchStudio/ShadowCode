@@ -973,6 +973,13 @@ fn provider_error_details_are_the_providers_own_redacted_message() {
 /// deadline; only a stream with no bytes for 120 seconds stalls. Runs on
 /// tokio's paused clock, so it takes no real time.
 #[tokio::test(start_paused = true)]
+// The paused clock jumps ahead whenever the runtime looks idle; on macOS a
+// loopback write is not always readable by then. The timing logic is the
+// same on every platform.
+#[cfg_attr(
+    not(target_os = "linux"),
+    ignore = "paused clock races real loopback I/O outside Linux"
+)]
 async fn long_steady_streams_are_not_cut_off_by_a_total_deadline() {
     let root = tempfile::tempdir().unwrap();
     let paths = AppPaths::isolated(root.path()).unwrap();
@@ -1040,6 +1047,13 @@ async fn long_steady_streams_are_not_cut_off_by_a_total_deadline() {
 /// the first byte must not stall the request; silence after the answer has
 /// started still does after 120 seconds. Paused clock: no real waiting.
 #[tokio::test(start_paused = true)]
+// The paused clock jumps ahead whenever the runtime looks idle; on macOS a
+// loopback write is not always readable by then. The timing logic is the
+// same on every platform.
+#[cfg_attr(
+    not(target_os = "linux"),
+    ignore = "paused clock races real loopback I/O outside Linux"
+)]
 async fn slow_local_prompt_processing_is_not_a_stall_but_a_silent_answer_is() {
     // `seen` is notified once the client has handed the first words to its
     // caller, so the silence after it starts only when the client is waiting.

@@ -758,7 +758,7 @@ fn restore_admin(
     );
     let staged = tempfile::Builder::new()
         .prefix(".shadowcode-cleanup-")
-        .tempdir_in(format!("/proc/self/fd/{}", source_parent.as_raw_fd()))?;
+        .tempdir_in(crate::paths::held_directory(source_parent.as_raw_fd())?)?;
     for (relative, entry) in &saved.entries {
         ensure!(
             relative
@@ -824,6 +824,7 @@ fn rename_noreplace(
     use std::os::fd::AsRawFd;
     let from_name = std::ffi::CString::new(name.as_bytes())?;
     let to_name = std::ffi::CString::new(destination.as_bytes())?;
+    #[cfg(target_os = "linux")]
     let result = unsafe {
         libc::renameat2(
             from.as_raw_fd(),
@@ -831,6 +832,16 @@ fn rename_noreplace(
             to.as_raw_fd(),
             to_name.as_ptr(),
             libc::RENAME_NOREPLACE,
+        )
+    };
+    #[cfg(target_os = "macos")]
+    let result = unsafe {
+        libc::renameatx_np(
+            from.as_raw_fd(),
+            from_name.as_ptr(),
+            to.as_raw_fd(),
+            to_name.as_ptr(),
+            libc::RENAME_EXCL,
         )
     };
     ensure!(
