@@ -85,6 +85,10 @@ landlock = "=0.4.7"
 # provide the default ALSA device on desktop Linux). Apache-2.0.
 cpal = { version = "=0.18.2", default-features = false }
 
+[target.'cfg(target_os = "macos")'.dependencies]
+# Voice input on macOS: the same cpal, through CoreAudio.
+cpal = { version = "=0.18.2", default-features = false }
+
 [dev-dependencies]
 # The same tokio, with its paused test clock (no new crate).
 tokio = { version = "1", features = ["full", "test-util"] }

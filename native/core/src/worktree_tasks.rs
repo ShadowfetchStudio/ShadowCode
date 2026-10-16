@@ -33,7 +33,8 @@ use tokio_util::sync::CancellationToken;
 
 mod locks;
 pub mod setup;
-#[cfg(test)]
+// Used by worktrees::cleanup's tests, which are Linux-only like that module.
+#[cfg(all(test, target_os = "linux"))]
 pub(crate) fn record_lock_references(store: &Store, id: &str) -> usize {
     locks::record_references(store, id)
 }

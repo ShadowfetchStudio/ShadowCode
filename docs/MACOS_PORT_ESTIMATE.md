@@ -1,6 +1,6 @@
 # macOS port: build estimate
 
-Status: estimate only, nothing built. Figures are judgement from a source survey
+Status: phase 1 done (see Progress); the rest is an estimate. Figures are judgement from a source survey
 (~135k lines of Rust in `native/core` and `src-tauri`), not measurements.
 
 ## Summary
@@ -10,6 +10,29 @@ Status: estimate only, nothing built. Figures are judgement from a source survey
   already cross-platform, and much code is gated `cfg(unix)` rather than Linux.
 - First blocker: the ungated `gdk` dependency in `src-tauri/Cargo.toml`, plus
   `/proc`, D-Bus and namespace code that needs `cfg(target_os = "linux")`.
+
+## Progress
+
+**Phase 1 (compile on macOS): done.** On macOS 15 (Intel iMac, Xcode 26.3)
+the whole workspace compiles and `cargo clippy --workspace --all-targets -- -D
+warnings` is clean. It took two fixes: voice capture's `cpal` is now a macOS
+dependency too (CoreAudio), and the control socket probe sets non-blocking and
+close-on-exec with `fcntl` where `SOCK_NONBLOCK`/`SOCK_CLOEXEC` don't exist.
+The `gdk` dependency was already Linux-only. `.github/workflows/macos.yml`
+keeps it compiling on GitHub's macOS runner.
+
+**Phase 2 has started.** Engine unit tests on macOS: 604 pass, 34 fail. The
+failures found so far are real macOS behaviour gaps, not test quirks:
+
+- Paths under a symlinked folder (`/var` is `/private/var`, and so is every
+  temporary folder) are refused as outside the workspace; containment checks
+  must compare canonical paths on both sides.
+- `workspace::open_mutation_file` does not refuse a symlink on macOS (the
+  Linux path relies on Linux-only open flags). Security-relevant: fix before
+  any macOS user relies on it.
+- Worktree locks, backup privacy and the remote-access profile-folder check
+  compare folder identities that differ only by that symlink.
+- `worktrees::cleanup` (stale worktree cleanup) is Linux-only (`/proc`).
 
 ## Work items
 

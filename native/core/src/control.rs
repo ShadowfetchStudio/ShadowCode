@@ -261,12 +261,28 @@ fn socket_refuses(path: &Path) -> bool {
         *dst = *src as libc::c_char;
     }
     // SAFETY: plain socket(2) call; the descriptor is closed below.
+    #[cfg(target_os = "linux")]
     let fd = unsafe {
         libc::socket(
             libc::AF_UNIX,
             libc::SOCK_STREAM | libc::SOCK_NONBLOCK | libc::SOCK_CLOEXEC,
             0,
         )
+    };
+    // macOS has no SOCK_NONBLOCK/SOCK_CLOEXEC: set both with fcntl(2) before
+    // the descriptor is used.
+    #[cfg(not(target_os = "linux"))]
+    let fd = unsafe {
+        let fd = libc::socket(libc::AF_UNIX, libc::SOCK_STREAM, 0);
+        if fd >= 0
+            && (libc::fcntl(fd, libc::F_SETFD, libc::FD_CLOEXEC) != 0
+                || libc::fcntl(fd, libc::F_SETFL, libc::O_NONBLOCK) != 0)
+        {
+            libc::close(fd);
+            -1
+        } else {
+            fd
+        }
     };
     if fd < 0 {
         return false;

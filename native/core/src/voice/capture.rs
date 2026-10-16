@@ -1,6 +1,7 @@
 //! Microphone capture in the engine process (cpal over ALSA; on PipeWire and
 //! PulseAudio desktops the default ALSA device is the desktop's default
-//! microphone). The window never touches the microphone: WebKitGTK's
+//! microphone. On macOS cpal uses CoreAudio, and the app needs the microphone
+//! usage description in its Info.plist). The window never touches the microphone: WebKitGTK's
 //! getUserMedia is off by default, the Tauri webview denies its permission
 //! requests, and it would need GStreamer PipeWire plugins inside the AppImage.
 //!

@@ -1124,6 +1124,9 @@ mod tests {
         };
         let socket = Arc::new(RelaySocket::bind(temp.path()).unwrap());
         let gate = proxy::Gate::new(proxy::parse_list(&["allowed.invalid".into()]).unwrap());
+        // The Linux-only fields (network namespace, Landlock) take defaults;
+        // elsewhere these two are all of them.
+        #[allow(clippy::needless_update)]
         let setup = ChildSetup {
             gate: Some(gate.clone()),
             relay: Some(socket.clone()),
