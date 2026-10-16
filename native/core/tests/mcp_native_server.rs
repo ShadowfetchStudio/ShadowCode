@@ -35,6 +35,11 @@ impl Fixture {
         let other = root.path().join("other");
         fs::create_dir(&project).unwrap();
         fs::create_dir(&other).unwrap();
+        // Real paths, as the service names them (macOS: /var is /private/var).
+        let (project, other) = (
+            project.canonicalize().unwrap(),
+            other.canonicalize().unwrap(),
+        );
         let paths = AppPaths::isolated(&root.path().join("profile")).unwrap();
         Config::patch(&paths,json!({"model":{"provider":"local","endpoint":endpoint,"name":"fixture","default":"fixture","context_limit":16384},"trusted_workspaces":[project,other],"agent":{"max_steps":4,"model_retries":0}})).unwrap();
         let service = Service::open(paths.clone(), Some(other.clone())).unwrap();

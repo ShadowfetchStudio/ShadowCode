@@ -495,6 +495,10 @@ async fn command_completion_hooks_run_once_and_cannot_hide_test_output_or_failur
 // A sandbox child reports a namespace-local PID. Resolve its host identity
 // while it is alive, then assert that exact process is reaped on shutdown.
 fn host_pid(project: &std::path::Path, namespace_pid: u32) -> u32 {
+    // macOS has no PID namespaces: the reported PID is the host's.
+    if !cfg!(target_os = "linux") {
+        return namespace_pid;
+    }
     let project = project.canonicalize().unwrap();
     let matches: Vec<_> = fs::read_dir("/proc")
         .unwrap()
@@ -553,7 +557,7 @@ async fn test_timeouts_stop_command_children_and_keep_the_workspace_reusable() {
     let done = wait(&service, &job).await;
     assert_eq!(done["status"], "failed");
     assert_eq!(done["result"]["command"]["timed_out"], true);
-    assert!(!fs::read_to_string(format!("/proc/{pid}/stat")).is_ok_and(|s| !s.contains(") Z ")));
+    assert!(!support::running(pid));
     let next = api(
         &service,
         "POST",

@@ -801,6 +801,30 @@ pub fn runtime_from(candidates: Vec<(PathBuf, &'static str)>) -> Runtime {
     first_failure.expect("at least one candidate")
 }
 
+/// Installed memory in bytes (0 when unknown).
+#[cfg(target_os = "macos")]
+pub fn read_meminfo() -> u64 {
+    let mut bytes: u64 = 0;
+    let mut size = std::mem::size_of::<u64>();
+    // SAFETY: hw.memsize is a 64-bit integer; `size` is the buffer's length.
+    let result = unsafe {
+        libc::sysctlbyname(
+            c"hw.memsize".as_ptr(),
+            (&mut bytes as *mut u64).cast(),
+            &mut size,
+            std::ptr::null_mut(),
+            0,
+        )
+    };
+    if result == 0 && size == std::mem::size_of::<u64>() {
+        bytes
+    } else {
+        0
+    }
+}
+
+/// Installed memory in bytes (0 when unknown).
+#[cfg(not(target_os = "macos"))]
 pub fn read_meminfo() -> u64 {
     let Ok(text) = fs::read_to_string("/proc/meminfo") else {
         return 0;

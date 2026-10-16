@@ -67,12 +67,7 @@ async fn until(
     .expect("background state timed out")
 }
 fn dead(pid: u32) -> bool {
-    match fs::read_to_string(format!("/proc/{pid}/stat")) {
-        Ok(stat) => stat
-            .rsplit_once(") ")
-            .is_some_and(|(_, rest)| rest.starts_with('Z') || rest.starts_with('X')),
-        Err(_) => true,
-    }
+    !support::running(pid)
 }
 
 #[tokio::test]

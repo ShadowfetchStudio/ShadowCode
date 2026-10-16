@@ -14,12 +14,7 @@ use shadowcode_core::{
     tools::{ToolExecutor, ToolResult},
     workspace::Workspace,
 };
-use std::{
-    fs,
-    path::{Path, PathBuf},
-    sync::Arc,
-    time::Duration,
-};
+use std::{fs, path::PathBuf, sync::Arc, time::Duration};
 use tokio_util::sync::CancellationToken;
 
 struct Fixture {
@@ -129,16 +124,11 @@ impl Fixture {
     async fn stopped(&self) {
         let pids = self.pids();
         // Engine completion must already have awaited leader reaping.
-        assert!(
-            !Path::new(&format!("/proc/{}", pids[0])).exists(),
-            "Leader outlived task completion"
-        );
+        assert!(!support::exists(pids[0]), "Leader outlived task completion");
         for pid in pids {
             tokio::time::timeout(Duration::from_secs(1), async {
                 loop {
-                    let active = fs::read_to_string(format!("/proc/{pid}/stat"))
-                        .ok()
-                        .is_some_and(|s| !s.rsplit_once(") ").unwrap().1.starts_with('Z'));
+                    let active = support::running(pid);
                     if !active {
                         break;
                     }

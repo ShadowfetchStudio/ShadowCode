@@ -223,7 +223,10 @@ fn query_inner(
         }
     }
     vfs::register()?;
-    let path = format!("/proc/self/fd/{}/{}", parent.as_raw_fd(), name);
+    // Declared before the connection so the directory stays held until the
+    // connection has closed.
+    let _held = vfs::hold(parent.as_raw_fd());
+    let path = vfs::filename(parent.as_raw_fd(), &name);
     let mut uri = reqwest::Url::from_file_path(&path)
         .map_err(|_| anyhow::anyhow!("Invalid database path"))?;
     uri.query_pairs_mut().append_pair("mode", "ro");

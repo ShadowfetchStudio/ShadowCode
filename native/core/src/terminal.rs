@@ -490,9 +490,9 @@ fn set_size(master: &std::fs::File, cols: u16, rows: u16) -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-fn spawn(shell: &Path, login: bool, workspace: &Path, cols: u16, rows: u16) -> Result<Pty> {
+fn open_pty() -> Result<(std::fs::File, std::fs::File)> {
     use std::os::fd::FromRawFd;
-    use std::os::unix::{fs::OpenOptionsExt, process::CommandExt};
+    use std::os::unix::fs::OpenOptionsExt;
     // SAFETY: posix_openpt returns a new descriptor we own, or -1.
     let fd = unsafe { libc::posix_openpt(libc::O_RDWR | libc::O_NOCTTY | libc::O_CLOEXEC) };
     ensure!(
@@ -519,13 +519,59 @@ fn spawn(shell: &Path, login: bool, workspace: &Path, cols: u16, rows: u16) -> R
     let path = unsafe { std::ffi::CStr::from_ptr(name.as_ptr()) }
         .to_string_lossy()
         .into_owned();
-    set_size(&master, cols, rows)?;
     let slave = std::fs::OpenOptions::new()
         .read(true)
         .write(true)
         .custom_flags(libc::O_NOCTTY)
         .open(&path)
         .context("Could not open the terminal device")?;
+    Ok((master, slave))
+}
+
+#[cfg(target_os = "macos")]
+fn open_pty() -> Result<(std::fs::File, std::fs::File)> {
+    use std::os::fd::{AsRawFd, FromRawFd};
+    let (mut master, mut slave) = (-1, -1);
+    // SAFETY: openpty writes two new descriptors we own; the name, termios
+    // and window size arguments may be null.
+    let result = unsafe {
+        libc::openpty(
+            &mut master,
+            &mut slave,
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+        )
+    };
+    ensure!(
+        result == 0,
+        "Could not open a terminal: {}",
+        std::io::Error::last_os_error()
+    );
+    // SAFETY: both descriptors are fresh and owned by nothing else.
+    let (master, slave) = unsafe {
+        (
+            std::fs::File::from_raw_fd(master),
+            std::fs::File::from_raw_fd(slave),
+        )
+    };
+    // macOS has no atomic close-on-exec for openpty.
+    for fd in [master.as_raw_fd(), slave.as_raw_fd()] {
+        // SAFETY: F_SETFD on a descriptor owned above.
+        ensure!(
+            unsafe { libc::fcntl(fd, libc::F_SETFD, libc::FD_CLOEXEC) } == 0,
+            "Could not prepare the terminal: {}",
+            std::io::Error::last_os_error()
+        );
+    }
+    Ok((master, slave))
+}
+
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+fn spawn(shell: &Path, login: bool, workspace: &Path, cols: u16, rows: u16) -> Result<Pty> {
+    use std::os::unix::process::CommandExt;
+    let (master, slave) = open_pty()?;
+    set_size(&master, cols, rows)?;
     let name = shell
         .file_name()
         .map(|n| n.to_string_lossy().into_owned())
@@ -560,7 +606,7 @@ fn spawn(shell: &Path, login: bool, workspace: &Path, cols: u16, rows: u16) -> R
             }
             // The host monitor gives the host shell its own session and
             // controlling terminal. Claiming it here would prevent that.
-            if !host_terminal && libc::ioctl(0, libc::TIOCSCTTY, 0) < 0 {
+            if !host_terminal && libc::ioctl(0, libc::TIOCSCTTY as _, 0) < 0 {
                 return Err(std::io::Error::last_os_error());
             }
             Ok(())
@@ -573,14 +619,14 @@ fn spawn(shell: &Path, login: bool, workspace: &Path, cols: u16, rows: u16) -> R
     Ok(Pty { master, child, pid })
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
 fn spawn(_shell: &Path, _login: bool, _workspace: &Path, _cols: u16, _rows: u16) -> Result<Pty> {
-    bail!("Terminals are available on Linux")
+    bail!("Terminals are available on Linux and macOS")
 }
 
 /// Signal a shell's whole session: its own process group, the leader, and
-/// (on Linux) every process whose session is the shell's, which includes the
-/// job-control groups the shell created.
+/// every process whose session is the shell's, which includes the job-control
+/// groups the shell created.
 fn signal_session(pid: i32, signal: libc::c_int, leader: bool) {
     if pid <= 0 {
         return;
@@ -593,9 +639,9 @@ fn signal_session(pid: i32, signal: libc::c_int, leader: bool) {
             libc::kill(pid, signal);
         }
     }
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
     for member in session_members(pid) {
-        // SAFETY: as above; members were read from /proc just now.
+        // SAFETY: as above; members were listed just now.
         unsafe {
             libc::kill(member, signal);
         }
@@ -620,6 +666,23 @@ fn session_members(sid: i32) -> Vec<i32> {
                 })
                 == Some(sid)
         })
+        .collect()
+}
+
+#[cfg(target_os = "macos")]
+fn session_members(sid: i32) -> Vec<i32> {
+    let mut pids = vec![0 as libc::pid_t; 8192];
+    // SAFETY: the buffer holds `pids.len()` pids and its size is passed in bytes.
+    let count = unsafe {
+        libc::proc_listallpids(
+            pids.as_mut_ptr().cast(),
+            (pids.len() * std::mem::size_of::<libc::pid_t>()) as libc::c_int,
+        )
+    };
+    pids.truncate(count.max(0) as usize);
+    pids.into_iter()
+        // SAFETY: getsid only reads the session id of a process id.
+        .filter(|pid| *pid > 0 && unsafe { libc::getsid(*pid) } == sid)
         .collect()
 }
 

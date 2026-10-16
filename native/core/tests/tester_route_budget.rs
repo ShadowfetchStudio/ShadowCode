@@ -44,9 +44,10 @@ fn workspace_at(path: &std::path::Path) -> Workspace {
 fn long_project(root: &std::path::Path) -> std::path::PathBuf {
     let workspace = workspace_at(root);
     let base = needed(&tester_messages(&workspace), &tools::schemas());
+    // The temporary folder is itself part of the path: macOS's is longer.
     assert!(
-        base < 4080,
-        "Short tester request must leave room for path pressure"
+        base < 4088,
+        "Short tester request must leave room for path pressure ({base} tokens)"
     );
     let padding = (4088 - base) * 3;
     root.join("p".repeat(padding.min(200)))

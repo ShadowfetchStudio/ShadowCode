@@ -92,12 +92,7 @@ async fn until(
     .expect("background process did not reach expected state")
 }
 fn dead(pid: u32) -> bool {
-    match fs::read_to_string(format!("/proc/{pid}/stat")) {
-        Ok(stat) => stat
-            .rsplit_once(") ")
-            .is_some_and(|(_, state)| state.starts_with('Z') || state.starts_with('X')),
-        Err(_) => true,
-    }
+    !support::running(pid)
 }
 
 #[tokio::test]
