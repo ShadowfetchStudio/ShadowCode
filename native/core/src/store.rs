@@ -552,6 +552,11 @@ impl Store {
     pub fn create_session(&self, workspace: &Path, model: &str, title: &str) -> Result<Value> {
         let sid = id();
         let now = now();
+        // Sessions are matched against `Workspace::open`, which names the
+        // folder by its real path (on macOS /var is /private/var).
+        let workspace = workspace
+            .canonicalize()
+            .unwrap_or_else(|_| workspace.to_path_buf());
         self.execute("INSERT INTO sessions(id,workspace,created_at,updated_at,model_id,status,title) VALUES(?,?,?,?,?,'active',?)",
             params![sid,workspace.to_string_lossy(),now,now,model,title])?;
         self.session(&sid)?.context("Created session disappeared")

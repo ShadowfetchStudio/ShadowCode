@@ -37,7 +37,9 @@ fn roots(paths: &AppPaths) -> Result<(PathBuf, PathBuf)> {
     paths::private_directory(&records)?;
     let checkouts = root.join("checkouts");
     paths::private_directory(&checkouts)?;
-    Ok((records, checkouts))
+    // Checkouts are recorded and later checked by their real path (on macOS
+    // the data folder may be reached through /var, a link to /private/var).
+    Ok((records, checkouts.canonicalize()?))
 }
 fn save(root: &Path, record: &Record) -> Result<()> {
     let bytes = serde_json::to_vec_pretty(record)?;
