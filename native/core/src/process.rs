@@ -80,34 +80,75 @@ pub struct ProcessResult {
     pub pid: u32,
 }
 
+/// Every live descendant of `pid`, children first. A shell's background
+/// job may leave the shell's process group; signalling these as well keeps
+/// an owned task from outliving its cancellation.
+pub(crate) fn descendants(pid: u32) -> Vec<u32> {
+    let mut all = Vec::new();
+    let mut pending = vec![pid];
+    while let Some(parent) = pending.pop() {
+        if all.len() >= 4096 {
+            break;
+        }
+        for child in children(parent) {
+            if child != pid && !all.contains(&child) {
+                all.push(child);
+                pending.push(child);
+            }
+        }
+    }
+    all
+}
+
+#[cfg(target_os = "linux")]
+fn children(pid: u32) -> Vec<u32> {
+    std::fs::read_to_string(format!("/proc/{pid}/task/{pid}/children"))
+        .unwrap_or_default()
+        .split_whitespace()
+        .filter_map(|value| value.parse().ok())
+        .collect()
+}
+
+#[cfg(target_os = "macos")]
+fn children(pid: u32) -> Vec<u32> {
+    let Ok(pid) = libc::pid_t::try_from(pid) else {
+        return Vec::new();
+    };
+    let mut buffer = vec![0 as libc::pid_t; 1024];
+    // SAFETY: the buffer holds `buffer.len()` pids; its size is in bytes.
+    let bytes = unsafe {
+        libc::proc_listchildpids(
+            pid,
+            buffer.as_mut_ptr().cast(),
+            (buffer.len() * std::mem::size_of::<libc::pid_t>()) as libc::c_int,
+        )
+    };
+    // proc_listchildpids returns a count of pids, not of bytes.
+    buffer.truncate(bytes.max(0) as usize);
+    buffer
+        .into_iter()
+        .filter_map(|child| u32::try_from(child).ok())
+        .filter(|child| *child > 0)
+        .collect()
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+fn children(_pid: u32) -> Vec<u32> {
+    Vec::new()
+}
+
 struct ProcessGroup(u32);
 impl ProcessGroup {
-    #[cfg(target_os = "linux")]
-    fn descendants(pid: u32) -> Vec<u32> {
-        let path = format!("/proc/{pid}/task/{pid}/children");
-        std::fs::read_to_string(path)
-            .unwrap_or_default()
-            .split_whitespace()
-            .filter_map(|value| value.parse().ok())
-            .flat_map(|child| {
-                let mut all = vec![child];
-                all.extend(Self::descendants(child));
-                all
-            })
-            .collect()
-    }
     fn terminate(&self) {
         #[cfg(unix)]
         if self.0 != 0 {
-            #[cfg(target_os = "linux")]
-            let descendants = Self::descendants(self.0);
+            let descendants = crate::process::descendants(self.0);
             unsafe {
                 libc::kill(-(self.0 as i32), libc::SIGTERM);
                 // Some shells alter their process group while spawning a
                 // background job. Signal the leader directly as well so an
                 // owned task cannot outlive its cancellation scope.
                 libc::kill(self.0 as i32, libc::SIGTERM);
-                #[cfg(target_os = "linux")]
                 for child in descendants {
                     libc::kill(child as i32, libc::SIGTERM);
                 }
@@ -117,12 +158,10 @@ impl ProcessGroup {
     fn kill(&mut self) {
         #[cfg(unix)]
         if self.0 != 0 {
-            #[cfg(target_os = "linux")]
-            let descendants = Self::descendants(self.0);
+            let descendants = crate::process::descendants(self.0);
             unsafe {
                 libc::kill(-(self.0 as i32), libc::SIGKILL);
                 libc::kill(self.0 as i32, libc::SIGKILL);
-                #[cfg(target_os = "linux")]
                 for child in descendants {
                     libc::kill(child as i32, libc::SIGKILL);
                 }

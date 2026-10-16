@@ -341,6 +341,8 @@ fn main() {
 }
 
 fn run() -> Result<()> {
+    #[cfg(target_os = "macos")]
+    shadowcode_core::login_path::adopt();
     // The bundler records the package format in the executable; Settings ›
     // About and the update notice use it to name the right update steps.
     {

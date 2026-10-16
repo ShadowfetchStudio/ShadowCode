@@ -181,30 +181,14 @@ fn append_assistant_text(collected: &mut String, text: &str) -> Result<()> {
 
 struct ProcessGroup(u32);
 impl ProcessGroup {
-    #[cfg(target_os = "linux")]
-    fn descendants(pid: u32) -> Vec<u32> {
-        let path = format!("/proc/{pid}/task/{pid}/children");
-        std::fs::read_to_string(path)
-            .unwrap_or_default()
-            .split_whitespace()
-            .filter_map(|value| value.parse().ok())
-            .flat_map(|child| {
-                let mut all = vec![child];
-                all.extend(Self::descendants(child));
-                all
-            })
-            .collect()
-    }
     fn terminate(&self) {
         if self.0 == 0 {
             return;
         }
-        #[cfg(target_os = "linux")]
-        let descendants = Self::descendants(self.0);
+        let descendants = crate::process::descendants(self.0);
         unsafe {
             libc::kill(-(self.0 as i32), libc::SIGTERM);
             libc::kill(self.0 as i32, libc::SIGTERM);
-            #[cfg(target_os = "linux")]
             for child in descendants {
                 libc::kill(child as i32, libc::SIGTERM);
             }
@@ -214,12 +198,10 @@ impl ProcessGroup {
         if self.0 == 0 {
             return;
         }
-        #[cfg(target_os = "linux")]
-        let descendants = Self::descendants(self.0);
+        let descendants = crate::process::descendants(self.0);
         unsafe {
             libc::kill(-(self.0 as i32), libc::SIGKILL);
             libc::kill(self.0 as i32, libc::SIGKILL);
-            #[cfg(target_os = "linux")]
             for child in descendants {
                 libc::kill(child as i32, libc::SIGKILL);
             }

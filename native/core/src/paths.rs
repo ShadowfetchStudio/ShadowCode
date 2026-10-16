@@ -35,12 +35,23 @@ impl AppPaths {
     pub fn discover() -> Result<Self> {
         let home = env::var_os("HOME").context("HOME is not set")?;
         let home = PathBuf::from(home);
-        let xdg = |key: &str, fallback: &str| {
+        // macOS keeps app settings and history under ~/Library; an XDG
+        // variable someone set on purpose still wins there too.
+        #[cfg(target_os = "macos")]
+        let fallback = |base: &str| match base {
+            ".cache" => home.join("Library/Caches/ShadowCode"),
+            ".config" => home.join("Library/Application Support/ShadowCode/config"),
+            ".local/share" => home.join("Library/Application Support/ShadowCode/data"),
+            _ => home.join("Library/Application Support/ShadowCode/state"),
+        };
+        #[cfg(not(target_os = "macos"))]
+        let fallback = |base: &str| home.join(base).join("shadow-agent");
+        let xdg = |key: &str, base: &str| {
             env::var_os(key)
                 .map(PathBuf::from)
                 .filter(|p| p.is_absolute())
-                .unwrap_or_else(|| home.join(fallback))
-                .join("shadow-agent")
+                .map(|p| p.join("shadow-agent"))
+                .unwrap_or_else(|| fallback(base))
         };
         let result = Self {
             config: xdg("XDG_CONFIG_HOME", ".config"),

@@ -41,6 +41,8 @@ pub mod local_downloads;
 pub mod local_engine;
 pub mod local_runtime;
 pub mod local_templates;
+#[cfg(target_os = "macos")]
+pub mod login_path;
 pub mod lsp;
 #[cfg(unix)]
 pub mod mcp;
