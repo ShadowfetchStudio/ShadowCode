@@ -131,7 +131,28 @@ pub fn inside_profile(candidate: &str, paths: &AppPaths) -> bool {
     if candidate.is_empty() {
         return false;
     }
-    let resolve = |p: &Path| p.canonicalize().unwrap_or_else(|_| p.to_path_buf());
+    // Resolve the deepest existing ancestor and keep the rest as written: a
+    // folder that does not exist yet still resolves through a symlinked
+    // profile path (on macOS /var is /private/var).
+    let resolve = |p: &Path| {
+        let mut rest = Vec::new();
+        let mut current = p;
+        loop {
+            if let Ok(real) = current.canonicalize() {
+                return rest
+                    .iter()
+                    .rev()
+                    .fold(real, |acc: PathBuf, part| acc.join(part));
+            }
+            match (current.file_name(), current.parent()) {
+                (Some(name), Some(parent)) => {
+                    rest.push(name.to_owned());
+                    current = parent;
+                }
+                _ => return p.to_path_buf(),
+            }
+        }
+    };
     let candidate = resolve(&expand(candidate));
     [&paths.config, &paths.data, &paths.state]
         .into_iter()
@@ -838,6 +859,34 @@ mod tests {
                 "{path}"
             );
         }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_profile_reached_through_a_symlink_is_still_refused() {
+        // Like macOS, where the temporary folder is under /var -> /private/var.
+        let root = tempfile::tempdir().unwrap();
+        let real = root.path().join("real");
+        std::fs::create_dir(&real).unwrap();
+        std::os::unix::fs::symlink(&real, root.path().join("alias")).unwrap();
+        let paths = AppPaths::isolated(&root.path().join("alias/profile")).unwrap();
+        for folder in [&paths.config, &paths.data, &paths.state] {
+            assert!(inside_profile(&folder.to_string_lossy(), &paths));
+            // A folder inside it that does not exist yet.
+            assert!(inside_profile(
+                &folder.join("not-yet/x").to_string_lossy(),
+                &paths
+            ));
+            let real_form = real.join(folder.strip_prefix(root.path().join("alias")).unwrap());
+            assert!(inside_profile(
+                &real_form.join("new").to_string_lossy(),
+                &paths
+            ));
+        }
+        assert!(!inside_profile(
+            &real.join("elsewhere").to_string_lossy(),
+            &paths
+        ));
     }
 
     #[test]

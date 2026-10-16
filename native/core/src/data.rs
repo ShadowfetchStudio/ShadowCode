@@ -397,12 +397,36 @@ impl NewFolder {
 
     /// Where to write: the open folder, whatever its name leads to now.
     fn inside(&self) -> PathBuf {
-        #[cfg(unix)]
+        #[cfg(target_os = "linux")]
         {
             use std::os::fd::AsRawFd;
             let held = PathBuf::from(format!("/proc/self/fd/{}", self.handle.as_raw_fd()));
             if held.is_dir() {
                 return held;
+            }
+        }
+        // macOS has no /proc: ask the kernel where the open folder is now
+        // (after a rename too), so a symlink swapped in at its old name is
+        // never written through.
+        #[cfg(target_os = "macos")]
+        {
+            use std::os::{fd::AsRawFd, unix::ffi::OsStrExt};
+            let mut buffer = vec![0u8; libc::PATH_MAX as usize];
+            // SAFETY: F_GETPATH writes at most PATH_MAX bytes, NUL-terminated,
+            // into the buffer; the descriptor is owned by self.handle.
+            let rc = unsafe {
+                libc::fcntl(
+                    self.handle.as_raw_fd(),
+                    libc::F_GETPATH,
+                    buffer.as_mut_ptr(),
+                )
+            };
+            if rc != -1 {
+                let end = buffer.iter().position(|b| *b == 0).unwrap_or(buffer.len());
+                let held = PathBuf::from(std::ffi::OsStr::from_bytes(&buffer[..end]));
+                if held.is_dir() {
+                    return held;
+                }
             }
         }
         self.path.clone()

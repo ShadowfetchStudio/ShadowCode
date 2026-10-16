@@ -12,9 +12,12 @@ struct Fixture {
 
 fn fixture() -> Fixture {
     let root = tempfile::tempdir().unwrap();
-    let paths = AppPaths::isolated(&root.path().join("app")).unwrap();
+    // Canonical, as product paths are (on macOS the temporary folder is under
+    // /var, a symlink to /private/var).
+    let base = root.path().canonicalize().unwrap();
+    let paths = AppPaths::isolated(&base.join("app")).unwrap();
     let profile = profile_dir(&paths);
-    let project = root.path().join("project");
+    let project = base.join("project");
     fs::create_dir_all(&project).unwrap();
     Fixture {
         profile,
@@ -976,9 +979,11 @@ async fn a_git_import_clones_updates_and_never_checks_out_links() {
     assert_eq!(fs::read_to_string(&leak).unwrap(), "/etc/passwd");
     let book = f.book();
     assert!(book.guidance(&f.workspace()).contains("Team rule one."));
+    // The address itself may be redacted: on macOS the temporary folder
+    // (/var/folders/<random>/T) reads as a high-entropy token.
     assert!(book
         .guidance(&f.workspace())
-        .contains("imported into their ShadowCode profile from file://"));
+        .contains("imported into their ShadowCode profile from file:"));
     let catalog = book.catalog(&f.workspace());
     assert!(catalog
         .definitions

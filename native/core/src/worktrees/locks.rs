@@ -224,12 +224,30 @@ pub(super) async fn reserve_record(
 
 #[cfg(all(test, unix))]
 mod tests {
+    /// A temporary folder named by its canonical path.
+    struct Canonical {
+        _dir: tempfile::TempDir,
+        path: std::path::PathBuf,
+    }
+    impl Canonical {
+        fn new(dir: tempfile::TempDir) -> Self {
+            let path = dir.path().canonicalize().unwrap();
+            Self { _dir: dir, path }
+        }
+        fn path(&self) -> &std::path::Path {
+            &self.path
+        }
+    }
+
     use super::*;
     use std::os::unix::fs::symlink;
 
     #[test]
     fn advisory_refuses_symlinks_hardlinks_and_replaced_ownership() {
         let root = tempfile::tempdir().unwrap();
+        // Canonical, as product paths are (on macOS the temporary folder is
+        // under /var, a symlink to /private/var).
+        let root = Canonical::new(root);
         let directory = root.path().join("repository");
         fs::create_dir(&directory).unwrap();
         let target = root.path().join("foreign");
@@ -289,6 +307,9 @@ mod tests {
     ) {
         use std::time::{Duration, Instant};
         let root = tempfile::tempdir().unwrap();
+        // Canonical, as product paths are (on macOS the temporary folder is
+        // under /var, a symlink to /private/var).
+        let root = Canonical::new(root);
         let source = root.path().join("source");
         let second = root.path().join("second");
         repository(&source);

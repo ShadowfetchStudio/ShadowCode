@@ -21,18 +21,32 @@ close-on-exec with `fcntl` where `SOCK_NONBLOCK`/`SOCK_CLOEXEC` don't exist.
 The `gdk` dependency was already Linux-only. `.github/workflows/macos.yml`
 keeps it compiling on GitHub's macOS runner.
 
-**Phase 2 has started.** Engine unit tests on macOS: 604 pass, 34 fail. The
-failures found so far are real macOS behaviour gaps, not test quirks:
+**Phase 2 has started.** All 640 engine unit tests that build on macOS pass
+there (Linux: 664). Fixed on the way, each a real macOS gap:
 
-- Paths under a symlinked folder (`/var` is `/private/var`, and so is every
-  temporary folder) are refused as outside the workspace; containment checks
-  must compare canonical paths on both sides.
-- `workspace::open_mutation_file` does not refuse a symlink on macOS (the
-  Linux path relies on Linux-only open flags). Security-relevant: fix before
-  any macOS user relies on it.
-- Worktree locks, backup privacy and the remote-access profile-folder check
-  compare folder identities that differ only by that symlink.
+- Workspace opens through cap-std now also set `FollowSymlinks::No`: on macOS
+  cap-std resolves paths itself and followed a final-component symlink before
+  `O_NOFOLLOW` reached the last `openat`.
+- Absolute paths naming the workspace through a symlinked folder (`/var` is
+  `/private/var`, as is every temporary folder) were refused as outside it.
+- Remote access's "own settings folder" refusal missed a folder that does not
+  exist yet under a symlinked profile path (both systems).
+- Backups found their open folder through `/proc/self/fd`; on macOS they now
+  ask the kernel with `fcntl(F_GETPATH)`, so a symlink swapped in at the
+  folder's name is never written through.
+- Rules exported to a vendor CLI were recognised as linked only when the
+  paths matched as written; they are compared by real location now.
+
+Still open in phase 2:
+
 - `worktrees::cleanup` (stale worktree cleanup) is Linux-only (`/proc`).
+- Redaction's high-entropy rule treats `/` as part of a token, so macOS's
+  per-user temporary folder (`/var/folders/<random>/T/…`) is masked as a
+  secret wherever text is redacted. Safe (over-redaction) but noisy; a
+  path-aware rule must not let base64 secrets with slashes through.
+- Integration tests (`native/core/tests`), the shell sandbox (Seatbelt),
+  Keychain, the PTY relay, GUI `PATH`, process control (kqueue), macOS paths
+  (`~/Library`), the window, and Metal llama.cpp, per the table below.
 
 ## Work items
 
