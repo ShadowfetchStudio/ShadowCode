@@ -93,9 +93,21 @@ impl Workspace {
     pub fn relative(&self, path: &str) -> Result<PathBuf> {
         ensure!(!path.contains('\0'), "Path contains a NUL byte");
         let path = Path::new(path);
+        let resolved;
         let path = if path.is_absolute() {
-            path.strip_prefix(&self.path)
-                .context("Path is outside the workspace")?
+            match path.strip_prefix(&self.path) {
+                Ok(inside) => inside,
+                // The root is canonical; the path may name it through a
+                // symlink (on macOS /var and every temporary folder are under
+                // /private). Resolve the deepest existing ancestor and try
+                // again; a path that really resolves outside stays refused.
+                Err(_) => {
+                    resolved = canonical_ancestor(path).context("Path is outside the workspace")?;
+                    resolved
+                        .strip_prefix(&self.path)
+                        .context("Path is outside the workspace")?
+                }
+            }
         } else {
             path
         };
@@ -665,6 +677,20 @@ impl Workspace {
     }
 }
 
+/// `path` with its deepest existing ancestor canonicalized and the rest
+/// appended unchanged (it may not exist yet). `None` when nothing resolves.
+fn canonical_ancestor(path: &Path) -> Option<PathBuf> {
+    let mut rest = Vec::new();
+    let mut current = path;
+    loop {
+        if let Ok(real) = current.canonicalize() {
+            return Some(rest.iter().rev().fold(real, |acc, part| acc.join(part)));
+        }
+        rest.push(current.file_name()?.to_owned());
+        current = current.parent()?;
+    }
+}
+
 fn open_mutation_directory(parent: &Dir, name: &std::ffi::OsStr) -> std::io::Result<Dir> {
     #[cfg(unix)]
     {
@@ -702,6 +728,33 @@ pub fn hash(bytes: &[u8]) -> String {
 mod mutation_parent_tests {
     use super::Workspace;
     use std::os::unix::fs::symlink;
+
+    #[test]
+    fn absolute_paths_through_a_symlinked_root_stay_inside() {
+        // Like macOS, where /var (and every temporary folder) is /private/var.
+        let root = tempfile::tempdir().unwrap();
+        let real = root.path().join("real");
+        std::fs::create_dir_all(real.join("project/src")).unwrap();
+        std::fs::create_dir(root.path().join("outside")).unwrap();
+        symlink(&real, root.path().join("alias")).unwrap();
+        let workspace = Workspace::open(&root.path().join("alias/project")).unwrap();
+        let alias = root.path().join("alias/project");
+        let inside = |p: &std::path::Path| workspace.relative(p.to_str().unwrap());
+        assert_eq!(
+            inside(&alias.join("src/main.rs")).unwrap(),
+            std::path::Path::new("src/main.rs"),
+            "a file that does not exist yet, named through the alias"
+        );
+        assert_eq!(
+            inside(&real.join("project/src")).unwrap(),
+            std::path::Path::new("src")
+        );
+        // Resolving the alias never lets a path out of the workspace.
+        assert!(inside(&alias.join("../../outside/x")).is_err());
+        symlink(root.path().join("outside"), real.join("project/escape")).unwrap();
+        assert!(inside(&alias.join("escape/x")).is_err());
+        assert!(inside(&root.path().join("outside/x")).is_err());
+    }
 
     #[test]
     fn pinned_parent_resolution_rejects_symlink_swapped_after_validation() {
