@@ -10,6 +10,15 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
+/// Never follow a symlink at the path's last component. On Linux cap-std
+/// opens with openat2 and O_NOFOLLOW is enough; on macOS it resolves the path
+/// itself and follows a final symlink unless told not to, before the flag
+/// reaches the last openat.
+fn no_follow(options: &mut OpenOptions) -> &mut OpenOptions {
+    use cap_fs_ext::{FollowSymlinks, OpenOptionsFollowExt};
+    options.follow(FollowSymlinks::No)
+}
+
 pub const MAX_FILE_BYTES: usize = 4_000_000;
 
 /// Directory capabilities make file operations relative to an already-open
@@ -278,6 +287,7 @@ impl Workspace {
         {
             use cap_std::fs::OpenOptionsExt;
             options.custom_flags(libc::O_NONBLOCK | libc::O_NOFOLLOW);
+            no_follow(&mut options);
         }
         let relative = self.relative(path)?;
         #[cfg(unix)]
@@ -288,6 +298,7 @@ impl Workspace {
             directory
                 .read(true)
                 .custom_flags(libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_NONBLOCK);
+            no_follow(&mut directory);
             for part in relative.parent().unwrap_or(Path::new(".")).components() {
                 if let Component::Normal(name) = part {
                     parent = Dir::from_std_file(parent.open_with(name, &directory)?.into_std());
@@ -357,6 +368,7 @@ impl Workspace {
         options
             .read(true)
             .custom_flags(libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_NONBLOCK);
+        no_follow(&mut options);
         for part in relative.parent().unwrap_or(Path::new(".")).components() {
             if let Component::Normal(name) = part {
                 parent = Dir::from_std_file(
@@ -661,6 +673,7 @@ fn open_mutation_directory(parent: &Dir, name: &std::ffi::OsStr) -> std::io::Res
         options
             .read(true)
             .custom_flags(libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_NONBLOCK);
+        no_follow(&mut options);
         Ok(Dir::from_std_file(
             parent.open_with(name, &options)?.into_std(),
         ))
@@ -676,6 +689,7 @@ fn open_mutation_file(parent: &Dir, name: &std::ffi::OsStr) -> std::io::Result<c
     {
         use cap_std::fs::OpenOptionsExt;
         options.custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK);
+        no_follow(&mut options);
     }
     parent.open_with(name, &options)
 }
