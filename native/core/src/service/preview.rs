@@ -19,10 +19,9 @@ impl Service {
             ("POST", "/api/preview/open") => {
                 let body: OpenBody = call.body()?;
                 let (target, path) = Target::parse(body.url.as_str())?;
-                let mut forbidden = tokio::task::spawn_blocking(|| {
-                    ports::own_ports(Path::new("/proc"), std::process::id())
-                })
-                .await?;
+                let mut forbidden =
+                    tokio::task::spawn_blocking(|| ports::own_ports_now(std::process::id()))
+                        .await?;
                 forbidden.extend(self.previews.ports().await);
                 let opened = self
                     .previews
@@ -42,12 +41,11 @@ impl Service {
     /// merged by port. ShadowCode's own ports are never listed.
     fn preview_servers(&self, _call: &Call) -> Result<Value> {
         let workspace = self.workspace()?;
-        let proc_root = Path::new("/proc");
         let own = std::process::id();
-        let own_ports: HashSet<u16> = ports::own_ports(proc_root, own);
-        let listening: HashSet<u16> = ports::listening(proc_root).iter().map(|l| l.port).collect();
+        let own_ports: HashSet<u16> = ports::own_ports_now(own);
+        let listening: HashSet<u16> = ports::listening_now();
         let mut servers: BTreeMap<u16, Value> = BTreeMap::new();
-        for found in ports::project_servers(proc_root, &workspace, own) {
+        for found in ports::servers(&workspace, own) {
             if own_ports.contains(&found.port) {
                 continue;
             }
