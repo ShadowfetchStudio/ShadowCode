@@ -1,0 +1,54 @@
+name: Windows
+# The Windows port (docs/WINDOWS_PORT.md), phase 1: the whole workspace must
+# compile on Windows. Every error is reported at once (--keep-going) and the
+# full log is kept as an artifact. Nothing here is packaged or signed.
+on:
+  push:
+    branches: [main]
+    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml']
+  pull_request:
+    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml']
+permissions:
+  contents: read
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    env:
+      RUSTUP_TOOLCHAIN: '1.95.0'
+      CARGO_PROFILE_DEV_DEBUG: line-tables-only
+      CARGO_PROFILE_TEST_DEBUG: line-tables-only
+      CARGO_TERM_COLOR: never
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - name: Install pinned Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal --component clippy
+      # The desktop crate embeds the built interface (tauri.conf.json frontendDist).
+      - run: npm --prefix ui ci
+      - run: npm --prefix ui run build
+      - name: Compile everything for Windows (all errors at once)
+        run: |
+          set -o pipefail
+          cargo +1.95.0 check --workspace --all-targets --locked --keep-going --message-format=short 2>&1 | tee windows-check.log
+      - name: Summarize the errors
+        if: always()
+        run: |
+          echo "errors: $(grep -c ': error' windows-check.log || true)"
+          grep ': error' windows-check.log | sed -E 's/:[0-9]+:[0-9]+:/:/' | sort | uniq -c | sort -rn | head -80
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: windows-check-log
+          path: windows-check.log
+          retention-days: 14
