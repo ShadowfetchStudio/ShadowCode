@@ -20,8 +20,13 @@
 #     vendored cpp-httplib, nlohmann/json, stb_image, miniaudio and
 #     subprocess.h, and SPIRV-Headers when the Vulkan module is built.
 #
-# Outputs: packaging/llama.cpp/bin (bundled into the AppImage and the deb) and,
-# unless --no-user-install is given, ~/.local/lib/shadowcode.
+#   * macOS: the same loadable CPU variants plus a Metal module whose shaders
+#     are embedded (no Vulkan); libraries find each other through
+#     @loader_path. Needs Xcode or the Command Line Tools, and cmake.
+#
+# Outputs: packaging/llama.cpp/bin (bundled into the AppImage, the deb and the
+# macOS app) and, unless --no-user-install is given, ~/.local/lib/shadowcode
+# (macOS: ~/Library/Application Support/ShadowCode/llama.cpp).
 # The tracked source pin and reference manifest are inputs, never build outputs.
 # Build timestamps and selected backends belong only in the generated runtime.
 #
@@ -36,7 +41,13 @@ SRC="${SHADOWCODE_LLAMA_SRC:-$ROOT/tools/llama.cpp}"
 BUILD_DIR="${SHADOWCODE_LLAMA_BUILD_DIR:-$SRC/build}"
 PIN="$ROOT/tools/llama.cpp.pin"
 OUT_REPO="$ROOT/packaging/llama.cpp"
-OUT_USER="${SHADOWCODE_LLAMA_PREFIX:-$HOME/.local/lib/shadowcode}"
+DARWIN=0
+[[ "$(uname -s)" == Darwin ]] && DARWIN=1
+if [[ "$DARWIN" == "1" ]]; then
+  OUT_USER="${SHADOWCODE_LLAMA_PREFIX:-$HOME/Library/Application Support/ShadowCode/llama.cpp}"
+else
+  OUT_USER="${SHADOWCODE_LLAMA_PREFIX:-$HOME/.local/lib/shadowcode}"
+fi
 URL="${SHADOWCODE_LLAMA_URL:-https://github.com/ggml-org/llama.cpp.git}"
 SPIRV_URL="${SHADOWCODE_SPIRV_HEADERS_URL:-https://github.com/KhronosGroup/SPIRV-Headers.git}"
 SPIRV_SRC="$ROOT/tools/spirv-headers"
@@ -73,7 +84,8 @@ GENERATOR=()
 if command -v ninja >/dev/null 2>&1; then
   GENERATOR=(-G Ninja)
 fi
-JOBS="${SHADOWCODE_BUILD_JOBS:-$(( $(nproc) > 2 ? $(nproc) - 2 : 1 ))}"
+CPUS="$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
+JOBS="${SHADOWCODE_BUILD_JOBS:-$(( CPUS > 2 ? CPUS - 2 : 1 ))}"
 
 mkdir -p "$(dirname "$SRC")" "$OUT_REPO/bin"
 if [[ ! -d "$SRC/.git" ]]; then
@@ -182,6 +194,14 @@ fi
 
 VULKAN_FLAGS=(-DGGML_VULKAN=OFF)
 BACKEND="cpu"
+RPATH='$ORIGIN'
+if [[ "$DARWIN" == "1" ]]; then
+  # Metal instead of Vulkan; its shader library is compiled into the module.
+  WANT_VULKAN=0
+  VULKAN_FLAGS=(-DGGML_VULKAN=OFF -DGGML_METAL=ON -DGGML_METAL_EMBED_LIBRARY=ON -DGGML_BLAS=OFF)
+  BACKEND="metal+cpu"
+  RPATH='@loader_path'
+fi
 if [[ "$WANT_VULKAN" == "1" ]]; then
   GLSLC="$ROOT/tools/glslc-flatpak.sh"
   if ! "$GLSLC" --version >/dev/null 2>&1; then
@@ -216,7 +236,7 @@ fi
 # compiler is GCC 13. Use gcc-14/g++-14 when the default cannot target it.
 # SHADOWCODE_CC and SHADOWCODE_CXX choose the compilers explicitly.
 COMPILER_FLAGS=()
-if [[ "$(uname -m)" == aarch64 ]]; then
+if [[ "$(uname -m)" == aarch64 && "$DARWIN" == "0" ]]; then
   targets_sme() { printf 'int shadowcode_probe;\n' | "$1" -x "$2" -march=armv9.2-a+sme -c -o /dev/null - >/dev/null 2>&1; }
   LLAMA_CC="${SHADOWCODE_CC:-${CC:-cc}}"
   LLAMA_CXX="${SHADOWCODE_CXX:-${CXX:-c++}}"
@@ -232,7 +252,8 @@ if [[ "$(uname -m)" == aarch64 ]]; then
   COMPILER_FLAGS=(-DCMAKE_C_COMPILER="$LLAMA_CC" -DCMAKE_CXX_COMPILER="$LLAMA_CXX")
 fi
 
-"$CMAKE" -S "$SRC" -B "$BUILD_DIR" "${GENERATOR[@]}" "${COMPILER_FLAGS[@]}" \
+# ${array[@]+...}: empty arrays are "unbound" under set -u in bash 3.2 (macOS).
+"$CMAKE" -S "$SRC" -B "$BUILD_DIR" ${GENERATOR[@]+"${GENERATOR[@]}"} ${COMPILER_FLAGS[@]+"${COMPILER_FLAGS[@]}"} \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_SHARED_LIBS=ON \
   -DGGML_BACKEND_DL=ON \
@@ -245,7 +266,7 @@ fi
   -DLLAMA_BUILD_TOOLS=ON \
   -DLLAMA_BUILD_SERVER=ON \
   -DLLAMA_CURL=OFF \
-  -DCMAKE_INSTALL_RPATH='$ORIGIN' \
+  -DCMAKE_INSTALL_RPATH="$RPATH" \
   -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
 "$CMAKE" --build "$BUILD_DIR" --parallel "$JOBS"
 BIN_DIR="$BUILD_DIR/bin"
@@ -264,7 +285,9 @@ install_runtime() {
   # cp -a keeps the SONAME symlinks relative.
   find "$BIN_DIR" -maxdepth 1 \( -name 'libllama.so*' -o -name 'libllama-common.so*' \
     -o -name 'libllama-server-impl.so' -o -name 'libllama-cli-impl.so' \
-    -o -name 'libggml*.so*' -o -name 'libmtmd*.so*' \) -exec cp -a {} "$dest.new/" \;
+    -o -name 'libggml*.so*' -o -name 'libmtmd*.so*' \
+    -o -name 'libllama*.dylib' -o -name 'libggml*.dylib' -o -name 'libmtmd*.dylib' \) \
+    -exec cp -a {} "$dest.new/" \;
   # Model architectures the pinned runtime can load, from its own source, so
   # the catalog can say "unsupported architecture" instead of guessing.
   sed -n '/LLM_ARCH_NAMES/,/^};/p' "$SRC/src/llama-arch.cpp" \

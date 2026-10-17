@@ -336,14 +336,13 @@ fn login_command(binary: &Path, args: &[&str]) -> tokio::process::Command {
     // No separate process group: a browser the CLI launches must survive
     // when the login child is stopped.
     super::scrub_api_keys(&mut command);
-    #[cfg(target_os = "linux")]
-    unsafe {
-        command.pre_exec(|| {
-            if libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGKILL) != 0 {
-                return Err(std::io::Error::last_os_error());
-            }
-            Ok(())
-        });
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    {
+        let parent = std::process::id();
+        // SAFETY: only system calls between fork and exec.
+        unsafe {
+            command.pre_exec(move || crate::process::die_with_parent(parent));
+        }
     }
     command
 }
@@ -540,14 +539,13 @@ async fn connect_antigravity(
             return Err(error);
         }
     };
-    #[cfg(target_os = "linux")]
-    unsafe {
-        command.pre_exec(|| {
-            if libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGKILL) != 0 {
-                return Err(std::io::Error::last_os_error());
-            }
-            Ok(())
-        });
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    {
+        let parent = std::process::id();
+        // SAFETY: only system calls between fork and exec.
+        unsafe {
+            command.pre_exec(move || crate::process::die_with_parent(parent));
+        }
     }
     let mut child = match command.spawn() {
         Ok(child) => child,

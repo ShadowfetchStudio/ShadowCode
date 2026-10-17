@@ -137,6 +137,82 @@ fn children(_pid: u32) -> Vec<u32> {
     Vec::new()
 }
 
+/// Make the child about to `exec` die with ShadowCode (`parent`), so a
+/// crash never leaves a model server or language server behind.
+///
+/// Linux: `PR_SET_PDEATHSIG`. macOS has no equivalent: the child forks a
+/// watcher that keeps none of its descriptors (pipes still reach EOF) and
+/// waits on kqueue for either process to exit; if ShadowCode goes first it
+/// kills the child. The watcher shares the child's process group, so
+/// stopping the group stops it too.
+///
+/// # Safety
+/// Call only between fork and exec: it only makes system calls.
+#[cfg(target_os = "linux")]
+pub(crate) unsafe fn die_with_parent(_parent: u32) -> std::io::Result<()> {
+    if unsafe { libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGKILL) } != 0 {
+        return Err(std::io::Error::last_os_error());
+    }
+    Ok(())
+}
+
+/// See the Linux version.
+///
+/// # Safety
+/// Call only between fork and exec: it only makes system calls.
+#[cfg(target_os = "macos")]
+pub(crate) unsafe fn die_with_parent(parent: u32) -> std::io::Result<()> {
+    let parent = parent as libc::pid_t;
+    let child = unsafe { libc::getpid() };
+    match unsafe { libc::fork() } {
+        -1 => return Err(std::io::Error::last_os_error()),
+        0 => {}
+        _ => return Ok(()),
+    }
+    // The watcher. Nothing here allocates or takes a lock.
+    unsafe {
+        let limit = libc::getdtablesize().clamp(0, 65536);
+        for fd in 0..limit {
+            libc::close(fd);
+        }
+        let queue = libc::kqueue();
+        if queue < 0 {
+            libc::_exit(0);
+        }
+        let watch = |pid: libc::pid_t| libc::kevent {
+            ident: pid as usize,
+            filter: libc::EVFILT_PROC,
+            flags: libc::EV_ADD | libc::EV_ONESHOT,
+            fflags: libc::NOTE_EXIT,
+            data: 0,
+            udata: std::ptr::null_mut(),
+        };
+        let none = std::ptr::null_mut();
+        // The child already gone (its exec failed): nothing to watch.
+        if libc::kevent(queue, &watch(child), 1, none, 0, std::ptr::null()) != 0 {
+            libc::_exit(0);
+        }
+        // ShadowCode already gone: the child must not outlive it.
+        if libc::kevent(queue, &watch(parent), 1, none, 0, std::ptr::null()) != 0 {
+            libc::kill(child, libc::SIGKILL);
+            libc::_exit(0);
+        }
+        let mut event: libc::kevent = std::mem::zeroed();
+        loop {
+            match libc::kevent(queue, std::ptr::null(), 0, &mut event, 1, std::ptr::null()) {
+                1 => {
+                    if event.ident == parent as usize {
+                        libc::kill(child, libc::SIGKILL);
+                    }
+                    libc::_exit(0);
+                }
+                -1 if *libc::__error() == libc::EINTR => continue,
+                _ => libc::_exit(0),
+            }
+        }
+    }
+}
+
 /// Whether a process id is still taken, zombies included (not yet reaped).
 #[cfg(test)]
 pub(crate) fn exists(pid: u32) -> bool {
@@ -309,21 +385,22 @@ async fn run_internal(
         .envs(&spec.env);
     #[cfg(unix)]
     command.process_group(0);
-    #[cfg(target_os = "linux")]
-    let setup = spec.child.clone();
-    #[cfg(target_os = "linux")]
-    unsafe {
-        command.pre_exec(move || {
-            // Propagate cancellation to shell-created descendants when their
-            // owning process exits, preventing orphaned local-model tasks.
-            if libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGKILL) != 0 {
-                return Err(std::io::Error::last_os_error());
-            }
-            if let Some(setup) = &setup {
-                setup.enter()?;
-            }
-            Ok(())
-        });
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
+    {
+        let setup = spec.child.clone();
+        let parent = std::process::id();
+        // SAFETY: only system calls between fork and exec.
+        unsafe {
+            command.pre_exec(move || {
+                // Propagate cancellation to shell-created descendants when
+                // their owning process exits, preventing orphaned tasks.
+                die_with_parent(parent)?;
+                if let Some(setup) = &setup {
+                    setup.enter()?;
+                }
+                Ok(())
+            });
+        }
     }
     let mut child = command
         .spawn()
@@ -489,4 +566,66 @@ async fn drain(
         }
     }
     Ok(())
+}
+
+#[cfg(all(test, any(target_os = "linux", target_os = "macos")))]
+mod die_with_parent_tests {
+    use std::{
+        io::BufRead,
+        os::unix::process::CommandExt,
+        process::{Command, Stdio},
+        time::{Duration, Instant},
+    };
+
+    const HELPER: &str = "SHADOWCODE_DIE_WITH_PARENT_HELPER";
+
+    /// A crashed ShadowCode (SIGKILL, no cleanup) takes its child along.
+    #[test]
+    // The helper never waits for its child on purpose: it is killed first.
+    #[allow(clippy::zombie_processes)]
+    fn a_child_dies_when_shadowcode_is_killed() {
+        if std::env::var_os(HELPER).is_some() {
+            // The helper stands in for ShadowCode: start a child, report it,
+            // then wait to be killed.
+            let parent = std::process::id();
+            let mut command = Command::new("/bin/sleep");
+            command.arg("30");
+            // SAFETY: only system calls between fork and exec.
+            unsafe {
+                command.pre_exec(move || super::die_with_parent(parent));
+            }
+            let child = command.spawn().unwrap();
+            println!("CHILD {}", child.id());
+            std::thread::sleep(Duration::from_secs(30));
+            return;
+        }
+        let mut helper = Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "process::die_with_parent_tests::a_child_dies_when_shadowcode_is_killed",
+                "--nocapture",
+                "--test-threads=1",
+            ])
+            .env(HELPER, "1")
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let mut child = None;
+        for line in std::io::BufReader::new(helper.stdout.take().unwrap()).lines() {
+            // libtest prints the test's name first on the same line.
+            if let Some(pid) = line.unwrap().split("CHILD ").nth(1) {
+                child = pid.trim().parse::<u32>().ok();
+                break;
+            }
+        }
+        let child = child.expect("the helper started its child");
+        assert!(super::exists(child));
+        helper.kill().unwrap();
+        helper.wait().unwrap();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        while super::exists(child) && Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        assert!(!super::exists(child), "child {child} outlived its parent");
+    }
 }

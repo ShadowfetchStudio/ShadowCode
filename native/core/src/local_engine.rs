@@ -20,7 +20,11 @@ use std::{
 };
 
 const MAX_SCAN_FILES: usize = 256;
+#[cfg(not(target_os = "macos"))]
 pub const MANAGED_RELATIVE: &str = ".local/lib/shadowcode";
+/// macOS keeps the user-installed runtime with the app's other data.
+#[cfg(target_os = "macos")]
+pub const MANAGED_RELATIVE: &str = "Library/Application Support/ShadowCode/llama.cpp";
 pub const MANAGED_SERVER: &str = "llama-server";
 /// Default upper bound for the server context window (tokens).
 pub const DEFAULT_CONTEXT_CAP: u64 = 16384;
@@ -317,9 +321,13 @@ pub fn managed_dir() -> Option<PathBuf> {
 }
 
 /// `usr/lib/shadowcode` next to the executable (AppImage `usr/bin/..`, deb
-/// `/usr/bin/..`).
+/// `/usr/bin/..`); on macOS the app bundle's `Contents/Resources/llama.cpp`
+/// (the executable is in `Contents/MacOS`).
 pub fn bundled_dir() -> Option<PathBuf> {
     let exe = std::env::current_exe().ok()?;
+    #[cfg(target_os = "macos")]
+    return Some(exe.parent()?.join("../Resources/llama.cpp"));
+    #[cfg(not(target_os = "macos"))]
     Some(exe.parent()?.join("../lib/shadowcode"))
 }
 

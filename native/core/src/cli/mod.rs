@@ -51,7 +51,12 @@ impl Outcome {
 }
 impl Options {
     pub fn parse_args() -> Self {
-        Self::parse()
+        let args = std::env::args_os();
+        // Finder may add a process serial number (`-psn_0_12345`) when it
+        // opens the app; it is not an option of ours.
+        #[cfg(target_os = "macos")]
+        let args = args.filter(|arg| !arg.to_string_lossy().starts_with("-psn_"));
+        Self::parse_from(args)
     }
     pub fn desktop(&self) -> bool {
         matches!(self.command, None | Some(Command::Ui))
