@@ -1,6 +1,6 @@
 # macOS port: build estimate
 
-Status: phase 1 done (see Progress); the rest is an estimate. Figures are judgement from a source survey
+Status: ShadowCode builds, installs and runs as a macOS app (see Progress); signing, notarization and release automation remain. The estimate below is the original one. Figures are judgement from a source survey
 (~135k lines of Rust in `native/core` and `src-tauri`), not measurements.
 
 ## Summary
@@ -21,7 +21,7 @@ close-on-exec with `fcntl` where `SOCK_NONBLOCK`/`SOCK_CLOEXEC` don't exist.
 The `gdk` dependency was already Linux-only. `.github/workflows/macos.yml`
 keeps it compiling on GitHub's macOS runner.
 
-**Phase 2 is under way.** All 640 engine unit tests that build on macOS pass
+**Phase 2 (engine on macOS): done.** All 640 engine unit tests that build on macOS pass
 there (Linux: 664). Fixed on the way, each a real macOS gap:
 
 - Workspace opens through cap-std now also set `FollowSymlinks::No`: on macOS
@@ -57,21 +57,56 @@ load on a 4-core Intel iMac; it passes alone), after these product fixes:
 
 The tests themselves no longer read `/proc` to decide whether a process is
 alive (it passed vacuously on macOS; `proc_pidinfo` there) and no longer
-need GNU `touch -d` or `setsid(1)`. Two paused-clock stream tests are
-Linux-only: the paused clock races real loopback I/O on macOS, and the
+need GNU `touch -d` or `setsid(1)`. Three paused-clock tests (two streams,
+one download) are Linux-only: the paused clock races real loopback I/O on macOS, and the
 timing logic they cover is the same everywhere. To run the suite on a Mac,
 build the app first (`cargo build -p shadowcode-desktop`; the real-engine
 tests start it), then `cargo test -p shadowcode-core --tests`.
 
-Still open in phase 2:
+**Phases 2–3 (runs as a Mac app): done, unsigned.** `scripts/build-macos-app.sh`
+builds `ShadowCode.app` and `ShadowCode_<version>_<arch>.dmg` (ad-hoc signed,
+macOS 12 or later) with the Metal llama.cpp runtime inside. On the Intel
+iMac the app opens from Finder, doctor passes, and the local engine reports
+`metal` on its Radeon Pro 555X. What the Mac now does like Linux:
 
-- Redaction's high-entropy rule treats `/` as part of a token, so macOS's
-  per-user temporary folder (`/var/folders/<random>/T/…`) is masked as a
-  secret wherever text is redacted. Safe (over-redaction) but noisy; a
-  path-aware rule must not let base64 secrets with slashes through.
-- The shell sandbox (Seatbelt), Keychain, GUI `PATH`, process control
-  (kqueue), macOS paths (`~/Library`), the window, and Metal llama.cpp, per
-  the table below.
+- **Folders:** settings and history in `~/Library/Application Support/ShadowCode`,
+  cache in `~/Library/Caches/ShadowCode`, the user-installed runtime in
+  `…/ShadowCode/llama.cpp`, the bundled one in `Contents/Resources/llama.cpp`.
+- **`PATH`:** opened from Finder or the Dock, the app asks the login shell
+  for its `PATH` once, so Homebrew Git, Node and the vendor CLIs are found.
+- **Shell sandbox:** Seatbelt (`sandbox-exec`) mirroring bubblewrap: reads
+  only in system, developer and package-manager folders, the project and
+  the toolchain folders (the rest of the home folder and other volumes are
+  hidden, even from `stat`); an empty `HOME` linking to read-only
+  toolchains; writes only in the project and scratch; network off (no IP
+  at all, localhost included), on, or only the allow-list proxy's port.
+  `DEVELOPER_DIR` keeps Apple's git/clang shims fast and quiet inside it.
+- **Keychain:** "Move to keyring" keeps API keys in the login Keychain.
+- **Processes:** stopping work reaches every descendant
+  (`proc_listchildpids`); helpers die with ShadowCode through a kqueue
+  watcher where Linux uses `PR_SET_PDEATHSIG`.
+- **Terminals** (`openpty`), the **dev-server preview** (`lsof` + libproc),
+  **worktree cleanup** (`F_GETPATH`, `renameatx_np`), **SQLite inspection**
+  (SQLite's open/stat routed through the held directory) and **installed
+  memory** (`hw.memsize`).
+- **Local models:** llama.cpp with Metal and the same loadable CPU
+  variants. Its shaders are compiled at build time: compiling them at run
+  time took 55 s on first use and hung outside a desktop session.
+
+Still open:
+
+- **Signing and notarization** need an Apple Developer ID. Until then a
+  downloaded copy needs right-click › Open on first launch.
+- **Release automation:** a macOS job in the release workflow, the signed
+  release manifest and an update path (the updater knows AppImage, deb and
+  Flatpak).
+- **Apple silicon** builds (`aarch64-apple-darwin`) are untested: there is
+  no arm64 Mac here. The runtime build already has the M1–M4 CPU variants.
+- **Real model runs** on the Mac: the runtime loads and sees the GPU, but no
+  GGUF was available to generate with.
+- Redaction's high-entropy rule masks macOS's per-user temporary folder
+  (`/var/folders/<random>/T/…`) as a secret. Safe but noisy; a path-aware
+  rule must not let base64 secrets with slashes through.
 
 ## Work items
 

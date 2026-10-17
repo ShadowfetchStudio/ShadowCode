@@ -877,7 +877,10 @@ pub fn hardware_json(runtime: &Runtime) -> Value {
             "{} with {:.1} GB VRAM via {}; {:.1} GB RAM",
             g.name,
             gb(g.total_bytes),
-            g.id.trim_end_matches(|c: char| c.is_ascii_digit()),
+            match g.id.trim_end_matches(|c: char| c.is_ascii_digit()) {
+                "MTL" => "Metal",
+                api => api,
+            },
             gb(ram)
         ),
         (None, "cpu") => format!("CPU only; {:.1} GB RAM", gb(ram)),
