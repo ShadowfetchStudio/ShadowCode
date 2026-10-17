@@ -30,6 +30,8 @@ mod lsm;
 #[cfg(target_os = "linux")]
 mod netns;
 pub mod proxy;
+#[cfg(target_os = "macos")]
+mod seatbelt;
 
 /// Home entries that toolchains commonly need, mounted read-only.
 pub const DEFAULT_HOME_BINDS: &[&str] = &[
@@ -478,6 +480,10 @@ pub struct ChildSetup {
     /// Flatpak host commands: the proxy's Unix socket, reached through the
     /// relay inside the host bubblewrap network namespace.
     relay: Option<Arc<RelaySocket>>,
+    /// macOS: the proxy's loopback listener, the only address the
+    /// command's Seatbelt profile may connect to.
+    #[cfg(target_os = "macos")]
+    listener: Option<Arc<Mutex<Option<std::net::TcpListener>>>>,
 }
 /// The proxy's listening Unix socket and the private folder holding it,
 /// removed when the command's setup is dropped.
@@ -604,6 +610,15 @@ impl ChildSetup {
             let listener = netns.receive()?;
             return Ok(Some(ProxyGuard(proxy::spawn(listener, gate.clone())?)));
         }
+        #[cfg(target_os = "macos")]
+        if let (Some(listener), Some(gate)) = (&self.listener, &self.gate) {
+            let listener = listener
+                .lock()
+                .map_err(|_| anyhow::anyhow!("Proxy listener lock poisoned"))?
+                .take()
+                .context("The allow-list proxy listener was already used")?;
+            return Ok(Some(ProxyGuard(proxy::spawn(listener, gate.clone())?)));
+        }
         if let (Some(relay), Some(gate)) = (&self.relay, &self.gate) {
             let listener = relay
                 .listener
@@ -669,7 +684,14 @@ pub fn prepare_shell(
     policy: &ShellPolicy,
 ) -> Result<PreparedShell> {
     let layout = HomeLayout::current(&policy.home_binds, workspace);
-    match working_bwrap(workspace) {
+    #[cfg(target_os = "macos")]
+    let result = {
+        // The process runs in `cwd` already; the profile is per project.
+        let _ = cwd;
+        prepare_seatbelt(workspace, command, policy, &layout)
+    };
+    #[cfg(not(target_os = "macos"))]
+    let result = match working_bwrap(workspace) {
         Ok(program) => {
             let net = match policy.network {
                 ShellNetwork::Off => Net::Off,
@@ -705,6 +727,8 @@ pub fn prepare_shell(
                     landlock: None,
                     gate: Some(shared.clone()),
                     relay: Some(socket.clone()),
+                    #[cfg(target_os = "macos")]
+                    listener: None,
                 });
                 gate = Some(shared);
                 relay = Some((program, socket));
@@ -849,7 +873,139 @@ pub fn prepare_shell(
                 warning: Some(warning),
             })
         }
+    };
+    result
+}
+
+/// macOS: the command under Seatbelt, or (when `sandbox-exec` cannot run)
+/// unsandboxed with a warning unless the sandbox is required or the
+/// allow-list is on. See [`seatbelt`].
+#[cfg(target_os = "macos")]
+fn prepare_seatbelt(
+    workspace: &Path,
+    command: &str,
+    policy: &ShellPolicy,
+    layout: &HomeLayout,
+) -> Result<PreparedShell> {
+    if let Err(error) = seatbelt::probe() {
+        if policy.require {
+            bail!("The command did not run: 'Require sandbox' is on and the macOS sandbox is unavailable ({error:#}). Turn off 'Require sandbox' in Settings > Permissions & network to run commands without it.");
+        }
+        if policy.network == ShellNetwork::Allowlist {
+            bail!("The command did not run: the network allow-list needs the macOS sandbox, which is unavailable ({error:#}). Change 'Shell commands and the network' in Settings > Permissions & network.");
+        }
+        return Ok(PreparedShell {
+            program: "/bin/sh".into(),
+            args: vec!["-c".into(), command.into()],
+            child: None,
+            scratch: None,
+            gate: None,
+            note: json!({
+                "mode": "none",
+                "reason": format!("{error:#}"),
+                "network": network_label(policy.network),
+                "network_requested": network_label(policy.network),
+                "network_enforcement": "none",
+                "note": "No macOS sandbox: the command runs as your user without isolation; only the approval policy applies."
+            }),
+            warning: Some(format!("Shell commands are running without a sandbox ({error:#}): they can read and change anything your user can. Turn on 'Require sandbox' in Settings > Permissions & network to refuse commands instead.")),
+        });
     }
+    let net = match policy.network {
+        ShellNetwork::Off => Net::Off,
+        ShellNetwork::On => Net::On,
+        ShellNetwork::Allowlist => Net::Proxy,
+    };
+    let mut child = None;
+    let mut gate = None;
+    let mut proxy_port = None;
+    if net == Net::Proxy {
+        let listener = std::net::TcpListener::bind(("127.0.0.1", 0))
+            .context("Could not start the network allow-list proxy")?;
+        proxy_port = Some(listener.local_addr()?.port());
+        let shared = proxy::Gate::new(policy.allow.clone());
+        child = Some(ChildSetup {
+            gate: Some(shared.clone()),
+            relay: None,
+            listener: Some(Arc::new(Mutex::new(Some(listener)))),
+        });
+        gate = Some(shared);
+    }
+    let scratch = create_scratch(&scratch_base())?;
+    let home = seatbelt::make_home(&scratch.path, layout)?;
+    let developer = seatbelt::developer_dir();
+    let mut read = seatbelt::path_roots(layout.home.as_deref());
+    if let Some(dir) = &developer {
+        read.push(real(dir));
+    }
+    let workspace = real(workspace);
+    let profile = seatbelt::Profile {
+        workspace: &workspace,
+        scratch: &scratch.path,
+        layout,
+        net,
+        proxy_port,
+        read,
+        user_temp: seatbelt::user_temp(),
+    };
+    let s = |p: &Path| p.to_string_lossy().into_owned();
+    let mut args = vec![
+        "-p".to_owned(),
+        profile.text(),
+        "/usr/bin/env".into(),
+        "-u".into(),
+        "XDG_CONFIG_HOME".into(),
+        "-u".into(),
+        "XDG_DATA_HOME".into(),
+        "-u".into(),
+        "XDG_STATE_HOME".into(),
+        format!("HOME={}", s(&home)),
+        format!("TMPDIR={}/", s(&scratch.path.join("tmp"))),
+        format!("SHADOWCODE_SCRATCH={}", s(&scratch.path)),
+    ];
+    if let Some(dir) = &developer {
+        args.push(format!("DEVELOPER_DIR={}", s(dir)));
+    }
+    if let Some(port) = proxy_port {
+        let url = format!("http://127.0.0.1:{port}");
+        for name in [
+            "HTTP_PROXY",
+            "HTTPS_PROXY",
+            "http_proxy",
+            "https_proxy",
+            "ALL_PROXY",
+            "all_proxy",
+        ] {
+            args.push(format!("{name}={url}"));
+        }
+    }
+    args.extend(["/bin/sh".into(), "-c".into(), command.into()]);
+    let note = json!({
+        "mode": "seatbelt",
+        "network": network_label(policy.network),
+        "network_requested": network_label(policy.network),
+        "network_enforcement": match net {
+            Net::Off => "no_network",
+            Net::On => "none",
+            Net::Proxy => "host_allowlist_proxy",
+        },
+        "allow": if net == Net::Proxy { json!(policy.allow_text) } else { Value::Null },
+        "home": "empty temporary folder",
+        "home_read_only": layout.binds.iter().map(|(_, d)| d.to_string_lossy()).collect::<Vec<_>>(),
+        "home_skipped": layout.skipped,
+        "scratch": scratch.path.to_string_lossy(),
+        "workspace_cow": false,
+        "note": "macOS sandbox: read-only system and developer folders, empty home with read-only toolchains, writable project, ephemeral scratch at SHADOWCODE_SCRATCH (also TMPDIR). Not a complete OS sandbox."
+    });
+    Ok(PreparedShell {
+        program: seatbelt::PROGRAM.into(),
+        args,
+        child,
+        scratch: Some(scratch.path),
+        gate,
+        note,
+        warning: None,
+    })
 }
 
 #[cfg(target_os = "linux")]
@@ -872,6 +1028,37 @@ fn landlock_paths(layout: &HomeLayout, network: ShellNetwork) -> (Vec<PathBuf>, 
 }
 
 /// What shell isolation this computer and configuration provide.
+#[cfg(target_os = "macos")]
+pub fn status(config: &Config) -> Value {
+    let works = seatbelt::probe();
+    let network = config.shell_network();
+    let effective = match (&works, config.sandbox.require, network) {
+        (Ok(()), _, _) => "seatbelt",
+        (Err(_), true, _) | (Err(_), _, ShellNetwork::Allowlist) => "blocked",
+        _ => "none",
+    };
+    let layout = HomeLayout::current(&config.sandbox.home_binds, Path::new("/nonexistent"));
+    json!({
+        "platform": "macos",
+        "effective": effective,
+        "seatbelt": {
+            "works": works.is_ok(),
+            "detail": match &works { Ok(()) => "The macOS sandbox works".to_owned(), Err(e) => format!("{e:#}") },
+        },
+        "bubblewrap": {"installed": false, "works": false, "detail": "bubblewrap is Linux-only"},
+        "landlock_abi": 0,
+        "network_namespace": {"available": false, "detail": "macOS commands share the computer's network; the allow-list proxy's port is the only address they may reach"},
+        "require": config.sandbox.require,
+        "shell_network": network_label(network),
+        "allow": config.network.allow,
+        "home_read_only": layout.binds.iter().map(|(_, d)| d.to_string_lossy()).collect::<Vec<_>>(),
+        "home_skipped": layout.skipped,
+        "never_mounted": DENIED_HOME,
+    })
+}
+
+/// What shell isolation this computer and configuration provide.
+#[cfg(not(target_os = "macos"))]
 pub fn status(config: &Config) -> Value {
     let installed = which("bwrap").is_some();
     let bwrap = (|| -> Result<()> {
@@ -892,6 +1079,7 @@ pub fn status(config: &Config) -> Value {
     };
     let layout = HomeLayout::current(&config.sandbox.home_binds, Path::new("/nonexistent"));
     json!({
+        "platform": "linux",
         "effective": effective,
         "bubblewrap": {
             "installed": installed,
@@ -912,6 +1100,23 @@ pub fn status(config: &Config) -> Value {
     })
 }
 
+#[cfg(target_os = "macos")]
+pub fn doctor_checks() -> Vec<Value> {
+    let works = seatbelt::probe();
+    vec![
+        json!({"id":"seatbelt","status":if works.is_ok() {"pass"} else {"warn"},
+        "title":"Shell sandbox (macOS)","detail":match &works {
+            Ok(()) => "The macOS sandbox works: shell commands see an empty home folder with read-only toolchains, read only system, developer and project folders, and write only to the project.".to_owned(),
+            Err(e) => format!("{e:#}. Shell commands run unsandboxed with a warning."),
+        },
+        "fix":"Turn on 'Require sandbox' to refuse commands when the sandbox cannot run. A command is never replayed after a sandbox failure."}),
+        json!({"id":"workspace-cow","status":"info","title":"Live workspace writes",
+        "detail":"Shell writes affect the current workspace. Scratch storage is temporary, not copy-on-write. A checkpoint taken before each command lets rewind restore project files.",
+        "fix":"Use an isolated Git worktree for changes you want to review before integrating."}),
+    ]
+}
+
+#[cfg(not(target_os = "macos"))]
 pub fn doctor_checks() -> Vec<Value> {
     let report = probe_workspace_cow();
     #[cfg(target_os = "linux")]
@@ -1114,6 +1319,8 @@ mod tests {
             .port()
     }
 
+    // The relay is built from packaging/flatpak/proxy-relay.c (Linux).
+    #[cfg(target_os = "linux")]
     #[tokio::test]
     async fn flatpak_relay_forwards_only_through_the_allow_list_proxy() {
         use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -1275,6 +1482,8 @@ mod tests {
         assert_eq!(report["kernel_proof"], false);
     }
 
+    // macOS always uses its own sandbox (see the seatbelt tests below).
+    #[cfg(not(target_os = "macos"))]
     #[test]
     fn missing_bubblewrap_reports_honest_fallback_and_fails_closed_when_required() {
         // PATH is process-global and tests share one process: run the mutation
@@ -1370,5 +1579,184 @@ mod tests {
         assert!(first_warning(&session));
         assert!(!first_warning(&session));
         assert!(first_warning(&format!("{session}-other")));
+    }
+
+    #[cfg(target_os = "macos")]
+    fn seatbelt_policy(network: ShellNetwork, allow: &[&str]) -> ShellPolicy {
+        let allow_text: Vec<String> = allow.iter().map(|s| (*s).to_owned()).collect();
+        ShellPolicy {
+            network,
+            allow: proxy::parse_list(&allow_text).unwrap(),
+            allow_text,
+            home_binds: DEFAULT_HOME_BINDS.iter().map(|s| (*s).to_owned()).collect(),
+            require: true,
+            landlock: false,
+        }
+    }
+
+    /// Run a prepared command to completion: (exit code, stdout + stderr).
+    #[cfg(target_os = "macos")]
+    fn run_prepared(prepared: &PreparedShell, cwd: &Path) -> (i32, String) {
+        let output = Command::new(&prepared.program)
+            .args(&prepared.args)
+            .current_dir(cwd)
+            .env_clear()
+            .env("PATH", "/usr/bin:/bin:/usr/sbin:/sbin")
+            .stdin(Stdio::null())
+            .output()
+            .unwrap();
+        let mut text = String::from_utf8_lossy(&output.stdout).into_owned();
+        text.push_str(&String::from_utf8_lossy(&output.stderr));
+        (output.status.code().unwrap_or(-1), text)
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn seatbelt_confines_files_to_the_project_and_hides_home_and_credentials() {
+        let (root, home, ws) = fake_home();
+        let root = root.path().canonicalize().unwrap();
+        fs::write(root.join("outside.txt"), "outside").unwrap();
+        // A project that contains a credential folder of its own home.
+        let layout = HomeLayout::build(
+            Some(home.clone()),
+            &DEFAULT_HOME_BINDS
+                .iter()
+                .map(|s| (*s).to_owned())
+                .collect::<Vec<_>>(),
+            &ws,
+        );
+        let policy = seatbelt_policy(ShellNetwork::Off, &[]);
+        let run = |command: &str| {
+            let prepared = prepare_seatbelt(&ws, command, &policy, &layout).unwrap();
+            assert_eq!(prepared.note["mode"], "seatbelt");
+            let result = run_prepared(&prepared, &ws);
+            if let Some(scratch) = &prepared.scratch {
+                discard_scratch(scratch).unwrap();
+            }
+            result
+        };
+        let (code, text) = run("echo hi > made.txt && cat made.txt");
+        assert_eq!((code, text.trim()), (0, "hi"));
+        assert!(ws.join("made.txt").is_file());
+        let (code, _) = run(&format!("cat {}", home.join(".ssh/id_ed25519").display()));
+        assert_ne!(code, 0, "the real home folder is hidden");
+        let (code, _) = run(&format!("cat {}", root.join("outside.txt").display()));
+        assert_ne!(code, 0, "folders outside the project are hidden");
+        let (code, _) = run(&format!("echo x > {}", root.join("written.txt").display()));
+        assert_ne!(code, 0);
+        assert!(
+            !root.join("written.txt").exists(),
+            "no writes outside the project"
+        );
+        // HOME is empty but for links to read-only toolchains.
+        let (code, text) =
+            run("test -L \"$HOME/.cargo\" && ls \"$HOME/.cargo\" && ls -a \"$HOME\"");
+        assert_eq!(code, 0, "{text}");
+        assert!(text.contains("bin") && !text.contains(".ssh"), "{text}");
+        let (code, _) = run("touch \"$HOME/.cargo/new\"");
+        assert_ne!(code, 0);
+        assert!(
+            !home.join(".cargo/new").exists(),
+            "toolchains stay read-only"
+        );
+        let (code, _) = run("cat \"$HOME/.cargo/credentials.toml\"");
+        assert_ne!(code, 0, "credential files inside toolchains stay hidden");
+        let (code, text) =
+            run("echo t > \"$TMPDIR/x\" && cat \"$TMPDIR/x\" && echo $SHADOWCODE_SCRATCH");
+        assert_eq!(code, 0, "{text}");
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn seatbelt_hides_credential_folders_inside_the_project() {
+        let root = tempfile::tempdir().unwrap();
+        let home = root.path().canonicalize().unwrap().join("me");
+        fs::create_dir_all(home.join(".ssh")).unwrap();
+        fs::write(home.join(".ssh/id_ed25519"), "not a real key").unwrap();
+        // The project is the home folder itself.
+        let layout = HomeLayout::build(Some(home.clone()), &[], &home);
+        let policy = seatbelt_policy(ShellNetwork::Off, &[]);
+        for command in [
+            "cat .ssh/id_ed25519",
+            "ls .ssh",
+            "mv .ssh moved",
+            "echo x > .ssh/new",
+        ] {
+            let prepared = prepare_seatbelt(&home, command, &policy, &layout).unwrap();
+            let (code, text) = run_prepared(&prepared, &home);
+            assert_ne!(code, 0, "{command}: {text}");
+        }
+        assert!(home.join(".ssh/id_ed25519").is_file());
+        assert!(!home.join(".ssh/new").exists() && !home.join("moved").exists());
+    }
+
+    #[cfg(target_os = "macos")]
+    #[tokio::test]
+    async fn seatbelt_network_modes_are_enforced() {
+        let listener = std::net::TcpListener::bind(("127.0.0.1", 0)).unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let ws = tempfile::tempdir().unwrap();
+        let ws = ws.path().canonicalize().unwrap();
+        let layout = HomeLayout::build(None, &[], &ws);
+        let probe = format!("/usr/bin/nc -z -w 2 127.0.0.1 {port}");
+        let run = |network: ShellNetwork, command: &str| {
+            let policy = seatbelt_policy(network, &["allowed.invalid"]);
+            let prepared = prepare_seatbelt(&ws, command, &policy, &layout).unwrap();
+            (prepared, ws.clone())
+        };
+        // Off: not even this computer's own services.
+        let (prepared, cwd) = run(ShellNetwork::Off, &probe);
+        assert_ne!(run_prepared(&prepared, &cwd).0, 0);
+        // On: anything.
+        let (prepared, cwd) = run(ShellNetwork::On, &probe);
+        assert_eq!(run_prepared(&prepared, &cwd).0, 0);
+        // Allow-list: only the proxy, which refuses hosts not on the list.
+        let (prepared, cwd) = run(ShellNetwork::Allowlist, &probe);
+        assert_ne!(
+            run_prepared(&prepared, &cwd).0,
+            0,
+            "other local ports are closed"
+        );
+        let (prepared, cwd) = run(
+            ShellNetwork::Allowlist,
+            "/usr/bin/curl -sS -m 5 -o /dev/null -w '%{http_code}' -p https://example.com/; echo",
+        );
+        let _guard = prepared
+            .child
+            .as_ref()
+            .unwrap()
+            .after_spawn()
+            .unwrap()
+            .unwrap();
+        let output = tokio::task::spawn_blocking(move || run_prepared(&prepared, &cwd))
+            .await
+            .unwrap();
+        assert!(output.1.contains("403"), "{output:?}");
+        drop(listener);
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn apple_developer_tools_run_cleanly_in_the_seatbelt() {
+        let ws = tempfile::tempdir().unwrap();
+        let ws = ws.path().canonicalize().unwrap();
+        let layout = HomeLayout::current(
+            &DEFAULT_HOME_BINDS
+                .iter()
+                .map(|s| (*s).to_owned())
+                .collect::<Vec<_>>(),
+            &ws,
+        );
+        let policy = seatbelt_policy(ShellNetwork::Off, &[]);
+        let command = "git init -q . && git status --short && cc --version && make --version && python3 -c 'print(6*7)'";
+        let prepared = prepare_seatbelt(&ws, command, &policy, &layout).unwrap();
+        let (code, text) = run_prepared(&prepared, &ws);
+        assert_eq!(code, 0, "{text}");
+        assert!(text.contains("42"), "{text}");
+        // Apple's shims must not fall back to xcodebuild inside the sandbox.
+        assert!(
+            !text.contains("xcodebuild") && !text.contains("xcrun"),
+            "{text}"
+        );
     }
 }

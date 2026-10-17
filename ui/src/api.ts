@@ -1374,8 +1374,11 @@ export type StartCompareRequest = {
 
 /** GET /api/sandbox/status: shell isolation this computer provides. */
 export type SandboxStatus = {
-  effective: "bubblewrap" | "landlock" | "none" | "blocked";
+  platform?: "linux" | "macos";
+  effective: "bubblewrap" | "seatbelt" | "landlock" | "none" | "blocked";
   bubblewrap: { installed: boolean; works: boolean; detail: string };
+  /** macOS only. */
+  seatbelt?: { works: boolean; detail: string };
   landlock_abi: number;
   network_namespace: { available: boolean; detail: string };
   require: boolean;
