@@ -1,0 +1,111 @@
+name: Flatpak release
+# ShadowCode_<version>_x86_64.flatpak and ShadowCode_<version>_aarch64.flatpak
+# (GNOME Platform, bundled llama.cpp with the Vulkan module), built from the
+# release tag inside the SDK on each architecture, installed and started, then
+# attached to the published GitHub release with
+# ShadowCode_<version>_flatpak.sha256. Pull requests already build the
+# Flatpak in ci.yml; this runs only for releases.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to build and attach (for example v2.2.0)'
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: release-flatpak-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: x86_64
+          - runner: ubuntu-24.04-arm
+            arch: aarch64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 240
+    env:
+      RUSTUP_TOOLCHAIN: '1.95.0'
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.TAG }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Require the tag to match the app version
+        run: |
+          version="$(node -p "require('./src-tauri/tauri.conf.json').version")"
+          test "v$version" = "$TAG" || { echo "Tag $TAG does not match app version $version" >&2; exit 1; }
+      - name: Install the pinned Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+      - name: Flatpak tools and Flathub
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder dbus-daemon
+          # flatpak-builder's bubblewrap needs unprivileged user namespaces,
+          # which Ubuntu 24.04 restricts through AppArmor by default.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+      - name: Build the Flatpak with the GNOME 50 SDK (Vulkan + CPU llama.cpp)
+        env:
+          SHADOWCODE_COMMIT: ${{ github.sha }}
+        run: python3 scripts/build-flatpak.py --install-deps-from=flathub --state-dir ~/.flatpak-builder
+      - name: Install and start the bundle
+        run: |
+          version="${TAG#v}"
+          bundle="target/flatpak/ShadowCode_${version}_${{ matrix.arch }}.flatpak"
+          test -f "$bundle"
+          flatpak install --user --noninteractive "$bundle"
+          # `flatpak run` needs a session bus; the runner has no desktop session.
+          dbus-run-session -- flatpak run com.shadowfetch.shadowcode --version | grep -Fx "ShadowCode $version"
+          dbus-run-session -- flatpak run --command=/app/lib/shadowcode/llama-server com.shadowfetch.shadowcode --version
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: flatpak-${{ matrix.arch }}
+          path: target/flatpak/ShadowCode_*_${{ matrix.arch }}.flatpak
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+  attach:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: flatpak-*
+          path: flatpak
+          merge-multiple: true
+      - name: Attach the bundles and their checksums without replacing anything
+        run: |
+          version="${TAG#v}"
+          cd flatpak
+          ls
+          test -f "ShadowCode_${version}_x86_64.flatpak"
+          test -f "ShadowCode_${version}_aarch64.flatpak"
+          sha256sum "ShadowCode_${version}_x86_64.flatpak" "ShadowCode_${version}_aarch64.flatpak" > "ShadowCode_${version}_flatpak.sha256"
+          cat "ShadowCode_${version}_flatpak.sha256"
+          existing="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets -q '.assets[].name')"
+          for file in "ShadowCode_${version}_x86_64.flatpak" "ShadowCode_${version}_aarch64.flatpak" "ShadowCode_${version}_flatpak.sha256"; do
+            if grep -Fxq "$file" <<<"$existing"; then
+              # Never overwrite a published file: an existing one must match.
+              gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$file" --output "existing-$file"
+              cmp -s "$file" "existing-$file" || { echo "$file on the release differs from this build; not replacing it" >&2; exit 1; }
+            else
+              gh release upload "$TAG" "$file" --repo "$GITHUB_REPOSITORY"
+            fi
+          done

@@ -1,19 +1,27 @@
-# ShadowCode 2.1 Flatpak
+# ShadowCode 2.2 Flatpak
 
 The Flatpak runs the native GTK/WebKit desktop, application engine, SQLite
 profile, and bundled CPU/Vulkan llama.cpp runtime on GNOME Platform 50. It is
 an x86_64 or aarch64 package built from source inside the SDK on a host of
-the same architecture. Version 2.1.0 is a local
-build until a publisher signs and publishes it; it is not listed on Flathub.
+the same architecture. From 2.2.0 every GitHub release carries both bundles
+(`.github/workflows/release-flatpak.yml` builds, installs and starts them
+from the release tag) with their SHA-256 checksums in
+`ShadowCode_VERSION_flatpak.sha256`. They are checked by that checksum, not
+by the publisher signature the AppImage and deb carry. It is not listed on
+Flathub.
 
-## Install the local bundle
+## Install the bundle
+
+Download the bundle for your computer and the checksum file from the
+release, then:
 
 ```sh
-flatpak install --user ./ShadowCode_2.1.0_x86_64.flatpak
+sha256sum --check --ignore-missing ShadowCode_2.2.0_flatpak.sha256
+flatpak install --user ./ShadowCode_2.2.0_x86_64.flatpak
 flatpak run com.shadowfetch.shadowcode
 ```
 
-On 64-bit ARM, install `ShadowCode_VERSION_aarch64.flatpak` instead.
+On 64-bit ARM, install `ShadowCode_2.2.0_aarch64.flatpak` instead.
 
 The bundle points to Flathub for the GNOME runtime. Installation exports the
 application launcher and icons into the desktop's Applications menu.

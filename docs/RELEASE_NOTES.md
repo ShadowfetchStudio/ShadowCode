@@ -1,3 +1,53 @@
+# ShadowCode 2.2.0
+
+ShadowCode 2.2.0 runs on Macs, both Apple silicon and Intel, and its Linux
+Flatpak is now a download on every release. It also connects to your own
+model servers and adds find in conversation, a smarter command palette and
+text size. The 2.1.0 notes follow below.
+
+## New
+
+- **ShadowCode for macOS.** `ShadowCode_2.2.0_aarch64.dmg` for Apple silicon
+  and `ShadowCode_2.2.0_x64.dmg` for Intel Macs (macOS 12 or later). Local
+  models run on llama.cpp with Metal; agent shell commands run in the macOS
+  sandbox, with your home folder and other drives hidden; API keys can be
+  kept in the Keychain. Install or update with one command, or open the
+  `.dmg` (see the [README](../README.md#macos); a copy downloaded in a
+  browser needs **Open Anyway** in Privacy & Security the first time).
+- **The Flatpak on every release.** `ShadowCode_2.2.0_x86_64.flatpak` and
+  `ShadowCode_2.2.0_aarch64.flatpak`, with the Vulkan GPU runtime, built,
+  installed and started from the release before they are attached.
+- **Your own model servers.** **Settings › Accounts › Your own endpoints**
+  connects Ollama, LM Studio, llama.cpp or vLLM servers, xAI, OpenAI or any
+  OpenAI-compatible API; the models you pick run with ShadowCode's own agent.
+- **Settings › Agent.** Steps, budgets, time limits, retries, history
+  shortening, checkpoints and more, each with its range, default and Reset.
+- **Find in conversation** (`Ctrl+F`), search that also matches answers, a
+  command palette that matches letters in order and lists conversations and
+  projects, **text size** (`Ctrl+=`, `Ctrl+-`, `Ctrl+0`), message times, and
+  **Show all** and **Copy** for long tool output.
+
+## Fixed
+
+- **Approval cards show the folder a command runs in.** Long paths such as
+  `/Volumes/Disk2/projects/app` could be hidden as if they were secrets.
+- **Low memory is named before a model loads.** A local model that needs
+  more memory than is free right now says so, instead of running very slowly.
+- The theme follows the desktop by default, and screen readers hear
+  milestones rather than every streamed update.
+
+## Download
+
+Linux x86_64: `ShadowCode_2.2.0_amd64.AppImage`, `ShadowCode_2.2.0_amd64.deb`
+and `ShadowCode_2.2.0_appimage-runtime-sources.tar.gz`, with `SHA256SUMS`,
+`RELEASE-MANIFEST.json`, `RELEASE-AUTH` and `RELEASE-AUTH.sig`. For ARM64 the
+packages end in `_aarch64` (AppImage) or `_arm64` (`.deb`), with signature
+files ending in `-aarch64`. Install the AppImage with the authenticated
+installer described in the [README](../README.md#install); the signature is
+checked before anything runs. The Flatpak bundles and the macOS disk images
+are attached shortly after publication, with their SHA-256 checksums in
+`ShadowCode_2.2.0_flatpak.sha256` and `ShadowCode_2.2.0_macos.sha256`.
+
 # ShadowCode 2.1.0
 
 ShadowCode 2.1.0 runs on 64-bit ARM computers, installs and updates from a

@@ -69,10 +69,12 @@ test('published retry verifies bytes without mutations', () => fixture(async ({ 
   assert.equal((await execute()).status, 'already-published');
   assert(state.calls.every(args => args[0] === 'api' || args[1] === 'download'));
 }));
-test('a published retry leaves the macOS images alone but a draft refuses them', () => fixture(async ({ state, execute }) => {
+test('a published retry leaves the macOS images and Flatpaks alone but a draft refuses them', () => fixture(async ({ state, execute }) => {
   await execute(); state.calls = [];
   state.assets.set('ShadowCode_1.0.0_x64.dmg', Buffer.from('macOS image'));
   state.assets.set('ShadowCode_1.0.0_macos.sha256', Buffer.from('checksums'));
+  state.assets.set('ShadowCode_1.0.0_aarch64.flatpak', Buffer.from('Flatpak bundle'));
+  state.assets.set('ShadowCode_1.0.0_flatpak.sha256', Buffer.from('checksums'));
   assert.equal((await execute()).status, 'already-published');
   assert(state.calls.every(args => args[0] === 'api' || args[1] === 'download'));
   state.release.draft = true;

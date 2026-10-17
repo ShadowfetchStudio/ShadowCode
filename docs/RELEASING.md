@@ -7,7 +7,7 @@ and authentication receipts to the exact candidate before publication.
 Pushing a `v*` tag starts `.github/workflows/release.yml`. Publication follows
 build/qualification, protected signing review and verification of all seven
 public assets. The signing environment permits only the tag being released
-(`v2.1.0` for 2.1.0); every later version needs reviewed trust-policy,
+(`v2.2.0` for 2.2.0); every later version needs reviewed trust-policy,
 deployment-rule and tooling-pin updates. The workflow uses
 `docs/RELEASE_NOTES.md` as the release text.
 
@@ -185,15 +185,15 @@ verifies and indexes both `.deb` files. The pinned tooling commit must include
 this multi-target signer and publisher; an older pin refuses the aarch64
 signing call, so the release fails rather than shipping x86_64 alone.
 
-Public trust in `release/trust` currently allows the x86_64 and aarch64 targets, epoch 1 and versions 0.33.0–2.1.0
+Public trust in `release/trust` currently allows the x86_64 and aarch64 targets, epoch 1 and versions 0.33.0–2.2.0
 (raise the key's maximum version in the release commit, as for earlier releases);
 `release/install-policy` fixes the first authenticated version at 0.33.0.
 The `release-signing` environment has the signing secret and requires review by
 `Shadowfetchapps` (User ID `209457103`). Self-review is allowed and GitHub's
-default administrator override remains unchanged. For 2.1.0 its sole
-deployment rule is the tag `v2.1.0` (it was `v1.0.1` for 1.0.1, `v1.0.0` for
-1.0.0, `v0.34.2` for 0.34.2 and `v0.33.1` for 0.33.1);
-`NATIVE_RELEASE_SIGNING_ENVIRONMENT` points to that environment. For 2.1.0,
+default administrator override remains unchanged. For 2.2.0 its sole
+deployment rule is the tag `v2.2.0` (it was `v2.1.0` for 2.1.0, `v1.0.1` for
+1.0.1, `v1.0.0` for 1.0.0, `v0.34.2` for 0.34.2 and `v0.33.1` for 0.33.1);
+`NATIVE_RELEASE_SIGNING_ENVIRONMENT` points to that environment. For 2.2.0,
 `NATIVE_RELEASE_TOOLING_COMMIT` pins the tagged release commit itself, as it
 did for 0.33.1 (`e15c4480e65db5650af012bb2a9773dbe89acf84`).
 

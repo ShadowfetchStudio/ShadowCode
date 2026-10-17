@@ -1,7 +1,35 @@
 # Changelog
 
-## 2.2.0 (unreleased)
+## 2.2.0: macOS, Flatpak downloads and your own model servers
 
+- **macOS.** ShadowCode builds and runs as a Mac app: `ShadowCode.app` in
+  `ShadowCode_VERSION_aarch64.dmg` (Apple silicon) and `_x64.dmg` (Intel),
+  macOS 12 or later, ad-hoc signed and not notarized (GitHub is the channel;
+  `scripts/install-macos.sh` installs from a release after checking
+  `ShadowCode_VERSION_macos.sha256`). Settings and history live in
+  `~/Library/Application Support/ShadowCode`; opened from Finder the app
+  adopts the login shell's `PATH`; agent shell commands run under Seatbelt
+  (`sandbox-exec`) mirroring bubblewrap: hidden home and other volumes, an
+  empty `HOME` with read-only toolchains, writes only in the project and
+  scratch, network off, on or limited to the allow-list proxy; API keys can
+  live in the login Keychain; terminals, the dev-server preview, worktree
+  cleanup and SQLite inspection work without `/proc`; helpers die with the
+  app through a kqueue watcher; llama.cpp is built with Metal and
+  precompiled shaders. `.github/workflows/release-macos.yml` attaches the
+  images to each published release. Details: `docs/MACOS_PORT_ESTIMATE.md`.
+- **Flatpak bundles on every release.** `.github/workflows/release-flatpak.yml`
+  builds `ShadowCode_VERSION_x86_64.flatpak` and `_aarch64.flatpak` (Vulkan
+  runtime) from the release tag, installs and starts them, and attaches them
+  with `ShadowCode_VERSION_flatpak.sha256`. The publisher leaves these
+  later attachments alone when it re-checks a published release.
+- **Paths on approval cards.** The high-entropy secret rule judges a path
+  under a well-known root (`/Users`, `/Volumes`, `/home`, ...) one segment at a
+  time, so a command's folder is no longer shown as `[redacted secret]`; a
+  secret that is itself a segment is still hidden.
+- **Free memory.** Local models that run in RAM (or Apple silicon's shared
+  memory) note when they need more memory than is free right now
+  (`MemAvailable` on Linux, free and reclaimable pages on macOS);
+  `hardware.available_bytes` reports it.
 - **Your own model servers.** **Settings › Accounts › Your own endpoints**
   connects Ollama, LM Studio, a llama.cpp or vLLM server, xAI, OpenAI or any
   OpenAI-compatible API. **Find models** lists what the server offers; the

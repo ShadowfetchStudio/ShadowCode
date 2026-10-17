@@ -29,6 +29,9 @@
     <binary>shadowcode</binary>
   </provides>
   <releases>
+    <release version="2.2.0" date="2026-10-17">
+      <description><p>Your own model servers (Ollama, LM Studio, vLLM, OpenAI-compatible APIs), Settings › Agent, find in conversation, a smarter command palette, text size, and a native macOS app for Apple silicon and Intel Macs.</p></description>
+    </release>
     <release version="2.1.0" date="2026-10-11">
       <description><p>Signed ARM64 builds, a signed APT repository, an installer that checks the new version's first window and can roll back, the hostname allow-list in the Flatpak, a window that remembers its size on Wayland, and per-model history in the picker.</p></description>
     </release>

@@ -58,7 +58,7 @@ await writeFile(path.join(profile, "config/config.yaml"), JSON.stringify({
 }));
 let owner, lease;
 try {
-  assert.equal(await cli(["--version"]), "ShadowCode 2.1.0");
+  assert.equal(await cli(["--version"]), "ShadowCode 2.2.0");
   assert.equal((await cli(["health"])).runtime, "rust");
   await cli(["trust"]);
   const exec = await cli(["exec", "printf host-command > host.txt; git --version; node --version; readlink /proc/self/ns/net"]);
@@ -98,7 +98,7 @@ try {
   }
   const view = (await exchange("POST", "/api/views", null, null, true)).view;
   const about = await exchange("GET", "/api/about", null, view);
-  assert.equal(about.version, "2.1.0"); assert.equal(about.publisher, "Shadowfetch");
+  assert.equal(about.version, "2.2.0"); assert.equal(about.publisher, "Shadowfetch");
   assert.equal(about.install.kind, "flatpak");
   assert.equal(about.links.website, "https://www.shadowfetchlinux.org/shadowcode");
   assert.equal(about.links.publisher, "https://shadowfetch.com");
@@ -136,7 +136,7 @@ try {
     return result.stdout === "dead";
   }, 5000);
   checks.push("persistent engine, attached view, real host PTY, shell job control, resize, Ctrl-C and descendant cleanup");
-  await writeFile(path.join(output, "package-result.json"), JSON.stringify({ version: "2.1.0", profile, project, checks, terminal, terminal_child_pid: terminalChild, host_network: hostNetwork }, null, 2) + "\n");
+  await writeFile(path.join(output, "package-result.json"), JSON.stringify({ version: "2.2.0", profile, project, checks, terminal, terminal_child_pid: terminalChild, host_network: hostNetwork }, null, 2) + "\n");
   console.log(JSON.stringify(checks, null, 2));
 } finally {
   if (lease) lease.destroy();
