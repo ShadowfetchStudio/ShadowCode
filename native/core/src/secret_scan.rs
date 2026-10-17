@@ -1559,9 +1559,13 @@ diff --git a/t\\303\\251st/a b.env b/t\\303\\251st/a b.env\nnew file mode 100644
     }
 
     fn executable(path: &Path, text: &str) {
-        use std::os::unix::fs::PermissionsExt;
         std::fs::write(path, text).unwrap();
-        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755)).unwrap();
+        // Windows has no execute bit; Git runs hooks through its own sh.
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755)).unwrap();
+        }
     }
 
     /// A sandboxed command can write `.git/config`, and the check runs

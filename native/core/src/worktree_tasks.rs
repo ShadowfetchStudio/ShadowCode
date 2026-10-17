@@ -34,7 +34,7 @@ use tokio_util::sync::CancellationToken;
 mod locks;
 pub mod setup;
 // Used by worktrees::cleanup's tests.
-#[cfg(test)]
+#[cfg(all(test, unix))]
 pub(crate) fn record_lock_references(store: &Store, id: &str) -> usize {
     locks::record_references(store, id)
 }
@@ -1038,6 +1038,8 @@ mod tests {
         assert!(!worktree.join("secret.txt").exists());
     }
 
+    // Creating a symlink needs extra privileges on Windows.
+    #[cfg(unix)]
     #[test]
     fn attachments_never_follow_a_symlink_out_of_the_project() {
         let root = tempfile::tempdir().unwrap();

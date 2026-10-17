@@ -214,7 +214,7 @@ pub(crate) unsafe fn die_with_parent(parent: u32) -> std::io::Result<()> {
 }
 
 /// Whether a process id is still taken, zombies included (not yet reaped).
-#[cfg(test)]
+#[cfg(all(test, unix))]
 pub(crate) fn exists(pid: u32) -> bool {
     let Ok(pid) = libc::pid_t::try_from(pid) else {
         return false;

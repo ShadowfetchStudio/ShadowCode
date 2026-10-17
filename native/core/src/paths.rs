@@ -145,6 +145,7 @@ impl AppPaths {
 /// descriptor itself; macOS has no /proc and asks the kernel for the
 /// directory's current path, so callers that later act through the held
 /// descriptor fail closed if the directory moved in between.
+#[cfg(unix)]
 pub(crate) fn held_directory(fd: std::os::fd::RawFd) -> Result<PathBuf> {
     #[cfg(target_os = "linux")]
     {

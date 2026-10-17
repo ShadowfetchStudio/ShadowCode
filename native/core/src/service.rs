@@ -65,7 +65,6 @@ mod feed;
 mod forge;
 mod git;
 mod goals;
-#[cfg(unix)]
 mod inspection;
 mod issues;
 mod jobs;

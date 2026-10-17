@@ -91,6 +91,10 @@ pub mod subagents;
 pub mod supply_chain;
 pub mod symbol_index;
 pub mod system_info;
+#[cfg(unix)]
+pub mod terminal;
+#[cfg(not(unix))]
+#[path = "terminal_windows.rs"]
 pub mod terminal;
 pub mod textdiff;
 pub mod timing;

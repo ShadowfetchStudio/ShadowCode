@@ -1372,6 +1372,8 @@ mod tests {
         }
     }
 
+    // The fake vendor CLI is a script started by its #! line.
+    #[cfg(unix)]
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn cancelled_login_waiting_to_publish_cannot_save_ready_or_usage() {
         for expires_while_waiting in [false, true] {

@@ -1,5 +1,6 @@
 //! Managed Git worktrees. The source checkout is never reset or stashed.
 pub mod changes;
+#[cfg(unix)]
 mod cleanup;
 mod locks;
 pub mod repair;
@@ -646,7 +647,18 @@ async fn dispose_checkout(
     cancel: CancellationToken,
 ) -> Result<Option<String>> {
     let index = index_root(paths, id);
+    #[cfg(unix)]
     let result = cleanup::dispose(paths, source, id, delete_branch, cancel).await;
+    // The careful cleanup works through held directory handles; on Windows
+    // it is not ported yet (docs/WINDOWS_PORT.md), and a checkout is never
+    // removed less carefully instead.
+    #[cfg(not(unix))]
+    let result: Result<Option<String>> = {
+        let _ = (paths, source, delete_branch, cancel);
+        Err(anyhow::anyhow!(
+            "Removing managed worktrees is not available on Windows yet; the checkout {id} was kept."
+        ))
+    };
     if result.is_ok() {
         forget_index(index);
     }
