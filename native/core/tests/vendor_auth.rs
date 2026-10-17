@@ -1,5 +1,6 @@
 //! Official-login supervision using an isolated fake CLI, never an account.
-#![cfg(target_os = "linux")]
+#![cfg(any(target_os = "linux", target_os = "macos"))]
+mod support;
 
 use serde_json::Value;
 use shadowcode_core::{
@@ -135,15 +136,10 @@ async fn exercise(case: Case) {
         .unwrap()
         .parse()
         .unwrap();
-    // /proc disappearance proves the supervised parent was reaped. Its helper
-    // still owns both inherited output pipes while the drain is in progress.
-    assert!(
-        wait_for(
-            || !Path::new(&format!("/proc/{pid}")).exists(),
-            Duration::from_millis(150)
-        )
-        .await
-    );
+    // The pid's disappearance proves the supervised parent was reaped. Its
+    // helper still owns both inherited output pipes while the drain is in
+    // progress.
+    assert!(wait_for(|| !support::exists(pid), Duration::from_millis(150)).await);
     if matches!(case, Case::Tail) {
         // Start the tail's delay only after reaping is observed, so scheduler
         // delay before that observation cannot make the tail finish early.

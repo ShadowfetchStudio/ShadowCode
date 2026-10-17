@@ -2,7 +2,7 @@
 //! process output and from project processes' listening sockets, the
 //! loopback proxy (refusals, HTML injection) and preview context appended
 //! to a task for the model.
-#![cfg(target_os = "linux")]
+#![cfg(any(target_os = "linux", target_os = "macos"))]
 mod support;
 use serde_json::{json, Value};
 use shadowcode_core::{
@@ -135,7 +135,11 @@ async fn finds_background_urls_and_project_listeners_but_not_others() {
     assert_eq!(inside["source"], "process");
     assert_eq!(inside["listening"], true);
     assert_eq!(inside["url"], format!("http://localhost:{inside_port}/"));
-    assert_eq!(inside["process"], "python3");
+    // The executable's own name: python3 on Linux, python3.13 (say) on macOS.
+    assert!(
+        inside["process"].as_str().unwrap().starts_with("python3"),
+        "{inside}"
+    );
     let printed = by_port(printed_port).unwrap();
     assert_eq!(printed["source"], "background");
     assert_eq!(

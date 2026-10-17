@@ -137,6 +137,17 @@ fn children(_pid: u32) -> Vec<u32> {
     Vec::new()
 }
 
+/// Whether a process id is still taken, zombies included (not yet reaped).
+#[cfg(test)]
+pub(crate) fn exists(pid: u32) -> bool {
+    let Ok(pid) = libc::pid_t::try_from(pid) else {
+        return false;
+    };
+    // SAFETY: signal 0 only checks that the process exists.
+    let alive = unsafe { libc::kill(pid, 0) } == 0;
+    alive || std::io::Error::last_os_error().raw_os_error() == Some(libc::EPERM)
+}
+
 struct ProcessGroup(u32);
 impl ProcessGroup {
     fn terminate(&self) {

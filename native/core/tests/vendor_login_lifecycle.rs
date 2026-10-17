@@ -1,5 +1,5 @@
 //! Private fake login/account-check lifecycle barriers; no real authentication.
-#![cfg(target_os = "linux")]
+#![cfg(any(target_os = "linux", target_os = "macos"))]
 mod vendor_support;
 
 use serde_json::{json, Value};
@@ -46,6 +46,40 @@ async fn until(mut ready: impl FnMut() -> bool, timeout: Duration) -> bool {
 fn pid_from(file: &Path) -> Option<u32> {
     fs::read_to_string(file).ok()?.trim().parse().ok()
 }
+/// The process's identity: present, state (Z for a zombie), start time and
+/// executable. A reaped process is absent.
+#[cfg(target_os = "macos")]
+fn process_snapshot(pid: u32) -> Value {
+    let mut info: libc::proc_bsdinfo = unsafe { std::mem::zeroed() };
+    let size = std::mem::size_of::<libc::proc_bsdinfo>() as i32;
+    // SAFETY: proc_pidinfo writes at most `size` bytes into `info`.
+    let written = unsafe {
+        libc::proc_pidinfo(
+            pid as i32,
+            libc::PROC_PIDTBSDINFO,
+            0,
+            (&mut info as *mut libc::proc_bsdinfo).cast(),
+            size,
+        )
+    };
+    if written != size {
+        return json!({"pid":pid,"present":false});
+    }
+    let mut path = vec![0u8; libc::PROC_PIDPATHINFO_MAXSIZE as usize];
+    // SAFETY: proc_pidpath writes at most the buffer's size.
+    let len =
+        unsafe { libc::proc_pidpath(pid as i32, path.as_mut_ptr().cast(), path.len() as u32) };
+    path.truncate(len.max(0) as usize);
+    let state = if info.pbi_status == libc::SZOMB {
+        "Z"
+    } else {
+        "S"
+    };
+    json!({"pid":pid,"present":true,"state":state,
+        "start_ticks":format!("{}.{:06}", info.pbi_start_tvsec, info.pbi_start_tvusec),
+        "exe":(len > 0).then(|| String::from_utf8_lossy(&path).into_owned())})
+}
+#[cfg(target_os = "linux")]
 fn process_snapshot(pid: u32) -> Value {
     let proc = PathBuf::from(format!("/proc/{pid}"));
     match fs::read_to_string(proc.join("stat")) {
