@@ -979,11 +979,9 @@ async fn a_git_import_clones_updates_and_never_checks_out_links() {
     assert_eq!(fs::read_to_string(&leak).unwrap(), "/etc/passwd");
     let book = f.book();
     assert!(book.guidance(&f.workspace()).contains("Team rule one."));
-    // The address itself may be redacted: on macOS the temporary folder
-    // (/var/folders/<random>/T) reads as a high-entropy token.
     assert!(book
         .guidance(&f.workspace())
-        .contains("imported into their ShadowCode profile from file:"));
+        .contains("imported into their ShadowCode profile from file://"));
     let catalog = book.catalog(&f.workspace());
     assert!(catalog
         .definitions
