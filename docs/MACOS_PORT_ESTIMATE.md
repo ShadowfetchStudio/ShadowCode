@@ -1,6 +1,6 @@
 # macOS port: build estimate
 
-Status: ShadowCode builds, installs and runs as a macOS app and is released on GitHub (see Progress). The estimate below is the original one. Figures are judgement from a source survey
+Status: released. ShadowCode 2.2.0 (October 17, 2026) is the first release with macOS disk images for Apple silicon and Intel (see Progress). The estimate below is the original one. Figures are judgement from a source survey
 (~135k lines of Rust in `native/core` and `src-tauri`), not measurements.
 
 ## Summary
