@@ -1,7 +1,7 @@
 //! API keys in the desktop keyring, with `secrets.env` as the fallback.
 //!
 //! The keyring is the freedesktop Secret Service (GNOME Keyring, KWallet,
-//! KeePassXC …) on the session D-Bus. A key moves there only when the user
+//! KeePassXC …) on the session D-Bus, or the login Keychain on macOS. A key moves there only when the user
 //! asks (Settings › Accounts), and moves back the same way; the move writes
 //! and reads back the new place before removing the old one, so a key is
 //! never lost. `config/keyring.json` (mode 600) lists which keys live in the
@@ -95,6 +95,9 @@ fn vault() -> Result<Box<dyn Vault>> {
         }
         return Ok(Box::new(fake::FileVault(file)));
     }
+    #[cfg(target_os = "macos")]
+    return Ok(Box::new(keychain::Keychain));
+    #[cfg(not(target_os = "macos"))]
     Ok(Box::new(dbus::SecretService::open()?))
 }
 
@@ -135,7 +138,8 @@ pub fn availability() -> std::result::Result<(), String> {
     if std::env::var_os("SHADOWCODE_TEST_KEYRING").is_some() {
         return with_vault(|_| Ok(())).map_err(|error| format!("{error:#}"));
     }
-    if std::env::var_os("DBUS_SESSION_BUS_ADDRESS").is_none()
+    if cfg!(not(target_os = "macos"))
+        && std::env::var_os("DBUS_SESSION_BUS_ADDRESS").is_none()
         && std::env::var_os("XDG_RUNTIME_DIR").is_none()
     {
         return Err("This session has no desktop keyring (no D-Bus session).".into());
@@ -282,6 +286,58 @@ pub fn move_out(paths: &AppPaths, name: &str) -> Result<()> {
     Ok(())
 }
 
+#[cfg(target_os = "macos")]
+mod keychain {
+    //! Generic passwords in the login Keychain: service `ShadowCode`,
+    //! account `<profile>/<name>` (the same attributes as the Secret
+    //! Service). A locked Keychain is reported, never unlocked here.
+    use super::Vault;
+    use anyhow::{anyhow, Context, Result};
+    use security_framework::passwords;
+
+    const SERVICE: &str = "ShadowCode";
+    /// errSecItemNotFound
+    const NOT_FOUND: i32 = -25300;
+
+    pub struct Keychain;
+
+    fn account(attributes: &[(&str, &str)]) -> Result<String> {
+        let get = |key: &str| {
+            attributes
+                .iter()
+                .find(|(k, _)| *k == key)
+                .map(|(_, value)| *value)
+        };
+        let profile = get("profile").context("Keychain item has no profile")?;
+        let name = get("name").context("Keychain item has no name")?;
+        Ok(format!("{profile}/{name}"))
+    }
+
+    impl Vault for Keychain {
+        fn get(&self, attributes: &[(&str, &str)]) -> Result<Option<String>> {
+            match passwords::get_generic_password(SERVICE, &account(attributes)?) {
+                Ok(bytes) => Ok(Some(
+                    String::from_utf8(bytes).context("Keychain item is not text")?,
+                )),
+                Err(error) if error.code() == NOT_FOUND => Ok(None),
+                Err(error) => Err(anyhow!("The Keychain refused: {error}")),
+            }
+        }
+        fn put(&self, attributes: &[(&str, &str)], _label: &str, value: &str) -> Result<()> {
+            passwords::set_generic_password(SERVICE, &account(attributes)?, value.as_bytes())
+                .map_err(|error| anyhow!("The Keychain refused: {error}"))
+        }
+        fn delete(&self, attributes: &[(&str, &str)]) -> Result<()> {
+            match passwords::delete_generic_password(SERVICE, &account(attributes)?) {
+                Ok(()) => Ok(()),
+                Err(error) if error.code() == NOT_FOUND => Ok(()),
+                Err(error) => Err(anyhow!("The Keychain refused: {error}")),
+            }
+        }
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
 mod dbus {
     //! The freedesktop Secret Service, spoken directly over D-Bus with the
     //! `plain` session algorithm (the session bus is private to the user).
@@ -515,6 +571,7 @@ pub fn overview(paths: &AppPaths) -> Result<serde_json::Value> {
         "keyring": {
             "available": available.is_ok(),
             "detail": available.err(),
+            "kind": if cfg!(target_os = "macos") { "keychain" } else { "secret_service" },
         },
         "file": paths.secrets_file(),
         "keys": keys,
@@ -674,5 +731,32 @@ mod tests {
         move_out(&paths, "SHADOWCODE_LIVE_TEST").unwrap();
         cache().lock().unwrap().clear();
         assert_eq!(get(&paths, "SHADOWCODE_LIVE_TEST").unwrap(), None);
+    }
+
+    /// Writes a throwaway item to the real login Keychain and removes it.
+    /// Ignored by default: run with `--ignored` on a Mac with an unlocked
+    /// login Keychain.
+    #[cfg(target_os = "macos")]
+    #[test]
+    #[ignore]
+    fn the_macos_keychain_stores_reads_and_deletes_an_item() {
+        let vault = super::keychain::Keychain;
+        let profile = format!("test-{}", crate::id());
+        let attributes = [
+            ("application", "shadowcode"),
+            ("profile", profile.as_str()),
+            ("name", "SHADOWCODE_TEST_KEY"),
+        ];
+        assert_eq!(vault.get(&attributes).unwrap(), None);
+        vault.put(&attributes, "test", "not-a-real-key").unwrap();
+        assert_eq!(
+            vault.get(&attributes).unwrap().as_deref(),
+            Some("not-a-real-key")
+        );
+        vault.put(&attributes, "test", "replaced").unwrap();
+        assert_eq!(vault.get(&attributes).unwrap().as_deref(), Some("replaced"));
+        vault.delete(&attributes).unwrap();
+        assert_eq!(vault.get(&attributes).unwrap(), None);
+        vault.delete(&attributes).unwrap();
     }
 }

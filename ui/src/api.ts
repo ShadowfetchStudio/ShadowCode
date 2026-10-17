@@ -908,7 +908,12 @@ export type GitHooksState = {
   fingerprint: string;
 };
 export type SecretStorage = {
-  keyring: { available: boolean; detail: string | null };
+  keyring: {
+    available: boolean;
+    detail: string | null;
+    /** The macOS Keychain or the freedesktop Secret Service. */
+    kind?: "keychain" | "secret_service";
+  };
   file: string;
   keys: { name: string; place: "file" | "keyring" }[];
 };
