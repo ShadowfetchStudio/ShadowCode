@@ -472,8 +472,15 @@ fn backend_of(devices: &[Device]) -> String {
     devices
         .first()
         .map(|d| {
-            d.id.trim_end_matches(|c: char| c.is_ascii_digit())
-                .to_ascii_lowercase()
+            let kind =
+                d.id.trim_end_matches(|c: char| c.is_ascii_digit())
+                    .to_ascii_lowercase();
+            // llama.cpp names Metal devices MTL0, MTL1, ...
+            if kind == "mtl" {
+                "metal".into()
+            } else {
+                kind
+            }
         })
         .unwrap_or_else(|| "cpu".into())
 }
@@ -2066,6 +2073,12 @@ mod tests {
         assert_eq!(backend_of(&devices), "vulkan");
         assert!(parse_devices("Available devices:\n").is_empty());
         assert_eq!(backend_of(&[]), "cpu");
+        // macOS (the real output on an Intel iMac).
+        let metal = parse_devices(
+            "Available devices:\n  MTL0: AMD Radeon Pro 555X (2048 MiB, 2047 MiB free)\n",
+        );
+        assert_eq!(metal[0].name, "AMD Radeon Pro 555X");
+        assert_eq!(backend_of(&metal), "metal");
         let (v, c) =
             parse_version("x\nversion: 0.4.1-dev (build 1, commit 18f9f7bef)\nbuilt with GNU")
                 .unwrap();

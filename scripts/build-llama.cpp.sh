@@ -20,9 +20,12 @@
 #     vendored cpp-httplib, nlohmann/json, stb_image, miniaudio and
 #     subprocess.h, and SPIRV-Headers when the Vulkan module is built.
 #
-#   * macOS: the same loadable CPU variants plus a Metal module whose shaders
-#     are embedded (no Vulkan); libraries find each other through
-#     @loader_path. Needs Xcode or the Command Line Tools, and cmake.
+#   * macOS: the same loadable CPU variants plus a Metal module (no Vulkan);
+#     libraries find each other through @loader_path. The Metal shaders are
+#     compiled at build time into default.metallib next to llama-server:
+#     compiling them at run time takes about a minute on first use and hangs
+#     outside a logged-in desktop session. Needs Xcode (its metal compiler)
+#     and cmake.
 #
 # Outputs: packaging/llama.cpp/bin (bundled into the AppImage, the deb and the
 # macOS app) and, unless --no-user-install is given, ~/.local/lib/shadowcode
@@ -198,7 +201,7 @@ RPATH='$ORIGIN'
 if [[ "$DARWIN" == "1" ]]; then
   # Metal instead of Vulkan; its shader library is compiled into the module.
   WANT_VULKAN=0
-  VULKAN_FLAGS=(-DGGML_VULKAN=OFF -DGGML_METAL=ON -DGGML_METAL_EMBED_LIBRARY=ON -DGGML_BLAS=OFF)
+  VULKAN_FLAGS=(-DGGML_VULKAN=OFF -DGGML_METAL=ON -DGGML_METAL_EMBED_LIBRARY=OFF -DGGML_BLAS=OFF)
   BACKEND="metal+cpu"
   RPATH='@loader_path'
 fi
@@ -286,7 +289,9 @@ install_runtime() {
   find "$BIN_DIR" -maxdepth 1 \( -name 'libllama.so*' -o -name 'libllama-common.so*' \
     -o -name 'libllama-server-impl.so' -o -name 'libllama-cli-impl.so' \
     -o -name 'libggml*.so*' -o -name 'libmtmd*.so*' \
-    -o -name 'libllama*.dylib' -o -name 'libggml*.dylib' -o -name 'libmtmd*.dylib' \) \
+    -o -name 'libllama.*dylib' -o -name 'libllama-common.*dylib' \
+    -o -name 'libllama-server-impl.dylib' -o -name 'libllama-cli-impl.dylib' \
+    -o -name 'libggml*.dylib' -o -name 'libmtmd*.dylib' -o -name '*.metallib' \) \
     -exec cp -a {} "$dest.new/" \;
   # Model architectures the pinned runtime can load, from its own source, so
   # the catalog can say "unsupported architecture" instead of guessing.

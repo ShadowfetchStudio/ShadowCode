@@ -280,7 +280,7 @@ export type LocalCatalog = {
     ram_bytes?: number;
     gpu?: string | null;
     vram_bytes?: number | null;
-    backend?: "vulkan" | "cpu" | "unknown" | string;
+    backend?: "vulkan" | "metal" | "cpu" | "unknown" | string;
     devices?: string[];
     detail?: string;
   };
