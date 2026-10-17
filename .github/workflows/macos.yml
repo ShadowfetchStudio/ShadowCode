@@ -1,0 +1,38 @@
+name: macOS
+# The macOS port (docs/MACOS_PORT_ESTIMATE.md): the whole workspace must keep
+# compiling on macOS with clippy warnings as errors, and the tests that pass
+# there must keep passing. Nothing here is packaged or signed.
+on:
+  push:
+    branches: [main]
+    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/macos.yml']
+  pull_request:
+    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/macos.yml']
+permissions:
+  contents: read
+concurrency:
+  group: macos-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      RUSTUP_TOOLCHAIN: '1.95.0'
+      CARGO_PROFILE_DEV_DEBUG: line-tables-only
+      CARGO_PROFILE_TEST_DEBUG: line-tables-only
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - name: Install pinned Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal --component clippy
+      # The desktop crate embeds the built interface (tauri.conf.json frontendDist).
+      - run: npm --prefix ui ci
+      - run: npm --prefix ui run build
+      - run: cargo +1.95.0 clippy --workspace --all-targets --locked -- -D warnings
+      # Phase 2: engine unit tests pass on macOS; integration tests join later.
+      - run: cargo +1.95.0 test -p shadowcode-core --lib --locked

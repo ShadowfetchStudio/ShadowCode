@@ -38,6 +38,11 @@ impl Fixture {
         let other = root.path().join("other");
         fs::create_dir(&project).unwrap();
         fs::create_dir(&other).unwrap();
+        // Real paths, as the service names them (macOS: /var is /private/var).
+        let (project, other) = (
+            project.canonicalize().unwrap(),
+            other.canonicalize().unwrap(),
+        );
         let paths = AppPaths::isolated(&root.path().join("profile")).unwrap();
         Config::patch(&paths,json!({"model":{"provider":"local","name":"fixture","default":"fixture","endpoint":endpoint,"context_limit":16384},"trusted_workspaces":[project,other],"agent":{"max_steps":5,"model_retries":0}})).unwrap();
         let service = Service::open(paths.clone(), Some(other.clone())).unwrap();
@@ -140,6 +145,10 @@ fn rpc(method: &str, params: Value) -> Value {
 // A sandbox child reports a namespace-local PID. Resolve its host identity
 // while it is alive, then assert that exact process is reaped on shutdown.
 fn host_pid(project: &std::path::Path, namespace_pid: u32) -> u32 {
+    // macOS has no PID namespaces: the reported PID is the host's.
+    if !cfg!(target_os = "linux") {
+        return namespace_pid;
+    }
     let project = project.canonicalize().unwrap();
     let matches: Vec<_> = fs::read_dir("/proc")
         .unwrap()
@@ -164,10 +173,7 @@ fn host_pid(project: &std::path::Path, namespace_pid: u32) -> u32 {
     matches[0]
 }
 fn dead(pid: u32) -> bool {
-    fs::read_to_string(format!("/proc/{pid}/stat")).map_or(true, |stat| {
-        stat.rsplit_once(") ")
-            .is_some_and(|(_, state)| state.starts_with('Z') || state.starts_with('X'))
-    })
+    !support::running(pid)
 }
 
 #[tokio::test]

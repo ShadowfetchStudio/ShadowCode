@@ -1,0 +1,7 @@
+{
+  "bundle": {
+    "resources": {
+      "../packaging/llama.cpp/bin/": "llama.cpp/"
+    }
+  }
+}

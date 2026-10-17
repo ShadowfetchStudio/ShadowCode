@@ -40,6 +40,8 @@ const X11_TITLE_BAR: f64 = 48.0;
 pub enum Desktop {
     /// The window draws its own title bar (a GTK header bar) inside the size
     /// it asks for, and the compositor chooses where the window opens.
+    /// Only GTK reports it; macOS sizes like X11 (title bar outside).
+    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
     Wayland,
     /// The window manager adds its title bar outside the window's size, and
     /// the window opens where Tauri or the window-state plugin puts it.

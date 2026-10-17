@@ -111,12 +111,10 @@ async fn install_sign_in_models_run_and_sign_out_through_the_acp_server() {
     let recent = home.join("runs/still-running");
     fs::create_dir_all(stale.join("tmp")).unwrap();
     fs::create_dir_all(&recent).unwrap();
-    let aged = std::process::Command::new("touch")
-        .args(["-d", "3 days ago"])
-        .arg(&stale)
-        .status()
+    fs::File::open(&stale)
+        .unwrap()
+        .set_modified(std::time::SystemTime::now() - Duration::from_secs(3 * 24 * 3600))
         .unwrap();
-    assert!(aged.success());
 
     // Installed, not signed in: the status probe sees the printed link and
     // stops; no browser is opened.

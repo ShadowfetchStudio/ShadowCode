@@ -43,33 +43,47 @@ export function sandboxPatch(values: SandboxValues) {
 }
 
 function statusLine(status: SandboxStatus): string {
+  const mac = status.platform === "macos";
   switch (status.effective) {
     case "bubblewrap":
       return "Sandbox active (bubblewrap): commands see an empty home folder with read-only toolchains, and only this project is writable.";
+    case "seatbelt":
+      return "Sandbox active (macOS): commands see an empty home folder with read-only toolchains, read only system, developer and project folders, and only this project is writable.";
     case "landlock":
       return "bubblewrap is unavailable. Commands can fall back to Landlock file limits; network and process isolation are incomplete. Turn on Require sandbox to refuse fallback.";
     case "blocked":
+      if (mac) {
+        return "The macOS sandbox is not available, so shell commands will be refused. Turn off Require sandbox and the host allow-list to run them unsandboxed.";
+      }
       return status.bubblewrap.works
         ? "The host allow-list needs private network namespaces, which this system does not allow. Shell commands will be refused."
         : "bubblewrap is not available, so shell commands will be refused. Install bubblewrap, or turn off Require sandbox and the host allow-list.";
     default:
-      return "No sandbox is available: commands run with your user's full access. Install bubblewrap to isolate them.";
+      return mac
+        ? "The macOS sandbox is not available: commands run with your user's full access."
+        : "No sandbox is available: commands run with your user's full access. Install bubblewrap to isolate them.";
   }
 }
 
-const NETWORK_OPTIONS: [ShellNetwork, string, string][] = [
-  [
-    "off",
-    "No network",
-    "Request no network access. Full isolation needs working bubblewrap.",
-  ],
-  [
-    "allowlist",
-    "Only allowed hosts",
-    "Web requests go through a filter that lets only the hosts below through. Needs bubblewrap.",
-  ],
-  ["on", "Full network", "Approved shell commands can reach any host."],
-];
+function networkOptions(mac: boolean): [ShellNetwork, string, string][] {
+  return [
+    [
+      "off",
+      "No network",
+      mac
+        ? "No network access at all, not even this computer's own services."
+        : "Request no network access. Full isolation needs working bubblewrap.",
+    ],
+    [
+      "allowlist",
+      "Only allowed hosts",
+      mac
+        ? "Web requests go through a filter that lets only the hosts below through."
+        : "Web requests go through a filter that lets only the hosts below through. Needs bubblewrap.",
+    ],
+    ["on", "Full network", "Approved shell commands can reach any host."],
+  ];
+}
 
 /** Settings › Permissions & network: the shell sandbox and its network. */
 export function SandboxSettings({
@@ -109,9 +123,11 @@ export function SandboxSettings({
           checked={values.require}
           onChange={(e) => onChange({ ...values, require: e.target.checked })}
         />{" "}
-        Require sandbox: refuse shell commands when bubblewrap is unavailable
+        Require sandbox: refuse shell commands when{" "}
+        {status?.platform === "macos" ? "the macOS sandbox" : "bubblewrap"} is
+        unavailable
       </label>
-      {NETWORK_OPTIONS.map(([id, label, hint]) => (
+      {networkOptions(status?.platform === "macos").map(([id, label, hint]) => (
         <label className="mode-option" key={id}>
           <input
             type="radio"

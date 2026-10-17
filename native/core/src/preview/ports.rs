@@ -7,8 +7,12 @@
 //!   folder inside the project (`/proc/<pid>/cwd`).
 //!
 //! Only sockets reachable over loopback count: bound to a loopback address or
-//! to the wildcard address. Everything takes a `/proc` root so tests can use
+//! to the wildcard address. The `/proc` readers take a root so tests can use
 //! fixture trees.
+//!
+//! macOS has no `/proc`: [`mac`] lists this user's listening sockets with the
+//! system's `lsof` and reads each process's working folder through libproc.
+//! [`servers`], [`own_ports_now`] and [`listening_now`] pick the right one.
 use regex::Regex;
 use serde::Serialize;
 use std::{
@@ -208,6 +212,246 @@ pub fn own_ports(proc_root: &Path, pid: u32) -> HashSet<u16> {
         .collect()
 }
 
+/// The project's servers on this computer (see [`project_servers`]).
+pub fn servers(project: &Path, exclude_pid: u32) -> Vec<Found> {
+    #[cfg(target_os = "macos")]
+    {
+        mac::project_servers(project, exclude_pid)
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        project_servers(Path::new("/proc"), project, exclude_pid)
+    }
+}
+
+/// Ports this process listens on now (see [`own_ports`]).
+pub fn own_ports_now(pid: u32) -> HashSet<u16> {
+    #[cfg(target_os = "macos")]
+    {
+        mac::listeners()
+            .into_iter()
+            .filter(|l| l.pid == pid)
+            .map(|l| l.port)
+            .collect()
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        own_ports(Path::new("/proc"), pid)
+    }
+}
+
+/// Every port something listens on now (on macOS: this user's processes).
+pub fn listening_now() -> HashSet<u16> {
+    #[cfg(target_os = "macos")]
+    {
+        mac::listeners().into_iter().map(|l| l.port).collect()
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        listening(Path::new("/proc"))
+            .iter()
+            .map(|l| l.port)
+            .collect()
+    }
+}
+
+#[cfg(target_os = "macos")]
+pub mod mac {
+    use super::{loopback_reachable, Found};
+    use std::{
+        net::IpAddr,
+        path::{Path, PathBuf},
+        process::{Command, Stdio},
+    };
+
+    /// One listening TCP socket of one process.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct Socket {
+        pub pid: u32,
+        pub command: String,
+        pub ip: IpAddr,
+        pub port: u16,
+    }
+
+    /// Parse `lsof -F pcn` output: `p<pid>`, `c<command>`, then one
+    /// `n<address>:<port>` line per socket (`*`, `127.0.0.1`, `[::1]`).
+    pub fn parse_lsof(text: &str) -> Vec<Socket> {
+        let mut sockets = Vec::new();
+        let (mut pid, mut command) = (None, String::new());
+        for line in text.lines() {
+            let (tag, value) = line.split_at(line.len().min(1));
+            match tag {
+                "p" => {
+                    pid = value.parse().ok();
+                    command.clear();
+                }
+                "c" => command = value.chars().take(64).collect(),
+                "n" => {
+                    let Some(pid) = pid else { continue };
+                    let Some((host, port)) = value.rsplit_once(':') else {
+                        continue;
+                    };
+                    let Ok(port) = port.parse::<u16>() else {
+                        continue;
+                    };
+                    let host = host.trim_start_matches('[').trim_end_matches(']');
+                    let ip = match host {
+                        "*" => IpAddr::from([0, 0, 0, 0]),
+                        host => match host.parse() {
+                            Ok(ip) => ip,
+                            Err(_) => continue,
+                        },
+                    };
+                    sockets.push(Socket {
+                        pid,
+                        command: command.clone(),
+                        ip,
+                        port,
+                    });
+                }
+                _ => {}
+            }
+        }
+        sockets
+    }
+
+    /// This user's listening TCP sockets that loopback can reach.
+    pub fn listeners() -> Vec<Socket> {
+        // SAFETY: getuid cannot fail.
+        let uid = unsafe { libc::getuid() };
+        let Ok(output) = Command::new("/usr/sbin/lsof")
+            .args(["-nP", "-a", "-iTCP", "-sTCP:LISTEN", "-u"])
+            .arg(uid.to_string())
+            .arg("-Fpcn")
+            .stdin(Stdio::null())
+            .stderr(Stdio::null())
+            .output()
+        else {
+            return Vec::new();
+        };
+        parse_lsof(&String::from_utf8_lossy(&output.stdout))
+            .into_iter()
+            .filter(|s| loopback_reachable(s.ip))
+            .collect()
+    }
+
+    /// A process's current working folder.
+    pub fn cwd(pid: u32) -> Option<PathBuf> {
+        let mut info: libc::proc_vnodepathinfo = unsafe { std::mem::zeroed() };
+        let size = std::mem::size_of::<libc::proc_vnodepathinfo>() as libc::c_int;
+        // SAFETY: proc_pidinfo writes at most `size` bytes into `info`.
+        let written = unsafe {
+            libc::proc_pidinfo(
+                i32::try_from(pid).ok()?,
+                libc::PROC_PIDVNODEPATHINFO,
+                0,
+                (&mut info as *mut libc::proc_vnodepathinfo).cast(),
+                size,
+            )
+        };
+        if written != size {
+            return None;
+        }
+        // SAFETY: vip_path is a MAXPATHLEN byte buffer, NUL-terminated.
+        let bytes: &[u8] = unsafe {
+            std::slice::from_raw_parts(
+                info.pvi_cdir.vip_path.as_ptr().cast(),
+                std::mem::size_of_val(&info.pvi_cdir.vip_path),
+            )
+        };
+        let end = bytes.iter().position(|b| *b == 0)?;
+        use std::os::unix::ffi::OsStrExt;
+        Some(PathBuf::from(std::ffi::OsStr::from_bytes(&bytes[..end])))
+    }
+
+    /// A process's executable path, bounded.
+    fn executable(pid: u32) -> String {
+        let mut buffer = vec![0u8; libc::PROC_PIDPATHINFO_MAXSIZE as usize];
+        // SAFETY: proc_pidpath writes at most the buffer's size.
+        let len = unsafe {
+            libc::proc_pidpath(
+                pid as libc::c_int,
+                buffer.as_mut_ptr().cast(),
+                buffer.len() as u32,
+            )
+        };
+        buffer.truncate(len.max(0) as usize);
+        String::from_utf8_lossy(&buffer).chars().take(400).collect()
+    }
+
+    /// Processes of this user whose working folder is inside `project`
+    /// and that listen on a loopback-reachable port.
+    pub fn project_servers(project: &Path, exclude_pid: u32) -> Vec<Found> {
+        let project = project
+            .canonicalize()
+            .unwrap_or_else(|_| project.to_path_buf());
+        let mut found = Vec::new();
+        for socket in listeners() {
+            if socket.pid == exclude_pid {
+                continue;
+            }
+            let Some(cwd) = cwd(socket.pid) else {
+                continue;
+            };
+            if !cwd.starts_with(&project) {
+                continue;
+            }
+            found.push(Found {
+                port: socket.port,
+                ip: socket.ip,
+                pid: socket.pid,
+                process: socket.command.clone(),
+                command: executable(socket.pid),
+                cwd,
+            });
+        }
+        found.sort_by_key(|f| (f.port, f.pid));
+        found.dedup_by_key(|f| f.port);
+        found
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn parses_lsof_fields() {
+            let text =
+                "p501\ncnode\nn*:5173\nn127.0.0.1:9229\np502\ncpython3.12\nn[::1]:8000\nnbad\n";
+            let sockets = parse_lsof(text);
+            assert_eq!(sockets.len(), 3);
+            assert_eq!((sockets[0].pid, sockets[0].port), (501, 5173));
+            assert_eq!(sockets[0].command, "node");
+            assert_eq!(sockets[2].ip, "::1".parse::<IpAddr>().unwrap());
+        }
+
+        #[test]
+        fn finds_a_server_running_in_the_project() {
+            let project = tempfile::tempdir().unwrap();
+            let mut child = Command::new("/usr/bin/python3")
+                .args(["-c", "import socket,time; s=socket.socket(); s.bind(('127.0.0.1',0)); s.listen(); print(s.getsockname()[1], flush=True); time.sleep(30)"])
+                .current_dir(project.path())
+                .stdout(Stdio::piped())
+                .spawn()
+                .unwrap();
+            let mut line = String::new();
+            std::io::BufRead::read_line(
+                &mut std::io::BufReader::new(child.stdout.take().unwrap()),
+                &mut line,
+            )
+            .unwrap();
+            let port: u16 = line.trim().parse().unwrap();
+            let found = project_servers(project.path(), std::process::id());
+            let _ = child.kill();
+            let _ = child.wait();
+            assert!(
+                found.iter().any(|f| f.port == port && f.pid == child.id()),
+                "{found:?}"
+            );
+        }
+    }
+}
+
 /// A local URL printed in a process's output.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PrintedUrl {
@@ -343,9 +587,11 @@ mod tests {
     #[test]
     fn finds_project_servers_from_proc_fixture() {
         let dir = tempfile::tempdir().unwrap();
-        let root = dir.path().join("proc");
-        let project = dir.path().join("app");
-        let other = dir.path().join("elsewhere");
+        // A real path, as the kernel reports working folders (macOS: /private/var).
+        let base = dir.path().canonicalize().unwrap();
+        let root = base.join("proc");
+        let project = base.join("app");
+        let other = base.join("elsewhere");
         fs::create_dir_all(root.join("net")).unwrap();
         fs::create_dir_all(project.join("web")).unwrap();
         fs::create_dir_all(&other).unwrap();

@@ -69,6 +69,15 @@ test('published retry verifies bytes without mutations', () => fixture(async ({ 
   assert.equal((await execute()).status, 'already-published');
   assert(state.calls.every(args => args[0] === 'api' || args[1] === 'download'));
 }));
+test('a published retry leaves the macOS images alone but a draft refuses them', () => fixture(async ({ state, execute }) => {
+  await execute(); state.calls = [];
+  state.assets.set('ShadowCode_1.0.0_x64.dmg', Buffer.from('macOS image'));
+  state.assets.set('ShadowCode_1.0.0_macos.sha256', Buffer.from('checksums'));
+  assert.equal((await execute()).status, 'already-published');
+  assert(state.calls.every(args => args[0] === 'api' || args[1] === 'download'));
+  state.release.draft = true;
+  await assert.rejects(execute, /Unexpected remote asset ShadowCode_1.0.0_/);
+}));
 test('same version with changed local content is refused', () => fixture(async ({ state, execute, files, rebuild }) => {
   await execute(); state.calls = [];
   await writeFile(files[0], 'different binary');

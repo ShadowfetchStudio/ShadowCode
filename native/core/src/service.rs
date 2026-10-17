@@ -73,7 +73,7 @@ mod local_downloads;
 mod logs;
 mod memory;
 mod model_catalog;
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 mod preview;
 #[cfg(unix)]
 mod remote;
@@ -122,7 +122,7 @@ pub struct Service {
     /// This view's interactive terminals (a forked view starts with none).
     terminals: Arc<crate::terminal::Terminals>,
     /// Loopback proxies for the in-app preview, shared by every view.
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "macos"))]
     previews: Arc<crate::preview::Previews>,
     /// Remote access and phone notifications (one per engine).
     #[cfg(unix)]
@@ -178,7 +178,7 @@ impl Service {
             remember_selection: true,
             job_owner: None,
             terminals,
-            #[cfg(target_os = "linux")]
+            #[cfg(any(target_os = "linux", target_os = "macos"))]
             previews: Arc::default(),
             #[cfg(unix)]
             remote,
@@ -216,7 +216,7 @@ impl Service {
             job_owner: None,
             // An attached window's terminals live as long as its view.
             terminals: Arc::new(crate::terminal::Terminals::new(self.engine.notifier())),
-            #[cfg(target_os = "linux")]
+            #[cfg(any(target_os = "linux", target_os = "macos"))]
             previews: self.previews.clone(),
             #[cfg(unix)]
             remote: self.remote.clone(),
@@ -395,7 +395,7 @@ impl Service {
             "remote" => self.remote_routes(&call).await,
             "git" => self.forge_routes(&call).await,
             "background" => self.background_routes(&call).await,
-            #[cfg(target_os = "linux")]
+            #[cfg(any(target_os = "linux", target_os = "macos"))]
             "preview" => self.preview_routes(&call).await,
             "code-intel" => self.code_intel_routes(&call).await,
             "voice" => self.voice_routes(&call).await,

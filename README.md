@@ -95,6 +95,33 @@ for published versions. The 2.1.0 x86_64 packages and checksums are:
   `RELEASE-AUTH.sig` (download these beside the package; the installer checks
   the publisher's signature before running anything)
 
+### macOS
+
+From 2.2.0, releases also carry `ShadowCode_VERSION_aarch64.dmg` (Apple
+silicon) and `ShadowCode_VERSION_x64.dmg` (Intel), for macOS 12 or later,
+with their SHA-256 checksums in `ShadowCode_VERSION_macos.sha256`. The app
+includes llama.cpp with Metal for local models.
+
+Install or update with one command; it picks your Mac's image, checks it
+against the release's checksums, puts ShadowCode in Applications and links
+the `shadowcode` command into `~/.local/bin`:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ShadowfetchStudio/ShadowCode/main/scripts/install-macos.sh | bash
+```
+
+Or download the `.dmg` from the release page and drag ShadowCode into
+Applications. The app is distributed on GitHub only and is not notarized by
+Apple, so the first time you open a copy downloaded in a browser macOS
+refuses it: open **System Settings › Privacy & Security** and choose **Open
+Anyway** next to ShadowCode (the installer above does not need this).
+
+On macOS your settings and history are in `~/Library/Application
+Support/ShadowCode`, shell commands run in the macOS sandbox (Seatbelt) and
+API keys can be kept in the Keychain. To build the app yourself, run
+`scripts/build-macos-app.sh` on a Mac with Xcode, Rust 1.95, Node 22 and
+cmake.
+
 ### AppImage (recommended)
 
 The installer requires signed release packages. Published 0.32.0
@@ -246,7 +273,8 @@ no version or identifier, and nothing is downloaded or installed for you.
 When a newer version exists, **Update available** appears in the status bar;
 **Settings › About** links the release notes and shows how to update this
 installation (the authenticated installer for the AppImage, `apt upgrade` from the
-ShadowCode APT repository or your package manager for the deb). Turn it off there with **Check for updates once a
+ShadowCode APT repository or your package manager for the deb, the macOS
+installer command for the Mac app). Turn it off there with **Check for updates once a
 day**; Offline mode pauses it. Distributions can turn it off for everyone.
 
 ## First run
@@ -657,6 +685,12 @@ The editor's project must be trusted in ShadowCode (or start the agent with
 | Project notes, skills, attachments | `<project>/.shadow/` |
 | Your rules, skills, commands and agents for every project, Git imports | `~/.config/shadowcode/profile/` |
 | Rules & skills switches, imports and export links | `~/.config/shadow-agent/rulebook.json` (mode 600) |
+
+On macOS, settings, data and state are the `config`, `data` and `state`
+folders in `~/Library/Application Support/ShadowCode`, the cache is
+`~/Library/Caches/ShadowCode`, and a llama.cpp runtime you build yourself goes
+to `~/Library/Application Support/ShadowCode/llama.cpp` (the app carries its
+own).
 
 The directories are named `shadow-agent`, and keep that name in every 1.x
 version so every upgrade finds your data. `--profile DIR` keeps a separate

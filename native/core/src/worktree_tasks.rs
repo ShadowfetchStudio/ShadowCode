@@ -33,6 +33,7 @@ use tokio_util::sync::CancellationToken;
 
 mod locks;
 pub mod setup;
+// Used by worktrees::cleanup's tests.
 #[cfg(test)]
 pub(crate) fn record_lock_references(store: &Store, id: &str) -> usize {
     locks::record_references(store, id)
@@ -995,12 +996,30 @@ async fn close(engine: &Engine, record: &mut Record, state: &str) {
 
 #[cfg(test)]
 mod tests {
+    /// A temporary folder named by its canonical path.
+    struct Canonical {
+        _dir: tempfile::TempDir,
+        path: std::path::PathBuf,
+    }
+    impl Canonical {
+        fn new(dir: tempfile::TempDir) -> Self {
+            let path = dir.path().canonicalize().unwrap();
+            Self { _dir: dir, path }
+        }
+        fn path(&self) -> &std::path::Path {
+            &self.path
+        }
+    }
+
     use super::*;
     use std::time::Duration;
 
     #[test]
     fn attachments_named_in_the_task_are_copied() {
         let root = tempfile::tempdir().unwrap();
+        // Canonical, as product paths are (on macOS the temporary folder is
+        // under /var, a symlink to /private/var).
+        let root = Canonical::new(root);
         let (source, worktree) = (root.path().join("s"), root.path().join("w"));
         fs::create_dir_all(source.join(".shadow/attachments")).unwrap();
         fs::create_dir_all(&worktree).unwrap();
@@ -1022,6 +1041,9 @@ mod tests {
     #[test]
     fn attachments_never_follow_a_symlink_out_of_the_project() {
         let root = tempfile::tempdir().unwrap();
+        // Canonical, as product paths are (on macOS the temporary folder is
+        // under /var, a symlink to /private/var).
+        let root = Canonical::new(root);
         let (source, worktree) = (root.path().join("s"), root.path().join("w"));
         let outside = root.path().join("outside");
         fs::create_dir_all(&outside).unwrap();
@@ -1086,12 +1108,15 @@ mod tests {
     }
     struct TaskFixture {
         engine: Engine,
-        root: tempfile::TempDir,
+        root: Canonical,
         source: PathBuf,
         record: Record,
     }
     async fn fixture() -> TaskFixture {
         let root = tempfile::tempdir().unwrap();
+        // Canonical, as product paths are (on macOS the temporary folder is
+        // under /var, a symlink to /private/var).
+        let root = Canonical::new(root);
         let source = root.path().join("source");
         fs::create_dir(&source).unwrap();
         command(&source, &["init", "-q"]);

@@ -438,7 +438,7 @@ pub async fn status(config: &CliAgentsConfig) -> Value {
     Value::Object(map)
 }
 
-#[cfg(all(test, target_os = "linux"))]
+#[cfg(all(test, any(target_os = "linux", target_os = "macos")))]
 mod login_lifecycle_tests {
     use super::*;
     use std::os::unix::fs::PermissionsExt;
@@ -470,10 +470,8 @@ mod login_lifecycle_tests {
                 loop {
                     if let Ok(text) = std::fs::read_to_string(&pid_file) {
                         if let Ok(pid) = text.parse::<u32>() {
-                            let identity =
-                                std::fs::read_to_string(format!("/proc/{pid}/stat")).ok();
-                            if let Some(identity) = identity {
-                                break (pid, identity);
+                            if crate::process::exists(pid) {
+                                break pid;
                             }
                         }
                     }
@@ -487,15 +485,14 @@ mod login_lifecycle_tests {
             entered
         };
         let (result, entered) = tokio::join!(command, interrupt);
-        let (pid, _identity) =
-            entered.expect("private version probe reached its live-child barrier");
+        let pid = entered.expect("private version probe reached its live-child barrier");
         assert!(
             result.is_none(),
             "cancelled read cannot publish version output"
         );
         // No grace period or sleep after return: a zombie also fails this.
         assert!(
-            !Path::new(&format!("/proc/{pid}")).exists(),
+            !crate::process::exists(pid),
             "owned short-command child was not reaped at return"
         );
     }

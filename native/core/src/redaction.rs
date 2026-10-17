@@ -90,29 +90,86 @@ fn patterns() -> &'static [Regex] {
 }
 
 /// High-entropy token heuristic: long base64/hex-like runs outside common words.
+///
+/// An absolute path under a well-known filesystem root (`/Users/…`,
+/// `/Volumes/…`, `/private/var/folders/…`) is judged one segment at a time:
+/// as a whole it is long and mixes cases, digits and `/` like base64, which
+/// hid the folder of a command on its approval card. A secret that is itself
+/// a path segment is still found; a run that does not start at such a root
+/// (base64 may contain `/`) is judged whole, as before.
 fn high_entropy_tokens(text: &str) -> Vec<(usize, usize)> {
     static ENTROPY: OnceLock<Regex> = OnceLock::new();
     let re = ENTROPY.get_or_init(|| Regex::new(r"[A-Za-z0-9+/_=-]{32,}").expect("entropy regex"));
-    re.find_iter(text)
-        .filter(|m| {
-            let s = m.as_str();
-            if s.chars().all(|c| c.is_ascii_digit()) {
-                return false;
-            }
-            let classes = [
-                s.bytes().any(|b| b.is_ascii_lowercase()),
-                s.bytes().any(|b| b.is_ascii_uppercase()),
-                s.bytes().any(|b| b.is_ascii_digit()),
-                s.bytes()
-                    .any(|b| matches!(b, b'+' | b'/' | b'_' | b'=' | b'-')),
-            ]
-            .into_iter()
-            .filter(|v| *v)
-            .count();
-            classes >= 3 && shannon(s) >= 3.5
-        })
-        .map(|m| (m.start(), m.end()))
-        .collect()
+    let mut spans = Vec::new();
+    for found in re.find_iter(text) {
+        let run = found.as_str();
+        if let Some(segments) = path_segments(run) {
+            spans.extend(segments.filter(|(_, segment)| looks_random(segment)).map(
+                |(offset, segment)| {
+                    let start = found.start() + offset;
+                    (start, start + segment.len())
+                },
+            ));
+        } else if looks_random(run) {
+            spans.push((found.start(), found.end()));
+        }
+    }
+    spans
+}
+
+/// The segments (with their offsets) of an absolute path under a well-known
+/// root, or `None` for anything else.
+fn path_segments(run: &str) -> Option<impl Iterator<Item = (usize, &str)>> {
+    const ROOTS: &[&str] = &[
+        "Users",
+        "Volumes",
+        "Applications",
+        "Library",
+        "System",
+        "private",
+        "home",
+        "root",
+        "tmp",
+        "var",
+        "opt",
+        "usr",
+        "srv",
+        "mnt",
+        "media",
+        "run",
+        "etc",
+        "nix",
+        "proc",
+    ];
+    // `file:///Users/…` leaves `///Users/…` in the run.
+    let rest = run.trim_start_matches('/');
+    let lead = run.len() - rest.len();
+    let first = rest.split('/').next()?;
+    if lead == 0 || !ROOTS.contains(&first) || rest.contains("//") || run.contains(['+', '=']) {
+        return None;
+    }
+    Some(rest.split('/').scan(lead, |offset, segment| {
+        let at = *offset;
+        *offset += segment.len() + 1;
+        Some((at, segment))
+    }))
+}
+
+fn looks_random(s: &str) -> bool {
+    if s.len() < 32 || s.chars().all(|c| c.is_ascii_digit()) {
+        return false;
+    }
+    let classes = [
+        s.bytes().any(|b| b.is_ascii_lowercase()),
+        s.bytes().any(|b| b.is_ascii_uppercase()),
+        s.bytes().any(|b| b.is_ascii_digit()),
+        s.bytes()
+            .any(|b| matches!(b, b'+' | b'/' | b'_' | b'=' | b'-')),
+    ]
+    .into_iter()
+    .filter(|v| *v)
+    .count();
+    classes >= 3 && shannon(s) >= 3.5
 }
 
 fn shannon(s: &str) -> f64 {
@@ -583,5 +640,36 @@ mod tests {
         let result = redact_text(code);
         assert!(!result.redacted);
         assert_eq!(result.text, code);
+    }
+
+    #[test]
+    fn paths_are_judged_by_segment_so_folders_stay_visible() {
+        for path in [
+            "/Volumes/NVME1TB/shadowcode-macos/task-demo",
+            "/private/var/folders/qq/twswrb793xqgdr954yy4t1dc0000gn/T/.tmpAb3dEf/project",
+            "/Users/Robert/Projects/ShadowCode2026/native/core/src/redaction.rs",
+            "/home/dev/work/Project-2026_v2/src/main.rs",
+            "file:///private/var/folders/qq/twswrb793xqgdr954yy4t1dc0000gn/T/.tmpX1/team.git",
+        ] {
+            let result = redact_text(&format!("cwd: {path}"));
+            assert!(!result.redacted, "{path} -> {}", result.text);
+        }
+        // A secret that is a whole path segment is still hidden, the rest kept.
+        let secret = "Zx9Kq2Lm7Pw4Rt6Yv8Nb3Hc5Jd1Fg0Se7Ua2Qi";
+        let result = redact_text(&format!("/Users/dev/{secret}/notes.txt"));
+        assert!(
+            result.redacted && !result.text.contains(secret),
+            "{}",
+            result.text
+        );
+        assert!(result.text.starts_with("/Users/dev/"), "{}", result.text);
+        // Base64 that merely contains or starts with '/' is judged whole.
+        for token in [
+            "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODw0QFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj",
+            "dGhpcyBpcyBub3QgYSByZWFsIHNlY3JldC9idXQvaXQ+bG9va3M9bGlrZQ",
+            "/Users/abc+Zx9Kq2Lm7Pw4Rt6Yv8Nb3Hc5Jd1Fg0Se7Ua2Qi=",
+        ] {
+            assert!(redact_text(token).redacted, "{token}");
+        }
     }
 }

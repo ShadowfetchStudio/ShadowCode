@@ -1,6 +1,7 @@
 //! The drawer's interactive terminals: a real `sh` on a pseudo-terminal,
 //! typed into, read by cursor, resized and hung up, and the routes the
 //! window uses.
+mod support;
 use base64::Engine as _;
 use serde_json::{json, Value};
 use shadowcode_core::{
@@ -44,14 +45,8 @@ fn read_until(hub: &Terminals, id: &str, cursor: &mut u64, needle: &str) -> Stri
 }
 
 fn alive(pid: i32) -> bool {
-    // A reaped or never-started process has no /proc entry; a zombie is
-    // gone for our purposes.
-    std::fs::read_to_string(format!("/proc/{pid}/stat"))
-        .map(|stat| {
-            let state = stat[stat.rfind(')').unwrap() + 2..].chars().next();
-            state != Some('Z')
-        })
-        .unwrap_or(false)
+    // A zombie is gone for our purposes.
+    u32::try_from(pid).is_ok_and(support::running)
 }
 
 fn wait_gone(pid: i32) {

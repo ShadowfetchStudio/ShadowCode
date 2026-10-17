@@ -12,9 +12,12 @@ struct Fixture {
 
 fn fixture() -> Fixture {
     let root = tempfile::tempdir().unwrap();
-    let paths = AppPaths::isolated(&root.path().join("app")).unwrap();
+    // Canonical, as product paths are (on macOS the temporary folder is under
+    // /var, a symlink to /private/var).
+    let base = root.path().canonicalize().unwrap();
+    let paths = AppPaths::isolated(&base.join("app")).unwrap();
     let profile = profile_dir(&paths);
-    let project = root.path().join("project");
+    let project = base.join("project");
     fs::create_dir_all(&project).unwrap();
     Fixture {
         profile,

@@ -35,12 +35,23 @@ impl AppPaths {
     pub fn discover() -> Result<Self> {
         let home = env::var_os("HOME").context("HOME is not set")?;
         let home = PathBuf::from(home);
-        let xdg = |key: &str, fallback: &str| {
+        // macOS keeps app settings and history under ~/Library; an XDG
+        // variable someone set on purpose still wins there too.
+        #[cfg(target_os = "macos")]
+        let fallback = |base: &str| match base {
+            ".cache" => home.join("Library/Caches/ShadowCode"),
+            ".config" => home.join("Library/Application Support/ShadowCode/config"),
+            ".local/share" => home.join("Library/Application Support/ShadowCode/data"),
+            _ => home.join("Library/Application Support/ShadowCode/state"),
+        };
+        #[cfg(not(target_os = "macos"))]
+        let fallback = |base: &str| home.join(base).join("shadow-agent");
+        let xdg = |key: &str, base: &str| {
             env::var_os(key)
                 .map(PathBuf::from)
                 .filter(|p| p.is_absolute())
-                .unwrap_or_else(|| home.join(fallback))
-                .join("shadow-agent")
+                .map(|p| p.join("shadow-agent"))
+                .unwrap_or_else(|| fallback(base))
         };
         let result = Self {
             config: xdg("XDG_CONFIG_HOME", ".config"),
@@ -128,6 +139,30 @@ impl AppPaths {
             file,
             owner_pid: std::process::id(),
         })
+    }
+}
+/// A path naming the directory held open as `fd`. Linux names the
+/// descriptor itself; macOS has no /proc and asks the kernel for the
+/// directory's current path, so callers that later act through the held
+/// descriptor fail closed if the directory moved in between.
+pub(crate) fn held_directory(fd: std::os::fd::RawFd) -> Result<PathBuf> {
+    #[cfg(target_os = "linux")]
+    {
+        Ok(PathBuf::from(format!("/proc/self/fd/{fd}")))
+    }
+    #[cfg(target_os = "macos")]
+    {
+        use std::os::unix::ffi::OsStrExt;
+        let mut buffer = vec![0u8; libc::PATH_MAX as usize];
+        // SAFETY: F_GETPATH writes at most PATH_MAX bytes, NUL-terminated.
+        let rc = unsafe { libc::fcntl(fd, libc::F_GETPATH, buffer.as_mut_ptr()) };
+        anyhow::ensure!(
+            rc != -1,
+            "Could not name a held directory: {}",
+            std::io::Error::last_os_error()
+        );
+        let end = buffer.iter().position(|b| *b == 0).unwrap_or(buffer.len());
+        Ok(PathBuf::from(std::ffi::OsStr::from_bytes(&buffer[..end])))
     }
 }
 

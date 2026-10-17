@@ -1,3 +1,5 @@
+//! Shared by the integration tests; each uses only some of it.
+#![allow(dead_code)]
 use serde_json::Value;
 use std::{
     sync::{Arc, Mutex},
@@ -69,4 +71,52 @@ pub async fn server(
         requests,
         worker,
     }
+}
+
+/// Whether a process exists and has not exited (a zombie has).
+pub fn running(pid: u32) -> bool {
+    #[cfg(target_os = "linux")]
+    {
+        std::fs::read_to_string(format!("/proc/{pid}/stat")).is_ok_and(|stat| {
+            stat.rsplit_once(") ")
+                .is_some_and(|(_, state)| !state.starts_with('Z') && !state.starts_with('X'))
+        })
+    }
+    #[cfg(target_os = "macos")]
+    {
+        let Ok(pid) = i32::try_from(pid) else {
+            return false;
+        };
+        // SAFETY: proc_bsdinfo is plain data; proc_pidinfo writes at most
+        // `size` bytes into it.
+        let mut info: libc::proc_bsdinfo = unsafe { std::mem::zeroed() };
+        let size = std::mem::size_of::<libc::proc_bsdinfo>() as i32;
+        let written = unsafe {
+            libc::proc_pidinfo(
+                pid,
+                libc::PROC_PIDTBSDINFO,
+                0,
+                (&mut info as *mut libc::proc_bsdinfo).cast(),
+                size,
+            )
+        };
+        written == size && info.pbi_status != libc::SZOMB
+    }
+}
+
+/// Whether a process id is still taken, zombies included (not yet reaped).
+pub fn exists(pid: u32) -> bool {
+    let Ok(pid) = i32::try_from(pid) else {
+        return false;
+    };
+    // SAFETY: signal 0 only checks that the process exists.
+    unsafe { libc::kill(pid, 0) == 0 || *errno() == libc::EPERM }
+}
+#[cfg(target_os = "linux")]
+unsafe fn errno() -> *mut i32 {
+    unsafe { libc::__errno_location() }
+}
+#[cfg(target_os = "macos")]
+unsafe fn errno() -> *mut i32 {
+    unsafe { libc::__error() }
 }

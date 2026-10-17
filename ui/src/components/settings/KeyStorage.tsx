@@ -22,6 +22,7 @@ export function KeyStorage() {
     };
   }, []);
   if (!storage || storage.keys.length === 0) return null;
+  const keychain = storage.keyring.kind === "keychain";
   async function move(name: string, to: "keyring" | "file") {
     setWorking(name);
     setError("");
@@ -37,9 +38,9 @@ export function KeyStorage() {
     <section className="key-storage" aria-label="Where your keys are kept">
       <h4>Where your keys are kept</h4>
       <p className="hint">
-        Keys are saved in a private file on this computer. On a desktop with a
-        keyring (GNOME Keyring, KWallet, KeePassXC), you can keep them there
-        instead.
+        {keychain
+          ? "Keys are saved in a private file on this computer. You can keep them in your macOS Keychain instead."
+          : "Keys are saved in a private file on this computer. On a desktop with a keyring (GNOME Keyring, KWallet, KeePassXC), you can keep them there instead."}
         {!storage.keyring.available && storage.keyring.detail
           ? ` ${storage.keyring.detail}`
           : ""}
@@ -51,7 +52,12 @@ export function KeyStorage() {
               {LABELS[key.name] || <code>{key.name}</code>}
               <span className="hint">
                 {" "}
-                · {key.place === "keyring" ? "in the keyring" : "in the file"}
+                ·{" "}
+                {key.place === "keyring"
+                  ? keychain
+                    ? "in the Keychain"
+                    : "in the keyring"
+                  : "in the file"}
               </span>
             </span>
             {key.place === "file" ? (
@@ -61,7 +67,7 @@ export function KeyStorage() {
                 disabled={!storage.keyring.available || working === key.name}
                 onClick={() => void move(key.name, "keyring")}
               >
-                Move to keyring
+                {keychain ? "Move to the Keychain" : "Move to keyring"}
               </button>
             ) : (
               <button

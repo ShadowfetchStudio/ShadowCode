@@ -365,10 +365,20 @@ impl Book {
     }
     /// Relative path inside the profile of an absolute path it reported.
     pub fn relative(&self, path: &str) -> Option<String> {
-        Path::new(path)
+        let path = Path::new(path);
+        let inside = path
             .strip_prefix(&self.dir)
-            .ok()
-            .map(|p| p.to_string_lossy().into_owned())
+            .map(Path::to_path_buf)
+            .or_else(|_| {
+                // Discovery may name a file by its real path while the profile
+                // folder is reached through a link (macOS: /var is /private/var).
+                let dir = self.dir.canonicalize()?;
+                let path = path.canonicalize()?;
+                path.strip_prefix(&dir)
+                    .map(Path::to_path_buf)
+                    .map_err(std::io::Error::other)
+            });
+        inside.ok().map(|p| p.to_string_lossy().into_owned())
     }
     pub fn path_of(&self, rel: &str) -> String {
         self.dir.join(rel).display().to_string()

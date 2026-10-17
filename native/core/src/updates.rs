@@ -420,6 +420,8 @@ pub enum InstallKind {
     Appimage,
     Deb,
     Flatpak,
+    /// ShadowCode.app on macOS (the .dmg or the macOS installer).
+    MacApp,
     /// Under /usr or /opt without the bundler's package marker: a
     /// distribution's own build or another package format.
     System,
@@ -434,6 +436,7 @@ impl InstallKind {
             Self::Appimage => "AppImage",
             Self::Deb => "Debian package",
             Self::Flatpak => "Flatpak",
+            Self::MacApp => "macOS app",
             Self::System => "System package",
             Self::Source => "Built from source",
             Self::Unknown => "Unknown",
@@ -478,12 +481,21 @@ pub fn detect_install(probe: &InstallProbe) -> InstallKind {
             return InstallKind::Appimage;
         }
     }
-    if matches!(probe.bundle, Some(InstallKind::Appimage | InstallKind::Deb)) {
+    if matches!(
+        probe.bundle,
+        Some(InstallKind::Appimage | InstallKind::Deb | InstallKind::MacApp)
+    ) {
         return probe.bundle.unwrap_or(InstallKind::Unknown);
     }
     let Some(exe) = exe else {
         return InstallKind::Unknown;
     };
+    if exe
+        .to_string_lossy()
+        .ends_with(".app/Contents/MacOS/shadowcode")
+    {
+        return InstallKind::MacApp;
+    }
     let names: Vec<_> = exe
         .components()
         .map(|part| part.as_os_str().to_string_lossy())
@@ -738,6 +750,11 @@ fn next_step_for(
             "command": null,
             "link": readme("debian-package"),
         }),
+        InstallKind::MacApp => json!({
+            "text": format!("Run the macOS installer again: it downloads ShadowCode_{version}_{}.dmg, checks it against the release's checksums and replaces the app, keeping your settings. Or download the .dmg from the release page and drag ShadowCode into Applications.", dmg_arch(arch)),
+            "command": format!("curl -fsSL https://raw.githubusercontent.com/ShadowfetchStudio/ShadowCode/{tag}/scripts/install-macos.sh | bash"),
+            "link": readme("macos"),
+        }),
         InstallKind::Flatpak => json!({
             "text": "Install the new Flatpak bundle from the official publisher, or update through the Flatpak remote you configured. Your settings and projects are preserved.",
             "command": null,
@@ -758,6 +775,14 @@ fn next_step_for(
             "command": null,
             "link": null,
         }),
+    }
+}
+
+/// The architecture in a macOS .dmg's name (Tauri's naming).
+fn dmg_arch(arch: &str) -> &str {
+    match arch {
+        "x86_64" => "x64",
+        other => other,
     }
 }
 
@@ -1181,6 +1206,21 @@ mod tests {
         assert!(flatpak["text"].as_str().unwrap().contains("Flatpak"));
         assert!(flatpak["command"].is_null());
         assert_eq!(InstallKind::Flatpak.label(), "Flatpak");
+        let mac = next_step_for(InstallKind::MacApp, &open, Some(&release), "x86_64");
+        assert!(mac["text"].as_str().unwrap().contains("_x64.dmg"), "{mac}");
+        assert!(mac["command"]
+            .as_str()
+            .unwrap()
+            .contains("scripts/install-macos.sh"));
+        assert_eq!(
+            detect_install(&InstallProbe {
+                bundle: None,
+                appimage: None,
+                appdir: None,
+                exe: Some("/Applications/ShadowCode.app/Contents/MacOS/shadowcode".into()),
+            }),
+            InstallKind::MacApp
+        );
         let deb = next_step(InstallKind::Deb, &open, Some(&release));
         assert!(deb["text"]
             .as_str()

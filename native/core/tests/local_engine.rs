@@ -436,10 +436,7 @@ async fn call(service: &Service, method: &str, path: &str, body: Value) -> anyho
 }
 
 fn pid_alive(pid: u64) -> bool {
-    // A zombie still has a /proc entry; check its state.
-    fs::read_to_string(format!("/proc/{pid}/stat"))
-        .map(|s| !s.split(") ").nth(1).unwrap_or("").starts_with('Z'))
-        .unwrap_or(false)
+    u32::try_from(pid).is_ok_and(support::running)
 }
 
 async fn wait_job(service: &Service, id: &str) -> Value {
@@ -1494,7 +1491,7 @@ async fn load_switch_lease_unload_and_shutdown_stop_the_server() {
     assert_eq!(provenance["identity_kind"], "filesystem_metadata");
     assert_eq!(
         provenance["files"]["model"]["path"],
-        b.display().to_string()
+        b.canonicalize().unwrap().display().to_string()
     );
     assert_eq!(provenance["model"]["architecture"], "gemma4");
     assert_eq!(

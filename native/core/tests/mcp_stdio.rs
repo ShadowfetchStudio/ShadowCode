@@ -1,4 +1,5 @@
 #![cfg(unix)]
+mod support;
 use serde_json::{json, Value};
 use shadowcode_core::mcp::{Client, StdioSpec};
 use std::{collections::BTreeMap, path::PathBuf, time::Duration};
@@ -46,23 +47,18 @@ impl Fixture {
         let pids = self.pids();
         for pid in &pids {
             for _ in 0..100 {
-                let running = std::fs::read_to_string(format!("/proc/{pid}/stat"))
-                    .ok()
-                    .is_some_and(|s| !s.rsplit_once(") ").unwrap().1.starts_with('Z'));
-                if !running {
+                if !support::running(*pid) {
                     break;
                 }
                 tokio::time::sleep(Duration::from_millis(10)).await;
             }
-            if let Ok(s) = std::fs::read_to_string(format!("/proc/{pid}/stat")) {
-                assert!(
-                    s.rsplit_once(") ").unwrap().1.starts_with('Z'),
-                    "MCP process {pid} survived cleanup"
-                );
-            }
+            assert!(
+                !support::running(*pid),
+                "MCP process {pid} survived cleanup"
+            );
         }
         for _ in 0..100 {
-            if !std::path::Path::new(&format!("/proc/{}", pids[0])).exists() {
+            if !support::exists(pids[0]) {
                 return;
             }
             tokio::time::sleep(Duration::from_millis(10)).await;
@@ -102,7 +98,13 @@ async fn native_mcp_handshake_paginated_catalog_literal_arguments_and_error_resu
     assert!(!environment.contains(&json!("CARGO_MANIFEST_DIR")));
     assert_eq!(
         result["structuredContent"]["cwd"],
-        fixture.root.path().to_string_lossy().as_ref()
+        fixture
+            .root
+            .path()
+            .canonicalize()
+            .unwrap()
+            .to_string_lossy()
+            .as_ref()
     );
     assert_eq!(
         client.call("failure", json!({})).await.unwrap()["isError"],

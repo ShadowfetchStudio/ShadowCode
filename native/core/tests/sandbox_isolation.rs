@@ -1,5 +1,6 @@
-//! Live checks of the shell sandbox: the real bubblewrap profile, the
-//! network allow-list proxy and the Landlock fallback. A test that needs a
+//! Live checks of the shell sandbox: the real bubblewrap (Linux) or
+//! Seatbelt (macOS) profile, the network allow-list proxy and the Landlock
+//! fallback. A test that needs a
 //! layer this machine cannot provide (no bubblewrap, no unprivileged user
 //! namespaces, no Landlock, no curl) prints why and returns.
 use serde_json::json;
@@ -90,7 +91,12 @@ printf ok > written.txt || exit 16
             return;
         }
     };
-    assert_eq!(prepared.note["mode"], "bubblewrap");
+    let expected = if cfg!(target_os = "macos") {
+        "seatbelt"
+    } else {
+        "bubblewrap"
+    };
+    assert_eq!(prepared.note["mode"], expected);
     assert_eq!(prepared.note["network"], "off");
     let result = run(prepared, ws.path()).await.unwrap();
     assert!(

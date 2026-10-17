@@ -55,6 +55,7 @@ async fn isolated_checkout_preserves_dirty_source_and_disables_checkout_hooks() 
     let root = tempfile::tempdir().unwrap();
     let project = root.path().join("project");
     repository(&project);
+    let project = project.canonicalize().unwrap();
     let paths = AppPaths::isolated(&root.path().join("profile")).unwrap();
     fs::write(project.join("tracked.txt"), "staged change\n").unwrap();
     git(&project, &["add", "tracked.txt"]);
@@ -1790,13 +1791,16 @@ mod profile_admission {
             .await
             .unwrap();
         let records = paths.data.join("managed-worktrees/records");
+        // Records name checkouts by their real path (macOS: /private/var).
+        let checkouts = paths
+            .data
+            .join("managed-worktrees/checkouts")
+            .canonicalize()
+            .unwrap();
         for _ in 0..62 {
             let mut pending = first.clone();
             pending.id = shadowcode_core::id();
-            pending.path = paths
-                .data
-                .join("managed-worktrees/checkouts")
-                .join(&pending.id);
+            pending.path = checkouts.join(&pending.id);
             pending.branch = format!("shadowcode/{}", pending.id);
             pending.state = "creating".into();
             pending.detail =

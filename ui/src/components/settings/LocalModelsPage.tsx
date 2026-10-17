@@ -145,7 +145,7 @@ export function LocalModelsPage({
                 }
               >
                 {runtime?.state === "ready"
-                  ? `Ready · ${runtime.backend === "vulkan" ? "Vulkan" : runtime.backend === "cpu" ? "CPU" : runtime.backend || "unknown backend"}${runtime.version ? ` · ${runtime.version}` : ""}`
+                  ? `Ready · ${runtime.backend === "vulkan" ? "Vulkan" : runtime.backend === "metal" ? "Metal" : runtime.backend === "cpu" ? "CPU" : runtime.backend || "unknown backend"}${runtime.version ? ` · ${runtime.version}` : ""}`
                   : runtime?.state === "setup_required"
                     ? "Setup required"
                     : "Unavailable"}

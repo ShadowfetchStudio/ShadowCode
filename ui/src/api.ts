@@ -280,7 +280,7 @@ export type LocalCatalog = {
     ram_bytes?: number;
     gpu?: string | null;
     vram_bytes?: number | null;
-    backend?: "vulkan" | "cpu" | "unknown" | string;
+    backend?: "vulkan" | "metal" | "cpu" | "unknown" | string;
     devices?: string[];
     detail?: string;
   };
@@ -908,7 +908,12 @@ export type GitHooksState = {
   fingerprint: string;
 };
 export type SecretStorage = {
-  keyring: { available: boolean; detail: string | null };
+  keyring: {
+    available: boolean;
+    detail: string | null;
+    /** The macOS Keychain or the freedesktop Secret Service. */
+    kind?: "keychain" | "secret_service";
+  };
   file: string;
   keys: { name: string; place: "file" | "keyring" }[];
 };
@@ -1374,8 +1379,11 @@ export type StartCompareRequest = {
 
 /** GET /api/sandbox/status: shell isolation this computer provides. */
 export type SandboxStatus = {
-  effective: "bubblewrap" | "landlock" | "none" | "blocked";
+  platform?: "linux" | "macos";
+  effective: "bubblewrap" | "seatbelt" | "landlock" | "none" | "blocked";
   bubblewrap: { installed: boolean; works: boolean; detail: string };
+  /** macOS only. */
+  seatbelt?: { works: boolean; detail: string };
   landlock_abi: number;
   network_namespace: { available: boolean; detail: string };
   require: boolean;
@@ -1388,7 +1396,14 @@ export type SandboxStatus = {
 
 /** How this copy was installed (`/api/about`, `/api/updates`). */
 export type InstallInfo = {
-  kind: "appimage" | "deb" | "flatpak" | "system" | "source" | "unknown";
+  kind:
+    | "appimage"
+    | "deb"
+    | "flatpak"
+    | "mac_app"
+    | "system"
+    | "source"
+    | "unknown";
   label: string;
 };
 

@@ -115,13 +115,21 @@ async fn dropping_execution_does_not_leave_the_process_group_alive() {
 #[tokio::test]
 async fn a_detached_pipe_cannot_hang_completion() {
     let root = tempfile::tempdir().unwrap();
+    // macOS has no setsid(1); its Perl calls setsid(2) the same way.
+    let setsid = if cfg!(target_os = "macos") {
+        "perl -MPOSIX -e 'POSIX::setsid(); exec @ARGV'"
+    } else {
+        "setsid"
+    };
     let result = run(
         ProcessSpec::shell(
             // Exit only once the child has left the shell's process group
             // (it writes its pid after setsid); a fixed pause could end the
             // shell first on a slow runner, and the group kill took it too.
-            "setsid sh -c 'echo $$ > escaped.pid; sleep 8' & \
-             while [ ! -s escaped.pid ]; do sleep .02; done; printf done",
+            &format!(
+                "{setsid} sh -c 'echo $$ > escaped.pid; sleep 8' & \
+                 while [ ! -s escaped.pid ]; do sleep .02; done; printf done"
+            ),
             root.path().into(),
             Duration::from_secs(3),
         ),

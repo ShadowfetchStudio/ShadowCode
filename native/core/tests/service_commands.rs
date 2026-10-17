@@ -151,6 +151,7 @@ async fn editor_drafts_survive_restart_without_overwriting_workspace_files() {
     assert_eq!(listed["drafts"][0]["draft"], "let answer = 2;\n");
     let other = root.path().join("other");
     fs::create_dir(&other).unwrap();
+    let other = other.canonicalize().unwrap();
     let second_project = reopened.fork_selection(other.clone(), None).unwrap();
     assert_eq!(
         call(
@@ -837,12 +838,7 @@ async fn shutdown_cancels_manual_terminal_and_audits_its_original_session() {
     );
     tokio::time::timeout(Duration::from_secs(2), async {
         loop {
-            let stat = fs::read_to_string(format!("/proc/{pid}/stat")).unwrap_or_default();
-            if stat.is_empty()
-                || stat
-                    .rsplit_once(") ")
-                    .is_some_and(|(_, tail)| tail.starts_with(['Z', 'X']))
-            {
+            if !support::running(pid) {
                 break;
             }
             tokio::time::sleep(Duration::from_millis(10)).await;

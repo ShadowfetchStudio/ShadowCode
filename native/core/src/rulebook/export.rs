@@ -92,9 +92,32 @@ fn planned(book: &Book, target: &str, vendor: &Path) -> Vec<(PathBuf, PathBuf)> 
     links
 }
 
+/// Two paths name the same place, also through a symlinked folder (on macOS
+/// /var is /private/var); paths that do not resolve must match as written.
+fn same_place(a: &Path, b: &Path) -> bool {
+    match (a.canonicalize(), b.canonicalize()) {
+        (Ok(a), Ok(b)) => a == b,
+        _ => a == b,
+    }
+}
+
 fn points_to(link: &Path, target: &Path) -> bool {
     std::fs::symlink_metadata(link).is_ok_and(|m| m.file_type().is_symlink())
-        && std::fs::read_link(link).is_ok_and(|t| t == target)
+        && std::fs::read_link(link).is_ok_and(|t| {
+            let t = if t.is_relative() {
+                link.parent().map_or(t.clone(), |dir| dir.join(&t))
+            } else {
+                t
+            };
+            same_place(&t, target)
+        })
+}
+
+/// `link` is inside `home`, compared by where its folder really is.
+fn inside(link: &Path, home: &Path) -> bool {
+    let real = |p: &Path| p.canonicalize().unwrap_or_else(|_| p.to_path_buf());
+    link.parent()
+        .is_some_and(|dir| real(dir).starts_with(real(home)))
 }
 
 /// Profile files and skill folders `vendor` reads by itself through an
@@ -117,7 +140,7 @@ pub(crate) fn linked(
     recorded
         .iter()
         .map(|l| (PathBuf::from(&l.link), PathBuf::from(&l.target)))
-        .filter(|(link, to)| link.starts_with(&home) && points_to(link, to))
+        .filter(|(link, to)| inside(link, &home) && points_to(link, to))
         .map(|(_, to)| to)
         .collect()
 }

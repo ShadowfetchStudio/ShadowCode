@@ -20,7 +20,11 @@ use std::{
 };
 
 const MAX_SCAN_FILES: usize = 256;
+#[cfg(not(target_os = "macos"))]
 pub const MANAGED_RELATIVE: &str = ".local/lib/shadowcode";
+/// macOS keeps the user-installed runtime with the app's other data.
+#[cfg(target_os = "macos")]
+pub const MANAGED_RELATIVE: &str = "Library/Application Support/ShadowCode/llama.cpp";
 pub const MANAGED_SERVER: &str = "llama-server";
 /// Default upper bound for the server context window (tokens).
 pub const DEFAULT_CONTEXT_CAP: u64 = 16384;
@@ -317,9 +321,13 @@ pub fn managed_dir() -> Option<PathBuf> {
 }
 
 /// `usr/lib/shadowcode` next to the executable (AppImage `usr/bin/..`, deb
-/// `/usr/bin/..`).
+/// `/usr/bin/..`); on macOS the app bundle's `Contents/Resources/llama.cpp`
+/// (the executable is in `Contents/MacOS`).
 pub fn bundled_dir() -> Option<PathBuf> {
     let exe = std::env::current_exe().ok()?;
+    #[cfg(target_os = "macos")]
+    return Some(exe.parent()?.join("../Resources/llama.cpp"));
+    #[cfg(not(target_os = "macos"))]
     Some(exe.parent()?.join("../lib/shadowcode"))
 }
 
@@ -464,8 +472,15 @@ fn backend_of(devices: &[Device]) -> String {
     devices
         .first()
         .map(|d| {
-            d.id.trim_end_matches(|c: char| c.is_ascii_digit())
-                .to_ascii_lowercase()
+            let kind =
+                d.id.trim_end_matches(|c: char| c.is_ascii_digit())
+                    .to_ascii_lowercase();
+            // llama.cpp names Metal devices MTL0, MTL1, ...
+            if kind == "mtl" {
+                "metal".into()
+            } else {
+                kind
+            }
         })
         .unwrap_or_else(|| "cpu".into())
 }
@@ -801,6 +816,78 @@ pub fn runtime_from(candidates: Vec<(PathBuf, &'static str)>) -> Runtime {
     first_failure.expect("at least one candidate")
 }
 
+/// Memory available to a new process now, in bytes (0 when unknown):
+/// Linux's `MemAvailable`; on macOS free, inactive, speculative and
+/// purgeable pages (what Activity Monitor does not count as used).
+#[cfg(target_os = "macos")]
+pub fn available_memory() -> u64 {
+    extern "C" {
+        // libSystem's own; libc's binding is deprecated in favour of a crate.
+        fn mach_host_self() -> libc::mach_port_t;
+    }
+    // One send right to the host port for the life of the process.
+    static HOST: std::sync::OnceLock<libc::mach_port_t> = std::sync::OnceLock::new();
+    // SAFETY: mach_host_self has no preconditions.
+    let host = *HOST.get_or_init(|| unsafe { mach_host_self() });
+    let mut info: libc::vm_statistics64 = unsafe { std::mem::zeroed() };
+    let mut count = libc::HOST_VM_INFO64_COUNT;
+    // SAFETY: host_statistics64 writes at most `count` integers into `info`.
+    let result = unsafe {
+        libc::host_statistics64(
+            host,
+            libc::HOST_VM_INFO64,
+            (&mut info as *mut libc::vm_statistics64).cast(),
+            &mut count,
+        )
+    };
+    // SAFETY: sysconf has no preconditions.
+    let page = unsafe { libc::sysconf(libc::_SC_PAGESIZE) };
+    if result != 0 || page <= 0 {
+        return 0;
+    }
+    let pages = u64::from(info.free_count)
+        + u64::from(info.inactive_count)
+        + u64::from(info.speculative_count)
+        + u64::from(info.purgeable_count);
+    pages.saturating_mul(page as u64)
+}
+
+/// See the macOS version.
+#[cfg(not(target_os = "macos"))]
+pub fn available_memory() -> u64 {
+    let Ok(text) = fs::read_to_string("/proc/meminfo") else {
+        return 0;
+    };
+    text.lines()
+        .find_map(|line| line.strip_prefix("MemAvailable:"))
+        .and_then(|rest| rest.split_whitespace().next()?.parse::<u64>().ok())
+        .map_or(0, |kb| kb.saturating_mul(1024))
+}
+
+/// Installed memory in bytes (0 when unknown).
+#[cfg(target_os = "macos")]
+pub fn read_meminfo() -> u64 {
+    let mut bytes: u64 = 0;
+    let mut size = std::mem::size_of::<u64>();
+    // SAFETY: hw.memsize is a 64-bit integer; `size` is the buffer's length.
+    let result = unsafe {
+        libc::sysctlbyname(
+            c"hw.memsize".as_ptr(),
+            (&mut bytes as *mut u64).cast(),
+            &mut size,
+            std::ptr::null_mut(),
+            0,
+        )
+    };
+    if result == 0 && size == std::mem::size_of::<u64>() {
+        bytes
+    } else {
+        0
+    }
+}
+
+/// Installed memory in bytes (0 when unknown).
+#[cfg(not(target_os = "macos"))]
 pub fn read_meminfo() -> u64 {
     let Ok(text) = fs::read_to_string("/proc/meminfo") else {
         return 0;
@@ -838,7 +925,10 @@ pub fn hardware_json(runtime: &Runtime) -> Value {
             "{} with {:.1} GB VRAM via {}; {:.1} GB RAM",
             g.name,
             gb(g.total_bytes),
-            g.id.trim_end_matches(|c: char| c.is_ascii_digit()),
+            match g.id.trim_end_matches(|c: char| c.is_ascii_digit()) {
+                "MTL" => "Metal",
+                api => api,
+            },
             gb(ram)
         ),
         (None, "cpu") => format!("CPU only; {:.1} GB RAM", gb(ram)),
@@ -850,6 +940,7 @@ pub fn hardware_json(runtime: &Runtime) -> Value {
     json!({
         "cpu_cores": std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1),
         "ram_bytes": ram,
+        "available_bytes": available_memory(),
         "gpu": gpu.map(|g| g.name.clone()),
         "vram_bytes": gpu.map(|g| g.total_bytes),
         "backend": backend,
@@ -872,6 +963,9 @@ pub struct Budget {
     pub runtime_ready: bool,
     pub gpu_bytes: Option<u64>,
     pub ram_bytes: u64,
+    /// Memory free for a new process now (0 when unknown): installed memory
+    /// says whether a model can ever fit, this whether it fits today.
+    pub available_bytes: u64,
     pub context_cap: u64,
     pub architectures: Option<Arc<HashSet<String>>>,
 }
@@ -882,6 +976,7 @@ impl Budget {
             runtime_ready: runtime.ready(),
             gpu_bytes: runtime.gpu().map(|g| g.total_bytes),
             ram_bytes: read_meminfo(),
+            available_bytes: available_memory(),
             context_cap: config.context_cap(),
             architectures: runtime.probe.as_ref().and_then(|p| p.architectures.clone()),
         }
@@ -1096,6 +1191,14 @@ pub fn inspect(candidate: &Candidate, budget: &Budget) -> Result<GgufEntry> {
         reason = "The llama.cpp runtime is not ready; see Settings › Local models.".into();
         "setup_required"
     } else {
+        // In RAM, or in GPU memory that is the same RAM (Apple silicon).
+        let shared = fits == "cpu" || cfg!(target_os = "macos");
+        if shared && budget.available_bytes > 0 && memory.total_bytes > budget.available_bytes {
+            notes.push(format!(
+                "Only {:.1} GB of memory is free right now; close other apps first or it will run very slowly.",
+                gb(budget.available_bytes)
+            ));
+        }
         reason = format!(
             "{} · {}-token context · ≈{:.1} GB {}",
             architecture.as_deref().unwrap_or("gguf"),
@@ -1847,6 +1950,7 @@ mod tests {
             runtime_ready: true,
             gpu_bytes: Some(16 * GIB),
             ram_bytes: 64 * GIB,
+            available_bytes: 0,
             context_cap: DEFAULT_CONTEXT_CAP,
             architectures: Some(Arc::new(archs.iter().map(|s| s.to_string()).collect())),
         }
@@ -1912,6 +2016,45 @@ mod tests {
             header(&path).unwrap().template_identity,
             Some(gguf::string_identity(&template))
         );
+    }
+
+    #[test]
+    fn free_memory_is_read_and_never_exceeds_installed() {
+        let available = available_memory();
+        let installed = read_meminfo();
+        eprintln!("available={available} installed={installed}");
+        assert!(available > 0 && available <= installed);
+    }
+
+    #[test]
+    fn a_model_bigger_than_free_memory_says_so() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("small.gguf");
+        model(&path, "qwen3", Some("{% if tools %}<tool_call>{% endif %}"));
+        let config = LocalEngineConfig {
+            files: vec![path.display().to_string()],
+            ..Default::default()
+        };
+        // Plenty installed, but the GPU is too small and almost nothing is free.
+        let mut short = budget(&["qwen3"]);
+        short.gpu_bytes = None;
+        short.available_bytes = 1024 * 1024;
+        let entries = scan_with(&config, &short);
+        assert_eq!(entries[0].availability, "ready");
+        assert!(
+            entries[0].reason.contains("of memory is free right now"),
+            "{}",
+            entries[0].reason
+        );
+        // Unknown (0) or enough free memory: no note.
+        short.available_bytes = 0;
+        assert!(!scan_with(&config, &short)[0]
+            .reason
+            .contains("free right now"));
+        short.available_bytes = 64 * GIB;
+        assert!(!scan_with(&config, &short)[0]
+            .reason
+            .contains("free right now"));
     }
 
     #[test]
@@ -2034,6 +2177,12 @@ mod tests {
         assert_eq!(backend_of(&devices), "vulkan");
         assert!(parse_devices("Available devices:\n").is_empty());
         assert_eq!(backend_of(&[]), "cpu");
+        // macOS (the real output on an Intel iMac).
+        let metal = parse_devices(
+            "Available devices:\n  MTL0: AMD Radeon Pro 555X (2048 MiB, 2047 MiB free)\n",
+        );
+        assert_eq!(metal[0].name, "AMD Radeon Pro 555X");
+        assert_eq!(backend_of(&metal), "metal");
         let (v, c) =
             parse_version("x\nversion: 0.4.1-dev (build 1, commit 18f9f7bef)\nbuilt with GNU")
                 .unwrap();

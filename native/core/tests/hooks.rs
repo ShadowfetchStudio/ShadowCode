@@ -594,8 +594,7 @@ async fn hook_timeout_output_flood_and_cancellation_stop_owned_processes() {
 struct PathCheck;
 impl PathCheck {
     fn alive(pid: &str) -> bool {
-        fs::read_to_string(format!("/proc/{}/stat", pid.trim()))
-            .is_ok_and(|s| !s.contains(") Z ") && !s.contains(") X "))
+        pid.trim().parse().is_ok_and(support::running)
     }
 }
 

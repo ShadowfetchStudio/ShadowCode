@@ -10,6 +10,15 @@ use std::{
     path::{Component, Path, PathBuf},
 };
 
+/// Never follow a symlink at the path's last component. On Linux cap-std
+/// opens with openat2 and O_NOFOLLOW is enough; on macOS it resolves the path
+/// itself and follows a final symlink unless told not to, before the flag
+/// reaches the last openat.
+fn no_follow(options: &mut OpenOptions) -> &mut OpenOptions {
+    use cap_fs_ext::{FollowSymlinks, OpenOptionsFollowExt};
+    options.follow(FollowSymlinks::No)
+}
+
 pub const MAX_FILE_BYTES: usize = 4_000_000;
 
 /// Directory capabilities make file operations relative to an already-open
@@ -84,9 +93,21 @@ impl Workspace {
     pub fn relative(&self, path: &str) -> Result<PathBuf> {
         ensure!(!path.contains('\0'), "Path contains a NUL byte");
         let path = Path::new(path);
+        let resolved;
         let path = if path.is_absolute() {
-            path.strip_prefix(&self.path)
-                .context("Path is outside the workspace")?
+            match path.strip_prefix(&self.path) {
+                Ok(inside) => inside,
+                // The root is canonical; the path may name it through a
+                // symlink (on macOS /var and every temporary folder are under
+                // /private). Resolve the deepest existing ancestor and try
+                // again; a path that really resolves outside stays refused.
+                Err(_) => {
+                    resolved = canonical_ancestor(path).context("Path is outside the workspace")?;
+                    resolved
+                        .strip_prefix(&self.path)
+                        .context("Path is outside the workspace")?
+                }
+            }
         } else {
             path
         };
@@ -278,6 +299,7 @@ impl Workspace {
         {
             use cap_std::fs::OpenOptionsExt;
             options.custom_flags(libc::O_NONBLOCK | libc::O_NOFOLLOW);
+            no_follow(&mut options);
         }
         let relative = self.relative(path)?;
         #[cfg(unix)]
@@ -288,6 +310,7 @@ impl Workspace {
             directory
                 .read(true)
                 .custom_flags(libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_NONBLOCK);
+            no_follow(&mut directory);
             for part in relative.parent().unwrap_or(Path::new(".")).components() {
                 if let Component::Normal(name) = part {
                     parent = Dir::from_std_file(parent.open_with(name, &directory)?.into_std());
@@ -357,6 +380,7 @@ impl Workspace {
         options
             .read(true)
             .custom_flags(libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_NONBLOCK);
+        no_follow(&mut options);
         for part in relative.parent().unwrap_or(Path::new(".")).components() {
             if let Component::Normal(name) = part {
                 parent = Dir::from_std_file(
@@ -653,6 +677,20 @@ impl Workspace {
     }
 }
 
+/// `path` with its deepest existing ancestor canonicalized and the rest
+/// appended unchanged (it may not exist yet). `None` when nothing resolves.
+fn canonical_ancestor(path: &Path) -> Option<PathBuf> {
+    let mut rest = Vec::new();
+    let mut current = path;
+    loop {
+        if let Ok(real) = current.canonicalize() {
+            return Some(rest.iter().rev().fold(real, |acc, part| acc.join(part)));
+        }
+        rest.push(current.file_name()?.to_owned());
+        current = current.parent()?;
+    }
+}
+
 fn open_mutation_directory(parent: &Dir, name: &std::ffi::OsStr) -> std::io::Result<Dir> {
     #[cfg(unix)]
     {
@@ -661,6 +699,7 @@ fn open_mutation_directory(parent: &Dir, name: &std::ffi::OsStr) -> std::io::Res
         options
             .read(true)
             .custom_flags(libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_NONBLOCK);
+        no_follow(&mut options);
         Ok(Dir::from_std_file(
             parent.open_with(name, &options)?.into_std(),
         ))
@@ -676,6 +715,7 @@ fn open_mutation_file(parent: &Dir, name: &std::ffi::OsStr) -> std::io::Result<c
     {
         use cap_std::fs::OpenOptionsExt;
         options.custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK);
+        no_follow(&mut options);
     }
     parent.open_with(name, &options)
 }
@@ -688,6 +728,33 @@ pub fn hash(bytes: &[u8]) -> String {
 mod mutation_parent_tests {
     use super::Workspace;
     use std::os::unix::fs::symlink;
+
+    #[test]
+    fn absolute_paths_through_a_symlinked_root_stay_inside() {
+        // Like macOS, where /var (and every temporary folder) is /private/var.
+        let root = tempfile::tempdir().unwrap();
+        let real = root.path().join("real");
+        std::fs::create_dir_all(real.join("project/src")).unwrap();
+        std::fs::create_dir(root.path().join("outside")).unwrap();
+        symlink(&real, root.path().join("alias")).unwrap();
+        let workspace = Workspace::open(&root.path().join("alias/project")).unwrap();
+        let alias = root.path().join("alias/project");
+        let inside = |p: &std::path::Path| workspace.relative(p.to_str().unwrap());
+        assert_eq!(
+            inside(&alias.join("src/main.rs")).unwrap(),
+            std::path::Path::new("src/main.rs"),
+            "a file that does not exist yet, named through the alias"
+        );
+        assert_eq!(
+            inside(&real.join("project/src")).unwrap(),
+            std::path::Path::new("src")
+        );
+        // Resolving the alias never lets a path out of the workspace.
+        assert!(inside(&alias.join("../../outside/x")).is_err());
+        symlink(root.path().join("outside"), real.join("project/escape")).unwrap();
+        assert!(inside(&alias.join("escape/x")).is_err());
+        assert!(inside(&root.path().join("outside/x")).is_err());
+    }
 
     #[test]
     fn pinned_parent_resolution_rejects_symlink_swapped_after_validation() {

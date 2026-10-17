@@ -1,3 +1,4 @@
+mod support;
 use serde_json::{json, Value};
 use shadowcode_core::{
     config::Config,
@@ -146,8 +147,7 @@ async fn client_disconnect_cancels_manual_command_and_releases_workspace() {
     let _ = operation.await;
     tokio::time::timeout(Duration::from_secs(5), async {
         loop {
-            let alive = fs::read_to_string(format!("/proc/{pid}/stat"))
-                .is_ok_and(|stat| !stat.contains(") Z "));
+            let alive = support::running(pid);
             if !alive {
                 break;
             }
@@ -273,6 +273,7 @@ async fn attached_views_keep_navigation_independent_and_detach_without_stopping_
     let primary = service.workspace().unwrap();
     let other = root.path().join("view-project");
     fs::create_dir(&other).unwrap();
+    let other = other.canonicalize().unwrap();
     let server = Server::start_with_mode(service.clone(), "server").unwrap();
     let client = server.endpoint().client(primary.clone(), None);
     let first = client.open_view().await.unwrap();
@@ -658,9 +659,13 @@ async fn closing_view_interrupts_pending_owner_discovery() {
 }
 
 fn descriptor_count() -> usize {
-    std::fs::read_dir("/proc/self/fd")
-        .map(|entries| entries.count())
-        .unwrap_or(0)
+    std::fs::read_dir(if cfg!(target_os = "linux") {
+        "/proc/self/fd"
+    } else {
+        "/dev/fd"
+    })
+    .map(|entries| entries.count())
+    .unwrap_or(0)
 }
 
 #[tokio::test]

@@ -25,6 +25,9 @@ fs2 = "0.4"
 libc = "0.2"
 tracing = "0.1"
 cap-std = "3"
+# cap-std's own no-follow option: where it resolves paths itself (macOS has
+# no openat2) O_NOFOLLOW alone does not stop a final-component symlink.
+cap-fs-ext = "3"
 clap = { version = "4.6.7", features = ["derive"] }
 rmcp = { version = "=3.4.0", default-features = false, features = ["client", "server", "transport-streamable-http-client", "transport-streamable-http-server"] }
 sse-stream = "=0.2.6"
@@ -84,6 +87,12 @@ landlock = "=0.4.7"
 # Voice input: microphone capture through ALSA (PipeWire and PulseAudio
 # provide the default ALSA device on desktop Linux). Apache-2.0.
 cpal = { version = "=0.18.2", default-features = false }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+# Voice input on macOS: the same cpal, through CoreAudio.
+cpal = { version = "=0.18.2", default-features = false }
+# API keys in the macOS Keychain (keyring.rs). MIT OR Apache-2.0.
+security-framework = { version = "3", default-features = false }
 
 [dev-dependencies]
 # The same tokio, with its paused test clock (no new crate).
