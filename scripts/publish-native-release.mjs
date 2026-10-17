@@ -11,6 +11,10 @@ import { IDENTITY, TARGETS } from './native-release-auth.mjs';
 import { withReleaseSnapshot, validateContext, validateStagedRelease, readReceipts, requireTransportLayout } from './native-release-assets.mjs';
 
 export { digest } from './native-release-verification.mjs';
+// After publication, .github/workflows/release-macos.yml attaches the macOS
+// disk images and their checksums. They are outside this signed asset set:
+// a published-release retry leaves them alone; a draft never has them.
+const MACOS_ASSET = /^ShadowCode_\d+\.\d+\.\d+_(x64|aarch64)\.dmg$|^ShadowCode_\d+\.\d+\.\d+_macos\.sha256$/;
 const command = (args) => execFileSync('gh', args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
 
 // One release carries every target's signed bundle. Each bundle is snapshotted
@@ -86,6 +90,7 @@ async function publishVerified({ repo, tag, commit, expected, gh, sleep }) {
     const scratch = await mkdtemp(path.join(tmpdir(), 'shadowcode-release-'));
     try {
       for (const asset of record.assets) {
+        if (!record.draft && MACOS_ASSET.test(asset.name)) continue;
         assert(expected.has(asset.name), `Unexpected remote asset ${asset.name}; review the draft`);
         assert(!names.has(asset.name), `Duplicate remote asset ${asset.name}`);
         names.add(asset.name);

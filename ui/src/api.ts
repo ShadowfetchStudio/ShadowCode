@@ -1396,7 +1396,14 @@ export type SandboxStatus = {
 
 /** How this copy was installed (`/api/about`, `/api/updates`). */
 export type InstallInfo = {
-  kind: "appimage" | "deb" | "flatpak" | "system" | "source" | "unknown";
+  kind:
+    | "appimage"
+    | "deb"
+    | "flatpak"
+    | "mac_app"
+    | "system"
+    | "source"
+    | "unknown";
   label: string;
 };
 

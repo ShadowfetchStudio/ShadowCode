@@ -1,0 +1,122 @@
+name: macOS release
+# ShadowCode.app as a .dmg for Apple silicon and Intel Macs, attached to a
+# published GitHub release with a SHA-256 checksum file
+# (ShadowCode_<version>_macos.sha256) that scripts/install-macos.sh checks.
+# The images are ad-hoc signed, not notarized: GitHub is the distribution
+# channel. On pull requests that touch macOS packaging this only builds and
+# smoke-tests the app (nothing is uploaded).
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to build and attach (for example v2.2.0)'
+        required: true
+  pull_request:
+    paths:
+      - '.github/workflows/release-macos.yml'
+      - 'scripts/build-macos-app.sh'
+      - 'scripts/build-llama.cpp.sh'
+      - 'scripts/install-macos.sh'
+      - 'packaging/macos/**'
+      - 'src-tauri/tauri.macos.conf.json'
+      - 'src-tauri/Info.plist'
+      - 'tools/llama.cpp.pin'
+permissions:
+  contents: read
+concurrency:
+  group: release-macos-${{ github.event.release.tag_name || inputs.tag || github.ref }}
+  cancel-in-progress: false
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: aarch64
+          - runner: macos-15-intel
+            arch: x64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    env:
+      RUSTUP_TOOLCHAIN: '1.95.0'
+      TAG: ${{ github.event.release.tag_name || inputs.tag || '' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.TAG || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - name: Install the pinned Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+      - name: Require the tag to match the app version
+        if: env.TAG != ''
+        run: |
+          version="$(node -p "require('./src-tauri/tauri.conf.json').version")"
+          test "v$version" = "$TAG" || { echo "Tag $TAG does not match app version $version" >&2; exit 1; }
+      - name: Build the Metal runtime, ShadowCode.app and the .dmg
+        env:
+          SHADOWCODE_COMMIT: ${{ github.sha }}
+          CARGO_PROFILE_RELEASE_DEBUG: '0'
+        run: bash scripts/build-macos-app.sh
+      - name: Smoke-test the bundled app and runtime
+        run: |
+          app=target/release/bundle/macos/ShadowCode.app
+          version="$(node -p "require('./src-tauri/tauri.conf.json').version")"
+          "$app/Contents/MacOS/shadowcode" --version | grep -Fx "ShadowCode $version"
+          profile="$(mktemp -d)"
+          "$app/Contents/MacOS/shadowcode" --profile "$profile" doctor --json > "$profile/doctor.json"
+          node -e "const d=require(process.argv[1]); const c=(d.checks||[]).find(x=>x.id==='seatbelt'); if(!c||c.status!=='pass') throw new Error('macOS sandbox check: '+JSON.stringify(c))" "$profile/doctor.json"
+          "$app/Contents/Resources/llama.cpp/llama-server" --version
+          test -f "$app/Contents/Resources/llama.cpp/default.metallib"
+          dmg="target/release/bundle/dmg/ShadowCode_${version}_${{ matrix.arch }}.dmg"
+          test -f "$dmg"
+          hdiutil verify "$dmg"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: macos-dmg-${{ matrix.arch }}
+          path: target/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+  attach:
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: macos-dmg-*
+          path: dmg
+          merge-multiple: true
+      - name: Attach the images and their checksums without replacing anything
+        run: |
+          version="${TAG#v}"
+          cd dmg
+          ls
+          test -f "ShadowCode_${version}_aarch64.dmg"
+          test -f "ShadowCode_${version}_x64.dmg"
+          sha256sum "ShadowCode_${version}_aarch64.dmg" "ShadowCode_${version}_x64.dmg" > "ShadowCode_${version}_macos.sha256"
+          cat "ShadowCode_${version}_macos.sha256"
+          existing="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets -q '.assets[].name')"
+          for file in "ShadowCode_${version}_aarch64.dmg" "ShadowCode_${version}_x64.dmg" "ShadowCode_${version}_macos.sha256"; do
+            if grep -Fxq "$file" <<<"$existing"; then
+              # Never overwrite a published file: an existing one must match.
+              gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$file" --output "existing-$file"
+              cmp -s "$file" "existing-$file" || { echo "$file on the release differs from this build; not replacing it" >&2; exit 1; }
+            else
+              gh release upload "$TAG" "$file" --repo "$GITHUB_REPOSITORY"
+            fi
+          done

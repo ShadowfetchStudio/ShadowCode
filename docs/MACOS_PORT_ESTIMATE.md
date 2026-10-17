@@ -1,6 +1,6 @@
 # macOS port: build estimate
 
-Status: ShadowCode builds, installs and runs as a macOS app (see Progress); signing, notarization and release automation remain. The estimate below is the original one. Figures are judgement from a source survey
+Status: ShadowCode builds, installs and runs as a macOS app and is released on GitHub (see Progress). The estimate below is the original one. Figures are judgement from a source survey
 (~135k lines of Rust in `native/core` and `src-tauri`), not measurements.
 
 ## Summary
@@ -93,13 +93,20 @@ iMac the app opens from Finder, doctor passes, and the local engine reports
   variants. Its shaders are compiled at build time: compiling them at run
   time took 55 s on first use and hung outside a desktop session.
 
+Distribution is GitHub only (no App Store, no notarization):
+`.github/workflows/release-macos.yml` builds the `.dmg` for Apple silicon
+(`macos-15`) and Intel (`macos-15-intel`) when a release is published,
+smoke-tests the app, and attaches both with `ShadowCode_<version>_macos.sha256`
+(on pull requests touching macOS packaging it only builds).
+`scripts/install-macos.sh` installs or updates from a release after checking
+that checksum; files fetched with curl are not quarantined, so Gatekeeper
+does not block the un-notarized app. The update notice names that command.
+
 Still open:
 
-- **Signing and notarization** need an Apple Developer ID. Until then a
-  downloaded copy needs right-click › Open on first launch.
-- **Release automation:** a macOS job in the release workflow, the signed
-  release manifest and an update path (the updater knows AppImage, deb and
-  Flatpak).
+- **Publisher signatures for the macOS images.** They are checked against
+  the release's SHA-256 file over HTTPS, not signed with the release key:
+  that needs macOS targets in `release/trust/policy` and the signing tools.
 - **Apple silicon** builds (`aarch64-apple-darwin`) are untested: there is
   no arm64 Mac here. The runtime build already has the M1–M4 CPU variants.
 - **Real model runs** on the Mac: the runtime loads and sees the GPU, but no
