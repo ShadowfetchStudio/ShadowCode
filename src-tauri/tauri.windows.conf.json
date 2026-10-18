@@ -7,6 +7,18 @@
       "../assets/icons/shadow-agent-128.png",
       "../assets/icons/shadow-agent-256.png",
       "../assets/icons/shadow-agent-512.png"
-    ]
+    ],
+    "targets": [
+      "nsis"
+    ],
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      },
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      }
+    }
   }
 }

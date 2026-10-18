@@ -2,8 +2,9 @@ name: Windows
 # The Windows port (docs/WINDOWS_PORT.md). Phase 1: the whole workspace must
 # compile on Windows without warnings; every error is reported at once
 # (--keep-going). Phase 2 (in progress, not yet required): the engine's unit
-# tests run on Windows. Both logs are kept as artifacts. Nothing here is
-# packaged or signed.
+# tests run on Windows. Both logs are kept as artifacts. The installer job
+# builds an unsigned preview installer (NSIS, per-user) as an artifact; it is
+# not attached to any release.
 on:
   push:
     branches: [main]
@@ -77,4 +78,39 @@ jobs:
             windows-check.log
             windows-test.log
           if-no-files-found: ignore
+          retention-days: 14
+  installer:
+    runs-on: windows-latest
+    timeout-minutes: 120
+    env:
+      RUSTUP_TOOLCHAIN: '1.95.0'
+      CARGO_TERM_COLOR: never
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - name: Install pinned Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+      - run: npm --prefix ui ci
+      - name: Build the preview installer (NSIS, current user)
+        run: CI=true ui/node_modules/.bin/tauri build --bundles nsis
+      - name: The app starts and reports its version
+        run: |
+          version="$(node -p "require('./src-tauri/tauri.conf.json').version")"
+          ls target/release/bundle/nsis/
+          out="$(timeout 60 target/release/shadowcode.exe --version 2>&1 || true)"
+          echo "$out"
+          grep -Fx "ShadowCode $version" <<<"$out"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-preview-installer
+          path: target/release/bundle/nsis/*.exe
+          if-no-files-found: error
+          compression-level: 0
           retention-days: 14
