@@ -1,19 +1,28 @@
 //! Retry authority for disposable checkout removal. Git can remove its admin
 //! registration even when deleting the checkout fails. A pre-removal journal
 //! preserves that registration; missing registration alone is never authority.
+//!
+//! Windows: identities are the volume serial and file index (cap-std reads
+//! them from an open handle), folders are opened with backup semantics and
+//! never through a link, the exclusive rename is `SetFileInformationByHandle`
+//! relative to the held destination folder, and there are no modes or
+//! folder flushes. Git writes its own paths with `/` there.
 use super::{git, Record};
 use crate::paths::Canonical;
 use crate::{paths, paths::AppPaths};
 use anyhow::{ensure, Context, Result};
 use base64::{engine::general_purpose::STANDARD, Engine as _};
-use cap_std::fs::{Dir, MetadataExt as _, OpenOptionsExt as _};
+#[cfg(unix)]
+use cap_std::fs::MetadataExt as _;
+use cap_std::fs::{Dir, OpenOptionsExt as _};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+#[cfg(unix)]
+use std::os::unix::{ffi::OsStrExt, fs::OpenOptionsExt as _};
 use std::{
     collections::BTreeMap,
     fs,
     io::{Read, Write},
-    os::unix::{ffi::OsStrExt, fs::OpenOptionsExt as _},
     path::{Path, PathBuf},
     time::{Duration, Instant},
 };
@@ -29,20 +38,88 @@ struct Identity {
     dev: u64,
     ino: u64,
 }
+#[cfg(windows)]
+const FILE_FLAG_BACKUP_SEMANTICS: u32 = 0x0200_0000;
+#[cfg(windows)]
+const FILE_FLAG_OPEN_REPARSE_POINT: u32 = 0x0020_0000;
+
 fn identity(meta: &cap_std::fs::Metadata) -> Identity {
     Identity {
-        dev: meta.dev(),
-        ino: meta.ino(),
+        dev: cap_fs_ext::MetadataExt::dev(meta),
+        ino: cap_fs_ext::MetadataExt::ino(meta),
     }
 }
+/// A path as Git writes it in its own files (`/` on Windows too).
+fn git_path(path: &Path) -> String {
+    paths::slash(path)
+}
+/// Make entries added or renamed in `dir` durable (Windows: nothing to do).
+fn sync_dir(dir: Dir) -> Result<()> {
+    #[cfg(unix)]
+    dir.into_std_file().sync_all()?;
+    #[cfg(not(unix))]
+    drop(dir);
+    Ok(())
+}
 fn directory(path: &Path) -> Result<Dir> {
-    let file = fs::OpenOptions::new()
-        .read(true)
-        .custom_flags(libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_NONBLOCK)
+    let mut options = fs::OpenOptions::new();
+    options.read(true);
+    #[cfg(unix)]
+    options.custom_flags(libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_NONBLOCK);
+    #[cfg(windows)]
+    std::os::windows::fs::OpenOptionsExt::custom_flags(
+        &mut options,
+        FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+    );
+    let file = options
         .open(path)
         .with_context(|| format!("Cleanup requires a real directory: {}", path.display()))?;
+    // The reparse-point flag opened a link or junction itself: refuse it.
+    #[cfg(windows)]
+    {
+        let meta = file.metadata()?;
+        ensure!(
+            meta.is_dir() && !meta.file_type().is_symlink(),
+            "Cleanup requires a real directory: {}",
+            path.display()
+        );
+    }
     ensure!(path.canonical()? == path, "Cleanup directory path changed");
     Ok(Dir::from_std_file(file))
+}
+/// Open the folder `name` in `dir`, never through a link.
+fn nested_directory(dir: &Dir, name: &std::ffi::OsStr) -> Result<Dir> {
+    #[cfg(unix)]
+    return Ok(Dir::from_std_file(
+        dir.open_with(
+            name,
+            cap_std::fs::OpenOptions::new()
+                .read(true)
+                .custom_flags(libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_NONBLOCK),
+        )?
+        .into_std(),
+    ));
+    #[cfg(windows)]
+    return Ok(cap_fs_ext::DirExt::open_dir_nofollow(dir, name)?);
+}
+/// Read-only options that never follow a final link.
+fn file_options() -> cap_std::fs::OpenOptions {
+    let mut options = cap_std::fs::OpenOptions::new();
+    options.read(true);
+    #[cfg(unix)]
+    options.custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK);
+    #[cfg(windows)]
+    cap_fs_ext::OpenOptionsFollowExt::follow(&mut options, cap_fs_ext::FollowSymlinks::No);
+    options
+}
+/// The bytes of a name or link target, for hashing.
+fn os_bytes(text: &std::ffi::OsStr) -> Vec<u8> {
+    #[cfg(unix)]
+    return text.as_bytes().to_vec();
+    #[cfg(windows)]
+    return std::os::windows::ffi::OsStrExt::encode_wide(text)
+        .flat_map(u16::to_le_bytes)
+        .collect();
 }
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 struct Entry {
@@ -92,7 +169,7 @@ fn snapshot(path: &Path, admin: bool, cancel: CancellationToken) -> Result<Tree>
         end: Instant::now() + Duration::from_secs(30),
         cancel,
     };
-    #[cfg(test)]
+    #[cfg(all(test, unix))]
     tests::pause_scan(path, &budget.cancel)?;
     walk(&dir, Path::new(""), admin, &mut tree.entries, &mut budget)?;
     ensure!(
@@ -123,10 +200,15 @@ fn walk(
             "Cleanup exceeds 131,072 entries or 32 MiB of paths; preserve this checkout and review large build outputs before retrying"
         );
         let meta = dir.symlink_metadata(&name)?;
+        #[cfg(unix)]
+        let mode = meta.mode() & 0o7777;
+        // Windows files have no mode bits.
+        #[cfg(windows)]
+        let mode = 0;
         let mut item = Entry {
             identity: identity(&meta),
             kind: String::new(),
-            mode: meta.mode() & 0o7777,
+            mode,
             bytes: if meta.is_file() { meta.len() } else { 0 },
             hash: String::new(),
             data: None,
@@ -135,15 +217,7 @@ fn walk(
             item.kind = "directory".into();
             // Directory permission repair is allowed, but inode replacement is not.
             item.mode = 0;
-            let nested = Dir::from_std_file(
-                dir.open_with(
-                    &name,
-                    cap_std::fs::OpenOptions::new()
-                        .read(true)
-                        .custom_flags(libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_NONBLOCK),
-                )?
-                .into_std(),
-            );
+            let nested = nested_directory(dir, &name)?;
             ensure!(
                 identity(&nested.dir_metadata()?) == item.identity,
                 "Cleanup entry changed during inspection"
@@ -151,19 +225,14 @@ fn walk(
             walk(&nested, &path, admin, out, budget)?;
         } else if meta.is_file() {
             item.kind = "file".into();
-            let mut file = dir.open_with(
-                &name,
-                cap_std::fs::OpenOptions::new()
-                    .read(true)
-                    .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK),
-            )?;
+            let mut file = dir.open_with(&name, &file_options())?;
             let before = file.metadata()?;
             ensure!(before.len() <= budget.bytes,
                 "Cleanup exceeds its byte budget (8 GiB checkout, 16 MiB Git metadata); preserve this checkout and review large build outputs before retrying");
             ensure!(
                 before.is_file()
                     && identity(&before) == item.identity
-                    && (!admin || before.nlink() == 1),
+                    && (!admin || cap_fs_ext::MetadataExt::nlink(&before) == 1),
                 "Cleanup file identity changed or Git metadata has extra hard links"
             );
             let mut hash = Sha256::new();
@@ -187,10 +256,12 @@ fn walk(
             }
             let after = file.metadata()?;
             ensure!(
-                before.len() == after.len()
-                    && before.modified()? == after.modified()?
-                    && before.ctime() == after.ctime()
-                    && before.ctime_nsec() == after.ctime_nsec(),
+                before.len() == after.len() && before.modified()? == after.modified()?,
+                "Cleanup file changed during inspection"
+            );
+            #[cfg(unix)]
+            ensure!(
+                before.ctime() == after.ctime() && before.ctime_nsec() == after.ctime_nsec(),
                 "Cleanup file changed during inspection"
             );
             item.hash = format!("{:x}", hash.finalize());
@@ -201,7 +272,7 @@ fn walk(
             item.kind = "symlink".into();
             item.hash = format!(
                 "{:x}",
-                Sha256::digest(dir.read_link_contents(&name)?.as_os_str().as_bytes())
+                Sha256::digest(os_bytes(dir.read_link_contents(&name)?.as_os_str()))
             );
         } else {
             anyhow::bail!(
@@ -261,11 +332,13 @@ fn save(path: &Path, intent: &Intent) -> Result<()> {
     paths::atomic_write(path, &bytes, true)
 }
 fn read(path: &Path) -> Result<Option<Intent>> {
-    let file = match fs::OpenOptions::new()
-        .read(true)
-        .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK)
-        .open(path)
-    {
+    let mut options = fs::OpenOptions::new();
+    options.read(true);
+    #[cfg(unix)]
+    options.custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK);
+    #[cfg(windows)]
+    std::os::windows::fs::OpenOptionsExt::custom_flags(&mut options, FILE_FLAG_OPEN_REPARSE_POINT);
+    let file = match options.open(path) {
         Ok(file) => file,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
         Err(e) => return Err(e.into()),
@@ -402,7 +475,7 @@ impl Session {
         if self.intent.is_some() {
             return Ok(());
         }
-        let pointer = format!("gitdir: {}\n", self.admin_path().display());
+        let pointer = format!("gitdir: {}\n", git_path(&self.admin_path()));
         let record = self.record.clone();
         let admin = self.admin_path();
         let snapshot_cancel = cancel.clone();
@@ -427,7 +500,7 @@ impl Session {
             ("HEAD", format!("ref: refs/heads/{}\n", self.record.branch)),
             (
                 "gitdir",
-                format!("{}\n", self.record.path.join(".git").display()),
+                format!("{}\n", git_path(&self.record.path.join(".git"))),
             ),
         ] {
             ensure!(
@@ -446,13 +519,14 @@ impl Session {
         );
         let container = self.container();
         paths::private_directory(container.parent().unwrap())?;
+        #[cfg_attr(not(unix), allow(unused_mut))]
         let mut builder = fs::DirBuilder::new();
-        use std::os::unix::fs::DirBuilderExt;
+        #[cfg(unix)]
+        std::os::unix::fs::DirBuilderExt::mode(&mut builder, 0o700);
         builder
-            .mode(0o700)
             .create(&container)
             .context("Cleanup quarantine already exists; preserve it for review")?;
-        fs::File::open(container.parent().unwrap())?.sync_all()?;
+        paths::sync_directory(container.parent().unwrap())?;
         let intent = Intent {
             version: 1,
             id: self.record.id.clone(),
@@ -523,8 +597,8 @@ impl Session {
                     &container,
                     std::ffi::OsStr::new("checkout"),
                 )?;
-                origin_parent.into_std_file().sync_all()?;
-                container.into_std_file().sync_all()?;
+                sync_dir(origin_parent)?;
+                sync_dir(container)?;
                 let moved =
                     directory(&intent.quarantine).and_then(|d| Ok(identity(&d.dir_metadata()?)));
                 if moved.as_ref().ok() != Some(&intent.lane.root) {
@@ -558,7 +632,7 @@ impl Session {
         }
         original_replacement(&intent)?;
         let admin_path = self.admin_path();
-        let planned_pointer = format!("{}\n", intent.quarantine.join(".git").display());
+        let planned_pointer = format!("{}\n", git_path(&intent.quarantine.join(".git")));
         if exists(&admin_path)? {
             ensure!(
                 identity(&directory(admin_path.parent().unwrap())?.dir_metadata()?)
@@ -593,7 +667,7 @@ impl Session {
             let parent = admin_path.parent().unwrap();
             if !exists(parent)? {
                 fs::create_dir(parent)?;
-                fs::File::open(&intent.common)?.sync_all()?;
+                paths::sync_directory(&intent.common)?;
             }
             let pinned_parent = directory(parent)?;
             let parent_identity = identity(&pinned_parent.dir_metadata()?);
@@ -637,16 +711,14 @@ impl Session {
                 identity(&lane.dir_metadata()?) == intent.lane.root,
                 "Cleanup checkout was replaced"
             );
-            let mut file = lane.open_with(
-                ".git",
-                cap_std::fs::OpenOptions::new()
-                    .write(true)
-                    .create_new(true)
-                    .mode(0o600),
-            )?;
+            let mut options = cap_std::fs::OpenOptions::new();
+            options.write(true).create_new(true);
+            #[cfg(unix)]
+            options.mode(0o600);
+            let mut file = lane.open_with(".git", &options)?;
             file.write_all(intent.pointer.as_bytes())?;
             file.sync_all()?;
-            lane.into_std_file().sync_all()?;
+            sync_dir(lane)?;
             let current = snapshot(&intent.quarantine, false, cancel.clone())?;
             intent.lane.entries.insert(
                 PathBuf::from(".git"),
@@ -721,8 +793,8 @@ impl Session {
                     .join("archive")
                     .join(format!("{}.cleanup", self.record.id)),
             )?;
-            fs::File::open(self.journal.parent().unwrap())?.sync_all()?;
-            fs::File::open(records.join("archive"))?.sync_all()?;
+            paths::sync_directory(self.journal.parent().unwrap())?;
+            paths::sync_directory(&records.join("archive"))?;
         }
         Ok(())
     }
@@ -733,8 +805,6 @@ fn restore_admin(
     expected_parent: &Identity,
     expected_common: &Identity,
 ) -> Result<()> {
-    use std::os::fd::AsRawFd;
-    use std::os::unix::fs::PermissionsExt;
     ensure!(
         saved.entries.len() <= ENTRIES,
         "Cleanup backup exceeds entry budget"
@@ -754,9 +824,16 @@ fn restore_admin(
         identity(&target_parent.dir_metadata()?) == *expected_parent,
         "Cleanup admin parent was replaced before restoration"
     );
+    // Unix stages inside the held folder itself; Windows by its path, and the
+    // exclusive rename below finds the staged folder only through the held
+    // handle, so a replaced path cannot redirect it.
+    #[cfg(unix)]
+    let held = crate::paths::held_directory(std::os::fd::AsRawFd::as_raw_fd(&source_parent))?;
+    #[cfg(windows)]
+    let held = common.to_path_buf();
     let staged = tempfile::Builder::new()
         .prefix(".shadowcode-cleanup-")
-        .tempdir_in(crate::paths::held_directory(source_parent.as_raw_fd())?)?;
+        .tempdir_in(held)?;
     for (relative, entry) in &saved.entries {
         ensure!(
             relative
@@ -784,13 +861,16 @@ fn restore_admin(
                     format!("{:x}", Sha256::digest(&bytes)) == entry.hash,
                     "Cleanup backup hash differs"
                 );
-                let mut file = fs::OpenOptions::new()
-                    .write(true)
-                    .create_new(true)
-                    .mode(entry.mode)
-                    .open(&target)?;
+                let mut options = fs::OpenOptions::new();
+                options.write(true).create_new(true);
+                #[cfg(unix)]
+                options.mode(entry.mode);
+                let mut file = options.open(&target)?;
                 file.write_all(&bytes)?;
-                file.set_permissions(fs::Permissions::from_mode(entry.mode))?;
+                #[cfg(unix)]
+                file.set_permissions(
+                    <fs::Permissions as std::os::unix::fs::PermissionsExt>::from_mode(entry.mode),
+                )?;
                 file.sync_all()?;
             }
             _ => anyhow::bail!("Unsafe entry in Git administration backup"),
@@ -799,20 +879,21 @@ fn restore_admin(
     // Flush child directories before publishing the complete backup atomically.
     for (relative, entry) in saved.entries.iter().rev() {
         if entry.kind == "directory" {
-            fs::File::open(staged.path().join(relative))?.sync_all()?;
+            paths::sync_directory(&staged.path().join(relative))?;
         }
     }
-    fs::File::open(staged.path())?.sync_all()?;
+    paths::sync_directory(staged.path())?;
     rename_noreplace(
         &source_parent,
         staged.path().file_name().unwrap(),
         &target_parent,
         path.file_name().unwrap(),
     )?;
-    target_parent.into_std_file().sync_all()?;
+    sync_dir(target_parent)?;
     Ok(())
 }
 
+#[cfg(unix)]
 fn rename_noreplace(
     from: &Dir,
     name: &std::ffi::OsStr,
@@ -844,6 +925,67 @@ fn rename_noreplace(
     };
     ensure!(
         result == 0,
+        "Exclusive cleanup rename refused: {}",
+        std::io::Error::last_os_error()
+    );
+    Ok(())
+}
+
+/// Move `name` in `from` to `destination` in `to`, both found through the
+/// held folder handles, failing if `destination` exists.
+#[cfg(windows)]
+fn rename_noreplace(
+    from: &Dir,
+    name: &std::ffi::OsStr,
+    to: &Dir,
+    destination: &std::ffi::OsStr,
+) -> Result<()> {
+    use std::os::windows::{ffi::OsStrExt, io::AsRawHandle};
+    use windows_sys::Win32::{
+        Foundation::HANDLE,
+        Storage::FileSystem::{FileRenameInfo, SetFileInformationByHandle, FILE_RENAME_INFO},
+    };
+    const DELETE: u32 = 0x0001_0000;
+    const SYNCHRONIZE: u32 = 0x0010_0000;
+    // The entry itself (never a link's target), opened for renaming.
+    let mut options = cap_std::fs::OpenOptions::new();
+    options
+        .access_mode(DELETE | SYNCHRONIZE)
+        .custom_flags(FILE_FLAG_BACKUP_SEMANTICS);
+    cap_fs_ext::OpenOptionsFollowExt::follow(&mut options, cap_fs_ext::FollowSymlinks::No);
+    let entry = from
+        .open_with(name, &options)
+        .context("Exclusive cleanup rename could not open its source")?;
+    let target: Vec<u16> = destination.encode_wide().collect();
+    ensure!(
+        !target.is_empty() && !target.contains(&0) && !target.contains(&(b'\\' as u16)),
+        "Exclusive cleanup rename needs a plain name"
+    );
+    // FILE_RENAME_INFO ends in the name; a u64 buffer keeps it aligned.
+    let header = std::mem::offset_of!(FILE_RENAME_INFO, FileName);
+    let size = header + target.len() * 2;
+    let mut buffer = vec![0u64; size.div_ceil(8)];
+    // SAFETY: the buffer is zeroed, aligned and large enough for the header
+    // and the name; both handles stay open for the call.
+    let done = unsafe {
+        let info = buffer.as_mut_ptr().cast::<FILE_RENAME_INFO>();
+        (*info).Anonymous.ReplaceIfExists = false;
+        (*info).RootDirectory = to.as_raw_handle() as HANDLE;
+        (*info).FileNameLength = (target.len() * 2) as u32;
+        std::ptr::copy_nonoverlapping(
+            target.as_ptr(),
+            std::ptr::addr_of_mut!((*info).FileName).cast::<u16>(),
+            target.len(),
+        );
+        SetFileInformationByHandle(
+            entry.as_raw_handle() as HANDLE,
+            FileRenameInfo,
+            buffer.as_ptr().cast(),
+            size as u32,
+        )
+    };
+    ensure!(
+        done != 0,
         "Exclusive cleanup rename refused: {}",
         std::io::Error::last_os_error()
     );
@@ -959,8 +1101,8 @@ pub(super) async fn dispose(
         records.join(format!("{id}.json")),
         archive.join(format!("{id}.json")),
     )?;
-    fs::File::open(&records)?.sync_all()?;
-    fs::File::open(&archive)?.sync_all()?;
+    paths::sync_directory(&records)?;
+    paths::sync_directory(&archive)?;
     session.archive(&records)?;
     Ok(exists(&record.path)?.then(|| {
         format!(
@@ -981,13 +1123,9 @@ fn rewrite_connection(admin_path: &Path, expected: &Tree, bytes: &[u8]) -> Resul
         .entries
         .get(Path::new("gitdir"))
         .context("Missing saved Git connection")?;
-    let mut file = admin.open_with(
-        "gitdir",
-        cap_std::fs::OpenOptions::new()
-            .read(true)
-            .write(true)
-            .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK),
-    )?;
+    let mut options = file_options();
+    options.write(true);
+    let mut file = admin.open_with("gitdir", &options)?;
     ensure!(
         identity(&file.metadata()?) == entry.identity,
         "Git connection was replaced before retargeting"
@@ -1047,11 +1185,15 @@ async fn branch_tip(
 }
 
 fn original_replacement(intent: &Intent) -> Result<bool> {
-    use std::os::unix::fs::MetadataExt;
     match fs::symlink_metadata(&intent.path) {
-        Ok(meta) => {
+        Ok(_) => {
+            // Read the identity through a handle (Windows has it only there);
+            // whatever is there now, link or not, is compared, never followed.
+            let parent = directory(intent.path.parent().context("Missing cleanup parent")?)?;
+            let name = intent.path.file_name().context("Missing cleanup name")?;
+            let meta = parent.symlink_metadata(name)?;
             ensure!(
-                meta.dev() != intent.lane.root.dev || meta.ino() != intent.lane.root.ino,
+                identity(&meta) != intent.lane.root,
                 "Owned checkout returned to its original path; preserve for review"
             );
             Ok(true)
@@ -1063,7 +1205,8 @@ fn original_replacement(intent: &Intent) -> Result<bool> {
     }
 }
 
-#[cfg(test)]
+// The scenarios below use Unix modes, symlinks and descriptors.
+#[cfg(all(test, unix))]
 mod tests {
     use super::*;
     use std::os::unix::fs::PermissionsExt;

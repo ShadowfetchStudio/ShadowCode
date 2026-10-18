@@ -115,8 +115,9 @@ pub async fn review(
     .await?;
     let checkout_pointer = text(&record.path.join(".git"))?;
     let registration_pointer = text(&administrative_directory.join("gitdir"))?;
-    let expected_checkout = format!("gitdir: {}", administrative_directory.display());
-    let expected_registration = record.path.join(".git").to_string_lossy().into_owned();
+    // Git writes these with `/` on Windows too.
+    let expected_checkout = format!("gitdir: {}", crate::paths::slash(&administrative_directory));
+    let expected_registration = crate::paths::slash(&record.path.join(".git"));
     ensure!(
         checkout_pointer
             .as_deref()
@@ -168,12 +169,15 @@ pub async fn apply(
         for (path, value, missing) in [
             (
                 record.path.join(".git"),
-                format!("gitdir: {}\n", reviewed.administrative_directory.display()),
+                format!(
+                    "gitdir: {}\n",
+                    crate::paths::slash(&reviewed.administrative_directory)
+                ),
                 reviewed.checkout_pointer.is_none(),
             ),
             (
                 reviewed.administrative_directory.join("gitdir"),
-                format!("{}\n", record.path.join(".git").display()),
+                format!("{}\n", crate::paths::slash(&record.path.join(".git"))),
                 reviewed.registration_pointer.is_none(),
             ),
         ] {
