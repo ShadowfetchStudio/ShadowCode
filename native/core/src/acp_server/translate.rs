@@ -451,14 +451,10 @@ mod tests {
         ));
         assert_eq!(started[0]["sessionUpdate"], "tool_call");
         assert_eq!(started[0]["kind"], "edit");
-        assert_eq!(
-            started[0]["locations"][0]["path"],
-            Path::new("/w")
-                .join("src")
-                .join("a.rs")
-                .display()
-                .to_string()
-        );
+        #[cfg(unix)]
+        assert_eq!(started[0]["locations"][0]["path"], "/w/src/a.rs");
+        #[cfg(windows)]
+        assert_eq!(started[0]["locations"][0]["path"], "\\w\\src\\a.rs");
         assert_eq!(started[0]["content"][0]["type"], "diff");
         assert_eq!(started[0]["content"][0]["oldText"], "a");
         assert_eq!(t.open_call("edit_file").unwrap().id, "c1");

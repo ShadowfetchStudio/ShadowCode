@@ -379,7 +379,7 @@ impl Book {
                     .map(Path::to_path_buf)
                     .map_err(std::io::Error::other)
             });
-        inside.ok().map(|p| p.to_string_lossy().into_owned())
+        inside.ok().map(|p| crate::paths::slash(&p))
     }
     pub fn path_of(&self, rel: &str) -> String {
         self.dir.join(rel).display().to_string()

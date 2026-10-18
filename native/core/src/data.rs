@@ -149,8 +149,7 @@ fn expand(path: &Path) -> PathBuf {
 /// Make a copied file private and durable before anything relies on it.
 fn seal(path: &Path) -> Result<()> {
     private_file(path)?;
-    fs::File::open(path)?.sync_all()?;
-    Ok(())
+    crate::paths::sync_file(path)
 }
 
 fn sync_dir(path: &Path) {
@@ -1227,7 +1226,7 @@ fn apply_restore(paths: &AppPaths, pending: &Pending) -> Result<Value> {
         ));
         fs::copy(staging.join(&file.path), &temporary)?;
         private_file(&temporary)?;
-        fs::File::open(&temporary)?.sync_all()?;
+        crate::paths::sync_file(&temporary)?;
         prepared.push((temporary, target, file.path.clone()));
     }
     let database = paths.database();

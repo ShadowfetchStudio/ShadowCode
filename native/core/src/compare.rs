@@ -519,7 +519,11 @@ pub(crate) async fn snapshot_for(
         snapshot_index_flags(source, &env, cancel).await?;
         // Clearing flags rewrites the temporary index. Preserve the source's
         // racy timestamp for other entries before Git examines working bytes.
-        fs::File::open(&index)?.set_modified(modified)?;
+        // Windows changes a time only through a handle that may write.
+        fs::OpenOptions::new()
+            .write(true)
+            .open(&index)?
+            .set_modified(modified)?;
     } else {
         git_env(source, &["read-tree", "HEAD"], &env, cancel).await?;
     }

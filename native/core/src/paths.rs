@@ -238,6 +238,17 @@ pub fn sync_directory(directory: &Path) -> Result<()> {
     Ok(())
 }
 
+/// Make a file's written bytes durable. Windows flushes only through a
+/// handle that may write.
+pub fn sync_file(path: &Path) -> Result<()> {
+    let mut options = fs::OpenOptions::new();
+    options.read(true);
+    #[cfg(windows)]
+    options.write(true);
+    options.open(path)?.sync_all()?;
+    Ok(())
+}
+
 pub fn atomic_write(path: &Path, bytes: &[u8], private: bool) -> Result<()> {
     use std::io::Write;
     let parent = path.parent().context("Path has no parent")?;

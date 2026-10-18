@@ -240,11 +240,7 @@ impl Workspace {
             };
             entries.push(FileEntry {
                 name,
-                path: child
-                    .strip_prefix(".")
-                    .unwrap_or(&child)
-                    .to_string_lossy()
-                    .into_owned(),
+                path: crate::paths::slash(child.strip_prefix(".").unwrap_or(&child)),
                 kind: kind.into(),
             });
         }
@@ -360,7 +356,7 @@ impl Workspace {
             "Binary files cannot be displayed as text"
         );
         Ok(FileContent {
-            path: self.relative(path)?.to_string_lossy().into_owned(),
+            path: crate::paths::slash(&self.relative(path)?),
             hash: hash(&bytes),
             bytes: bytes.len(),
             content: String::from_utf8(bytes).context("File is not valid UTF-8")?,
@@ -617,11 +613,7 @@ impl Workspace {
                     serde_json::json!({"matches":matches,"truncated":true,"scanned":scanned-1}),
                 );
             }
-            let rel = entry
-                .path()
-                .strip_prefix(&self.path)?
-                .to_string_lossy()
-                .into_owned();
+            let rel = crate::paths::slash(entry.path().strip_prefix(&self.path)?);
             // A glob override outranks the hidden-file rule, so it could reach
             // `.env` and other secret files: never return their contents.
             if crate::redaction::is_secret_path(&rel) {
@@ -671,13 +663,7 @@ impl Workspace {
                     .to_lowercase()
                     .contains(&needle)
             {
-                hits.push(
-                    entry
-                        .path()
-                        .strip_prefix(&self.path)?
-                        .to_string_lossy()
-                        .into_owned(),
-                );
+                hits.push(crate::paths::slash(entry.path().strip_prefix(&self.path)?));
             }
         }
         Ok(serde_json::json!({"hits":hits,"truncated":false}))
