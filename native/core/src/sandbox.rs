@@ -706,10 +706,7 @@ pub fn prepare_shell(
         prepare_seatbelt(workspace, command, policy, &layout)
     };
     #[cfg(windows)]
-    let result = {
-        let _ = cwd;
-        prepare_windows(workspace, command, policy, &layout)
-    };
+    let result = prepare_windows(workspace, cwd, command, policy, &layout);
     #[cfg(all(unix, not(target_os = "macos")))]
     let result = match working_bwrap(workspace) {
         Ok(program) => {
@@ -904,6 +901,7 @@ pub fn prepare_shell(
 #[cfg(windows)]
 fn prepare_windows(
     workspace: &Path,
+    cwd: &Path,
     command: &str,
     policy: &ShellPolicy,
     layout: &HomeLayout,
@@ -913,7 +911,7 @@ fn prepare_windows(
     if policy.network == ShellNetwork::Allowlist {
         bail!("The command did not run: the network allow-list is not available on Windows (the Windows sandbox cannot reach the allow-list proxy on this computer). Choose 'off' or 'on' in Settings > Permissions & network > Shell commands and the network.");
     }
-    let error = match appcontainer::prepare(workspace, command, policy, layout) {
+    let error = match appcontainer::prepare(workspace, cwd, command, policy, layout) {
         Ok(prepared) => return Ok(prepared),
         Err(error) => error,
     };

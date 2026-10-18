@@ -322,6 +322,7 @@ fn launcher() -> Result<PathBuf> {
 /// The command in ShadowCode's AppContainer.
 pub(super) fn prepare(
     workspace: &Path,
+    cwd: &Path,
     command: &str,
     policy: &ShellPolicy,
     layout: &HomeLayout,
@@ -336,7 +337,7 @@ pub(super) fn prepare(
     let temp = scratch.path.join("tmp");
     std::fs::create_dir_all(&home)?;
     std::fs::create_dir_all(&temp)?;
-    let (shell, shell_args) = sandbox_shell(command)?;
+    let (shell, shell_args) = sandbox_shell(cwd, command)?;
     // Read-only: the toolchains the home layout shows, the user's own PATH
     // folders and the shell's folder, unless Windows already allows them.
     // Best effort: a folder ShadowCode may not change is skipped.
@@ -415,7 +416,7 @@ pub(super) fn prepare(
 /// The shell inside the container. Git for Windows' bash (MSYS2) cannot start
 /// in an AppContainer (its runtime fails to initialize, 0xC0000142) and
 /// Windows PowerShell cannot load its own modules there; PowerShell 7 runs.
-fn sandbox_shell(command: &str) -> Result<(String, Vec<String>)> {
+fn sandbox_shell(cwd: &Path, command: &str) -> Result<(String, Vec<String>)> {
     let pwsh = crate::sandbox::which("pwsh").or_else(|| {
         ["ProgramW6432", "ProgramFiles"]
             .iter()
@@ -433,7 +434,12 @@ fn sandbox_shell(command: &str) -> Result<(String, Vec<String>)> {
             "-NoProfile".into(),
             "-NonInteractive".into(),
             "-Command".into(),
-            command.into(),
+            // PowerShell cannot confirm an inherited folder whose parents the
+            // container may not read, and would start at the drive root.
+            format!(
+                "Set-Location -LiteralPath '{}'\n{command}",
+                cwd.to_string_lossy().replace('\'', "''")
+            ),
         ],
     ))
 }
