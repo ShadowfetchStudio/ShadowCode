@@ -2119,7 +2119,7 @@ impl Engine {
     }
     // Windows: the vendor runner is not ported yet; the turn stops with an
     // error after preparing, and the rest of this function is not reached.
-    #[cfg_attr(not(unix), allow(unreachable_code))]
+    #[cfg_attr(not(unix), allow(unreachable_code, unused_variables))]
     async fn run_cli_agent(
         &self,
         running: &Running,
