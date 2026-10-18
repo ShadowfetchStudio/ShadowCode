@@ -27,12 +27,10 @@
 #     outside a logged-in desktop session. Needs Xcode (its metal compiler)
 #     and cmake.
 #
-#   * Windows (Git Bash): the same loadable CPU variants, compiled by clang-cl
-#     through the Visual Studio generator (the variants need GCC/Clang-style
-#     target flags, as upstream's own Windows builds do), without OpenMP, plus
+#   * Windows (Git Bash): the same loadable CPU variants, compiled by MSVC
+#     through the Visual Studio generator, without OpenMP, plus
 #     a Vulkan module when the Vulkan SDK is installed (VULKAN_SDK with glslc).
-#     Needs Visual Studio (2022 or newer) with its C++ and Clang tools, and
-#     cmake.
+#     Needs Visual Studio (2022 or newer) with its C++ tools, and cmake.
 #
 # Outputs: packaging/llama.cpp/bin (bundled into the AppImage, the deb, the
 # macOS app and the Windows installer) and, unless --no-user-install is given,
@@ -99,8 +97,10 @@ if [[ -z "$CMAKE" ]]; then
 fi
 GENERATOR=()
 if [[ "$WINDOWS" == "1" ]]; then
-  # The newest Visual Studio installed (CMake's default generator here).
-  GENERATOR=(-A x64 -T ClangCL)
+  # The newest Visual Studio installed (CMake's default generator here),
+  # with its own compiler: ggml's CPU variants use MSVC's /arch flags and
+  # feature macros there (clang-cl would be given the same and refuse them).
+  GENERATOR=(-A x64)
 elif command -v ninja >/dev/null 2>&1; then
   GENERATOR=(-G Ninja)
 fi
