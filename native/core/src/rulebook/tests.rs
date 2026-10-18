@@ -222,7 +222,13 @@ fn profile_instructions_come_first_labelled_as_the_users() {
     assert_eq!(text.matches("Run cargo test").count(), 1);
     // Without a profile (and nothing switched off) the system prompt is
     // exactly what it was before profiles existed.
-    fs::remove_dir_all(&f.profile).unwrap();
+    // Windows: a virus scanner may still hold a file just written; retry.
+    let mut tries = 0;
+    while let Err(error) = fs::remove_dir_all(&f.profile) {
+        tries += 1;
+        assert!(tries < 50, "{error}");
+        std::thread::sleep(std::time::Duration::from_millis(100));
+    }
     set_enabled(&f.paths, Some(&f.project), "project:CLAUDE.md", true).unwrap();
     assert_eq!(
         f.book().guidance(&f.workspace()),
@@ -525,7 +531,7 @@ fn codes(report: &Value) -> Vec<(String, String)> {
                 f["path"]
                     .as_str()
                     .unwrap()
-                    .rsplit('/')
+                    .rsplit(['/', '\\'])
                     .next()
                     .unwrap()
                     .to_owned()

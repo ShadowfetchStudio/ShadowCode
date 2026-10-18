@@ -2073,7 +2073,9 @@ mod tests {
         let timestamp = SystemTime::UNIX_EPOCH + Duration::from_secs(1_000_000_000);
         let file = source.join("data.txt");
         fs::write(&file, b"before\n").unwrap();
-        fs::File::open(&file)
+        fs::OpenOptions::new()
+            .write(true)
+            .open(&file)
             .unwrap()
             .set_modified(timestamp)
             .unwrap();
@@ -2096,7 +2098,9 @@ mod tests {
         .await
         .unwrap();
         let index = source.join(".git/index");
-        fs::File::open(&index)
+        fs::OpenOptions::new()
+            .write(true)
+            .open(&index)
             .unwrap()
             .set_modified(timestamp)
             .unwrap();
@@ -2105,7 +2109,9 @@ mod tests {
         // Same size and cached mtime: Git must use the index's original racy
         // timestamp to decide to hash bytes instead of trusting its stat cache.
         fs::write(&file, b"after!\n").unwrap();
-        fs::File::open(&file)
+        fs::OpenOptions::new()
+            .write(true)
+            .open(&file)
             .unwrap()
             .set_modified(timestamp)
             .unwrap();
