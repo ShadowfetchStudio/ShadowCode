@@ -738,9 +738,7 @@ pub fn resolve_binary(configured: &str) -> Option<std::path::PathBuf> {
         return candidate.is_file().then(|| candidate.to_path_buf());
     }
     let path = std::env::var_os("PATH")?;
-    std::env::split_paths(&path)
-        .map(|dir| dir.join(configured))
-        .find(|p| p.is_file())
+    crate::paths::find_program_in(configured, &path)
 }
 
 /// Truncate vendor output before it enters the transcript or store.

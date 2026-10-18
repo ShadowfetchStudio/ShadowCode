@@ -142,6 +142,9 @@ static SCRATCH: LazyLock<Mutex<HashMap<PathBuf, tempfile::TempDir>>> =
 static WARNED: LazyLock<Mutex<HashSet<String>>> = LazyLock::new(|| Mutex::new(HashSet::new()));
 
 pub fn which(name: &str) -> Option<PathBuf> {
+    #[cfg(windows)]
+    return crate::paths::find_program_in(name, &std::env::var_os("PATH")?);
+    #[cfg(not(windows))]
     std::env::var_os("PATH").and_then(|paths| {
         std::env::split_paths(&paths).find_map(|dir| {
             let candidate = dir.join(name);

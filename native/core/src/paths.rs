@@ -55,6 +55,30 @@ impl Drop for ProfileLock {
     }
 }
 
+/// `name` in the folders of `path`. Windows also tries the program
+/// extensions (npm installs `codex` as `codex.cmd`), in `PATHEXT` order.
+pub fn find_program_in(name: &str, path: &std::ffi::OsStr) -> Option<PathBuf> {
+    #[cfg(windows)]
+    let names: Vec<String> = if Path::new(name).extension().is_some() {
+        vec![name.to_owned()]
+    } else {
+        let extensions = std::env::var("PATHEXT").unwrap_or_else(|_| ".COM;.EXE;.BAT;.CMD".into());
+        extensions
+            .split(';')
+            .filter(|e| !e.is_empty())
+            .map(|e| format!("{name}{}", e.to_ascii_lowercase()))
+            .collect()
+    };
+    #[cfg(not(windows))]
+    let names = [name.to_owned()];
+    std::env::split_paths(path).find_map(|dir| {
+        names
+            .iter()
+            .map(|name| dir.join(name))
+            .find(|p| p.is_file())
+    })
+}
+
 /// The user's home folder. Windows names it `USERPROFILE`; a program started
 /// from Explorer has no `HOME` (Git Bash sets one).
 pub fn home_dir() -> Option<PathBuf> {

@@ -171,10 +171,8 @@ pub fn find_program(name: &str) -> Option<PathBuf> {
         return is_executable(&path).then_some(path);
     }
     crate::sandbox::which(name).or_else(|| {
-        extra_dirs()
-            .into_iter()
-            .map(|dir| dir.join(name))
-            .find(|p| is_executable(p))
+        let extra = std::env::join_paths(extra_dirs()).ok()?;
+        crate::paths::find_program_in(name, &extra).filter(|p| is_executable(p))
     })
 }
 

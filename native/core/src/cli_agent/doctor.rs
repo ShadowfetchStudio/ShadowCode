@@ -406,9 +406,7 @@ fn resolve_with_path(configured: &str, path_env: Option<&OsStr>) -> Option<PathB
             if candidate.components().count() > 1 {
                 return candidate.is_file().then(|| candidate.to_path_buf());
             }
-            std::env::split_paths(path)
-                .map(|dir| dir.join(configured))
-                .find(|p| p.is_file())
+            crate::paths::find_program_in(configured, path)
         }
     }
 }
