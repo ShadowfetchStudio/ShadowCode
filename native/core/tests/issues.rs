@@ -1,6 +1,8 @@
 //! "Start from an issue" through fake `gh` and `glab` on PATH (no network):
 //! listing open issues, turning one into a bounded task with a branch name,
 //! a signed-out CLI, and remotes that are not GitHub or GitLab.
+// The fake `gh` and `glab` are shell scripts found on PATH.
+#![cfg(unix)]
 use serde_json::{json, Value};
 use shadowcode_core::{
     config::Config,

@@ -92,6 +92,11 @@ impl Workspace {
         let dir = Dir::open_ambient_dir(&path, ambient_authority())?;
         Ok(Self { path, dir })
     }
+    /// [`Workspace::relative`] as the agent, the interface and stored records
+    /// name it: `/` between its parts on every system.
+    pub fn relative_text(&self, path: &str) -> Result<String> {
+        Ok(crate::paths::slash(&self.relative(path)?))
+    }
     pub fn relative(&self, path: &str) -> Result<PathBuf> {
         ensure!(!path.contains('\0'), "Path contains a NUL byte");
         let path = Path::new(path);

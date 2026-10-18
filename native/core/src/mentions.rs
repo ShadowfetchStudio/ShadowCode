@@ -205,6 +205,12 @@ pub fn search(root: &Path, query: &str, limit: usize) -> Result<Value> {
 /// Whether `path` (relative to the project) is one of `scope`'s files or
 /// inside one of its folders.
 pub fn in_scope(scope: &[Mention], path: &str) -> bool {
+    // Windows names a file inside a chosen folder with either separator.
+    let path = if cfg!(windows) {
+        std::borrow::Cow::Owned(path.replace('\\', "/"))
+    } else {
+        std::borrow::Cow::Borrowed(path)
+    };
     let path = path.trim_start_matches("./");
     scope.iter().any(|m| {
         let target = m.path.trim_start_matches("./").trim_end_matches('/');

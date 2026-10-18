@@ -3,6 +3,7 @@
 //! registered loopback models on one fake OpenAI-compatible server (the
 //! reply depends on the requested model name); the cloud reviewer is the
 //! fake Codex app-server. No real vendor CLI or network is used.
+#![cfg_attr(not(unix), allow(unused))]
 use shadowcode_core::paths::Canonical;
 mod support;
 mod vendor_support;
@@ -581,6 +582,7 @@ fn local_turn(service: &Service, project: &Path, sid: &str) -> String {
     task_id
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn local_work_reaches_a_cloud_reviewer_only_with_consent() {
     let root = tempfile::tempdir().unwrap();
@@ -906,6 +908,7 @@ async fn live_review_of_a_staged_change_by_a_real_model() {
     service.engine.shutdown().await.unwrap();
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn a_second_opinion_that_hits_a_plan_limit_stays_on_its_model() {
     let root = tempfile::tempdir().unwrap();

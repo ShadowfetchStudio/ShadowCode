@@ -1,5 +1,6 @@
 //! Permission modes, network modes, config migration, durable redaction,
 //! the engine trust gate (goals included) and checkpoint.restored events.
+#![cfg_attr(not(unix), allow(unused))]
 use shadowcode_core::paths::Canonical;
 mod support;
 use serde_json::{json, Value};
@@ -267,6 +268,7 @@ fn permission_mode_matrix() {
     assert!(permissions::parallel_safe("web_fetch", &json!({})));
 }
 
+#[cfg(unix)]
 #[test]
 fn shell_paths_are_placed_in_the_real_project() {
     let mut legacy = perms(PermissionMode::AllowEdits);

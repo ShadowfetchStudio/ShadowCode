@@ -246,8 +246,7 @@ fn vendor_changes(root: &Path, kind: &str, args: &Value) -> Option<Value> {
     };
     let shown = |path: &str| {
         workspace
-            .relative(path)
-            .map(|p| p.to_string_lossy().into_owned())
+            .relative_text(path)
             .unwrap_or_else(|_| path.to_owned())
     };
     // Claude Code: Write / Edit / MultiEdit inputs.

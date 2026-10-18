@@ -1,5 +1,6 @@
 //! Full undo: project checkpoints around native shell commands and vendor CLI
 //! turns, restored by the existing rewind.
+#![cfg_attr(not(unix), allow(unused))]
 use shadowcode_core::paths::Canonical;
 mod vendor_support;
 use serde_json::{json, Value};
@@ -544,6 +545,7 @@ async fn call(service: &Service, method: &str, path: &str, body: Value) -> anyho
         .await
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn vendor_cli_edits_are_checkpointed_and_rewound() {
     for with_git in [true, false] {
@@ -629,6 +631,7 @@ async fn vendor_cli_edits_are_checkpointed_and_rewound() {
     }
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn a_vendor_turn_is_checked_against_only_change_these_or_says_it_was_not() {
     for checkpoints in [true, false] {

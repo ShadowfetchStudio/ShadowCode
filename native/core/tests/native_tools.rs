@@ -1,3 +1,4 @@
+#![cfg_attr(not(unix), allow(unused))]
 use serde_json::{json, Value};
 use shadowcode_core::{
     approvals::ApprovalHub,
@@ -74,6 +75,7 @@ async fn system_info_is_read_only_and_cannot_read_an_arbitrary_path() {
     assert!(denied.error.contains("takes no arguments"));
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn sqlite_builtins_work_in_read_only_mode_without_external_activation() {
     let mut config = Config::default();

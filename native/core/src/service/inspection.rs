@@ -87,7 +87,7 @@ impl Service {
         let path = if path.is_empty() {
             String::new()
         } else {
-            workspace.relative(path)?.to_string_lossy().into_owned()
+            workspace.relative_text(path)?
         };
         let mut args = vec![
             "log".into(),

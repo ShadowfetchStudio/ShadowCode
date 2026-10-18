@@ -3,6 +3,8 @@
 //! `/props`, and `/v1/chat/completions` (canned tool calls), requires the
 //! per-launch bearer key, records every launch and request, and exits on
 //! SIGTERM. Nothing here touches a GPU or a real model.
+// The fake llama-server is a script started directly; local models on Windows come with the runtime port.
+#![cfg(unix)]
 use shadowcode_core::paths::Canonical;
 mod support;
 mod vendor_support;

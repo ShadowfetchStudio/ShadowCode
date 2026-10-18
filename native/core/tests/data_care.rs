@@ -429,7 +429,8 @@ async fn an_upgrade_copy_restores_and_is_upgraded_again() {
                 .join("tests/fixtures/upgrade/0.28.0/shadow-agent.sql"),
         )
         .unwrap()
-        .replace("@ROOT@", &p.root.to_string_lossy());
+        // Inside JSON values too: `/` needs no escaping, `\` would.
+        .replace("@ROOT@", &shadowcode_core::paths::slash(&p.root));
         let db = rusqlite::Connection::open(&old).unwrap();
         db.pragma_update(None, "synchronous", "OFF").unwrap();
         db.execute_batch(&format!("BEGIN;\n{sql}\nCOMMIT;"))

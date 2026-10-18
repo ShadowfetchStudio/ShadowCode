@@ -592,6 +592,7 @@ async fn profile_rules_and_skills_reach_shadowcodes_own_agent() {
     s.service.engine.shutdown().await.unwrap();
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn a_codex_run_gets_developer_instructions_and_a_profile_command_expanded() {
     let s = setup("http://127.0.0.1:9/v1");

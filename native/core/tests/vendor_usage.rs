@@ -2,6 +2,8 @@
 //! the turn fails, hits the plan limit or is cancelled, and never counted
 //! twice when a Codex thread is resumed. The vendor is a fake Codex
 //! app-server (plus the recorded Codex 0.158 transcripts); no real vendor runs.
+// The vendor runner is not ported to Windows yet.
+#![cfg(unix)]
 mod vendor_support;
 use serde_json::{json, Value};
 use shadowcode_core::{

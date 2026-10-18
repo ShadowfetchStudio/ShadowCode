@@ -1,4 +1,5 @@
 //! Codex identity-envelope regressions. Only local fake protocol frames/CLIs.
+#![cfg_attr(not(unix), allow(unused))]
 mod vendor_support;
 use serde_json::{json, Value};
 use shadowcode_core::cli_agent::{adapter_for, CliAdapter, LaunchOptions, Step, Update, Vendor};
@@ -407,6 +408,7 @@ fn matching_current_frames_publish_and_global_token_refresh_stays_declined() {
         .any(|u| matches!(u, Update::TurnCompleted { .. })));
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn real_runner_keeps_owned_turn_running_after_foreign_frames() {
     use shadowcode_core::{

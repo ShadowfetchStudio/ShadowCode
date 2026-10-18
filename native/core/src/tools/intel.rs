@@ -95,12 +95,7 @@ impl ToolExecutor {
                     ensure!(paths.len() <= 50, "Give at most 50 focus paths");
                     for path in paths {
                         let path = path.as_str().context("Each path must be a string")?;
-                        focus.push(
-                            self.workspace
-                                .relative(path)?
-                                .to_string_lossy()
-                                .into_owned(),
-                        );
+                        focus.push(self.workspace.relative_text(path)?);
                     }
                 }
                 focus.extend(crate::symbol_index::recent_edits(&root, 12));
@@ -139,11 +134,7 @@ impl ToolExecutor {
         if let Some(path) = args["path"].as_str() {
             let line = integer(args, "line", 0, 1, 10_000_000)?;
             let column = integer(args, "column", 1, 1, 100_000)?;
-            let rel = self
-                .workspace
-                .relative(path)?
-                .to_string_lossy()
-                .into_owned();
+            let rel = self.workspace.relative_text(path)?;
             let kind = if call.name == "goto_definition" {
                 crate::lsp::Locate::Definition
             } else {
@@ -182,11 +173,7 @@ impl ToolExecutor {
     }
 
     async fn diagnostics(&self, path: &str) -> Result<Value> {
-        let rel = self
-            .workspace
-            .relative(path)?
-            .to_string_lossy()
-            .into_owned();
+        let rel = self.workspace.relative_text(path)?;
         ensure!(
             !crate::redaction::is_secret_path(&rel),
             "Secret paths cannot be inspected"

@@ -185,7 +185,8 @@ async fn cancelled_checkout_leaves_a_recovery_record_and_source_intact() {
         xdg.join("git/config"),
         format!(
             "[filter \"slow\"]\n\tsmudge = \"touch '{}'; sleep 60; cat\"\n",
-            marker.display()
+            // Git config reads `\` as an escape; `/` works on Windows too.
+            shadowcode_core::paths::slash(&marker)
         ),
     )
     .unwrap();
