@@ -16,7 +16,6 @@ struct ActivationBody {
 
 impl Service {
     pub(super) async fn extension_routes(&self, call: &Arc<Call>) -> Result<Value> {
-        #[cfg(unix)]
         if (call.method.as_str(), call.path.as_str()) == ("POST", "/api/sqlite") {
             return crate::sqlite::inspect(
                 Arc::new(Workspace::open(&self.workspace()?)?),

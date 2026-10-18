@@ -886,7 +886,6 @@ impl ToolExecutor {
         if call.name.starts_with("git_") {
             return self.git(&call.name, &call.arguments).await;
         }
-        #[cfg(unix)]
         if matches!(call.name.as_str(), "mcp_sqlite_tables" | "mcp_sqlite_query") {
             let mut request: crate::sqlite::Request =
                 serde_json::from_value(call.arguments.clone())?;

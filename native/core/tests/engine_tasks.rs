@@ -1068,7 +1068,6 @@ async fn usage_limit_stops_before_executing_new_tool_calls() {
     engine.shutdown().await.unwrap();
 }
 
-#[cfg(unix)]
 #[tokio::test]
 async fn successful_sqlite_reads_satisfy_current_workspace_inspection() {
     for (name, arguments, succeeds) in [

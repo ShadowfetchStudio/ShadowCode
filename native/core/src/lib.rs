@@ -75,7 +75,6 @@ pub mod second_opinion;
 pub mod secret_scan;
 pub mod service;
 pub mod spending;
-#[cfg(unix)]
 pub mod sqlite;
 pub mod steering;
 pub mod store;

@@ -1,5 +1,6 @@
 //! Bounded, read-only inspection of workspace databases. Uses the same bundled
 //! SQLite as native persistence; no Python, extension loader or shell process.
+#[cfg(unix)]
 mod vfs;
 use crate::workspace::Workspace;
 use anyhow::{bail, ensure, Context, Result};
@@ -12,9 +13,10 @@ use rusqlite::{
 };
 use serde::Deserialize;
 use serde_json::{json, Map, Value};
+#[cfg(unix)]
+use std::os::fd::AsRawFd;
 use std::{
     collections::HashSet,
-    os::fd::AsRawFd,
     sync::{Arc, LazyLock},
     time::{Duration, Instant},
 };
@@ -193,6 +195,31 @@ fn query(workspace: &Workspace, request: &Request, cancel: &CancellationToken) -
     result.context("SQLite inspection failed (queries are read-only and bounded; SQLite must be able to access WAL coordination files)")
 }
 
+/// The folder behind a held handle, as a plain path where one names it.
+#[cfg(windows)]
+fn held_path(dir: &cap_std::fs::Dir) -> Result<std::path::PathBuf> {
+    use std::os::windows::{ffi::OsStringExt, io::AsRawHandle};
+    use windows_sys::Win32::{Foundation::HANDLE, Storage::FileSystem::GetFinalPathNameByHandleW};
+    let mut buffer = vec![0u16; 1024];
+    // SAFETY: the buffer holds `buffer.len()` UTF-16 units; the handle is open.
+    let length = unsafe {
+        GetFinalPathNameByHandleW(
+            dir.as_raw_handle() as HANDLE,
+            buffer.as_mut_ptr(),
+            buffer.len() as u32,
+            0,
+        )
+    } as usize;
+    ensure!(
+        length > 0 && length < buffer.len(),
+        "Cannot name the database folder: {}",
+        std::io::Error::last_os_error()
+    );
+    buffer.truncate(length);
+    let path = std::path::PathBuf::from(std::ffi::OsString::from_wide(&buffer));
+    Ok(dunce::simplified(&path).to_path_buf())
+}
+
 fn query_inner(
     workspace: &Workspace,
     request: &Request,
@@ -204,13 +231,12 @@ fn query_inner(
     for suffix in ["", "-wal", "-shm", "-journal"] {
         match parent.symlink_metadata(format!("{name}{suffix}")) {
             Ok(metadata) => {
-                use cap_std::fs::MetadataExt;
                 ensure!(
                     metadata.is_file(),
                     "Database and sidecars must be regular files, not symlinks or special files"
                 );
                 ensure!(
-                    suffix.is_empty() || metadata.nlink() == 1,
+                    suffix.is_empty() || cap_fs_ext::MetadataExt::nlink(&metadata) == 1,
                     "Database sidecars must not have additional hard links"
                 );
             }
@@ -222,24 +248,32 @@ fn query_inner(
             }
         }
     }
+    #[cfg(unix)]
     vfs::register()?;
     // Declared before the connection so the directory stays held until the
     // connection has closed.
+    #[cfg(unix)]
     let _held = vfs::hold(parent.as_raw_fd());
+    #[cfg(unix)]
     let path = vfs::filename(parent.as_raw_fd(), &name);
+    // Windows: the held parent cannot be renamed or removed (see
+    // Workspace::confined_parent), so its own path names the database.
+    #[cfg(windows)]
+    let path = held_path(&parent)?.join(&name);
     let mut uri = reqwest::Url::from_file_path(&path)
         .map_err(|_| anyhow::anyhow!("Invalid database path"))?;
     uri.query_pairs_mut().append_pair("mode", "ro");
+    let flags = OpenFlags::SQLITE_OPEN_READ_ONLY
+        | OpenFlags::SQLITE_OPEN_URI
+        | OpenFlags::SQLITE_OPEN_NO_MUTEX;
     // `parent` outlives this connection. Do not use immutable=1: live WAL
     // writers must retain SQLite's normal transaction and locking semantics.
-    let connection = Connection::open_with_flags_and_vfs(
-        uri.as_str(),
-        OpenFlags::SQLITE_OPEN_READ_ONLY
-            | OpenFlags::SQLITE_OPEN_URI
-            | OpenFlags::SQLITE_OPEN_NO_MUTEX,
-        vfs::NAME,
-    )
-    .context("Cannot open this project database read-only")?;
+    #[cfg(unix)]
+    let connection = Connection::open_with_flags_and_vfs(uri.as_str(), flags, vfs::NAME)
+        .context("Cannot open this project database read-only")?;
+    #[cfg(windows)]
+    let connection = Connection::open_with_flags(uri.as_str(), flags)
+        .context("Cannot open this project database read-only")?;
     let finished = CancellationToken::new();
     let _finish_guard = finished.clone().drop_guard();
     let interrupt = connection.get_interrupt_handle();

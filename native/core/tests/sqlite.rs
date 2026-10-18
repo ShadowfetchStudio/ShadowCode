@@ -1,13 +1,14 @@
-#![cfg(unix)]
+#![cfg_attr(not(unix), allow(unused))]
 use rusqlite::Connection;
 use serde_json::{json, Value};
 use shadowcode_core::{
     sqlite::{self, Request},
     workspace::Workspace,
 };
+#[cfg(unix)]
+use std::os::unix::fs::{symlink, PermissionsExt};
 use std::{
     fs,
-    os::unix::fs::{symlink, PermissionsExt},
     sync::Arc,
     time::{Duration, Instant},
 };
@@ -33,7 +34,14 @@ async fn read(workspace: &Arc<Workspace>, value: Value) -> anyhow::Result<Value>
 async fn native_queries_preserve_types_parameters_and_database_bytes() {
     let (_root, ws) = fixture();
     let before = fs::read(ws.path.join("data.db")).unwrap();
+    #[cfg(unix)]
     fs::set_permissions(ws.path.join("data.db"), fs::Permissions::from_mode(0o444)).unwrap();
+    #[cfg(windows)]
+    {
+        let mut read_only = fs::metadata(ws.path.join("data.db")).unwrap().permissions();
+        read_only.set_readonly(true);
+        fs::set_permissions(ws.path.join("data.db"), read_only).unwrap();
+    }
     assert_eq!(
         read(&ws, json!({"path":"data.db"})).await.unwrap()["tables"],
         json!(["items"])
@@ -185,6 +193,8 @@ async fn wide_schemas_busy_databases_and_corruption_have_bounded_results() {
     );
 }
 
+// Symlinks and FIFOs, which need Unix (or Windows developer rights).
+#[cfg(unix)]
 #[tokio::test]
 async fn database_paths_and_sidecars_are_confined_without_creating_missing_files() {
     let (root, ws) = fixture();
@@ -240,7 +250,8 @@ async fn live_wal_commits_from_another_process_are_visible_without_database_chan
     let path = ws.path.join("live.db");
     // python3 + stdlib sqlite3: Ubuntu /usr/bin/node is often 18 and has no
     // node:sqlite, which made this look like a parallel flake on sanitized PATH.
-    let mut child = std::process::Command::new("python3")
+    // Windows installs Python as `python`; `python3` may be a store stub.
+    let mut child = std::process::Command::new(if cfg!(windows) { "python" } else { "python3" })
         .arg(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/tests/fixtures/sqlite-writer.py"

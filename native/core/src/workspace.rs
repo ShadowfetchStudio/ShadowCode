@@ -396,6 +396,43 @@ impl Workspace {
         }
         Ok((parent, name))
     }
+    /// Windows: each folder on the way is opened without following a link and
+    /// without sharing delete access, so the parent this returns cannot be
+    /// renamed or removed while it is held.
+    #[cfg(windows)]
+    pub(crate) fn confined_parent(&self, path: &str) -> Result<(Dir, String)> {
+        use cap_std::fs::OpenOptionsExt;
+        const FILE_SHARE_READ: u32 = 0x1;
+        const FILE_SHARE_WRITE: u32 = 0x2;
+        const FILE_FLAG_BACKUP_SEMANTICS: u32 = 0x0200_0000;
+        let relative = self.relative(path)?;
+        let name = relative
+            .file_name()
+            .and_then(|n| n.to_str())
+            .context("A regular file path with a UTF-8 name is required")?
+            .to_owned();
+        let mut parent = self.dir.try_clone()?;
+        let mut options = OpenOptions::new();
+        options
+            .read(true)
+            .share_mode(FILE_SHARE_READ | FILE_SHARE_WRITE)
+            .custom_flags(FILE_FLAG_BACKUP_SEMANTICS);
+        no_follow(&mut options);
+        for part in relative.parent().unwrap_or(Path::new(".")).components() {
+            if let Component::Normal(name) = part {
+                let next = parent
+                    .open_with(name, &options)
+                    .context("Database parent must be a real workspace directory")?;
+                let meta = next.metadata()?;
+                ensure!(
+                    meta.is_dir() && !meta.file_type().is_symlink(),
+                    "Database parent must be a real workspace directory"
+                );
+                parent = Dir::from_std_file(next.into_std());
+            }
+        }
+        Ok((parent, name))
+    }
     pub fn write(&self, path: &str, bytes: &[u8], expected: Option<&str>) -> Result<String> {
         ensure!(
             bytes.len() <= MAX_FILE_BYTES,
