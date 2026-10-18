@@ -931,8 +931,10 @@ fn rename_noreplace(
     Ok(())
 }
 
-/// Move `name` in `from` to `destination` in `to`, both found through the
-/// held folder handles, failing if `destination` exists.
+/// Move `name` in `from` to `destination` in `to`, failing if `destination`
+/// exists. The source is opened through the held `from` handle; Windows
+/// renames to a full path (a relative root is refused), taken from the held
+/// `to` handle just before the call. Callers check what arrived.
 #[cfg(windows)]
 fn rename_noreplace(
     from: &Dir,
@@ -943,10 +945,42 @@ fn rename_noreplace(
     use std::os::windows::{ffi::OsStrExt, io::AsRawHandle};
     use windows_sys::Win32::{
         Foundation::HANDLE,
-        Storage::FileSystem::{FileRenameInfo, SetFileInformationByHandle, FILE_RENAME_INFO},
+        Storage::FileSystem::{
+            FileRenameInfo, GetFinalPathNameByHandleW, SetFileInformationByHandle, FILE_RENAME_INFO,
+        },
     };
     const DELETE: u32 = 0x0001_0000;
     const SYNCHRONIZE: u32 = 0x0010_0000;
+    let leaf: Vec<u16> = destination.encode_wide().collect();
+    ensure!(
+        !leaf.is_empty()
+            && !leaf.contains(&0)
+            && !leaf.contains(&(b'\\' as u16))
+            && !leaf.contains(&(b'/' as u16)),
+        "Exclusive cleanup rename needs a plain name"
+    );
+    // The destination folder's own path (`\\?\C:\...`), from its handle.
+    let mut folder = vec![0u16; 1024];
+    // SAFETY: the buffer holds `folder.len()` UTF-16 units.
+    let length = unsafe {
+        GetFinalPathNameByHandleW(
+            to.as_raw_handle() as HANDLE,
+            folder.as_mut_ptr(),
+            folder.len() as u32,
+            0,
+        )
+    } as usize;
+    ensure!(
+        length > 0 && length < folder.len(),
+        "Exclusive cleanup rename could not name its destination: {}",
+        std::io::Error::last_os_error()
+    );
+    folder.truncate(length);
+    let mut target = folder;
+    if target.last() != Some(&(b'\\' as u16)) {
+        target.push(b'\\' as u16);
+    }
+    target.extend_from_slice(&leaf);
     // The entry itself (never a link's target), opened for renaming.
     let mut options = cap_std::fs::OpenOptions::new();
     options
@@ -956,21 +990,16 @@ fn rename_noreplace(
     let entry = from
         .open_with(name, &options)
         .context("Exclusive cleanup rename could not open its source")?;
-    let target: Vec<u16> = destination.encode_wide().collect();
-    ensure!(
-        !target.is_empty() && !target.contains(&0) && !target.contains(&(b'\\' as u16)),
-        "Exclusive cleanup rename needs a plain name"
-    );
     // FILE_RENAME_INFO ends in the name; a u64 buffer keeps it aligned.
     let header = std::mem::offset_of!(FILE_RENAME_INFO, FileName);
-    let size = header + target.len() * 2;
+    let size = (header + (target.len() + 1) * 2).max(std::mem::size_of::<FILE_RENAME_INFO>());
     let mut buffer = vec![0u64; size.div_ceil(8)];
-    // SAFETY: the buffer is zeroed, aligned and large enough for the header
-    // and the name; both handles stay open for the call.
+    // SAFETY: the buffer is zeroed, aligned and large enough for the header,
+    // the name and a terminating zero; the handle stays open for the call.
     let done = unsafe {
         let info = buffer.as_mut_ptr().cast::<FILE_RENAME_INFO>();
         (*info).Anonymous.ReplaceIfExists = false;
-        (*info).RootDirectory = to.as_raw_handle() as HANDLE;
+        (*info).RootDirectory = std::ptr::null_mut();
         (*info).FileNameLength = (target.len() * 2) as u32;
         std::ptr::copy_nonoverlapping(
             target.as_ptr(),
