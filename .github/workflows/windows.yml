@@ -1,8 +1,8 @@
 name: Windows
-# The Windows port (docs/WINDOWS_PORT.md). Phase 1: the whole workspace must
-# compile on Windows without warnings; every error is reported at once
-# (--keep-going). Phase 2 (in progress, not yet required): the engine's unit
-# tests run on Windows. Both logs are kept as artifacts. The installer job
+# The Windows port (docs/WINDOWS_PORT.md). The whole workspace must compile
+# on Windows without warnings (every error is reported at once with
+# --keep-going), and the engine's unit tests must pass. The integration tests
+# run too but do not block yet (phase 2). The logs are kept as artifacts. The installer job
 # builds an unsigned preview installer (NSIS, per-user) as an artifact; it is
 # not attached to any release.
 on:
@@ -19,7 +19,7 @@ concurrency:
 jobs:
   build:
     runs-on: windows-latest
-    timeout-minutes: 90
+    timeout-minutes: 150
     env:
       RUSTUP_TOOLCHAIN: '1.95.0'
       CARGO_PROFILE_DEV_DEBUG: line-tables-only
@@ -55,21 +55,34 @@ jobs:
       # the tests' repositories expect the bytes they committed.
       - name: Neutral Git settings for the tests
         run: git config --global core.autocrlf false
-      - name: Engine unit tests on Windows (phase 2, not yet required)
+      - name: Engine unit tests on Windows
         id: unit
-        continue-on-error: true
         env:
           # An error's backtrace says which call failed, not only its message.
           RUST_LIB_BACKTRACE: '1'
         run: |
           set -o pipefail
           cargo +1.95.0 test -p shadowcode-core --lib --locked --no-fail-fast 2>&1 | tee windows-test.log
-      - name: Summarize the unit tests
+      - name: Engine integration tests on Windows (phase 2, not yet required)
+        id: integration
+        if: steps.unit.outcome == 'success'
+        continue-on-error: true
+        env:
+          RUST_LIB_BACKTRACE: '1'
+        run: |
+          set -o pipefail
+          cargo +1.95.0 test -p shadowcode-core --test '*' --locked --no-fail-fast 2>&1 | tee windows-integration.log
+      - name: Summarize the tests
         if: always() && steps.unit.outcome != 'skipped'
         run: |
-          grep -E '^test result:' windows-test.log || true
-          echo "failing tests:"
-          { grep -E '^test .* \.\.\. FAILED$' windows-test.log || true; } | sed -E 's/^test //; s/ \.\.\. FAILED$//' | sort
+          for log in windows-test.log windows-integration.log; do
+            [ -f "$log" ] || continue
+            echo "== $log"
+            grep -E '^test result:' "$log" | sort | uniq -c || true
+            echo "failing tests:"
+            { grep -E '^test .* \.\.\. FAILED$' "$log" || true; } | sed -E 's/^test //; s/ \.\.\. FAILED$//' | sort
+            grep -E '^error: (test failed|could not compile)' "$log" || true
+          done
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
@@ -77,6 +90,7 @@ jobs:
           path: |
             windows-check.log
             windows-test.log
+            windows-integration.log
           if-no-files-found: ignore
           retention-days: 14
   installer:

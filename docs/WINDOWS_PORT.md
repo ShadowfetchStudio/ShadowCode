@@ -50,9 +50,10 @@ needed for phases 1 and 2.
     and linking exported rules.
   - Integration tests built on Unix sockets, FIFOs, symlinks, file modes or
     the fake vendor CLIs (shell scripts) are Unix-only for now.
-- Phase 2 (in progress): the CI job runs the engine's unit tests on Windows
-  and lists the failures; it does not block yet. 581 of 596 passed on
-  October 17 (554 of 605 on the first run). Fixed along the way:
+- Phase 2 (in progress): all 596 of the engine's unit tests pass on Windows
+  (October 18; 554 of 605 on the first run) and are now required. The
+  integration tests run on Windows without blocking yet. Fixed along the
+  way:
   - Randomness for remote-access tokens and the local server key comes
     from the system (getrandom), not `/dev/urandom`.
   - Canonical paths have no `\\?\` prefix (`paths::Canonical`, dunce), and
@@ -67,10 +68,14 @@ needed for phases 1 and 2.
   - Installed and free memory come from `GlobalMemoryStatusEx`; model file
     identity uses the volume serial, file index and change time.
   - Claude skill files are copied, not linked, beside a staged `SKILL.md`.
-- Still open in phase 2: removing managed worktree checkouts (the careful
-  cleanup relies on directory handles and no-replace renames; it reports
-  "not available on Windows yet" and keeps the checkout), the integration
-  tests, and the vendor runner (subscription CLIs).
+  - Managed worktree checkouts are removed with the same careful cleanup:
+    identities are the volume serial and file index read from open handles,
+    folders are never opened through links or junctions, and the exclusive
+    rename is `SetFileInformationByHandle` without replacement. Git writes
+    and lists its own paths with `/`, which the checks expect.
+  - Background processes use the Windows shell, not `/bin/sh`.
+- Still open in phase 2: the integration tests and the vendor runner
+  (subscription CLIs).
 - Preview installer: the Windows job also builds an unsigned NSIS
   installer (per-user) and checks that the app reports its version. It is a
   14-day CI artifact, not a release.
