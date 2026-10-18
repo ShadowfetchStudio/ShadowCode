@@ -349,11 +349,15 @@ mod tests {
         assert!(cache.get(id).is_err());
         let latest = cache.prepare(&report, &Value::Null).unwrap();
         let latest_id = latest["id"].as_str().unwrap();
-        {
-            let mut snapshots = cache.0.lock().unwrap();
-            snapshots.back_mut().unwrap().created = Instant::now() - TTL;
+        // An instant before boot does not exist (a just-started Windows
+        // machine has been up for less than the TTL).
+        if let Some(expired) = Instant::now().checked_sub(TTL) {
+            {
+                let mut snapshots = cache.0.lock().unwrap();
+                snapshots.back_mut().unwrap().created = expired;
+            }
+            assert!(cache.get(latest_id).is_err());
         }
-        assert!(cache.get(latest_id).is_err());
     }
 
     #[test]

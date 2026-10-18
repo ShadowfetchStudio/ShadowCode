@@ -2159,7 +2159,15 @@ mod tests {
         )
         .unwrap();
         assert!(entry.vision);
-        projector(&dir.path().join("mmproj-bf16.gguf"), 4096);
+        // Replaced as a download does (a new file renamed into place): an
+        // in-place rewrite of the same size within one tick of Windows'
+        // file clock keeps every identity Windows reports.
+        projector(&dir.path().join("mmproj-new.gguf"), 4096);
+        std::fs::rename(
+            dir.path().join("mmproj-new.gguf"),
+            dir.path().join("mmproj-bf16.gguf"),
+        )
+        .unwrap();
         let entry = inspect(
             &Candidate {
                 path: m,
