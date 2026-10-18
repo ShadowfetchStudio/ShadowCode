@@ -1,5 +1,39 @@
 # Changelog
 
+## 2.3.0: Windows
+
+- **Windows.** ShadowCode builds and runs on 64-bit Windows 10 (1809 or
+  later) and 11: `ShadowCode_VERSION_x64-setup.exe`, a per-user NSIS
+  installer (no administrator rights), not code-signed (GitHub is the
+  channel; `scripts/install-windows.ps1` installs from a release after
+  checking `ShadowCode_VERSION_windows.sha256`). The app lives in
+  `%LOCALAPPDATA%\ShadowCode`, settings in `%APPDATA%\ShadowCode\config`.
+  The engine connection is a named pipe that only this user may open;
+  terminals are pseudoconsoles (ConPTY) running PowerShell; subscription CLIs
+  and agent commands run in job objects, so stopping or closing ShadowCode
+  ends everything they started; llama.cpp is built with MSVC (CPU) and
+  installed beside the app.
+- **Windows sandbox.** Agent shell commands run in an AppContainer: the
+  project and a scratch folder are writable, Windows, Program Files and
+  read-only toolchains readable, the rest of the home folder hidden; the
+  network is off (no capabilities, this computer's own services included)
+  or on. Commands run in a bundled busybox-w32 `sh`, built from a pinned
+  commit with one patch (the container may not open the null device, so
+  `/dev/null` uses a handle the launcher opens for it); its complete source
+  is attached to each release as `ShadowCode_VERSION_busybox-w32-source.tar.gz`.
+  The network allow-list is refused on Windows. `shadowcode doctor` and
+  **Settings › Permissions & network** report the Windows sandbox.
+- **Windows release workflow.** `.github/workflows/release-windows.yml`
+  builds the installer from the release tag, installs it through the
+  install script, requires the doctor's sandbox check to pass and attaches
+  the installer, the busybox source and their checksums; `release.yml`
+  dispatches it with the macOS and Flatpak builds.
+- **Contested writes.** Settings files replaced by two writers at the same
+  moment are retried (Windows refuses the second replacement), and writers
+  in one process queue for a database's write lock instead of polling it.
+- **Native runtime pins** follow Alpine 3.21's libcurl and libexpat security
+  updates.
+
 ## 2.2.0: macOS, Flatpak downloads and your own model servers
 
 - **macOS.** ShadowCode builds and runs as a Mac app: `ShadowCode.app` in

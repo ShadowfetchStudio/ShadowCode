@@ -1,3 +1,51 @@
+# ShadowCode 2.3.0
+
+ShadowCode 2.3.0 runs on Windows. The 2.2.0 notes follow below.
+
+## New
+
+- **ShadowCode for Windows.** `ShadowCode_2.3.0_x64-setup.exe` for 64-bit
+  Windows 10 (version 1809 or later) and 11 installs for your user, without
+  administrator rights. Local models run on llama.cpp (CPU), terminals open
+  PowerShell, and subscription tools such as Codex and Claude Code run
+  through their Windows command-line programs. Install or update with one PowerShell command (see
+  the [README](../README.md#windows)); a copy downloaded in a browser shows
+  **Windows protected your PC** the first time: choose **More info**, then
+  **Run anyway**.
+- **A sandbox for agent commands on Windows.** Commands run in a contained
+  shell that can change only the project, sees Windows, Program Files and
+  your toolchains read-only, cannot see the rest of your home folder, and
+  has no network unless you turn it on. Commands keep their usual `sh`
+  syntax. **Only allowed hosts** is not available on Windows.
+
+## Fixed
+
+- Two parts of ShadowCode saving settings at the same moment no longer fail
+  on Windows with "Access is denied", and busy databases no longer time out
+  with "database is locked".
+
+## Known limits
+
+- The Windows version is new and has been tested on GitHub's Windows
+  machines, not yet on a wide range of PCs. Subscription tools were tested
+  there with stand-in programs, not yet with each vendor's own Windows CLI.
+  Local models use the CPU only on Windows for now.
+
+## Download
+
+Linux x86_64: `ShadowCode_2.3.0_amd64.AppImage`, `ShadowCode_2.3.0_amd64.deb`
+and `ShadowCode_2.3.0_appimage-runtime-sources.tar.gz`, with `SHA256SUMS`,
+`RELEASE-MANIFEST.json`, `RELEASE-AUTH` and `RELEASE-AUTH.sig`. For ARM64 the
+packages end in `_aarch64` (AppImage) or `_arm64` (`.deb`), with signature
+files ending in `-aarch64`. Install the AppImage with the authenticated
+installer described in the [README](../README.md#install); the signature is
+checked before anything runs. The Flatpak bundles, the macOS disk images and
+the Windows installer are attached shortly after publication, with their
+SHA-256 checksums in `ShadowCode_2.3.0_flatpak.sha256`,
+`ShadowCode_2.3.0_macos.sha256` and `ShadowCode_2.3.0_windows.sha256`; the
+complete source of the busybox-w32 shell bundled for Windows is
+`ShadowCode_2.3.0_busybox-w32-source.tar.gz`.
+
 # ShadowCode 2.2.0
 
 ShadowCode 2.2.0 runs on Macs, both Apple silicon and Intel, and its Linux

@@ -16,12 +16,12 @@ Download the bundle for your computer and the checksum file from the
 release, then:
 
 ```sh
-sha256sum --check --ignore-missing ShadowCode_2.2.0_flatpak.sha256
-flatpak install --user ./ShadowCode_2.2.0_x86_64.flatpak
+sha256sum --check --ignore-missing ShadowCode_2.3.0_flatpak.sha256
+flatpak install --user ./ShadowCode_2.3.0_x86_64.flatpak
 flatpak run com.shadowfetch.shadowcode
 ```
 
-On 64-bit ARM, install `ShadowCode_2.2.0_aarch64.flatpak` instead.
+On 64-bit ARM, install `ShadowCode_2.3.0_aarch64.flatpak` instead.
 
 The bundle points to Flathub for the GNOME runtime. Installation exports the
 application launcher and icons into the desktop's Applications menu.
