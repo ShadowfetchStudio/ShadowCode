@@ -18,6 +18,7 @@
 //!
 //! Files are read through a directory capability rooted at the profile
 //! folder, so a symlink inside it cannot reach a file outside it.
+use crate::paths::Canonical;
 use crate::{
     instructions::{self, RootFile},
     paths::AppPaths,
@@ -372,13 +373,13 @@ impl Book {
             .or_else(|_| {
                 // Discovery may name a file by its real path while the profile
                 // folder is reached through a link (macOS: /var is /private/var).
-                let dir = self.dir.canonicalize()?;
-                let path = path.canonicalize()?;
+                let dir = self.dir.canonical()?;
+                let path = path.canonical()?;
                 path.strip_prefix(&dir)
                     .map(Path::to_path_buf)
                     .map_err(std::io::Error::other)
             });
-        inside.ok().map(|p| p.to_string_lossy().into_owned())
+        inside.ok().map(|p| crate::paths::slash(&p))
     }
     pub fn path_of(&self, rel: &str) -> String {
         self.dir.join(rel).display().to_string()

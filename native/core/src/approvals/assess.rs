@@ -201,7 +201,7 @@ impl Ctx<'_> {
         let normal = normalize(&absolute);
         match normal.strip_prefix(self.root) {
             Ok(rel) => {
-                let mut rel = rel.to_string_lossy().into_owned();
+                let mut rel = crate::paths::slash(rel);
                 if text.ends_with('/') && !rel.is_empty() {
                     rel.push('/');
                 }
@@ -5402,6 +5402,8 @@ fn vendor_files(args: &Value) -> Vec<String> {
 }
 
 #[cfg(test)]
+// Helpers of Unix-only tests are unused on Windows.
+#[cfg_attr(not(unix), allow(unused))]
 mod tests {
     use super::*;
 
@@ -6471,6 +6473,7 @@ mod tests {
         );
     }
 
+    #[cfg(unix)]
     #[test]
     fn vendor_rules_cover_only_commands_in_the_project() {
         let root = Path::new(ROOT);

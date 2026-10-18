@@ -14,6 +14,7 @@
 //! A worktree task's folder is never listed as a project or remembered as
 //! the relaunch folder (see `Service::select_if`); its conversation is
 //! listed under its project (`worktree_source`).
+use crate::paths::Canonical;
 use crate::{
     compare::{self, Base, FileStat},
     engine::{Engine, Job},
@@ -34,7 +35,7 @@ use tokio_util::sync::CancellationToken;
 mod locks;
 pub mod setup;
 // Used by worktrees::cleanup's tests.
-#[cfg(test)]
+#[cfg(all(test, unix))]
 pub(crate) fn record_lock_references(store: &Store, id: &str) -> usize {
     locks::record_references(store, id)
 }
@@ -325,7 +326,7 @@ fn copy_attachments(source: &Path, worktree: &Path, task: &str, images: &[String
     // ~/.ssh must never be read, and must never be copied onto through the same
     // symlink in the worktree (which would truncate the target).
     let base = source.join(PREFIX);
-    let (Ok(canon_base), Ok(canon_source)) = (base.canonicalize(), source.canonicalize()) else {
+    let (Ok(canon_base), Ok(canon_source)) = (base.canonical(), source.canonical()) else {
         return Ok(());
     };
     if !canon_base.starts_with(&canon_source) || !canon_base.is_dir() {
@@ -343,7 +344,7 @@ fn copy_attachments(source: &Path, worktree: &Path, task: &str, images: &[String
         let from = source.join(path);
         // Resolve every component: a symlink anywhere in the path that leaves
         // the attachments folder is refused.
-        let Ok(canon_from) = from.canonicalize() else {
+        let Ok(canon_from) = from.canonical() else {
             continue;
         };
         if !canon_from.starts_with(&canon_base) {
@@ -358,7 +359,7 @@ fn copy_attachments(source: &Path, worktree: &Path, task: &str, images: &[String
             fs::create_dir_all(parent)?;
             // The destination folder must resolve inside the worktree, so the
             // copy cannot follow a symlink out of it.
-            match (parent.canonicalize(), worktree.canonicalize()) {
+            match (parent.canonical(), worktree.canonical()) {
                 (Ok(canon_parent), Ok(canon_worktree))
                     if canon_parent.starts_with(&canon_worktree) => {}
                 _ => continue,
@@ -468,7 +469,7 @@ pub(crate) async fn prepare(
     };
     let record_guard = locks::record(&engine.store(), &record.id, &cancel).await?;
     let prepared: Result<setup::Setup> = async {
-        record.worktree = checkout.path.canonicalize()?;
+        record.worktree = checkout.path.canonical()?;
         compare::set_trust(engine, std::slice::from_ref(&record.worktree), true)?;
         copy_attachments(&source, &record.worktree, task, images)?;
         let store = engine.store();
@@ -1003,7 +1004,7 @@ mod tests {
     }
     impl Canonical {
         fn new(dir: tempfile::TempDir) -> Self {
-            let path = dir.path().canonicalize().unwrap();
+            let path = crate::paths::Canonical::canonical(dir.path()).unwrap();
             Self { _dir: dir, path }
         }
         fn path(&self) -> &std::path::Path {
@@ -1038,6 +1039,8 @@ mod tests {
         assert!(!worktree.join("secret.txt").exists());
     }
 
+    // Creating a symlink needs extra privileges on Windows.
+    #[cfg(unix)]
     #[test]
     fn attachments_never_follow_a_symlink_out_of_the_project() {
         let root = tempfile::tempdir().unwrap();
@@ -1150,7 +1153,8 @@ mod tests {
         }
     }
     async fn until(mut ready: impl FnMut() -> bool, message: &str) {
-        tokio::time::timeout(Duration::from_secs(3), async {
+        // A shell can take seconds to start on a loaded Windows runner.
+        tokio::time::timeout(Duration::from_secs(10), async {
             while !ready() {
                 tokio::time::sleep(Duration::from_millis(5)).await;
             }
@@ -1202,7 +1206,8 @@ mod tests {
             .unwrap()
             .unwrap();
         assert_eq!(record.id, f.record.id);
-        assert!(discard(&f.engine, &f.record.id).await.unwrap().removed);
+        let closed = discard(&f.engine, &f.record.id).await.unwrap();
+        assert!(closed.removed, "{:?}", closed.notes);
         f.engine.shutdown().await.unwrap();
     }
 
@@ -1264,7 +1269,8 @@ mod tests {
             b"independent bytes\n"
         );
         drop(held);
-        assert!(discard(&f.engine, &f.record.id).await.unwrap().removed);
+        let closed = discard(&f.engine, &f.record.id).await.unwrap();
+        assert!(closed.removed, "{:?}", closed.notes);
         f.engine.shutdown().await.unwrap();
     }
 
@@ -1336,7 +1342,7 @@ mod tests {
         );
         fs::rename(&preserved, &f.source).unwrap();
         let closed = discard(&f.engine, &f.record.id).await.unwrap();
-        assert!(closed.removed && !closed.open());
+        assert!(closed.removed && !closed.open(), "{:?}", closed.notes);
         assert_eq!(command(&f.source, &["rev-parse", "HEAD"]), before_head);
         assert_eq!(fs::read(f.source.join(".git/index")).unwrap(), source_index);
         assert!(!f.record.worktree.exists());
@@ -1393,7 +1399,8 @@ mod tests {
             b"source bytes\n"
         );
         save(&f.engine.store(), &f.record).unwrap();
-        assert!(discard(&f.engine, &f.record.id).await.unwrap().removed);
+        let closed = discard(&f.engine, &f.record.id).await.unwrap();
+        assert!(closed.removed, "{:?}", closed.notes);
         f.engine.shutdown().await.unwrap();
     }
 
@@ -1430,7 +1437,8 @@ mod tests {
             b"source bytes\n"
         );
         store.set_native_meta(&key, &before).unwrap();
-        assert!(discard(&f.engine, &f.record.id).await.unwrap().removed);
+        let closed = discard(&f.engine, &f.record.id).await.unwrap();
+        assert!(closed.removed, "{:?}", closed.notes);
         f.engine.shutdown().await.unwrap();
     }
 
@@ -1504,7 +1512,8 @@ mod tests {
         );
         assert!(load(&f.engine.store(), &f.record.id).unwrap().open());
         fs::write(&record_path, original).unwrap();
-        assert!(discard(&f.engine, &f.record.id).await.unwrap().removed);
+        let closed = discard(&f.engine, &f.record.id).await.unwrap();
+        assert!(closed.removed, "{:?}", closed.notes);
         f.engine.shutdown().await.unwrap();
     }
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -1580,7 +1589,8 @@ mod tests {
             Some(f.record.id.as_str())
         );
         fs::rename(&preserved, &f.source).unwrap();
-        assert!(discard(&f.engine, &f.record.id).await.unwrap().removed);
+        let closed = discard(&f.engine, &f.record.id).await.unwrap();
+        assert!(closed.removed, "{:?}", closed.notes);
         assert!(!f.source.join("must-not-run.txt").exists());
         f.engine.shutdown().await.unwrap();
     }
@@ -1639,7 +1649,8 @@ mod tests {
         let did_not_run = !f.source.join("must-not-run.txt").exists()
             && !f.record.worktree.join("must-not-run.txt").exists();
         f.engine.shutdown().await.unwrap();
-        assert!(result.unwrap().removed);
+        let result = result.unwrap();
+        assert!(result.removed, "{:?}", result.notes);
         assert_eq!(
             statuses,
             vec!["cancelled", "cancelled"],
@@ -1728,9 +1739,14 @@ mod tests {
         );
         drop(held);
         let retried = discard(&f.engine, &prepared.id).await.unwrap();
-        assert!(retried.removed && !prepared.worktree.exists());
+        assert!(
+            retried.removed && !prepared.worktree.exists(),
+            "{:?}",
+            retried.notes
+        );
         assert!(!f.source.join("must-not-run.txt").exists());
-        assert!(discard(&f.engine, &f.record.id).await.unwrap().removed);
+        let closed = discard(&f.engine, &f.record.id).await.unwrap();
+        assert!(closed.removed, "{:?}", closed.notes);
         f.engine.shutdown().await.unwrap();
     }
 
@@ -1742,7 +1758,8 @@ mod tests {
         crate::symbol_index::ensure_index(&f.record.worktree, &[], true).unwrap();
         let index = crate::symbol_index::index_path(&f.record.worktree);
         assert!(index.exists());
-        assert!(discard(&f.engine, &f.record.id).await.unwrap().removed);
+        let closed = discard(&f.engine, &f.record.id).await.unwrap();
+        assert!(closed.removed, "{:?}", closed.notes);
         // Back in the project, its turns no longer get the task's port.
         assert!(store
             .session_meta(&f.record.session_id, keys::TASK_ENV)
@@ -1755,14 +1772,14 @@ mod tests {
     #[tokio::test]
     async fn abandoning_a_task_after_its_setup_ran_runs_the_teardown() {
         let f = fixture().await;
-        let source = f.source.canonicalize().unwrap();
+        let source = crate::paths::Canonical::canonical(&f.source).unwrap();
         let marker = f.root.path().join("teardown-ran");
         setup::save(
             &f.engine.store(),
             &source,
             setup::Setup {
                 setup: vec!["printf \"$PORT\" > port.txt".into()],
-                teardown: vec![format!("touch {}", marker.display())],
+                teardown: vec![format!("touch {}", crate::paths::slash(&marker))],
                 ..setup::Setup::default()
             },
         )
@@ -1786,14 +1803,15 @@ mod tests {
         abandon(&f.engine, prepared.clone()).await;
         assert!(marker.exists(), "services setup started were left running");
         assert!(!prepared.worktree.exists());
-        assert!(discard(&f.engine, &f.record.id).await.unwrap().removed);
+        let closed = discard(&f.engine, &f.record.id).await.unwrap();
+        assert!(closed.removed, "{:?}", closed.notes);
         f.engine.shutdown().await.unwrap();
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn setup_runs_without_holding_up_the_projects_other_tasks() {
         let f = fixture().await;
-        let source = f.source.canonicalize().unwrap();
+        let source = crate::paths::Canonical::canonical(&f.source).unwrap();
         let (entered, gate) = (f.root.path().join("entered"), f.root.path().join("gate"));
         setup::save(
             &f.engine.store(),
@@ -1801,8 +1819,8 @@ mod tests {
             setup::Setup {
                 setup: vec![format!(
                     "touch {}; while [ ! -e {} ]; do sleep 0.05; done",
-                    entered.display(),
-                    gate.display()
+                    crate::paths::slash(&entered),
+                    crate::paths::slash(&gate)
                 )],
                 ..setup::Setup::default()
             },
@@ -1818,7 +1836,7 @@ mod tests {
             .await
             .expect("Discard waited for another task's setup")
             .unwrap();
-        assert!(closed.removed);
+        assert!(closed.removed, "{:?}", closed.notes);
         fs::write(&gate, "").unwrap();
         let prepared = tokio::time::timeout(Duration::from_secs(10), preparing)
             .await
@@ -1838,7 +1856,7 @@ mod tests {
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn closing_shadowcode_stops_a_running_setup_instead_of_waiting_for_it() {
         let f = fixture().await;
-        let source = f.source.canonicalize().unwrap();
+        let source = crate::paths::Canonical::canonical(&f.source).unwrap();
         let entered = f.root.path().join("entered");
         setup::save(
             &f.engine.store(),
@@ -1846,7 +1864,7 @@ mod tests {
             setup::Setup {
                 setup: vec![format!(
                     "touch {}; while true; do sleep 0.05; done",
-                    entered.display()
+                    crate::paths::slash(&entered)
                 )],
                 ..setup::Setup::default()
             },

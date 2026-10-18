@@ -7,6 +7,7 @@
 //! The source checkout is never reset, stashed, checked out or committed in.
 //! The starting state is captured with a temporary index file, so neither the
 //! source index nor its working tree is written while the compare starts.
+use crate::paths::Canonical;
 use crate::{
     config::{self, Config},
     engine::{Engine, Job, JobOwner, StartRequest},
@@ -518,7 +519,11 @@ pub(crate) async fn snapshot_for(
         snapshot_index_flags(source, &env, cancel).await?;
         // Clearing flags rewrites the temporary index. Preserve the source's
         // racy timestamp for other entries before Git examines working bytes.
-        fs::File::open(&index)?.set_modified(modified)?;
+        // Windows changes a time only through a handle that may write.
+        fs::OpenOptions::new()
+            .write(true)
+            .open(&index)?
+            .set_modified(modified)?;
     } else {
         git_env(source, &["read-tree", "HEAD"], &env, cancel).await?;
     }
@@ -908,7 +913,7 @@ pub(crate) async fn repository_root_for(
         .await
         .with_context(|| format!("{needs} a Git repository"))?;
     ensure!(
-        Path::new(&top).canonicalize()? == workspace,
+        Path::new(&top).canonical()? == workspace,
         "Open the repository root before {action}"
     );
     Ok(())
@@ -1071,7 +1076,7 @@ pub(crate) async fn start(engine: &Engine, options: StartOptions<'_>) -> Result<
                 } else {
                     model.name.clone()
                 },
-                worktree: checkout.path.canonicalize()?,
+                worktree: checkout.path.canonical()?,
                 worktree_id: checkout.id,
                 branch: checkout.branch,
                 base_commit: base.commit.clone(),
@@ -2068,7 +2073,9 @@ mod tests {
         let timestamp = SystemTime::UNIX_EPOCH + Duration::from_secs(1_000_000_000);
         let file = source.join("data.txt");
         fs::write(&file, b"before\n").unwrap();
-        fs::File::open(&file)
+        fs::OpenOptions::new()
+            .write(true)
+            .open(&file)
             .unwrap()
             .set_modified(timestamp)
             .unwrap();
@@ -2091,7 +2098,9 @@ mod tests {
         .await
         .unwrap();
         let index = source.join(".git/index");
-        fs::File::open(&index)
+        fs::OpenOptions::new()
+            .write(true)
+            .open(&index)
             .unwrap()
             .set_modified(timestamp)
             .unwrap();
@@ -2100,7 +2109,9 @@ mod tests {
         // Same size and cached mtime: Git must use the index's original racy
         // timestamp to decide to hash bytes instead of trusting its stat cache.
         fs::write(&file, b"after!\n").unwrap();
-        fs::File::open(&file)
+        fs::OpenOptions::new()
+            .write(true)
+            .open(&file)
             .unwrap()
             .set_modified(timestamp)
             .unwrap();

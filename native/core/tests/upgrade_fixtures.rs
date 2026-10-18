@@ -6,7 +6,9 @@
 //! plus `manifest.json` naming the records it created. Each one is rebuilt in
 //! a temporary profile and opened through `Service::open`, the way the
 //! desktop and CLI open a profile after an upgrade.
+#![cfg_attr(not(unix), allow(unused))]
 use serde_json::{json, Value};
+use shadowcode_core::paths::Canonical;
 use shadowcode_core::{
     paths::AppPaths,
     service::{Request, Service},
@@ -56,7 +58,12 @@ fn copy_tree(from: &Path, to: &Path, root: &Path) {
             copy_tree(&entry.path(), &target, root);
         } else {
             let text = fs::read_to_string(entry.path()).unwrap();
-            fs::write(&target, text.replace("@ROOT@", &root.to_string_lossy())).unwrap();
+            // Inside JSON values too: `/` needs no escaping, `\` would.
+            fs::write(
+                &target,
+                text.replace("@ROOT@", &shadowcode_core::paths::slash(root)),
+            )
+            .unwrap();
             #[cfg(unix)]
             {
                 use std::os::unix::fs::PermissionsExt;
@@ -87,7 +94,7 @@ fn write_private(path: &Path, text: &str) {
 fn profile(version: &str) -> Profile {
     let dir = fixtures().join(version);
     let temp = tempfile::tempdir().unwrap();
-    let root = temp.path().canonicalize().unwrap();
+    let root = temp.path().canonical().unwrap();
     let project = root.join("project");
     fs::create_dir_all(&project).unwrap();
     fs::write(project.join("README.md"), "# Fixture project\n").unwrap();
@@ -110,7 +117,7 @@ fn profile(version: &str) -> Profile {
     );
     let sql = fs::read_to_string(dir.join("shadow-agent.sql"))
         .unwrap()
-        .replace("@ROOT@", &root.to_string_lossy());
+        .replace("@ROOT@", &shadowcode_core::paths::slash(&root));
     let db = rusqlite::Connection::open(paths.database()).unwrap();
     // A throwaway file: one transaction, no fsync per row.
     db.pragma_update(None, "synchronous", "OFF").unwrap();
@@ -233,6 +240,9 @@ fn a_fixture_exists_for_every_release_and_schema_version() {
     assert!(schemas.iter().all(|s| *s <= SCHEMA_VERSION));
 }
 
+// Released profiles come from Linux and macOS, with Unix paths throughout;
+// no Windows release exists to upgrade from.
+#[cfg(unix)]
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn every_released_profile_opens_with_all_its_data() {
     let versions = versions();

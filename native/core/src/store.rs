@@ -1,3 +1,4 @@
+use crate::paths::Canonical;
 use crate::{id, now};
 use anyhow::{ensure, Context, Result};
 use rusqlite::{params, types::ValueRef, Connection, OptionalExtension, Params};
@@ -555,7 +556,7 @@ impl Store {
         // Sessions are matched against `Workspace::open`, which names the
         // folder by its real path (on macOS /var is /private/var).
         let workspace = workspace
-            .canonicalize()
+            .canonical()
             .unwrap_or_else(|_| workspace.to_path_buf());
         self.execute("INSERT INTO sessions(id,workspace,created_at,updated_at,model_id,status,title) VALUES(?,?,?,?,?,'active',?)",
             params![sid,workspace.to_string_lossy(),now,now,model,title])?;
@@ -1472,7 +1473,7 @@ impl Store {
             .collect())
     }
     pub fn touch_project(&self, path: &Path) -> Result<()> {
-        let path = path.canonicalize()?;
+        let path = path.canonical()?;
         self.execute("INSERT INTO projects(id,path,name,last_opened) VALUES(?,?,?,?) ON CONFLICT(path) DO UPDATE SET last_opened=excluded.last_opened",params![id(),path.to_string_lossy(),path.file_name().map(|s|s.to_string_lossy().into_owned()).unwrap_or_else(||"/".into()),now()])?;
         Ok(())
     }

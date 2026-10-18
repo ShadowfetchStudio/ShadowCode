@@ -1,3 +1,5 @@
+// Helpers used only by Unix-only tests are unused on Windows.
+#![cfg_attr(not(unix), allow(unused))]
 mod support;
 use serde_json::{json, Value};
 use shadowcode_core::{
@@ -88,6 +90,7 @@ fn front_matter_and_literal_arguments_have_bounded_expansion() {
     let expansion = Definition::parse("a.md", "skill", &"$ARGUMENTS ".repeat(100), "").unwrap();
     assert!(expansion.guidance(&"x".repeat(32000)).is_err());
 }
+#[cfg(unix)]
 #[tokio::test]
 async fn discovery_reports_ambiguity_invalid_metadata_and_confined_paths() {
     let (root, service) = setup("http://127.0.0.1:9/v1");

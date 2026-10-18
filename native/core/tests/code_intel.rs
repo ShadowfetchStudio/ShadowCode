@@ -1,5 +1,7 @@
 //! Code intelligence: the LSP pool against a fake language server, new-error
 //! attachment on edits, and the repo_map / search_code tools.
+// The fake language servers are `python3` scripts started directly.
+#![cfg(unix)]
 use serde_json::{json, Value};
 use shadowcode_core::{
     approvals::ApprovalHub,

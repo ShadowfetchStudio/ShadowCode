@@ -1,6 +1,7 @@
 //! Restore only missing managed Git connection files; never rebuild an index.
 use super::{git, read_record, roots, save, AppPaths, Record};
 use crate::paths;
+use crate::paths::Canonical;
 use anyhow::{ensure, Context, Result};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -24,7 +25,7 @@ pub struct Review {
 fn directory(path: &Path) -> Result<()> {
     let metadata = fs::symlink_metadata(path)?;
     ensure!(
-        metadata.is_dir() && !metadata.file_type().is_symlink() && path.canonicalize()? == path,
+        metadata.is_dir() && !metadata.file_type().is_symlink() && path.canonical()? == path,
         "Repair requires the original real directory at {}",
         path.display()
     );
@@ -71,7 +72,7 @@ pub async fn review(
     )
     .await?;
     ensure!(
-        Path::new(&common).canonicalize()? == record.common_directory,
+        Path::new(&common).canonical()? == record.common_directory,
         "Source repository identity changed"
     );
     let administrative_directory = record.common_directory.join("worktrees").join(id);
@@ -114,8 +115,9 @@ pub async fn review(
     .await?;
     let checkout_pointer = text(&record.path.join(".git"))?;
     let registration_pointer = text(&administrative_directory.join("gitdir"))?;
-    let expected_checkout = format!("gitdir: {}", administrative_directory.display());
-    let expected_registration = record.path.join(".git").to_string_lossy().into_owned();
+    // Git writes these with `/` on Windows too.
+    let expected_checkout = format!("gitdir: {}", crate::paths::slash(&administrative_directory));
+    let expected_registration = crate::paths::slash(&record.path.join(".git"));
     ensure!(
         checkout_pointer
             .as_deref()
@@ -167,12 +169,15 @@ pub async fn apply(
         for (path, value, missing) in [
             (
                 record.path.join(".git"),
-                format!("gitdir: {}\n", reviewed.administrative_directory.display()),
+                format!(
+                    "gitdir: {}\n",
+                    crate::paths::slash(&reviewed.administrative_directory)
+                ),
                 reviewed.checkout_pointer.is_none(),
             ),
             (
                 reviewed.administrative_directory.join("gitdir"),
-                format!("{}\n", record.path.join(".git").display()),
+                format!("{}\n", crate::paths::slash(&record.path.join(".git"))),
                 reviewed.registration_pointer.is_none(),
             ),
         ] {
@@ -186,7 +191,7 @@ pub async fn apply(
                 temporary
                     .persist_noclobber(&path)
                     .map_err(|error| error.error)?;
-                fs::File::open(path.parent().unwrap())?.sync_all()?;
+                crate::paths::sync_directory(path.parent().unwrap())?;
             }
         }
         let top = git(
@@ -196,7 +201,7 @@ pub async fn apply(
         )
         .await?;
         ensure!(
-            Path::new(&top).canonicalize()? == record.path,
+            Path::new(&top).canonical()? == record.path,
             "Repaired checkout root differs"
         );
         let common = git(
@@ -206,7 +211,7 @@ pub async fn apply(
         )
         .await?;
         ensure!(
-            Path::new(&common).canonicalize()? == record.common_directory,
+            Path::new(&common).canonical()? == record.common_directory,
             "Repaired repository identity differs"
         );
         Ok(())

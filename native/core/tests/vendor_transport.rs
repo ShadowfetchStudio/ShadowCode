@@ -1,5 +1,7 @@
 //! Real subprocess transport regressions, with isolated fake vendor CLIs.
 //! No network, real accounts or provider allowance are used.
+// The vendor runner and its fake CLIs (shell scripts) are Unix-only so far.
+#![cfg(unix)]
 mod vendor_support;
 
 use serde_json::json;

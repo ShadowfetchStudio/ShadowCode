@@ -210,6 +210,7 @@ fn rewind_handles_repeated_writes_crash_before_write_creates_deletes_and_mode() 
     let store = Store::open(&root.path().join("db")).unwrap();
     checkpoint::restore(&store, &ws, "task").unwrap();
     assert_eq!(ws.read("changed").unwrap().content, "original");
+    #[cfg(unix)]
     assert_eq!(ws.snapshot("changed").unwrap().mode, Some(0o755));
     assert!(ws.snapshot("created").unwrap().bytes.is_none());
     assert_eq!(ws.read("deleted").unwrap().content, "gone");

@@ -2,6 +2,7 @@
 //! (tree-sitter), plus one-shot `rust-analyzer diagnostics`, the fallback
 //! when the persistent language server (`crate::lsp`) cannot answer. No
 //! startup world index.
+use crate::paths::Canonical;
 use anyhow::{bail, Result};
 use serde_json::{json, Value};
 use std::{path::Path, time::Duration};
@@ -50,7 +51,7 @@ pub async fn get_diagnostics(root: &Path, path: &str) -> Result<Value> {
     }
     let workspace = crate::workspace::Workspace::open(root)?;
     let rel = workspace.relative(path)?;
-    let full = root.join(&rel).canonicalize()?;
+    let full = root.join(&rel).canonical()?;
     anyhow::ensure!(full.starts_with(&workspace.path), "path escapes workspace");
     anyhow::ensure!(
         !crate::redaction::is_secret_path(&rel.to_string_lossy()),

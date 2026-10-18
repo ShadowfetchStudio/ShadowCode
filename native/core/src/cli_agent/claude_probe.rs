@@ -93,6 +93,7 @@ fn sanitized(binary: &Path, path_env: Option<&OsStr>, cwd: &Path) -> Command {
         .stderr(Stdio::null())
         .kill_on_drop(true)
         .env_clear()
+        .envs(crate::process::platform_env())
         .env("NO_COLOR", "1")
         .env("TERM", "dumb");
     for name in [

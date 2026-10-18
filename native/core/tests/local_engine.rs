@@ -3,6 +3,9 @@
 //! `/props`, and `/v1/chat/completions` (canned tool calls), requires the
 //! per-launch bearer key, records every launch and request, and exits on
 //! SIGTERM. Nothing here touches a GPU or a real model.
+// The fake llama-server is a script started directly; local models on Windows come with the runtime port.
+#![cfg(unix)]
+use shadowcode_core::paths::Canonical;
 mod support;
 mod vendor_support;
 use serde_json::{json, Value};
@@ -1491,7 +1494,7 @@ async fn load_switch_lease_unload_and_shutdown_stop_the_server() {
     assert_eq!(provenance["identity_kind"], "filesystem_metadata");
     assert_eq!(
         provenance["files"]["model"]["path"],
-        b.canonicalize().unwrap().display().to_string()
+        b.canonical().unwrap().display().to_string()
     );
     assert_eq!(provenance["model"]["architecture"], "gemma4");
     assert_eq!(
@@ -1666,6 +1669,7 @@ fn runtime_probe_does_not_hang_on_a_child_left_behind() {
 /// LOC-04: another program takes llama-server's port between choosing it and
 /// the server listening. The load retries on a fresh port on the same device
 /// instead of calling it a GPU failure and moving the model to the CPU.
+#[cfg(unix)]
 #[tokio::test]
 async fn an_occupied_port_is_retried_without_a_cpu_fallback() {
     let f = fixture(GPU);
@@ -1837,6 +1841,7 @@ async fn cancel_during_load_early_exit_tail_and_cpu_fallback() {
     engine.shutdown().await.unwrap();
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn ollama_manifest_import_references_blobs_without_copying() {
     let f = fixture(GPU);

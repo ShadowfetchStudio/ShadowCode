@@ -1,6 +1,8 @@
 //! The drawer's interactive terminals: a real `sh` on a pseudo-terminal,
 //! typed into, read by cursor, resized and hung up, and the routes the
 //! window uses.
+// Terminals (ConPTY) are not ported to Windows yet.
+#![cfg(unix)]
 mod support;
 use base64::Engine as _;
 use serde_json::{json, Value};

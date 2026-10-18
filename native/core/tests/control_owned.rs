@@ -1,3 +1,6 @@
+// The control socket is the Unix transport; the Windows pipe needs its own tests.
+#![cfg(unix)]
+use shadowcode_core::paths::Canonical;
 mod support;
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
@@ -25,7 +28,7 @@ async fn raw_owner(server: &Server, service: &Service) -> UnixStream {
     let paths = service.engine.paths();
     let mut identity = Vec::new();
     for root in [&paths.config, &paths.data, &paths.state] {
-        identity.extend_from_slice(root.canonicalize().unwrap().as_os_str().as_encoded_bytes());
+        identity.extend_from_slice(root.canonical().unwrap().as_os_str().as_encoded_bytes());
         identity.push(0);
     }
     let profile = format!("{:x}", Sha256::digest(identity));

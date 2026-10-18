@@ -1,3 +1,4 @@
+#![cfg_attr(not(unix), allow(unused))]
 use serde_json::{json, Value};
 use shadowcode_core::{
     approvals::ApprovalHub,
@@ -453,6 +454,7 @@ async fn denied_approval_is_not_success_and_does_not_run_the_command() {
         .is_none());
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn read_file_cannot_reach_secrets_by_spelling_or_symlink() {
     let (_root, tools) = fixture(Config::default());

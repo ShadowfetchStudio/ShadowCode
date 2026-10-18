@@ -5,6 +5,14 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 
+# The Windows sandbox launcher for the engine's own tests (the app is its
+# own launcher); elsewhere it only says so.
+[[bin]]
+name = "shadowcode-sandbox"
+path = "src/bin/shadowcode-sandbox.rs"
+test = false
+doc = false
+
 [dependencies]
 anyhow = "1"
 serde = { version = "1", features = ["derive"] }
@@ -12,6 +20,10 @@ serde_json = "1"
 serde_yaml_ng = "0.10"
 rusqlite = { version = "0.40.2", default-features = false, features = ["bundled", "backup", "cache", "hooks", "limits", "fallible_uint"] }
 uuid = { version = "1", features = ["v4", "serde"] }
+# Kernel randomness on every system (already used through uuid).
+getrandom = "0.4"
+# Canonical paths without Windows' verbatim prefix (see paths::Canonical).
+dunce = "1"
 tokio = { version = "1", features = ["full"] }
 tokio-util = { version = "0.7", features = ["rt"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
@@ -93,6 +105,13 @@ cpal = { version = "=0.18.2", default-features = false }
 cpal = { version = "=0.18.2", default-features = false }
 # API keys in the macOS Keychain (keyring.rs). MIT OR Apache-2.0.
 security-framework = { version = "3", default-features = false }
+
+[target.'cfg(windows)'.dependencies]
+# Voice input on Windows: the same cpal, through WASAPI.
+cpal = { version = "=0.18.2", default-features = false }
+# The control channel's named pipe (its access rules and peer identity), the
+# memory figures and file identities for local models.
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Security", "Win32_Security_Authorization", "Win32_Security_Isolation", "Win32_Storage_FileSystem", "Win32_System_Console", "Win32_System_JobObjects", "Win32_System_Pipes", "Win32_System_StationsAndDesktops", "Win32_System_SystemInformation", "Win32_System_Threading"] }
 
 [dev-dependencies]
 # The same tokio, with its paused test clock (no new crate).

@@ -1,3 +1,4 @@
+#![cfg_attr(not(unix), allow(unused))]
 mod support;
 use serde_json::{json, Value};
 use shadowcode_core::{
@@ -95,6 +96,7 @@ fn dead(pid: u32) -> bool {
     !support::running(pid)
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn scoped_approvals_gate_start_stop_and_cleanup_with_durable_origin() {
     let (_root, service) = fixture("http://127.0.0.1:1/v1");

@@ -31,7 +31,9 @@ output-error handling, not a disk-performance or power-loss durability claim.
 `SHADOW_CONTAINER_ENGINE=podman`. The engine must already be usable by the build
 user. The container is pinned by digest, every APK version is pinned in
 `apk-packages.txt`, and source archives/patches have checksums. Unavailable pins
-fail the build. Build tools stay in the container; none are copied into the app.
+fail the build. A line `ARCH:name=version` (for example `aarch64:libcurl=...`)
+replaces that package's pin on one architecture while Alpine's builders are a
+revision apart; remove it once both architectures carry the same version. Build tools stay in the container; none are copied into the app.
 The runtime itself links statically, and the build rejects dynamic dependencies.
 
 Source downloads use bounded attempts and verify the pinned digest before

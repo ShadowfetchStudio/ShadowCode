@@ -1,3 +1,6 @@
+// Helpers used only by Unix-only tests are unused on Windows.
+#![cfg_attr(not(unix), allow(unused))]
+use shadowcode_core::paths::Canonical;
 mod support;
 use serde_json::{json, Value};
 use shadowcode_core::{
@@ -7,7 +10,9 @@ use shadowcode_core::{
     service::{Request, Service},
     workspace::Workspace,
 };
-use std::{fs, os::unix::fs::symlink, path::Path, sync::Arc, time::Duration};
+#[cfg(unix)]
+use std::os::unix::fs::symlink;
+use std::{fs, path::Path, sync::Arc, time::Duration};
 fn fixture() -> (tempfile::TempDir, Service) {
     let root = tempfile::tempdir().unwrap();
     let path = root.path().join("project");
@@ -46,6 +51,7 @@ async fn wait(service: &Service, job: &Value) -> Value {
     .unwrap()
     .unwrap())
 }
+#[cfg(unix)]
 #[tokio::test]
 async fn project_scan_is_bounded_confined_and_explicit_about_ambiguous_tests() {
     let (root, service) = fixture();
@@ -114,6 +120,7 @@ async fn project_scan_is_bounded_confined_and_explicit_about_ambiguous_tests() {
     service.engine.shutdown().await.unwrap();
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn project_scan_caps_aggregate_reads_and_skips_special_files() {
     use std::os::unix::ffi::OsStrExt;
@@ -299,6 +306,7 @@ fn git(path: &Path, args: &[&str]) {
         String::from_utf8_lossy(&out.stderr)
     );
 }
+#[cfg(unix)]
 #[tokio::test]
 async fn change_history_uses_literal_paths_and_disables_external_diff_helpers() {
     let (_root, service) = fixture();
@@ -499,7 +507,7 @@ fn host_pid(project: &std::path::Path, namespace_pid: u32) -> u32 {
     if !cfg!(target_os = "linux") {
         return namespace_pid;
     }
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     let matches: Vec<_> = fs::read_dir("/proc")
         .unwrap()
         .filter_map(|e| {

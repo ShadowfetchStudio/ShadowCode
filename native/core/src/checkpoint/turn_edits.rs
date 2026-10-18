@@ -50,10 +50,7 @@ fn vendor_reported(store: &Store, ws: &Workspace, task: &str) -> Result<HashSet<
         };
         for path in payload["paths"].as_array().into_iter().flatten() {
             if let Some(path) = path.as_str() {
-                let relative = ws
-                    .relative(path)
-                    .map(|p| p.to_string_lossy().into_owned())
-                    .unwrap_or_else(|_| path.to_owned());
+                let relative = ws.relative_text(path).unwrap_or_else(|_| path.to_owned());
                 paths.insert(relative);
             }
         }

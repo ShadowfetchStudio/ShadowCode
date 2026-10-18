@@ -7,6 +7,23 @@ use super::Store;
 use anyhow::Result;
 use rusqlite::{params, OptionalExtension, Transaction, TransactionBehavior};
 use serde::{de::DeserializeOwned, Serialize};
+use std::collections::HashMap;
+use std::path::PathBuf;
+use std::sync::{Arc, LazyLock, Mutex};
+
+/// One gate per database file for this process's meta transactions. SQLite
+/// makes a waiting writer poll (busy_timeout), and on Windows, where each
+/// commit's flush is slow, a poller can miss every gap between other
+/// connections' commits until it times out. Writers in this process queue
+/// here instead; other processes still wait in busy_timeout.
+fn write_gate(path: &std::path::Path) -> Arc<Mutex<()>> {
+    static GATES: LazyLock<Mutex<HashMap<PathBuf, Arc<Mutex<()>>>>> =
+        LazyLock::new(Default::default);
+    let mut gates = GATES
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    gates.entry(path.to_path_buf()).or_default().clone()
+}
 
 impl Store {
     pub fn native_meta(&self, key: &str) -> Result<Option<String>> {
@@ -30,6 +47,9 @@ impl Store {
         &self,
         work: impl FnOnce(&MetaTransaction<'_>) -> Result<R>,
     ) -> Result<R> {
+        // The gate first, then the connection: the same order everywhere.
+        let gate = write_gate(&self.path);
+        let _turn = gate.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         let mut db = self.lock()?;
         // IMMEDIATE takes the write lock before the first read, so a second
         // process waits (busy_timeout) instead of reading a value this

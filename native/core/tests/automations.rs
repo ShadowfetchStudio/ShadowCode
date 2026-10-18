@@ -3,6 +3,7 @@
 //! runs, catch-up and missed times, fresh worktrees that are removed when
 //! nothing changed, approval requests stopping unattended runs, and
 //! recovery of runs interrupted by a restart.
+use shadowcode_core::paths::Canonical;
 mod support;
 use serde_json::{json, Value};
 use shadowcode_core::{
@@ -63,7 +64,7 @@ fn setup(endpoint: &str, approve_shell: bool) -> Fixture {
     fs::write(project.join("README.md"), "# Demo\n").unwrap();
     git(&project, &["add", "."]);
     git(&project, &["commit", "-m", "Initial commit"]);
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     let paths = AppPaths::isolated(&root.path().join("profile")).unwrap();
     Config::patch(&paths, json!({"model":{"provider":"local","endpoint":endpoint,"name":"fixture","context_limit":16384},"trusted_workspaces":[project],"permissions":{"approve_shell":approve_shell},"agent":{"max_steps":8,"retry_attempts":0}})).unwrap();
     let service = Service::open(paths.clone(), Some(project.clone())).unwrap();

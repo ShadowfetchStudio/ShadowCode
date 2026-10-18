@@ -1,4 +1,5 @@
 #![cfg(unix)]
+use shadowcode_core::paths::Canonical;
 mod support;
 use rmcp::{model::*, service::RunningService, RoleClient, ServiceExt};
 use serde_json::{json, Value};
@@ -36,10 +37,7 @@ impl Fixture {
         fs::create_dir(&project).unwrap();
         fs::create_dir(&other).unwrap();
         // Real paths, as the service names them (macOS: /var is /private/var).
-        let (project, other) = (
-            project.canonicalize().unwrap(),
-            other.canonicalize().unwrap(),
-        );
+        let (project, other) = (project.canonical().unwrap(), other.canonical().unwrap());
         let paths = AppPaths::isolated(&root.path().join("profile")).unwrap();
         Config::patch(&paths,json!({"model":{"provider":"local","endpoint":endpoint,"name":"fixture","default":"fixture","context_limit":16384},"trusted_workspaces":[project,other],"agent":{"max_steps":4,"model_retries":0}})).unwrap();
         let service = Service::open(paths.clone(), Some(other.clone())).unwrap();

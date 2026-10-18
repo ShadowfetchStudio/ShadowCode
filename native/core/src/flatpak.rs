@@ -51,7 +51,7 @@ pub fn shared_socket_base() -> Option<PathBuf> {
     })
 }
 
-#[cfg(test)]
+#[cfg(all(test, target_os = "linux"))]
 mod tests {
     use super::*;
 

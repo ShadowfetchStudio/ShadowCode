@@ -108,7 +108,7 @@ fn listing(root: &Path) -> Listing {
             continue;
         };
         entries.push(Entry {
-            path: relative.to_string_lossy().into_owned(),
+            path: crate::paths::slash(relative),
             dir: entry.file_type().is_some_and(|t| t.is_dir()),
         });
     }
@@ -205,6 +205,12 @@ pub fn search(root: &Path, query: &str, limit: usize) -> Result<Value> {
 /// Whether `path` (relative to the project) is one of `scope`'s files or
 /// inside one of its folders.
 pub fn in_scope(scope: &[Mention], path: &str) -> bool {
+    // Windows names a file inside a chosen folder with either separator.
+    let path = if cfg!(windows) {
+        std::borrow::Cow::Owned(path.replace('\\', "/"))
+    } else {
+        std::borrow::Cow::Borrowed(path)
+    };
     let path = path.trim_start_matches("./");
     scope.iter().any(|m| {
         let target = m.path.trim_start_matches("./").trim_end_matches('/');
@@ -229,7 +235,7 @@ pub fn validate(workspace: &Workspace, mentions: Vec<Mention>) -> Result<Vec<Men
     let mut out: Vec<Mention> = Vec::new();
     for mention in mentions {
         let relative = workspace.relative(&mention.path)?;
-        let path = relative.to_string_lossy().into_owned();
+        let path = crate::paths::slash(&relative);
         ensure!(path != "." || mention.kind == "dir", "Choose a file");
         let kind = if mention.kind == "dir" { "dir" } else { "file" };
         if !out.iter().any(|m| m.path == path) {
@@ -540,6 +546,8 @@ mod tests {
         .is_err());
     }
 
+    // Creating a symlink needs extra privileges on Windows.
+    #[cfg(unix)]
     #[test]
     fn mentioned_secret_files_are_not_attached_and_tokens_are_redacted() {
         let dir = project();

@@ -21,6 +21,7 @@
 //! own worktree and returns a diff. Project roles (`crate::roles`) choose the
 //! model of `explore`, `plan`, `review` and write children, and run the
 //! stages of a Plan → Implement → Review task (`Self::run_role`).
+use crate::paths::Canonical;
 use crate::{
     agents::{self, AgentCatalog, AgentDefinition},
     cli_agent::{handoff, Vendor},
@@ -975,7 +976,7 @@ impl SubagentHost {
                 cancel.clone(),
             )
             .await?;
-            let path = created.path.canonicalize()?;
+            let path = created.path.canonical()?;
             config.grant_trust(&path);
             checkout = Some((created.id.clone(), path.clone(), base.commit));
             path

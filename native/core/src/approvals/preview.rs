@@ -246,8 +246,7 @@ fn vendor_changes(root: &Path, kind: &str, args: &Value) -> Option<Value> {
     };
     let shown = |path: &str| {
         workspace
-            .relative(path)
-            .map(|p| p.to_string_lossy().into_owned())
+            .relative_text(path)
             .unwrap_or_else(|_| path.to_owned())
     };
     // Claude Code: Write / Edit / MultiEdit inputs.
@@ -351,6 +350,8 @@ fn vendor_changes(root: &Path, kind: &str, args: &Value) -> Option<Value> {
 }
 
 #[cfg(test)]
+// Helpers of Unix-only tests are unused on Windows.
+#[cfg_attr(not(unix), allow(unused))]
 mod tests {
     use super::*;
 
@@ -428,6 +429,7 @@ mod tests {
         .is_null());
     }
 
+    #[cfg(unix)]
     #[test]
     fn commands_show_the_full_command_and_folder() {
         let (_dir, ws) = project();

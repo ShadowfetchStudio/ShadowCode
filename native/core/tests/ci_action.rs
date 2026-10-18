@@ -4,6 +4,7 @@
 //! token confined to their own steps, trusted commenters only, no
 //! `pull_request_target`, least-privilege permissions, no persisted
 //! checkout credentials).
+#![cfg_attr(not(unix), allow(unused))]
 use serde_yaml_ng::Value;
 use std::{
     fs,
@@ -158,6 +159,7 @@ fn the_spending_limit_can_be_raised_and_is_explained() {
     assert!(readme.contains("2 stopped for approval or at the spending\nlimit"));
 }
 
+#[cfg(unix)]
 #[test]
 fn max_cost_outside_what_shadowcode_accepts_is_refused_up_front() {
     // Otherwise the run step fails later on `spending.daily_usd`, a setting
@@ -206,6 +208,7 @@ fn max_cost_outside_what_shadowcode_accepts_is_refused_up_front() {
     }
 }
 
+#[cfg(unix)]
 #[test]
 fn each_use_of_the_action_starts_with_its_own_profile() {
     // Two uses in one job share $RUNNER_TEMP. The second must not inherit the
@@ -276,6 +279,7 @@ fn each_use_of_the_action_starts_with_its_own_profile() {
     assert!(Path::new(&first_result).exists());
 }
 
+#[cfg(unix)]
 #[test]
 fn a_spending_stop_comment_names_the_limit_that_was_reached() {
     if shadowcode_core::sandbox::which("jq").is_none() {

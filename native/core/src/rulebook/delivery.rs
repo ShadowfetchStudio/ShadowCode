@@ -649,6 +649,14 @@ fn stage_plugin(root: &Path, skills: &[Definition]) -> Result<PathBuf> {
                         }
                         #[cfg(unix)]
                         let _ = std::os::unix::fs::symlink(entry.path(), dir.join(&name));
+                        // Symlinks need extra rights on Windows: copy regular
+                        // files of a reasonable size instead (not folders).
+                        #[cfg(not(unix))]
+                        if kind.is_file()
+                            && entry.metadata().is_ok_and(|m| m.len() <= 4 * 1024 * 1024)
+                        {
+                            let _ = std::fs::copy(entry.path(), dir.join(&name));
+                        }
                     }
                 }
             }

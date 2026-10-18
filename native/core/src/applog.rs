@@ -57,7 +57,9 @@ pub fn init(paths: &AppPaths, level: &str) -> std::io::Result<PathBuf> {
                 dir: dir.clone(),
                 file: None,
                 size: 0,
-                home: std::env::var("HOME").ok().filter(|h| h.len() > 1),
+                home: crate::paths::home_dir()
+                    .and_then(|h| h.to_str().map(str::to_owned))
+                    .filter(|h| h.len() > 1),
             });
         }
     }

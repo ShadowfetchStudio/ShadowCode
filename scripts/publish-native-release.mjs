@@ -11,11 +11,12 @@ import { IDENTITY, TARGETS } from './native-release-auth.mjs';
 import { withReleaseSnapshot, validateContext, validateStagedRelease, readReceipts, requireTransportLayout } from './native-release-assets.mjs';
 
 export { digest } from './native-release-verification.mjs';
-// After publication, .github/workflows/release-macos.yml and
-// release-flatpak.yml attach the macOS disk images, the Flatpak bundles and
+// After publication, .github/workflows/release-macos.yml,
+// release-flatpak.yml and release-windows.yml attach the macOS disk images,
+// the Flatpak bundles, the Windows installer with its busybox-w32 source and
 // their checksums. They are outside this signed asset set: a
 // published-release retry leaves them alone; a draft never has them.
-const ATTACHED_LATER = /^ShadowCode_\d+\.\d+\.\d+_((x64|aarch64)\.dmg|(x86_64|aarch64)\.flatpak|(macos|flatpak)\.sha256)$/;
+const ATTACHED_LATER = /^ShadowCode_\d+\.\d+\.\d+_((x64|aarch64)\.dmg|(x86_64|aarch64)\.flatpak|x64-setup\.exe|busybox-w32-source\.tar\.gz|(macos|flatpak|windows)\.sha256)$/;
 const command = (args) => execFileSync('gh', args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
 
 // One release carries every target's signed bundle. Each bundle is snapshotted

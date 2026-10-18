@@ -1,6 +1,6 @@
 # ShadowCode user guide
 
-This guide describes the 2.2.0 workflow: open a
+This guide describes the 2.3.0 workflow: open a
 project, pick a model, describe the task, watch the agent work, then review
 what changed. Installation and a feature overview are in the
 [README](../README.md).

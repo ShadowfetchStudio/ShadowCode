@@ -1,5 +1,7 @@
 //! Full undo: project checkpoints around native shell commands and vendor CLI
 //! turns, restored by the existing rewind.
+#![cfg_attr(not(unix), allow(unused))]
+use shadowcode_core::paths::Canonical;
 mod vendor_support;
 use serde_json::{json, Value};
 use shadowcode_core::{
@@ -92,7 +94,7 @@ fn fixture(config: Config, prepare: impl FnOnce(&Path)) -> Fixture {
     .unwrap();
     Fixture {
         _root: root,
-        project: project.canonicalize().unwrap(),
+        project: project.canonical().unwrap(),
         store,
         task,
         tools,

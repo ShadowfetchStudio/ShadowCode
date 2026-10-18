@@ -861,8 +861,7 @@ impl Agent {
                         .and_then(|u| u.to_file_path().ok());
                     let label = local
                         .as_ref()
-                        .and_then(|p| workspace.relative(&p.to_string_lossy()).ok())
-                        .map(|p| p.display().to_string());
+                        .and_then(|p| workspace.relative_text(&p.to_string_lossy()).ok());
                     // An editor that reads files can hand over an unsaved buffer.
                     let buffer = match &local {
                         Some(path) if self.client_reads_files() => self
@@ -897,8 +896,7 @@ impl Agent {
                         .ok()
                         .filter(|u| u.scheme() == "file")
                         .and_then(|u| u.to_file_path().ok())
-                        .and_then(|p| workspace.relative(&p.to_string_lossy()).ok())
-                        .map(|p| p.display().to_string())
+                        .and_then(|p| workspace.relative_text(&p.to_string_lossy()).ok())
                         .unwrap_or_else(|| uri.to_owned());
                     if let Some(body) = resource["text"].as_str() {
                         embed(&mut context, &label, body);

@@ -4512,7 +4512,7 @@ dependencies = [
 
 [[package]]
 name = "shadowcode-core"
-version = "2.2.0"
+version = "2.3.0"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -4525,9 +4525,11 @@ dependencies = [
  "clap_mangen",
  "cpal",
  "crossterm",
+ "dunce",
  "flate2",
  "fs2",
  "futures-util",
+ "getrandom 0.4.3",
  "http-body",
  "http-body-util",
  "hyper",
@@ -4567,12 +4569,13 @@ dependencies = [
  "unicode-width",
  "uuid",
  "whisper-rs",
+ "windows-sys 0.61.2",
  "zbus",
 ]
 
 [[package]]
 name = "shadowcode-desktop"
-version = "2.2.0"
+version = "2.3.0"
 dependencies = [
  "anyhow",
  "gdk",

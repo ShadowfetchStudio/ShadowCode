@@ -16,7 +16,6 @@ struct ActivationBody {
 
 impl Service {
     pub(super) async fn extension_routes(&self, call: &Arc<Call>) -> Result<Value> {
-        #[cfg(unix)]
         if (call.method.as_str(), call.path.as_str()) == ("POST", "/api/sqlite") {
             return crate::sqlite::inspect(
                 Arc::new(Workspace::open(&self.workspace()?)?),
@@ -32,15 +31,12 @@ impl Service {
         let body: ActivationBody = call.body()?;
         let path = call.path.as_str();
         match (call.method.as_str(), path) {
-            #[cfg(unix)]
             ("GET", "/api/plugins") => {
                 crate::plugins::catalog(self.engine.paths(), &Workspace::open(&self.workspace()?)?)
             }
-            #[cfg(unix)]
             ("POST", "/api/plugins/preview") => {
                 crate::plugins::preview(&crate::plugins::resolve(&call.body)?)
             }
-            #[cfg(unix)]
             ("POST", "/api/plugins/install" | "/api/plugins/remove") => {
                 let workspace = self.mutable_workspace()?;
                 ensure!(
@@ -73,13 +69,11 @@ impl Service {
                     json!({"result":result,"catalog":crate::plugins::catalog(self.engine.paths(), &workspace)?}),
                 )
             }
-            #[cfg(unix)]
             ("GET", "/api/mcp/servers") => {
                 let workspace = Workspace::open(&self.workspace()?)?;
                 let config = Config::load(self.engine.paths(), Some(&workspace.path))?;
                 crate::mcp::registry::catalog(&workspace, &config)
             }
-            #[cfg(unix)]
             ("POST", "/api/mcp/servers" | "/api/mcp/servers/delete") => {
                 let workspace = Workspace::open(&self.workspace()?)?;
                 let deleting = path.ends_with("/delete");
@@ -115,7 +109,6 @@ impl Service {
                 )?;
                 crate::mcp::registry::catalog(&workspace, &config)
             }
-            #[cfg(unix)]
             ("POST", "/api/mcp/activation") => {
                 let workspace = Workspace::open(&self.workspace()?)?;
                 ensure!(

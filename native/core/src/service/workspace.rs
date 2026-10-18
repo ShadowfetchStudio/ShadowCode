@@ -160,7 +160,7 @@ impl Service {
                 };
                 let relative = workspace.relative(path)?;
                 Ok(
-                    json!({"entries":workspace.list(path)?,"workspace":workspace.path,"path":relative,"parent":if relative==Path::new("."){String::new()}else{relative.parent().filter(|p|!p.as_os_str().is_empty()).unwrap_or(Path::new(".")).to_string_lossy().into_owned()}}),
+                    json!({"entries":workspace.list(path)?,"workspace":workspace.path,"path":crate::paths::slash(&relative),"parent":if relative==Path::new("."){String::new()}else{crate::paths::slash(relative.parent().filter(|p|!p.as_os_str().is_empty()).unwrap_or(Path::new(".")))}}),
                 )
             }
             ("GET", "/api/workspace/file") => {
@@ -218,7 +218,7 @@ impl Service {
                 let path = call.q("path");
                 let hash =
                     workspace.write(path, body.content.as_str().as_bytes(), Some(expected))?;
-                let relative = workspace.relative(path)?.to_string_lossy().into_owned();
+                let relative = workspace.relative_text(path)?;
                 // Saved while a subscription turn runs: Rewind of that turn
                 // keeps this file as you saved it.
                 if let Some(task) = &turn {

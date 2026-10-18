@@ -29,6 +29,9 @@
     <binary>shadowcode</binary>
   </provides>
   <releases>
+    <release version="2.3.0" date="2026-10-19">
+      <description><p>ShadowCode for Windows: a per-user installer with local models (llama.cpp), terminals, subscription tools and an AppContainer sandbox for agent commands.</p></description>
+    </release>
     <release version="2.2.0" date="2026-10-17">
       <description><p>Your own model servers (Ollama, LM Studio, vLLM, OpenAI-compatible APIs), Settings › Agent, find in conversation, a smarter command palette, text size, and a native macOS app for Apple silicon and Intel Macs.</p></description>
     </release>

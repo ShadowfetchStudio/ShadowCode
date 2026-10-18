@@ -8,6 +8,7 @@
 //! `PORT` and `SHADOWCODE_PORT` set. Each task's port is free on this
 //! computer and not used by another open worktree task of the project, and
 //! the task's shells and subscription CLIs get it too (`keys::TASK_ENV`).
+use crate::paths::Canonical;
 use crate::store::{keys, Store};
 use anyhow::{ensure, Result};
 use serde::{Deserialize, Serialize};
@@ -229,6 +230,11 @@ async fn run_command(
             return json!({"command": command, "ok": false, "stopped": "not_started", "seconds": seconds(), "output": format!("Could not start: {error}")})
         }
     };
+    // Windows: the job holds what the command starts; dropping it ends them.
+    #[cfg(windows)]
+    let job = child
+        .raw_handle()
+        .and_then(|handle| crate::process::Job::for_process(handle).ok());
     let stdout = Tail::read(child.stdout.take());
     let stderr = Tail::read(child.stderr.take());
     let waited = tokio::select! {
@@ -243,6 +249,10 @@ async fn run_command(
             unsafe {
                 libc::kill(-(pid as i32), libc::SIGKILL);
             }
+        }
+        #[cfg(windows)]
+        if let Some(job) = &job {
+            job.terminate();
         }
         let _ = child.kill().await;
     }
@@ -298,11 +308,9 @@ fn copy_file(source: &Path, worktree: &Path, path: &str) -> std::result::Result<
     if !copyable {
         return Err("missing, not a regular file, or over 10 MB".into());
     }
-    let (Ok(source), Ok(worktree), Ok(real)) = (
-        source.canonicalize(),
-        worktree.canonicalize(),
-        from.canonicalize(),
-    ) else {
+    let (Ok(source), Ok(worktree), Ok(real)) =
+        (source.canonical(), worktree.canonical(), from.canonical())
+    else {
         return Err(refused());
     };
     match real.strip_prefix(&source) {
@@ -546,17 +554,21 @@ mod tests {
         tokio::time::sleep(Duration::from_millis(2500)).await;
         assert!(!late.exists(), "the background part outlived the timeout");
 
-        let killed = run_command(
-            dir.path(),
-            "kill -9 $$",
-            &env,
-            Duration::from_secs(10),
-            &never(),
-        )
-        .await;
-        assert_eq!(killed["stopped"], "signal");
-        assert_eq!(killed["signal"], 9);
-        assert!(killed["exit_code"].is_null());
+        // Windows has no signals to report.
+        #[cfg(unix)]
+        {
+            let killed = run_command(
+                dir.path(),
+                "kill -9 $$",
+                &env,
+                Duration::from_secs(10),
+                &never(),
+            )
+            .await;
+            assert_eq!(killed["stopped"], "signal");
+            assert_eq!(killed["signal"], 9);
+            assert!(killed["exit_code"].is_null());
+        }
         let missing = run_command(
             &dir.path().join("gone"),
             "true",

@@ -3,6 +3,9 @@
 //! and the Rules & skills routes show and change it. Vendor protocols are
 //! replayed from recorded fixtures or driven by fake CLIs; no real vendor
 //! runs and nothing is written to a vendor's home folder.
+// Helpers used only by Unix-only tests are unused on Windows.
+#![cfg_attr(not(unix), allow(unused))]
+use shadowcode_core::paths::Canonical;
 mod support;
 mod vendor_support;
 use serde_json::{json, Value};
@@ -13,9 +16,10 @@ use shadowcode_core::{
     rulebook::{self, VendorRules},
     service::{Request, Service},
 };
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use std::{
     fs,
-    os::unix::fs::PermissionsExt,
     path::{Path, PathBuf},
     time::Duration,
 };
@@ -274,7 +278,7 @@ fn setup(endpoint: &str) -> Setup {
     let root = tempfile::tempdir().unwrap();
     let project = root.path().join("project");
     fs::create_dir(&project).unwrap();
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     let fake = FakeCodex::new(root.path(), json!({"auth":"chatgpt","turn":"ok"}));
     let paths = AppPaths::isolated(&root.path().join("app")).unwrap();
     let mut agents = cli_agents(&fake);
@@ -588,6 +592,7 @@ async fn profile_rules_and_skills_reach_shadowcodes_own_agent() {
     s.service.engine.shutdown().await.unwrap();
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn a_codex_run_gets_developer_instructions_and_a_profile_command_expanded() {
     let s = setup("http://127.0.0.1:9/v1");
@@ -678,6 +683,7 @@ for raw in sys.stdin:
     send({"type":"result","subtype":"success","is_error":False,"result":"PELICAN","usage":{"input_tokens":3,"output_tokens":1}})
 "#;
 
+#[cfg(unix)]
 #[tokio::test]
 async fn a_claude_run_reads_a_private_rules_file_that_is_removed_afterwards() {
     let s = setup("http://127.0.0.1:9/v1");

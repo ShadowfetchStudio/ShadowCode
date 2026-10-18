@@ -133,6 +133,10 @@ fn sandbox_scratch_and_hidden_home_args() {
 }
 
 #[test]
+#[cfg_attr(
+    not(target_os = "linux"),
+    ignore = "bubblewrap is the Linux sandbox; macOS and Windows report their own"
+)]
 fn sandbox_fallback_is_honest_without_bubblewrap() {
     // PATH is process-global and tests in this binary share one process: run
     // the mutation in an isolated child so a concurrent test never observes an

@@ -1,0 +1,171 @@
+name: Windows
+# The Windows port (docs/WINDOWS_PORT.md). The whole workspace must compile
+# on Windows without warnings (every error is reported at once with
+# --keep-going), and the engine's unit and integration tests must pass. The
+# logs are kept as artifacts. The installer job
+# builds an unsigned preview installer (NSIS, per-user) as an artifact; it is
+# not attached to any release.
+on:
+  push:
+    branches: [main]
+    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml', 'scripts/build-llama.cpp.sh', 'tools/llama.cpp.pin', 'scripts/build-busybox-w32.sh', 'tools/busybox-w32.pin', 'packaging/windows/**']
+  pull_request:
+    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml', 'scripts/build-llama.cpp.sh', 'tools/llama.cpp.pin', 'scripts/build-busybox-w32.sh', 'tools/busybox-w32.pin', 'packaging/windows/**']
+permissions:
+  contents: read
+concurrency:
+  group: windows-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  # The sandbox's shell, cross-compiled from pinned source (see the script).
+  busybox:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Cross compiler
+        run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64-x86-64 bzip2
+      - run: bash scripts/build-busybox-w32.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: busybox-w32
+          path: packaging/busybox-w32/bin/
+          if-no-files-found: error
+          retention-days: 7
+  build:
+    needs: busybox
+    runs-on: windows-latest
+    timeout-minutes: 150
+    env:
+      RUSTUP_TOOLCHAIN: '1.95.0'
+      CARGO_PROFILE_DEV_DEBUG: line-tables-only
+      CARGO_PROFILE_TEST_DEBUG: line-tables-only
+      CARGO_TERM_COLOR: never
+      # Job-wide so the check and the test build share one compilation.
+      RUSTFLAGS: -D warnings
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - name: Install pinned Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal --component clippy
+      # The desktop crate embeds the built interface (tauri.conf.json frontendDist).
+      - run: npm --prefix ui ci
+      - run: npm --prefix ui run build
+      - name: Compile everything for Windows (all errors at once)
+        run: |
+          set -o pipefail
+          cargo +1.95.0 check --workspace --all-targets --locked --keep-going --message-format=short 2>&1 | tee windows-check.log
+      - name: Summarize the errors
+        if: always()
+        run: |
+          echo "errors: $(grep -c ': error' windows-check.log || true)"
+          { grep ': error' windows-check.log || true; } | sed -E 's/:[0-9]+:[0-9]+:/:/' | sort | uniq -c | sort -rn | head -80
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: busybox-w32
+          path: packaging/busybox-w32/bin
+      # The runner's Git converts line endings on checkout (core.autocrlf);
+      # the tests' repositories expect the bytes they committed.
+      - name: Neutral Git settings for the tests
+        run: git config --global core.autocrlf false
+      - name: Engine unit tests on Windows
+        id: unit
+        env:
+          # An error's backtrace says which call failed, not only its message.
+          RUST_LIB_BACKTRACE: '1'
+        run: |
+          set -o pipefail
+          cargo +1.95.0 test -p shadowcode-core --lib --locked --no-fail-fast 2>&1 | tee windows-test.log
+      - name: Engine integration tests on Windows
+        id: integration
+        env:
+          RUST_LIB_BACKTRACE: '1'
+        run: |
+          export SHADOWCODE_BUSYBOX="$(cygpath -w "$PWD/packaging/busybox-w32/bin/busybox.exe")"
+          set -o pipefail
+          cargo +1.95.0 test -p shadowcode-core --test '*' --locked --no-fail-fast 2>&1 | tee windows-integration.log
+      - name: Summarize the tests
+        if: always() && steps.unit.outcome != 'skipped'
+        run: |
+          for log in windows-test.log windows-integration.log; do
+            [ -f "$log" ] || continue
+            echo "== $log"
+            grep -E '^test result:' "$log" | sort | uniq -c || true
+            echo "failing tests:"
+            { grep -E '^test .* \.\.\. FAILED$' "$log" || true; } | sed -E 's/^test //; s/ \.\.\. FAILED$//' | sort
+            grep -E '^error: (test failed|could not compile)' "$log" || true
+          done
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: windows-check-log
+          path: |
+            windows-check.log
+            windows-test.log
+            windows-integration.log
+          if-no-files-found: ignore
+          retention-days: 14
+  installer:
+    needs: busybox
+    runs-on: windows-latest
+    timeout-minutes: 150
+    env:
+      RUSTUP_TOOLCHAIN: '1.95.0'
+      CARGO_TERM_COLOR: never
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - name: Install pinned Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+      - run: npm --prefix ui ci
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: busybox-w32
+          path: packaging/busybox-w32/bin
+      # The pinned llama.cpp (CPU variants, clang-cl), bundled as llama.cpp\.
+      - name: Build the local model runtime
+        run: bash scripts/build-llama.cpp.sh --no-user-install --cpu-only
+      - name: The runtime starts and reports its version
+        run: |
+          ls packaging/llama.cpp/bin
+          packaging/llama.cpp/bin/llama-server.exe --version
+          packaging/llama.cpp/bin/llama-server.exe --list-devices
+      - name: Build the preview installer (NSIS, current user)
+        run: CI=true ui/node_modules/.bin/tauri build --bundles nsis --config packaging/windows/bundle-runtime.conf.json
+      - name: The app starts and reports its version
+        run: |
+          version="$(node -p "require('./src-tauri/tauri.conf.json').version")"
+          ls target/release/bundle/nsis/
+          out="$(timeout 60 target/release/shadowcode.exe --version 2>&1 || true)"
+          echo "$out"
+          grep -Fx "ShadowCode $version" <<<"$out"
+      # Started from Explorer, Windows programs have no HOME (Git Bash sets
+      # one): the app must still find its folders.
+      - name: The app finds its folders without HOME
+        run: |
+          out="$(env -u HOME timeout 60 target/release/shadowcode.exe status 2>&1 || true)"
+          echo "$out"
+          ! grep -q "HOME is not set" <<<"$out"
+          test -d "$(cygpath -u "$LOCALAPPDATA")/ShadowCode/state"
+          test -d "$(cygpath -u "$APPDATA")/ShadowCode/config"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-preview-installer
+          path: target/release/bundle/nsis/*.exe
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14

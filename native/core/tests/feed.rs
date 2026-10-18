@@ -95,7 +95,8 @@ async fn feed_lists_approvals_jobs_and_the_events_that_change_them() {
         .unwrap()
         .iter()
         .any(|row| row["id"] == job["id"]));
-    tokio::time::timeout(Duration::from_secs(10), async {
+    // A refused local connection takes seconds on Windows, not milliseconds.
+    tokio::time::timeout(Duration::from_secs(30), async {
         loop {
             if wakeups.recv().await.unwrap()["type"] == "agent.completed" {
                 break;

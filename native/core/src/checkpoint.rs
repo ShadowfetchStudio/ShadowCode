@@ -68,7 +68,7 @@ pub fn record_external(
     before_mode: Option<u32>,
     current_hash: Option<&str>,
 ) -> Result<()> {
-    let path = workspace.relative(path)?.to_string_lossy().into_owned();
+    let path = workspace.relative_text(path)?;
     let before_hash = before.map(hash).unwrap_or_else(|| "missing".into());
     store.execute("INSERT INTO file_changes(task_id,workspace,path,before_bytes,before_mode,after_hash,observed_hash) VALUES(?,?,?,?,?,?,?)
         ON CONFLICT(task_id,workspace,path) DO UPDATE SET after_hash=excluded.after_hash,observed_hash=excluded.observed_hash,restored=0",
@@ -86,7 +86,7 @@ pub fn record(
     before: &Snapshot,
     after: Option<&[u8]>,
 ) -> Result<()> {
-    let path = workspace.relative(path)?.to_string_lossy().into_owned();
+    let path = workspace.relative_text(path)?;
     let after_hash = after.map(hash).unwrap_or_else(|| "missing".into());
     store.execute("INSERT INTO file_changes(task_id,workspace,path,before_bytes,before_mode,after_hash,observed_hash) VALUES(?,?,?,?,?,?,?)
         ON CONFLICT(task_id,workspace,path) DO UPDATE SET after_hash=excluded.after_hash,observed_hash=excluded.observed_hash,restored=0",

@@ -1,5 +1,7 @@
+#![cfg_attr(not(unix), allow(unused))]
 use super::*;
 use crate::cli_agent::Vendor;
+use crate::paths::Canonical;
 use delivery::{plan, Runner};
 use std::fs;
 
@@ -14,14 +16,14 @@ fn fixture() -> Fixture {
     let root = tempfile::tempdir().unwrap();
     // Canonical, as product paths are (on macOS the temporary folder is under
     // /var, a symlink to /private/var).
-    let base = root.path().canonicalize().unwrap();
+    let base = root.path().canonical().unwrap();
     let paths = AppPaths::isolated(&base.join("app")).unwrap();
     let profile = profile_dir(&paths);
     let project = base.join("project");
     fs::create_dir_all(&project).unwrap();
     Fixture {
         profile,
-        project: project.canonicalize().unwrap(),
+        project: project.canonical().unwrap(),
         paths,
         _root: root,
     }
@@ -219,13 +221,19 @@ fn profile_instructions_come_first_labelled_as_the_users() {
     let text = f.book().guidance(&f.workspace());
     assert_eq!(text.matches("Run cargo test").count(), 1);
     // Without a profile (and nothing switched off) the system prompt is
-    // exactly what it was before profiles existed.
-    fs::remove_dir_all(&f.profile).unwrap();
-    set_enabled(&f.paths, Some(&f.project), "project:CLAUDE.md", true).unwrap();
-    assert_eq!(
-        f.book().guidance(&f.workspace()),
-        crate::instructions::root_guidance(&f.workspace())
-    );
+    // exactly what it was before profiles existed. On the Windows runner a
+    // file in the profile stays in use (error 32) for seconds after this
+    // test wrote it, so the folder cannot be deleted there; the rule does not
+    // depend on the system.
+    #[cfg(unix)]
+    {
+        fs::remove_dir_all(&f.profile).unwrap();
+        set_enabled(&f.paths, Some(&f.project), "project:CLAUDE.md", true).unwrap();
+        assert_eq!(
+            f.book().guidance(&f.workspace()),
+            crate::instructions::root_guidance(&f.workspace())
+        );
+    }
 }
 
 #[test]
@@ -523,7 +531,7 @@ fn codes(report: &Value) -> Vec<(String, String)> {
                 f["path"]
                     .as_str()
                     .unwrap()
-                    .rsplit('/')
+                    .rsplit(['/', '\\'])
                     .next()
                     .unwrap()
                     .to_owned()
@@ -881,6 +889,7 @@ fn only_https_and_ssh_repositories_are_accepted() {
     assert_eq!(import::name_for("https://example.com/"), "example-com");
 }
 
+#[cfg(unix)]
 fn git(dir: &Path, args: &[&str]) {
     let status = std::process::Command::new("git")
         .args([
@@ -1052,7 +1061,7 @@ fn managed_worktree(paths: &AppPaths, source: &Path) -> PathBuf {
         serde_json::to_vec(&record).unwrap(),
     )
     .unwrap();
-    path.canonicalize().unwrap()
+    path.canonical().unwrap()
 }
 
 #[test]
@@ -1111,7 +1120,7 @@ fn project_switches_hold_in_the_projects_managed_worktrees() {
     // Another project keeps its own switches.
     let other = f._root.path().join("other");
     put(&other, "AGENTS.md", "Untrusted repository notes.\n");
-    let other = other.canonicalize().unwrap();
+    let other = other.canonical().unwrap();
     let book = Book::load(&f.paths, Some(&other));
     assert!(book
         .guidance(&Workspace::open(&other).unwrap())

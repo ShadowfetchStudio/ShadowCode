@@ -1,16 +1,49 @@
 use super::*;
-use std::os::unix::fs::{MetadataExt, PermissionsExt};
+
+/// Owned by this account and closed to everyone else (mode 700/600). On
+/// Windows the profile lives under the user's own %APPDATA%, whose ACL
+/// already limits it to that user.
+fn owner_only(m: &std::fs::Metadata) -> bool {
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::MetadataExt;
+        m.uid() == unsafe { libc::geteuid() } && m.mode() & 0o077 == 0
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = m;
+        true
+    }
+}
 
 fn check(id: &str, status: &str, label: &str, detail: impl Into<String>, fix: &str) -> Value {
     json!({"id":id,"status":status,"ok":status=="pass","label":label,"detail":detail.into(),"fix":if status=="pass"{""}else{fix}})
 }
 fn executable(name: &str) -> Option<PathBuf> {
+    // Windows finds `git` as git.exe (or a .cmd shim), with no execute bit.
+    let names: Vec<String> = if cfg!(windows) {
+        vec![
+            format!("{name}.exe"),
+            format!("{name}.cmd"),
+            name.to_owned(),
+        ]
+    } else {
+        vec![name.to_owned()]
+    };
     std::env::split_paths(&std::env::var_os("PATH").unwrap_or_default())
         .take(128)
-        .map(|dir| dir.join(name))
+        .flat_map(|dir| names.iter().map(move |name| dir.join(name)))
         .find(|path| {
-            std::fs::metadata(path)
-                .is_ok_and(|m| m.is_file() && m.permissions().mode() & 0o111 != 0)
+            std::fs::metadata(path).is_ok_and(|m| {
+                #[cfg(unix)]
+                let runnable = {
+                    use std::os::unix::fs::PermissionsExt;
+                    m.permissions().mode() & 0o111 != 0
+                };
+                #[cfg(not(unix))]
+                let runnable = true;
+                m.is_file() && runnable
+            })
         })
 }
 impl Service {
@@ -54,7 +87,7 @@ impl Service {
         let path = if path.is_empty() {
             String::new()
         } else {
-            workspace.relative(path)?.to_string_lossy().into_owned()
+            workspace.relative_text(path)?
         };
         let mut args = vec![
             "log".into(),
@@ -154,12 +187,8 @@ impl Service {
             ("data-directory", &paths.data),
             ("state-directory", &paths.state),
         ] {
-            let private = std::fs::symlink_metadata(path).is_ok_and(|m| {
-                m.is_dir()
-                    && !m.file_type().is_symlink()
-                    && m.uid() == unsafe { libc::geteuid() }
-                    && m.mode() & 0o077 == 0
-            });
+            let private = std::fs::symlink_metadata(path)
+                .is_ok_and(|m| m.is_dir() && !m.file_type().is_symlink() && owner_only(&m));
             checks.push(check(
                 name,
                 if private { "pass" } else { "warn" },
@@ -170,14 +199,7 @@ impl Service {
         }
         let secrets = paths.secrets_file();
         let secret_status = match std::fs::symlink_metadata(&secrets) {
-            Ok(m)
-                if m.is_file()
-                    && !m.file_type().is_symlink()
-                    && m.uid() == unsafe { libc::geteuid() }
-                    && m.mode() & 0o077 == 0 =>
-            {
-                "pass"
-            }
+            Ok(m) if m.is_file() && !m.file_type().is_symlink() && owner_only(&m) => "pass",
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => "pass",
             _ => "fail",
         };

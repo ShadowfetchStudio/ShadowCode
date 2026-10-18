@@ -3,6 +3,8 @@
 //! stderr and waits in `authenticate`; with one it answers `session/new` with
 //! a `model` config option. It records the launch environment. Nothing here
 //! starts the real server.
+// The vendor runner and its fake CLIs (shell scripts) are Unix-only so far.
+#![cfg(unix)]
 use serde_json::Value;
 use shadowcode_core::{
     approvals::ApprovalHub,

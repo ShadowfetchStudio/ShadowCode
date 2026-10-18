@@ -514,13 +514,18 @@ mod removal_tests {
                 "printf \"$PORT $SHADOWCODE_PORT\" > port.txt",
             )
             .unwrap();
-        tokio::time::timeout(Duration::from_secs(10), async {
-            while manager.get(&process.id).unwrap().status != "COMPLETED" {
+        let ended = tokio::time::timeout(Duration::from_secs(10), async {
+            loop {
+                let task = manager.get(&process.id).unwrap();
+                if task.status != "RUNNING" && task.status != "STARTING" {
+                    return task;
+                }
                 tokio::time::sleep(Duration::from_millis(20)).await;
             }
         })
         .await
         .expect("the process did not finish");
+        assert_eq!(ended.status, "COMPLETED", "{ended:?}");
         assert_eq!(
             std::fs::read_to_string(project.join("port.txt")).unwrap(),
             "4555 4555"

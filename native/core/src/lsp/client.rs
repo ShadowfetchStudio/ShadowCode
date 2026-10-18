@@ -341,6 +341,7 @@ impl Client {
             .args(&launch.args)
             .current_dir(root)
             .env_clear()
+            .envs(crate::process::platform_env())
             .envs(servers::environment(launch))
             .stdin(std::process::Stdio::piped())
             .stdout(std::process::Stdio::piped())

@@ -1,3 +1,4 @@
+#![cfg_attr(not(unix), allow(unused))]
 mod support;
 use serde_json::{json, Value};
 use shadowcode_core::{
@@ -179,6 +180,7 @@ async fn output_flood_keeps_a_live_bounded_tail_and_stop_preserves_the_cancelled
     service.engine.shutdown().await.unwrap();
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn completion_failure_graceful_stop_and_forced_child_cleanup_are_truthful() {
     let (_root, service) = setup(true);

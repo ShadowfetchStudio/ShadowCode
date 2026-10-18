@@ -1,0 +1,177 @@
+name: Windows release
+# ShadowCode for 64-bit Windows as a per-user NSIS installer
+# (ShadowCode_<version>_x64-setup.exe), attached to a published GitHub
+# release with the complete source of the bundled busybox-w32 (GPL-2.0, the
+# sandbox's shell) and a SHA-256 checksum file
+# (ShadowCode_<version>_windows.sha256) that scripts/install-windows.ps1
+# checks. The installer is not code-signed: GitHub is the distribution
+# channel. On pull requests that touch Windows packaging this only builds,
+# installs and smoke-tests it (nothing is uploaded).
+# release.yml dispatches this after it publishes (its GITHUB_TOKEN-made
+# release does not trigger `release: published`); a release published by
+# hand still does.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to build and attach (for example v2.3.0)'
+        required: true
+  pull_request:
+    paths:
+      - '.github/workflows/release-windows.yml'
+      - 'scripts/build-busybox-w32.sh'
+      - 'scripts/build-llama.cpp.sh'
+      - 'scripts/install-windows.ps1'
+      - 'packaging/windows/**'
+      - 'src-tauri/tauri.windows.conf.json'
+      - 'tools/busybox-w32.pin'
+      - 'tools/busybox-w32-patches/**'
+      - 'tools/llama.cpp.pin'
+permissions:
+  contents: read
+concurrency:
+  group: release-windows-${{ github.event.release.tag_name || inputs.tag || github.ref }}
+  cancel-in-progress: false
+env:
+  TAG: ${{ github.event.release.tag_name || inputs.tag || '' }}
+jobs:
+  busybox:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.TAG || github.sha }}
+          persist-credentials: false
+      - name: Cross compiler
+        run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64-x86-64 bzip2
+      - name: Build busybox-w32 and its complete source archive
+        run: |
+          version="$(node -p "require('./src-tauri/tauri.conf.json').version")"
+          bash scripts/build-busybox-w32.sh --source-archive "source/ShadowCode_${version}_busybox-w32-source.tar.gz"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: busybox-w32
+          path: packaging/busybox-w32/bin/
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-release-source
+          path: source/*.tar.gz
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+  build:
+    needs: busybox
+    runs-on: windows-latest
+    timeout-minutes: 150
+    env:
+      RUSTUP_TOOLCHAIN: '1.95.0'
+      CARGO_TERM_COLOR: never
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ env.TAG || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - name: Install the pinned Rust toolchain
+        run: rustup toolchain install 1.95.0 --profile minimal
+      - name: Require the tag to match the app version
+        if: env.TAG != ''
+        run: |
+          version="$(node -p "require('./src-tauri/tauri.conf.json').version")"
+          test "v$version" = "$TAG" || { echo "Tag $TAG does not match app version $version" >&2; exit 1; }
+      - run: npm --prefix ui ci
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: busybox-w32
+          path: packaging/busybox-w32/bin
+      - name: Build the local model runtime (llama.cpp, CPU)
+        run: bash scripts/build-llama.cpp.sh --no-user-install --cpu-only
+      - name: Build the installer (NSIS, current user)
+        env:
+          SHADOWCODE_COMMIT: ${{ github.sha }}
+          CARGO_PROFILE_RELEASE_DEBUG: '0'
+        run: CI=true ui/node_modules/.bin/tauri build --bundles nsis --config packaging/windows/bundle-runtime.conf.json
+      - name: Install it silently and smoke-test the installed app
+        run: |
+          version="$(node -p "require('./src-tauri/tauri.conf.json').version")"
+          setup="target/release/bundle/nsis/ShadowCode_${version}_x64-setup.exe"
+          test -f "$setup"
+          # Through the published installer script (Windows PowerShell 5.1),
+          # from this build's files instead of a download.
+          setup_dir="$(mktemp -d)"
+          cp "$setup" "$setup_dir/"
+          (cd "$setup_dir" && sha256sum "ShadowCode_${version}_x64-setup.exe" > "ShadowCode_${version}_windows.sha256")
+          SHADOWCODE_SETUP_DIR="$(cygpath -w "$setup_dir")" powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/install-windows.ps1
+          powershell.exe -NoProfile -Command "[Environment]::GetEnvironmentVariable('Path','User')" | tr -d '\r' | tr ';' '\n' | grep -Fix "$(cygpath -w "$LOCALAPPDATA")\ShadowCode"
+          app="$(cygpath -u "$LOCALAPPDATA")/ShadowCode"
+          ls "$app"
+          test -f "$app/shadowcode.exe"
+          test -f "$app/busybox/busybox.exe"
+          test -f "$app/busybox/LICENSE"
+          test -f "$app/llama.cpp/llama-server.exe"
+          "$app/llama.cpp/llama-server.exe" --version
+          out="$(timeout 60 "$app/shadowcode.exe" --version 2>&1 || true)"
+          echo "$out"
+          grep -Fx "ShadowCode $version" <<<"$out"
+          profile="$(mktemp -d)"
+          timeout 120 "$app/shadowcode.exe" --profile "$(cygpath -w "$profile")" doctor --json > "$profile/doctor.json" || true
+          node -e "const d=require(process.argv[1]); const c=(d.checks||[]).find(x=>x.id==='appcontainer'); if(!c||c.status!=='pass') throw new Error('Windows sandbox check: '+JSON.stringify(c))" "$(cygpath -w "$profile/doctor.json")"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-installer
+          path: target/release/bundle/nsis/*-setup.exe
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 7
+  attach:
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: windows-installer
+          path: windows
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: windows-release-source
+          path: windows
+      - name: Attach the installer, the busybox source and their checksums without replacing anything
+        run: |
+          version="${TAG#v}"
+          cd windows
+          ls
+          setup="ShadowCode_${version}_x64-setup.exe"
+          source="ShadowCode_${version}_busybox-w32-source.tar.gz"
+          sums="ShadowCode_${version}_windows.sha256"
+          test -f "$setup"
+          test -f "$source"
+          sha256sum "$setup" "$source" > "$sums"
+          cat "$sums"
+          existing="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets -q '.assets[].name')"
+          for file in "$setup" "$source" "$sums"; do
+            if grep -Fxq "$file" <<<"$existing"; then
+              # Never overwrite a published file: an existing one must match.
+              gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$file" --output "existing-$file"
+              cmp -s "$file" "existing-$file" || { echo "$file on the release differs from this build; not replacing it" >&2; exit 1; }
+            else
+              gh release upload "$TAG" "$file" --repo "$GITHUB_REPOSITORY"
+            fi
+          done
