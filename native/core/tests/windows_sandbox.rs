@@ -7,7 +7,11 @@ use shadowcode_core::{
     config::ShellNetwork,
     sandbox::{self, ShellPolicy},
 };
-use std::{fs, path::Path, process::Command};
+use std::{fs, path::Path, process::Command, sync::Mutex};
+
+/// One test at a time: a grant rewrites folder permissions, which must not
+/// change under a command another test is running in the container.
+static SERIAL: Mutex<()> = Mutex::new(());
 
 fn policy(require: bool) -> ShellPolicy {
     ShellPolicy {
@@ -39,6 +43,9 @@ fn run(workspace: &Path, command: &str) -> (i32, String) {
 
 #[test]
 fn commands_write_the_project_but_cannot_read_the_home_folder_or_write_outside() {
+    let _serial = SERIAL
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     let home = shadowcode_core::paths::home_dir().unwrap();
     // A secret in the home folder, outside the project.
     let secret_dir = tempfile::Builder::new()
@@ -87,10 +94,15 @@ fn dunce_path(path: &Path) -> std::path::PathBuf {
 /// busybox's /dev/null is the handle the launcher opened for it.
 #[test]
 fn system_programs_and_busybox_start_in_the_container() {
+    let _serial = SERIAL
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     std::env::set_var(
         "SHADOWCODE_SANDBOX_LAUNCHER",
         env!("CARGO_BIN_EXE_shadowcode-sandbox"),
     );
+    // The doctor's check: it also lets the container read busybox's folder.
+    sandbox::appcontainer::probe().unwrap();
     let sid = sandbox::appcontainer::container_sid().unwrap();
     let system = std::env::var("SystemRoot").unwrap();
     let busybox = std::env::var("SHADOWCODE_BUSYBOX").expect("SHADOWCODE_BUSYBOX");
