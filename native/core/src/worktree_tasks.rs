@@ -1205,7 +1205,8 @@ mod tests {
             .unwrap()
             .unwrap();
         assert_eq!(record.id, f.record.id);
-        assert!(discard(&f.engine, &f.record.id).await.unwrap().removed);
+        let closed = discard(&f.engine, &f.record.id).await.unwrap();
+        assert!(closed.removed, "{:?}", closed.notes);
         f.engine.shutdown().await.unwrap();
     }
 
@@ -1267,7 +1268,8 @@ mod tests {
             b"independent bytes\n"
         );
         drop(held);
-        assert!(discard(&f.engine, &f.record.id).await.unwrap().removed);
+        let closed = discard(&f.engine, &f.record.id).await.unwrap();
+        assert!(closed.removed, "{:?}", closed.notes);
         f.engine.shutdown().await.unwrap();
     }
 
@@ -1339,7 +1341,7 @@ mod tests {
         );
         fs::rename(&preserved, &f.source).unwrap();
         let closed = discard(&f.engine, &f.record.id).await.unwrap();
-        assert!(closed.removed && !closed.open());
+        assert!(closed.removed && !closed.open(), "{:?}", closed.notes);
         assert_eq!(command(&f.source, &["rev-parse", "HEAD"]), before_head);
         assert_eq!(fs::read(f.source.join(".git/index")).unwrap(), source_index);
         assert!(!f.record.worktree.exists());
@@ -1396,7 +1398,8 @@ mod tests {
             b"source bytes\n"
         );
         save(&f.engine.store(), &f.record).unwrap();
-        assert!(discard(&f.engine, &f.record.id).await.unwrap().removed);
+        let closed = discard(&f.engine, &f.record.id).await.unwrap();
+        assert!(closed.removed, "{:?}", closed.notes);
         f.engine.shutdown().await.unwrap();
     }
 
@@ -1433,7 +1436,8 @@ mod tests {
             b"source bytes\n"
         );
         store.set_native_meta(&key, &before).unwrap();
-        assert!(discard(&f.engine, &f.record.id).await.unwrap().removed);
+        let closed = discard(&f.engine, &f.record.id).await.unwrap();
+        assert!(closed.removed, "{:?}", closed.notes);
         f.engine.shutdown().await.unwrap();
     }
 
@@ -1507,7 +1511,8 @@ mod tests {
         );
         assert!(load(&f.engine.store(), &f.record.id).unwrap().open());
         fs::write(&record_path, original).unwrap();
-        assert!(discard(&f.engine, &f.record.id).await.unwrap().removed);
+        let closed = discard(&f.engine, &f.record.id).await.unwrap();
+        assert!(closed.removed, "{:?}", closed.notes);
         f.engine.shutdown().await.unwrap();
     }
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -1583,7 +1588,8 @@ mod tests {
             Some(f.record.id.as_str())
         );
         fs::rename(&preserved, &f.source).unwrap();
-        assert!(discard(&f.engine, &f.record.id).await.unwrap().removed);
+        let closed = discard(&f.engine, &f.record.id).await.unwrap();
+        assert!(closed.removed, "{:?}", closed.notes);
         assert!(!f.source.join("must-not-run.txt").exists());
         f.engine.shutdown().await.unwrap();
     }
@@ -1642,7 +1648,8 @@ mod tests {
         let did_not_run = !f.source.join("must-not-run.txt").exists()
             && !f.record.worktree.join("must-not-run.txt").exists();
         f.engine.shutdown().await.unwrap();
-        assert!(result.unwrap().removed);
+        let result = result.unwrap();
+        assert!(result.removed, "{:?}", result.notes);
         assert_eq!(
             statuses,
             vec!["cancelled", "cancelled"],
@@ -1731,9 +1738,14 @@ mod tests {
         );
         drop(held);
         let retried = discard(&f.engine, &prepared.id).await.unwrap();
-        assert!(retried.removed && !prepared.worktree.exists());
+        assert!(
+            retried.removed && !prepared.worktree.exists(),
+            "{:?}",
+            retried.notes
+        );
         assert!(!f.source.join("must-not-run.txt").exists());
-        assert!(discard(&f.engine, &f.record.id).await.unwrap().removed);
+        let closed = discard(&f.engine, &f.record.id).await.unwrap();
+        assert!(closed.removed, "{:?}", closed.notes);
         f.engine.shutdown().await.unwrap();
     }
 
@@ -1745,7 +1757,8 @@ mod tests {
         crate::symbol_index::ensure_index(&f.record.worktree, &[], true).unwrap();
         let index = crate::symbol_index::index_path(&f.record.worktree);
         assert!(index.exists());
-        assert!(discard(&f.engine, &f.record.id).await.unwrap().removed);
+        let closed = discard(&f.engine, &f.record.id).await.unwrap();
+        assert!(closed.removed, "{:?}", closed.notes);
         // Back in the project, its turns no longer get the task's port.
         assert!(store
             .session_meta(&f.record.session_id, keys::TASK_ENV)
@@ -1789,7 +1802,8 @@ mod tests {
         abandon(&f.engine, prepared.clone()).await;
         assert!(marker.exists(), "services setup started were left running");
         assert!(!prepared.worktree.exists());
-        assert!(discard(&f.engine, &f.record.id).await.unwrap().removed);
+        let closed = discard(&f.engine, &f.record.id).await.unwrap();
+        assert!(closed.removed, "{:?}", closed.notes);
         f.engine.shutdown().await.unwrap();
     }
 
@@ -1821,7 +1835,7 @@ mod tests {
             .await
             .expect("Discard waited for another task's setup")
             .unwrap();
-        assert!(closed.removed);
+        assert!(closed.removed, "{:?}", closed.notes);
         fs::write(&gate, "").unwrap();
         let prepared = tokio::time::timeout(Duration::from_secs(10), preparing)
             .await
