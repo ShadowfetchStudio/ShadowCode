@@ -31,7 +31,8 @@
 #     through the Visual Studio generator (the variants need GCC/Clang-style
 #     target flags, as upstream's own Windows builds do), without OpenMP, plus
 #     a Vulkan module when the Vulkan SDK is installed (VULKAN_SDK with glslc).
-#     Needs Visual Studio 2022 with its C++ and Clang tools, and cmake.
+#     Needs Visual Studio (2022 or newer) with its C++ and Clang tools, and
+#     cmake.
 #
 # Outputs: packaging/llama.cpp/bin (bundled into the AppImage, the deb, the
 # macOS app and the Windows installer) and, unless --no-user-install is given,
@@ -98,7 +99,8 @@ if [[ -z "$CMAKE" ]]; then
 fi
 GENERATOR=()
 if [[ "$WINDOWS" == "1" ]]; then
-  GENERATOR=(-G "Visual Studio 17 2022" -A x64 -T ClangCL)
+  # The newest Visual Studio installed (CMake's default generator here).
+  GENERATOR=(-A x64 -T ClangCL)
 elif command -v ninja >/dev/null 2>&1; then
   GENERATOR=(-G Ninja)
 fi
