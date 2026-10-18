@@ -127,6 +127,15 @@ jobs:
           out="$(timeout 60 target/release/shadowcode.exe --version 2>&1 || true)"
           echo "$out"
           grep -Fx "ShadowCode $version" <<<"$out"
+      # Started from Explorer, Windows programs have no HOME (Git Bash sets
+      # one): the app must still find its folders.
+      - name: The app finds its folders without HOME
+        run: |
+          out="$(env -u HOME timeout 60 target/release/shadowcode.exe status 2>&1 || true)"
+          echo "$out"
+          ! grep -q "HOME is not set" <<<"$out"
+          test -d "$(cygpath -u "$LOCALAPPDATA")/ShadowCode/state"
+          test -d "$(cygpath -u "$APPDATA")/ShadowCode/config"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: windows-preview-installer

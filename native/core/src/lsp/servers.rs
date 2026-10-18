@@ -153,7 +153,7 @@ pub struct Launch {
 
 /// Usual per-user install folders that GUI sessions often omit from PATH.
 pub fn extra_dirs() -> Vec<PathBuf> {
-    let Some(home) = std::env::var_os("HOME").map(PathBuf::from) else {
+    let Some(home) = crate::paths::home_dir() else {
         return Vec::new();
     };
     vec![

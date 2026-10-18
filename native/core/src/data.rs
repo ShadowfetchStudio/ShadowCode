@@ -140,8 +140,8 @@ fn private_file(_path: &Path) -> Result<()> {
 
 /// `~/x` to the home folder; other paths unchanged.
 fn expand(path: &Path) -> PathBuf {
-    match (path.strip_prefix("~"), std::env::var_os("HOME")) {
-        (Ok(rest), Some(home)) => PathBuf::from(home).join(rest),
+    match (path.strip_prefix("~"), crate::paths::home_dir()) {
+        (Ok(rest), Some(home)) => home.join(rest),
         _ => path.to_path_buf(),
     }
 }

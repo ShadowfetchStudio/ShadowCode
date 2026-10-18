@@ -192,7 +192,7 @@ impl Client {
         let mut command = Command::new(&spec.command[0]);
         // Do not pass the application's provider credentials, control-socket
         // variables, or dynamic-library overrides to an external integration.
-        command.env_clear();
+        command.env_clear().envs(crate::process::platform_env());
         for key in [
             "PATH",
             "HOME",

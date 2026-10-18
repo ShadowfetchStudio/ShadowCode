@@ -37,9 +37,7 @@ fn target_of(vendor: Vendor) -> Option<&'static str> {
 }
 
 fn home() -> Result<PathBuf> {
-    Ok(PathBuf::from(
-        std::env::var_os("HOME").context("HOME is not set")?,
-    ))
+    crate::paths::home_dir().context("HOME is not set")
 }
 
 /// The CLI's own folder: `CLAUDE_CONFIG_DIR` / `CODEX_HOME`, or the default.

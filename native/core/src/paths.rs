@@ -55,10 +55,19 @@ impl Drop for ProfileLock {
     }
 }
 
+/// The user's home folder. Windows names it `USERPROFILE`; a program started
+/// from Explorer has no `HOME` (Git Bash sets one).
+pub fn home_dir() -> Option<PathBuf> {
+    #[cfg(windows)]
+    let home = env::var_os("USERPROFILE").or_else(|| env::var_os("HOME"));
+    #[cfg(not(windows))]
+    let home = env::var_os("HOME");
+    home.map(PathBuf::from)
+}
+
 impl AppPaths {
     pub fn discover() -> Result<Self> {
-        let home = env::var_os("HOME").context("HOME is not set")?;
-        let home = PathBuf::from(home);
+        let home = home_dir().context("HOME is not set")?;
         // macOS keeps app settings and history under ~/Library; an XDG
         // variable someone set on purpose still wins there too.
         #[cfg(target_os = "macos")]
@@ -68,7 +77,25 @@ impl AppPaths {
             ".local/share" => home.join("Library/Application Support/ShadowCode/data"),
             _ => home.join("Library/Application Support/ShadowCode/state"),
         };
-        #[cfg(not(target_os = "macos"))]
+        // Windows: settings roam with the account (%APPDATA%); history,
+        // models and caches stay on this computer (%LOCALAPPDATA%).
+        #[cfg(windows)]
+        let fallback = |base: &str| {
+            let folder = |key: &str, default: &str| {
+                env::var_os(key)
+                    .map(PathBuf::from)
+                    .filter(|p| p.is_absolute())
+                    .unwrap_or_else(|| home.join(default))
+                    .join("ShadowCode")
+            };
+            match base {
+                ".config" => folder("APPDATA", "AppData/Roaming").join("config"),
+                ".local/share" => folder("LOCALAPPDATA", "AppData/Local").join("data"),
+                ".cache" => folder("LOCALAPPDATA", "AppData/Local").join("cache"),
+                _ => folder("LOCALAPPDATA", "AppData/Local").join("state"),
+            }
+        };
+        #[cfg(all(unix, not(target_os = "macos")))]
         let fallback = |base: &str| home.join(base).join("shadow-agent");
         let xdg = |key: &str, base: &str| {
             env::var_os(key)

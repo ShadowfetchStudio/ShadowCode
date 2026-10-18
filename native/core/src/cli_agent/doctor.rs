@@ -56,6 +56,7 @@ fn sanitized_command(
         .stderr(Stdio::piped())
         .kill_on_drop(true)
         .env_clear()
+        .envs(crate::process::platform_env())
         .env("NO_COLOR", "1")
         .env("TERM", "dumb");
     for name in [
@@ -414,9 +415,7 @@ fn resolve_with_path(configured: &str, path_env: Option<&OsStr>) -> Option<PathB
 
 /// All three vendor checks for the running user.
 pub async fn checks(config: &CliAgentsConfig) -> Vec<Value> {
-    let home = std::env::var_os("HOME")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("/nonexistent"));
+    let home = crate::paths::home_dir().unwrap_or_else(|| PathBuf::from("/nonexistent"));
     let mut out = Vec::new();
     for vendor in Vendor::ALL {
         out.push(check_vendor(vendor, config, &home, None).await);

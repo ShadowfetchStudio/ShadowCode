@@ -522,23 +522,11 @@ pub fn runtime_env(binary: &Path) -> Vec<(String, std::ffi::OsString)> {
         }
     }
     // Windows: system DLLs (and the Vulkan loader) need these to load.
-    #[cfg(windows)]
-    for name in [
-        "SystemRoot",
-        "windir",
-        "SystemDrive",
-        "TEMP",
-        "TMP",
-        "USERPROFILE",
-        "LOCALAPPDATA",
-        "APPDATA",
-        "NUMBER_OF_PROCESSORS",
-        "PROCESSOR_ARCHITECTURE",
-    ] {
-        if let Some(value) = std::env::var_os(name) {
-            env.push((name.to_owned(), value));
-        }
-    }
+    env.extend(
+        crate::process::platform_env()
+            .into_iter()
+            .map(|(name, value)| (name.to_owned(), value)),
+    );
     // Windows finds a program's DLLs beside it without help.
     #[cfg(unix)]
     if let Some(dir) = binary.parent() {

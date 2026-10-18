@@ -305,6 +305,43 @@ impl Drop for Job {
     }
 }
 
+/// Variables a Windows program needs whatever its purpose: without
+/// `SystemRoot` even networking (Winsock) fails to start. Every command
+/// started from a cleared environment keeps these; empty on Unix.
+pub(crate) fn platform_env() -> Vec<(&'static str, std::ffi::OsString)> {
+    #[cfg(windows)]
+    const NAMES: &[&str] = &[
+        "SystemRoot",
+        "windir",
+        "SystemDrive",
+        "ComSpec",
+        "PATHEXT",
+        "TEMP",
+        "TMP",
+        "USERPROFILE",
+        "HOMEDRIVE",
+        "HOMEPATH",
+        "APPDATA",
+        "LOCALAPPDATA",
+        "ProgramData",
+        "ProgramFiles",
+        "ProgramFiles(x86)",
+        "ProgramW6432",
+        "CommonProgramFiles",
+        "NUMBER_OF_PROCESSORS",
+        "PROCESSOR_ARCHITECTURE",
+        "OS",
+        "USERNAME",
+        "COMPUTERNAME",
+    ];
+    #[cfg(not(windows))]
+    const NAMES: &[&str] = &[];
+    NAMES
+        .iter()
+        .filter_map(|name| std::env::var_os(name).map(|value| (*name, value)))
+        .collect()
+}
+
 struct ProcessGroup {
     pid: u32,
     #[cfg(windows)]
@@ -463,7 +500,8 @@ async fn run_internal(
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .kill_on_drop(true)
-        .env_clear();
+        .env_clear()
+        .envs(platform_env());
     for name in [
         "PATH",
         "HOME",

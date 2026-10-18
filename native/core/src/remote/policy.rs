@@ -118,7 +118,7 @@ fn contains_placeholder(value: &Value) -> bool {
 }
 
 fn expand(text: &str) -> PathBuf {
-    let home = std::env::var_os("HOME").map(PathBuf::from);
+    let home = crate::paths::home_dir();
     match (text, home) {
         ("~", Some(home)) => home,
         (t, Some(home)) if t.starts_with("~/") => home.join(&t[2..]),

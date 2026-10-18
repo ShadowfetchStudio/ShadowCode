@@ -29,7 +29,7 @@ needed for phases 1 and 2.
 | Terminals | PTY | ConPTY |
 | Engine connection | Unix socket | Named pipe restricted to the user |
 | API keys | Secret Service, Keychain | Windows Credential Manager |
-| Settings and history | XDG folders, `~/Library` | `%APPDATA%\ShadowCode` (cache in `%LOCALAPPDATA%`) |
+| Settings and history | XDG folders, `~/Library` | Settings in `%APPDATA%\ShadowCode\config` (they roam with the account); history, models and caches in `%LOCALAPPDATA%\ShadowCode` |
 | Local models | Vulkan, Metal | Vulkan and CPU builds of llama.cpp |
 | Installer and updates | AppImage, deb, Flatpak, dmg | `.msi`/`.exe` from Tauri; the update notice names it |
 

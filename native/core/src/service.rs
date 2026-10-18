@@ -509,9 +509,11 @@ fn query_limit(query: &HashMap<String, String>, default: usize, max: usize) -> u
 fn expand_path(path: &str) -> Result<PathBuf> {
     ensure!(!path.is_empty(), "Project path required");
     Ok(if path == "~" {
-        PathBuf::from(std::env::var_os("HOME").context("HOME is not set")?)
+        crate::paths::home_dir().context("HOME is not set")?
     } else if let Some(tail) = path.strip_prefix("~/") {
-        PathBuf::from(std::env::var_os("HOME").context("HOME is not set")?).join(tail)
+        crate::paths::home_dir()
+            .context("HOME is not set")?
+            .join(tail)
     } else {
         PathBuf::from(path)
     })

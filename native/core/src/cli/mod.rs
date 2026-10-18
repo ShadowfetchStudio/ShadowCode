@@ -97,9 +97,11 @@ impl Options {
 fn expand(path: &Path) -> Result<PathBuf> {
     let text = path.to_string_lossy();
     Ok(if text == "~" {
-        PathBuf::from(std::env::var_os("HOME").context("HOME is not set")?)
+        crate::paths::home_dir().context("HOME is not set")?
     } else if let Some(rest) = text.strip_prefix("~/") {
-        PathBuf::from(std::env::var_os("HOME").context("HOME is not set")?).join(rest)
+        crate::paths::home_dir()
+            .context("HOME is not set")?
+            .join(rest)
     } else {
         path.into()
     })
@@ -386,7 +388,7 @@ async fn acp(
         options.workspace.as_deref().map(expand).transpose()?,
         std::env::current_dir().ok(),
         paths.remembered_workspace(),
-        std::env::var_os("HOME").map(PathBuf::from),
+        crate::paths::home_dir(),
     ]
     .into_iter()
     .flatten()
