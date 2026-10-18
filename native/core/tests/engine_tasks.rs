@@ -2524,14 +2524,14 @@ async fn timings_separate_model_attempts_from_check_processes_and_survive_restar
         .find(|e| e["type"] == "agent.completed")
         .unwrap();
     let expected = serde_json::to_value(t).unwrap();
-    assert_eq!(completed["payload"]["timings"], expected);
+    same_timings(&completed["payload"]["timings"], &expected);
     let paths = engine.paths().clone();
     engine.shutdown().await.unwrap();
     drop(engine);
     let reopened = Engine::open(paths).unwrap();
-    assert_eq!(
-        serde_json::to_value(reopened.job(&job.id).unwrap().unwrap().timings).unwrap(),
-        expected
+    same_timings(
+        &serde_json::to_value(reopened.job(&job.id).unwrap().unwrap().timings).unwrap(),
+        &expected,
     );
     reopened.shutdown().await.unwrap();
 }
@@ -3773,4 +3773,22 @@ async fn a_final_state_that_cannot_be_saved_still_ends_the_task() {
         .is_none());
     assert!(engine.delete_session(&job.session_id).unwrap());
     engine.shutdown().await.unwrap();
+}
+
+/// SQLite keeps JSON reals to 15 significant digits, so a stored time may
+/// differ from the in-memory one in its last bit.
+fn same_timings(stored: &Value, expected: &Value) {
+    let (stored, expected) = (stored.as_object().unwrap(), expected.as_object().unwrap());
+    assert_eq!(
+        stored.keys().collect::<Vec<_>>(),
+        expected.keys().collect::<Vec<_>>()
+    );
+    for (key, value) in expected {
+        match (value.as_f64(), stored[key].as_f64()) {
+            (Some(a), Some(b)) if value.is_f64() => {
+                assert!((a - b).abs() <= a.abs() * 1e-12, "{key}: {a} vs {b}")
+            }
+            _ => assert_eq!(&stored[key], value, "{key}"),
+        }
+    }
 }

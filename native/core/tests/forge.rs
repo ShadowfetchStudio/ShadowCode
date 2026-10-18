@@ -156,6 +156,7 @@ async fn call(service: &Service, method: &str, path: &str, body: Value) -> anyho
         .await
 }
 
+#[cfg(unix)]
 #[tokio::test(flavor = "multi_thread")]
 async fn branch_commit_push_and_pull_request_with_checks() {
     let f = setup("http://127.0.0.1:9/v1");

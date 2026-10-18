@@ -512,7 +512,7 @@ async fn a_new_worktree_gets_its_files_its_setup_its_own_port_and_a_teardown() {
         json!({"setup":{
             "copy":[".env"],
             "setup":["printf \"$PORT\" > port.txt"],
-            "teardown":[format!("touch {}", marker.display())],
+            "teardown":[format!("touch {}", shadowcode_core::paths::slash(&marker))],
             "port_start":41000,
             "port_end":41999
         }}),

@@ -1,3 +1,4 @@
+#![cfg_attr(not(unix), allow(unused))]
 // Regression tests for the remote-access defects found in the 2.0 audit.
 // Real HTTP, temporary profiles, and fake secrets only.
 use serde_json::{json, Value};
@@ -187,6 +188,7 @@ async fn remote_cannot_open_a_private_profile_ancestor_or_inherit_one() {
     f.manager.stop();
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn remote_quoted_git_paths_hide_secret_file_contents() {
     let f = fixture().await;

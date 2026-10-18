@@ -306,6 +306,7 @@ fn git(path: &Path, args: &[&str]) {
         String::from_utf8_lossy(&out.stderr)
     );
 }
+#[cfg(unix)]
 #[tokio::test]
 async fn change_history_uses_literal_paths_and_disables_external_diff_helpers() {
     let (_root, service) = fixture();

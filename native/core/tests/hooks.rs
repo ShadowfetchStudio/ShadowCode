@@ -1,3 +1,4 @@
+#![cfg_attr(not(unix), allow(unused))]
 mod support;
 use serde_json::{json, Value};
 use shadowcode_core::{
@@ -520,6 +521,7 @@ async fn noisy_completion_checks_leave_room_for_the_model_to_repair() {
     service.engine.shutdown().await.unwrap();
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn hook_timeout_output_flood_and_cancellation_stop_owned_processes() {
     let (_root, service) = fixture("http://127.0.0.1:1/v1");
@@ -598,6 +600,7 @@ impl PathCheck {
     }
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn engine_shutdown_cancels_completion_hooks_before_releasing_the_job() {
     let server = support::server(|_, _| (response("ready", json!([])), Duration::ZERO)).await;

@@ -505,7 +505,9 @@ async fn missing_checkout_rescue_retains_commits_index_and_original_registration
     assert_eq!(fs::read(record_file).unwrap(), record_bytes);
     assert_eq!(git(&project, &["rev-parse", &record.branch]), commit);
     assert!(
-        git(&project, &["worktree", "list", "--porcelain"]).contains(record.path.to_str().unwrap())
+        // Git lists paths with `/` on Windows too.
+        git(&project, &["worktree", "list", "--porcelain"])
+            .contains(&shadowcode_core::paths::slash(&record.path))
     );
     assert_eq!(
         fs::read_to_string(saved.join("tracked.txt")).unwrap(),
