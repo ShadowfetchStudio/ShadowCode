@@ -50,5 +50,27 @@ needed for phases 1 and 2.
     and linking exported rules.
   - Integration tests built on Unix sockets, FIFOs, symlinks, file modes or
     the fake vendor CLIs (shell scripts) are Unix-only for now.
-- Phase 2 (started): the CI job runs the engine's unit tests on Windows and
-  lists the failures; it does not block yet.
+- Phase 2 (in progress): the CI job runs the engine's unit tests on Windows
+  and lists the failures; it does not block yet. 581 of 596 passed on
+  October 17 (554 of 605 on the first run). Fixed along the way:
+  - Randomness for remote-access tokens and the local server key comes
+    from the system (getrandom), not `/dev/urandom`.
+  - Canonical paths have no `\\?\` prefix (`paths::Canonical`, dunce), and
+    project paths shown to the agent and in approvals use `/`
+    (`paths::slash`); with `\`, deleting `.git\objects` was not recognized
+    as unrecoverable.
+  - Files are flushed and re-timed through a handle that may write, and
+    folders are opened with backup semantics: Windows refuses otherwise
+    ("Access is denied").
+  - Commands and worktree setup scripts run in a job object, so cancelling,
+    a timeout or closing ShadowCode ends everything they started.
+  - Installed and free memory come from `GlobalMemoryStatusEx`; model file
+    identity uses the volume serial, file index and change time.
+  - Claude skill files are copied, not linked, beside a staged `SKILL.md`.
+- Still open in phase 2: removing managed worktree checkouts (the careful
+  cleanup relies on directory handles and no-replace renames; it reports
+  "not available on Windows yet" and keeps the checkout), the integration
+  tests, and the vendor runner (subscription CLIs).
+- Preview installer: the Windows job also builds an unsigned NSIS
+  installer (per-user) and checks that the app reports its version. It is a
+  14-day CI artifact, not a release.
