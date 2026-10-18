@@ -440,6 +440,109 @@ fn quote(arg: &OsStr, out: &mut Vec<u16>) {
     out.push(b'"' as u16);
 }
 
+/// Let the container use this process's window station and desktop when they
+/// are not the interactive ones (a service or a CI runner). Every program
+/// loads user32, which fails to start (0xC0000142) without them; on the
+/// interactive desktop containers already have that access, and nothing is
+/// changed there.
+fn allow_window_station(container: &Sid) -> Result<()> {
+    use windows_sys::Win32::{
+        Security::Authorization::{GetSecurityInfo, SetSecurityInfo, SE_WINDOW_OBJECT},
+        System::{
+            StationsAndDesktops::{
+                GetProcessWindowStation, GetThreadDesktop, GetUserObjectInformationW, UOI_NAME,
+            },
+            Threading::GetCurrentThreadId,
+        },
+    };
+    const GENERIC_READ: u32 = 0x8000_0000;
+    const GENERIC_WRITE: u32 = 0x4000_0000;
+    const GENERIC_EXECUTE: u32 = 0x2000_0000;
+    // SAFETY: handles owned by the system for this process; not closed.
+    let (station, desktop) = unsafe {
+        (
+            GetProcessWindowStation(),
+            GetThreadDesktop(GetCurrentThreadId()),
+        )
+    };
+    ensure!(
+        !station.is_null() && !desktop.is_null(),
+        "No window station"
+    );
+    let mut name = [0u16; 256];
+    let mut needed = 0u32;
+    // SAFETY: the buffer's size is passed in bytes.
+    let named = unsafe {
+        GetUserObjectInformationW(
+            station,
+            UOI_NAME,
+            name.as_mut_ptr().cast(),
+            std::mem::size_of_val(&name) as u32,
+            &mut needed,
+        )
+    } != 0;
+    let length = name.iter().position(|&c| c == 0).unwrap_or(0);
+    if named && String::from_utf16_lossy(&name[..length]).eq_ignore_ascii_case("WinSta0") {
+        return Ok(());
+    }
+    for handle in [station, desktop] {
+        let mut dacl: *mut ACL = std::ptr::null_mut();
+        let mut descriptor: *mut c_void = std::ptr::null_mut();
+        // SAFETY: as in grant(), on a window object's handle.
+        let status = unsafe {
+            let status = GetSecurityInfo(
+                handle,
+                SE_WINDOW_OBJECT,
+                DACL_SECURITY_INFORMATION,
+                std::ptr::null_mut(),
+                std::ptr::null_mut(),
+                &mut dacl,
+                std::ptr::null_mut(),
+                &mut descriptor,
+            );
+            if status != 0 {
+                status
+            } else {
+                let entry = EXPLICIT_ACCESS_W {
+                    grfAccessPermissions: GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE,
+                    grfAccessMode: GRANT_ACCESS,
+                    grfInheritance: 0,
+                    Trustee: TRUSTEE_W {
+                        pMultipleTrustee: std::ptr::null_mut(),
+                        MultipleTrusteeOperation: NO_MULTIPLE_TRUSTEE,
+                        TrusteeForm: TRUSTEE_IS_SID,
+                        TrusteeType: TRUSTEE_IS_UNKNOWN,
+                        ptstrName: container.0.cast(),
+                    },
+                };
+                let mut merged: *mut ACL = std::ptr::null_mut();
+                let mut status = SetEntriesInAclW(1, &entry, dacl, &mut merged);
+                if status == 0 {
+                    status = SetSecurityInfo(
+                        handle,
+                        SE_WINDOW_OBJECT,
+                        DACL_SECURITY_INFORMATION,
+                        std::ptr::null_mut(),
+                        std::ptr::null_mut(),
+                        merged,
+                        std::ptr::null(),
+                    );
+                }
+                if !merged.is_null() {
+                    LocalFree(merged.cast());
+                }
+                LocalFree(descriptor);
+                status
+            }
+        };
+        ensure!(
+            status == 0,
+            "Cannot open the window station to the sandbox ({status})"
+        );
+    }
+    Ok(())
+}
+
 /// Entry point of the launcher: `--sid S --network off|on [--env K=V]… --
 /// program args…`. Starts the program in the container with this process's
 /// standard handles, waits, and returns its exit code (125: not started).
@@ -478,6 +581,7 @@ fn launch(args: Vec<OsString>) -> Result<i32> {
     }
     ensure!(!command.is_empty(), "No command to run");
     let container = Sid::parse(&sid.context("--sid is required")?)?;
+    allow_window_station(&container)?;
     let capabilities: Vec<Sid> = if network {
         NETWORK_CAPABILITIES
             .iter()

@@ -292,9 +292,17 @@ impl FakeCodex {
         {
             fs::write(dir.join("codex.py"), FAKE_CODEX).unwrap();
             // Its errors are kept and shown when the test ends.
+            // The interpreter by its full path: the shim must not depend on
+            // what PATH the vendor process sees.
+            let python = std::env::var_os("PATH")
+                .and_then(|path| shadowcode_core::paths::find_program_in("python", &path))
+                .expect("python must be on PATH to run the fake Codex");
             fs::write(
                 dir.join("codex.cmd"),
-                "@python \"%~dp0codex.py\" %* 2>>\"%~dp0stderr.log\"\r\n",
+                format!(
+                    "@\"{}\" \"%~dp0codex.py\" %* 2>>\"%~dp0stderr.log\"\r\n",
+                    python.display()
+                ),
             )
             .unwrap();
         }
