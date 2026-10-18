@@ -1093,6 +1093,8 @@ pub async fn unpushed(workspace: &Path, commit: &str, remote: &str) -> Result<Sc
 }
 
 #[cfg(test)]
+// Helpers of Unix-only tests are unused on Windows.
+#[cfg_attr(not(unix), allow(unused))]
 mod tests {
     use super::*;
 

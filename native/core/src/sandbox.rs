@@ -1222,6 +1222,8 @@ pub fn doctor_check() -> Value {
 }
 
 #[cfg(test)]
+// Helpers of Unix-only tests are unused on Windows.
+#[cfg_attr(not(unix), allow(unused))]
 mod tests {
     use super::*;
     use std::fs;

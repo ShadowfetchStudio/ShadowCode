@@ -343,6 +343,8 @@ pub fn failed_hook(events: &str) -> Option<String> {
 }
 
 #[cfg(test)]
+// Helpers of Unix-only tests are unused on Windows.
+#[cfg_attr(not(unix), allow(unused))]
 mod tests {
     use super::*;
     use crate::paths::Canonical;

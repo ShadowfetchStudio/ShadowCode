@@ -259,6 +259,7 @@ pub fn listening_now() -> HashSet<u16> {
 #[cfg(target_os = "macos")]
 pub mod mac {
     use super::{loopback_reachable, Found};
+    use crate::paths::Canonical;
     use std::{
         net::IpAddr,
         path::{Path, PathBuf},

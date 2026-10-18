@@ -351,6 +351,8 @@ fn vendor_changes(root: &Path, kind: &str, args: &Value) -> Option<Value> {
 }
 
 #[cfg(test)]
+// Helpers of Unix-only tests are unused on Windows.
+#[cfg_attr(not(unix), allow(unused))]
 mod tests {
     use super::*;
 

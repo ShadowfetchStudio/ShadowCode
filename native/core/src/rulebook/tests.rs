@@ -1,3 +1,4 @@
+#![cfg_attr(not(unix), allow(unused))]
 use super::*;
 use crate::cli_agent::Vendor;
 use crate::paths::Canonical;

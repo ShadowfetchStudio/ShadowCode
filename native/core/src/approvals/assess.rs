@@ -5402,6 +5402,8 @@ fn vendor_files(args: &Value) -> Vec<String> {
 }
 
 #[cfg(test)]
+// Helpers of Unix-only tests are unused on Windows.
+#[cfg_attr(not(unix), allow(unused))]
 mod tests {
     use super::*;
 

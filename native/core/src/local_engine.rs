@@ -1882,6 +1882,8 @@ pub async fn prepare_with_progress(
 }
 
 #[cfg(test)]
+// Helpers of Unix-only tests are unused on Windows.
+#[cfg_attr(not(unix), allow(unused))]
 mod tests {
     use super::*;
     use crate::gguf::test_support::{write_gguf, V};

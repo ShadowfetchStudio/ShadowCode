@@ -857,6 +857,8 @@ pub fn about(paths: &AppPaths, config: &Config) -> Value {
 }
 
 #[cfg(test)]
+// Helpers of Unix-only tests are unused on Windows.
+#[cfg_attr(not(unix), allow(unused))]
 mod tests {
     use super::*;
 
