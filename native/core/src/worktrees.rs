@@ -413,10 +413,9 @@ pub(crate) async fn validate_task_checkout(
         cancel.clone(),
     )
     .await?;
-    let expected = format!(
-        "worktree {}",
-        checkout.to_str().context("Worktree path must be UTF-8")?
-    );
+    // Git lists paths with `/` on Windows too.
+    checkout.to_str().context("Worktree path must be UTF-8")?;
+    let expected = format!("worktree {}", crate::paths::slash(checkout));
     let registration = registered
         .split("\0\0")
         .find(|block| block.split('\0').any(|field| field == expected))
@@ -482,13 +481,12 @@ pub async fn inspect(
         cancel.clone(),
     )
     .await?;
-    let expected = format!(
-        "worktree {}",
-        record
-            .path
-            .to_str()
-            .context("Worktree path must be UTF-8")?
-    );
+    // Git lists paths with `/` on Windows too.
+    record
+        .path
+        .to_str()
+        .context("Worktree path must be UTF-8")?;
+    let expected = format!("worktree {}", crate::paths::slash(&record.path));
     let registration = registered
         .split("\0\0")
         .find(|block| block.split('\0').any(|field| field == expected))
@@ -711,13 +709,12 @@ pub async fn recovery(
         cancel.clone(),
     )
     .await?;
-    let expected = format!(
-        "worktree {}",
-        record
-            .path
-            .to_str()
-            .context("Worktree path must be UTF-8")?
-    );
+    // Git lists paths with `/` on Windows too.
+    record
+        .path
+        .to_str()
+        .context("Worktree path must be UTF-8")?;
+    let expected = format!("worktree {}", crate::paths::slash(&record.path));
     let block = registered
         .split("\0\0")
         .find(|block| block.split('\0').any(|field| field == expected))
