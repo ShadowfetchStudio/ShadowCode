@@ -5,6 +5,14 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 
+# The Windows sandbox launcher for the engine's own tests (the app is its
+# own launcher); elsewhere it only says so.
+[[bin]]
+name = "shadowcode-sandbox"
+path = "src/bin/shadowcode-sandbox.rs"
+test = false
+doc = false
+
 [dependencies]
 anyhow = "1"
 serde = { version = "1", features = ["derive"] }
@@ -103,7 +111,7 @@ security-framework = { version = "3", default-features = false }
 cpal = { version = "=0.18.2", default-features = false }
 # The control channel's named pipe (its access rules and peer identity), the
 # memory figures and file identities for local models.
-windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Security", "Win32_Security_Authorization", "Win32_Storage_FileSystem", "Win32_System_Console", "Win32_System_JobObjects", "Win32_System_Pipes", "Win32_System_SystemInformation", "Win32_System_Threading"] }
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Security", "Win32_Security_Authorization", "Win32_Security_Isolation", "Win32_Storage_FileSystem", "Win32_System_Console", "Win32_System_JobObjects", "Win32_System_Pipes", "Win32_System_SystemInformation", "Win32_System_Threading"] }
 
 [dev-dependencies]
 # The same tokio, with its paused test clock (no new crate).

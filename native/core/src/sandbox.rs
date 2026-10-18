@@ -26,6 +26,8 @@ use std::{
     time::{Duration, Instant},
 };
 
+#[cfg(windows)]
+pub mod appcontainer;
 #[cfg(target_os = "linux")]
 mod lsm;
 #[cfg(target_os = "linux")]
@@ -202,7 +204,6 @@ pub fn discard_scratch(path: &Path) -> Result<Value> {
         json!({"ok":true,"discarded":path,"note":"Removed this command's managed temporary directory."}),
     )
 }
-#[cfg_attr(not(unix), allow(dead_code))]
 fn scratch_base() -> PathBuf {
     #[cfg(unix)]
     // SAFETY: geteuid cannot fail.
@@ -286,9 +287,7 @@ fn real(path: &Path) -> PathBuf {
 
 impl HomeLayout {
     pub fn current(entries: &[String], workspace: &Path) -> Self {
-        let home = std::env::var_os("HOME")
-            .map(PathBuf::from)
-            .filter(|h| h.is_absolute() && h.parent().is_some());
+        let home = crate::paths::home_dir().filter(|h| h.is_absolute() && h.parent().is_some());
         Self::build(home, entries, workspace)
     }
     pub fn build(home: Option<PathBuf>, entries: &[String], workspace: &Path) -> Self {
@@ -708,8 +707,8 @@ pub fn prepare_shell(
     };
     #[cfg(windows)]
     let result = {
-        let _ = (cwd, &layout);
-        prepare_windows(command, policy)
+        let _ = cwd;
+        prepare_windows(workspace, command, policy, &layout)
     };
     #[cfg(all(unix, not(target_os = "macos")))]
     let result = match working_bwrap(workspace) {
@@ -898,17 +897,28 @@ pub fn prepare_shell(
     result
 }
 
-/// Windows: no shell sandbox yet (docs/WINDOWS_PORT.md). Commands run as
-/// the user with a warning, and are refused when the sandbox is required or
-/// the network allow-list is on, exactly like a Linux host without
-/// bubblewrap or Landlock.
+/// Windows: the command in ShadowCode's AppContainer ([`appcontainer`]).
+/// When the sandbox cannot be set up, commands run as the user with a
+/// warning and are refused when the sandbox is required, like a Linux host
+/// without bubblewrap or Landlock. The allow-list is always refused.
 #[cfg(windows)]
-fn prepare_windows(command: &str, policy: &ShellPolicy) -> Result<PreparedShell> {
-    if policy.require {
-        bail!("The command did not run: 'Require sandbox' is on and ShadowCode has no shell sandbox on Windows yet. Turn off 'Require sandbox' in Settings > Permissions & network to run commands without it.");
-    }
+fn prepare_windows(
+    workspace: &Path,
+    command: &str,
+    policy: &ShellPolicy,
+    layout: &HomeLayout,
+) -> Result<PreparedShell> {
+    // The allow-list proxy listens on this computer, which the Windows
+    // sandbox cannot reach; it is refused rather than weakened.
     if policy.network == ShellNetwork::Allowlist {
-        bail!("The command did not run: the network allow-list needs a shell sandbox, which ShadowCode does not have on Windows yet. Change 'Shell commands and the network' in Settings > Permissions & network.");
+        bail!("The command did not run: the network allow-list is not available on Windows (the Windows sandbox cannot reach the allow-list proxy on this computer). Choose 'off' or 'on' in Settings > Permissions & network > Shell commands and the network.");
+    }
+    let error = match appcontainer::prepare(workspace, command, policy, layout) {
+        Ok(prepared) => return Ok(prepared),
+        Err(error) => error,
+    };
+    if policy.require {
+        bail!("The command did not run: 'Require sandbox' is on and the Windows sandbox is unavailable ({error:#}). Turn off 'Require sandbox' in Settings > Permissions & network to run commands without it.");
     }
     let (program, args) = windows_shell(command);
     Ok(PreparedShell {
@@ -919,13 +929,13 @@ fn prepare_windows(command: &str, policy: &ShellPolicy) -> Result<PreparedShell>
         gate: None,
         note: json!({
             "mode": "none",
-            "reason": "no shell sandbox on Windows yet",
+            "reason": format!("{error:#}"),
             "network": network_label(policy.network),
             "network_requested": network_label(policy.network),
             "network_enforcement": "none",
-            "note": "Windows: the command runs as your user without isolation; only the approval policy applies."
+            "note": "No Windows sandbox: the command runs as your user without isolation; only the approval policy applies."
         }),
-        warning: Some("Shell commands are running without a sandbox (ShadowCode has none on Windows yet): they can read and change anything your user can. Turn on 'Require sandbox' in Settings > Permissions & network to refuse commands instead.".into()),
+        warning: Some(format!("Shell commands are running without a sandbox ({error:#}): they can read and change anything your user can. Turn on 'Require sandbox' in Settings > Permissions & network to refuse commands instead.")),
     })
 }
 

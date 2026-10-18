@@ -24,7 +24,7 @@ needed for phases 1 and 2.
 | Area | Linux and macOS | Windows |
 |---|---|---|
 | Agent shell commands | `/bin/sh -c` | Git Bash (`bash -c`) when Git for Windows is installed, so the same commands work; otherwise Windows PowerShell. Never WSL's `bash.exe` in System32 |
-| Shell sandbox | bubblewrap, Landlock, Seatbelt | No equivalent with the same guarantees. Commands run unsandboxed with the existing warning, and **Require sandbox** refuses them, until a Windows design (AppContainer or a restricted token plus a job object) is reviewed |
+| Shell sandbox | bubblewrap, Landlock, Seatbelt | An AppContainer: the project and a scratch folder writable, Windows and Program Files readable, read-only toolchain and PATH folders from the home folder, the rest of the home hidden; network off (no capabilities, loopback included) or on (internet and private-network capabilities). The allow-list is refused: the container cannot reach its proxy on this computer. Started through ShadowCode's own executable as a launcher (`--shadowcode-sandbox`) |
 | Process trees | process groups, signals, `/proc`, kqueue | Job objects: every command and helper runs in a job that is killed as a whole, and closes with ShadowCode |
 | Terminals | PTY | ConPTY |
 | Engine connection | Unix socket | Named pipe restricted to the user |

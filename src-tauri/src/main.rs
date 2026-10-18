@@ -334,6 +334,18 @@ fn request_shutdown(app: &tauri::AppHandle) {
 }
 
 fn main() {
+    // Windows: this executable is also the sandbox launcher (the command
+    // that follows the flag runs in ShadowCode's AppContainer).
+    #[cfg(windows)]
+    if std::env::args_os().nth(1).as_deref()
+        == Some(std::ffi::OsStr::new(
+            shadowcode_core::sandbox::appcontainer::LAUNCH_FLAG,
+        ))
+    {
+        std::process::exit(shadowcode_core::sandbox::appcontainer::launch_main(
+            std::env::args_os().skip(2).collect(),
+        ));
+    }
     if let Err(error) = run() {
         eprintln!("ShadowCode: {error:#}");
         std::process::exit(1);
