@@ -1,5 +1,4 @@
 //! Native application engine shared by the desktop, CLI, and MCP transports.
-#[cfg(unix)]
 pub mod acp_server;
 pub mod agents;
 pub mod allowance;
@@ -9,7 +8,6 @@ pub mod automations;
 pub mod autonomy;
 pub mod background;
 pub mod checkpoint;
-#[cfg(unix)]
 pub mod cli;
 pub mod cli_agent;
 pub mod code_intel;
@@ -17,7 +15,6 @@ pub mod compaction;
 pub mod compare;
 pub mod config;
 pub mod context;
-#[cfg(unix)]
 pub mod control;
 pub mod data;
 pub mod effort;
@@ -35,7 +32,6 @@ pub mod instructions;
 pub mod intelligence;
 pub mod issues;
 pub mod keyring;
-#[cfg(unix)]
 pub mod lifecycle;
 pub mod local_downloads;
 pub mod local_engine;
@@ -44,7 +40,6 @@ pub mod local_templates;
 #[cfg(target_os = "macos")]
 pub mod login_path;
 pub mod lsp;
-#[cfg(unix)]
 pub mod mcp;
 pub mod memory;
 pub mod mentions;
@@ -59,7 +54,6 @@ pub mod parallel;
 pub mod patch;
 pub mod paths;
 pub mod permissions;
-#[cfg(unix)]
 pub mod plugins;
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 pub mod preview;
@@ -67,7 +61,6 @@ pub mod process;
 pub mod project;
 pub mod prompt_cache;
 pub mod redaction;
-#[cfg(unix)]
 pub mod remote;
 pub mod resume;
 pub mod retry;

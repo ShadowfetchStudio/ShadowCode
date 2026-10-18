@@ -4,9 +4,10 @@
 //! probes clear the environment. They never reach a real vendor.
 #![allow(dead_code)]
 use serde_json::{json, Value};
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use std::{
     fs,
-    os::unix::fs::PermissionsExt,
     path::{Path, PathBuf},
     time::Duration,
 };
@@ -279,9 +280,12 @@ impl FakeCodex {
         fs::create_dir_all(&dir).unwrap();
         let script = dir.join("codex");
         fs::write(&script, FAKE_CODEX).unwrap();
-        let mut perm = fs::metadata(&script).unwrap().permissions();
-        perm.set_mode(0o755);
-        fs::set_permissions(&script, perm).unwrap();
+        #[cfg(unix)]
+        {
+            let mut perm = fs::metadata(&script).unwrap().permissions();
+            perm.set_mode(0o755);
+            fs::set_permissions(&script, perm).unwrap();
+        }
         let fake = Self { dir };
         fake.configure(config);
         fake

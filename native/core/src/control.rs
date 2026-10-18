@@ -1,6 +1,7 @@
 //! Private local transport for command-line clients of the profile's one engine.
-//! Filesystem permissions and peer credentials restrict access to this OS user;
-//! it deliberately opens no TCP listener and does not accept browser requests.
+//! Filesystem permissions and peer credentials (a named pipe's access rules
+//! and owner on Windows, see `transport`) restrict access to this OS user; it
+//! deliberately opens no TCP listener and does not accept browser requests.
 use crate::{
     paths::AppPaths,
     service::{Request, Service},
@@ -10,10 +11,11 @@ use anyhow::{bail, ensure, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
+#[cfg(unix)]
+use std::os::unix::fs::{DirBuilderExt, FileTypeExt, MetadataExt, PermissionsExt};
 use std::{
     fs,
     io::Write,
-    os::unix::fs::{DirBuilderExt, FileTypeExt, MetadataExt, PermissionsExt},
     path::{Path, PathBuf},
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -21,9 +23,10 @@ use std::{
     },
     time::Duration,
 };
+#[cfg(unix)]
+use tokio::net::UnixListener;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
-    net::{UnixListener, UnixStream},
     sync::{Notify, Semaphore},
     task::JoinSet,
 };
@@ -33,14 +36,18 @@ const REQUEST_LIMIT: usize = 8_100_000;
 const RESPONSE_LIMIT: usize = 68_000_000;
 const MAX_CLIENTS: usize = 16;
 mod owned;
+mod transport;
 mod view;
 pub use owned::OwnedJobs;
+use transport::Stream;
 pub use view::ViewClient;
 
+#[cfg(unix)]
 fn uid() -> u32 {
     // SAFETY: geteuid has no arguments, dereferences no pointers, and cannot fail.
     unsafe { libc::geteuid() }
 }
+#[cfg(unix)]
 fn private_directory(path: &Path, create: bool) -> Result<()> {
     if create {
         match fs::DirBuilder::new().mode(0o700).create(path) {
@@ -73,6 +80,14 @@ impl Endpoint {
             identity.push(0);
         }
         let profile = format!("{:x}", Sha256::digest(&identity));
+        #[cfg(windows)]
+        let path = PathBuf::from(format!(r"\\.\pipe\shadowcode-{}", &profile[..32]));
+        #[cfg(unix)]
+        let path = Self::socket(&profile)?;
+        Ok(Self { path, profile })
+    }
+    #[cfg(unix)]
+    fn socket(profile: &str) -> Result<PathBuf> {
         // Derive this from UID, not each shell's environment: cron and desktop
         // sessions with different runtime/TMPDIR variables must find one engine.
         let runtime = PathBuf::from(format!("/run/user/{}", uid()));
@@ -87,7 +102,7 @@ impl Endpoint {
             path.as_os_str().as_encoded_bytes().len() < 104,
             "Local control socket path is too long"
         );
-        Ok(Self { path, profile })
+        Ok(path)
     }
     pub fn path(&self) -> &Path {
         &self.path
@@ -136,18 +151,8 @@ impl Client {
         send(&mut stream, &self.envelope(request), REQUEST_LIMIT).await?;
         self.response(&mut stream).await
     }
-    async fn connect(&self) -> Result<UnixStream> {
-        let stream = tokio::time::timeout(
-            Duration::from_secs(2),
-            UnixStream::connect(&self.endpoint.path),
-        )
-        .await
-        .context("Local engine connection timed out")??;
-        ensure!(
-            stream.peer_cred()?.uid() == uid(),
-            "Local engine belongs to another OS user"
-        );
-        Ok(stream)
+    async fn connect(&self) -> Result<Stream> {
+        transport::connect(&self.endpoint.path).await
     }
     fn envelope(&self, request: Request) -> Envelope {
         Envelope {
@@ -159,7 +164,7 @@ impl Client {
             request,
         }
     }
-    async fn response(&self, stream: &mut UnixStream) -> Result<Value> {
+    async fn response(&self, stream: &mut Stream) -> Result<Value> {
         let bytes = receive(stream, RESPONSE_LIMIT).await?;
         self.result(self.validate_response(&bytes)?)
     }
@@ -231,9 +236,11 @@ impl Client {
         }
     }
 }
+#[cfg(unix)]
 /// A socket younger than this may belong to an engine between bind and listen.
 const STALE_SOCKET_AGE: Duration = Duration::from_secs(10);
 
+#[cfg(unix)]
 fn engine_socket_name(path: &Path) -> bool {
     path.file_name()
         .and_then(|n| n.to_str())
@@ -246,6 +253,7 @@ fn engine_socket_name(path: &Path) -> bool {
         })
 }
 
+#[cfg(unix)]
 /// True only when nothing listens on the socket (ECONNREFUSED). A live
 /// engine accepts or reports a full backlog; both count as alive.
 fn socket_refuses(path: &Path) -> bool {
@@ -301,6 +309,7 @@ fn socket_refuses(path: &Path) -> bool {
     rc != 0 && error == Some(libc::ECONNREFUSED)
 }
 
+#[cfg(unix)]
 /// Remove engine control sockets (`<32 hex>.sock`) in `directory` that belong
 /// to this user, are older than `min_age`, and refuse connections. Live
 /// engines answer and are never touched; `keep` (this engine's own path) is
@@ -343,11 +352,13 @@ pub fn sweep_stale_sockets(directory: &Path, keep: &Path, min_age: Duration) -> 
     removed
 }
 
+#[cfg(unix)]
 struct SocketLease {
     path: PathBuf,
     dev: u64,
     ino: u64,
 }
+#[cfg(unix)]
 impl Drop for SocketLease {
     fn drop(&mut self) {
         if fs::symlink_metadata(&self.path)
@@ -387,29 +398,11 @@ impl Server {
         let mode = mode.to_owned();
         service.set_engine_mode(&mode);
         let endpoint = Endpoint::for_paths(service.engine.paths())?;
-        if let Some(directory) = endpoint.path.parent() {
-            // Crashed or killed engines leave their socket files behind.
-            sweep_stale_sockets(directory, &endpoint.path, STALE_SOCKET_AGE);
-        }
-        if let Ok(metadata) = fs::symlink_metadata(&endpoint.path) {
-            ensure!(
-                metadata.file_type().is_socket() && metadata.uid() == uid(),
-                "Refusing to replace a non-socket local control path"
-            );
-            ensure!(
-                std::os::unix::net::UnixStream::connect(&endpoint.path).is_err(),
-                "Local engine control endpoint is already running"
-            );
-            fs::remove_file(&endpoint.path)?;
-        }
-        let listener = UnixListener::bind(&endpoint.path)?;
-        fs::set_permissions(&endpoint.path, fs::Permissions::from_mode(0o600))?;
-        let metadata = fs::symlink_metadata(&endpoint.path)?;
-        let lease = SocketLease {
-            path: endpoint.path.clone(),
-            dev: metadata.dev(),
-            ino: metadata.ino(),
-        };
+        #[cfg(unix)]
+        let (mut listener, lease) = bind(&endpoint)?;
+        // A pipe disappears with its last handle; there is nothing to sweep.
+        #[cfg(windows)]
+        let (mut listener, lease) = (transport::Listener::bind(&endpoint.path)?, ());
         let state = Arc::new(State {
             cancel: CancellationToken::new(),
             finished: AtomicBool::new(false),
@@ -434,8 +427,8 @@ impl Server {
                 tokio::select! {
                     _=running.cancel.cancelled()=>break,
                     Some(_)=clients.join_next(),if !clients.is_empty()=>{},
-                    accepted=listener.accept(),if clients.len()<MAX_CLIENTS=>match accepted {
-                        Ok((stream,_))=>{
+                    accepted=accept(&mut listener),if clients.len()<MAX_CLIENTS=>match accepted {
+                        Ok(stream)=>{
                             let service=service.clone();let profile=profile.clone();let mode=mode.clone();let owners=owners.clone();let views=views.clone();
                             clients.spawn(async move {let _=handle(stream, service, profile, mode, owners, views).await;});
                         }
@@ -472,15 +465,50 @@ impl Drop for Server {
         self.close();
     }
 }
+#[cfg(unix)]
+fn bind(endpoint: &Endpoint) -> Result<(UnixListener, SocketLease)> {
+    if let Some(directory) = endpoint.path.parent() {
+        // Crashed or killed engines leave their socket files behind.
+        sweep_stale_sockets(directory, &endpoint.path, STALE_SOCKET_AGE);
+    }
+    if let Ok(metadata) = fs::symlink_metadata(&endpoint.path) {
+        ensure!(
+            metadata.file_type().is_socket() && metadata.uid() == uid(),
+            "Refusing to replace a non-socket local control path"
+        );
+        ensure!(
+            std::os::unix::net::UnixStream::connect(&endpoint.path).is_err(),
+            "Local engine control endpoint is already running"
+        );
+        fs::remove_file(&endpoint.path)?;
+    }
+    let listener = UnixListener::bind(&endpoint.path)?;
+    fs::set_permissions(&endpoint.path, fs::Permissions::from_mode(0o600))?;
+    let metadata = fs::symlink_metadata(&endpoint.path)?;
+    let lease = SocketLease {
+        path: endpoint.path.clone(),
+        dev: metadata.dev(),
+        ino: metadata.ino(),
+    };
+    Ok((listener, lease))
+}
+#[cfg(unix)]
+async fn accept(listener: &mut UnixListener) -> std::io::Result<Stream> {
+    listener.accept().await.map(|(stream, _)| stream)
+}
+#[cfg(windows)]
+async fn accept(listener: &mut transport::Listener) -> Result<Stream> {
+    listener.accept().await
+}
 async fn handle(
-    mut stream: UnixStream,
+    mut stream: Stream,
     service: Service,
     profile: String,
     mode: String,
     owners: Arc<Semaphore>,
     views: view::Registry,
 ) -> Result<()> {
-    ensure!(stream.peer_cred()?.uid() == uid(), "Wrong peer user");
+    ensure!(transport::peer_is_this_user(&stream)?, "Wrong peer user");
     let response = async {
         let bytes =
             tokio::time::timeout(Duration::from_secs(10), receive(&mut stream, REQUEST_LIMIT))
@@ -501,7 +529,7 @@ async fn handle(
             return Ok(json!({"mode":mode,"persistent":mode!="command","pid":std::process::id(),"version":crate::VERSION}));
         }
         if envelope.request.path == "/api/owned-jobs" && envelope.request.method == "POST" {
-            ensure!(mode != "command" || stream.peer_cred()?.pid() == Some(std::process::id() as i32), "A foreground CLI task owns this profile; use the desktop or shadowcode serve for concurrent work");
+            ensure!(mode != "command" || transport::peer_pid(&stream)? == Some(std::process::id() as i32), "A foreground CLI task owns this profile; use the desktop or shadowcode serve for concurrent work");
             let permit = owners.try_acquire_owned().context("At most eight task ownership connections may be active")?;
             let scoped = service.fork_selection(envelope.workspace, envelope.session_id)?;
             return owned::serve(&mut stream, scoped, &profile, permit).await;
@@ -548,7 +576,11 @@ async fn receive(
     stream.read_exact(&mut bytes).await?;
     Ok(bytes)
 }
-async fn send(stream: &mut UnixStream, value: &impl Serialize, limit: usize) -> Result<()> {
+async fn send(
+    stream: &mut (impl tokio::io::AsyncWrite + Unpin),
+    value: &impl Serialize,
+    limit: usize,
+) -> Result<()> {
     send_bytes(stream, &encode(value, limit)?).await
 }
 fn encode(value: &impl Serialize, limit: usize) -> Result<Vec<u8>> {
@@ -577,7 +609,7 @@ fn encode(value: &impl Serialize, limit: usize) -> Result<Vec<u8>> {
     serde_json::to_writer(&mut buffer, value)?;
     Ok(buffer.bytes)
 }
-async fn send_bytes(stream: &mut UnixStream, bytes: &[u8]) -> Result<()> {
+async fn send_bytes(stream: &mut (impl tokio::io::AsyncWrite + Unpin), bytes: &[u8]) -> Result<()> {
     tokio::time::timeout(Duration::from_secs(15), async {
         stream.write_u32(bytes.len() as u32).await?;
         stream.write_all(bytes).await
@@ -587,7 +619,7 @@ async fn send_bytes(stream: &mut UnixStream, bytes: &[u8]) -> Result<()> {
     Ok(())
 }
 
-#[cfg(test)]
+#[cfg(all(test, unix))]
 mod tests {
     use super::*;
     use std::os::unix::net::UnixListener as StdListener;

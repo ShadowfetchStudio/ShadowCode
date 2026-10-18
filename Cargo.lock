@@ -4567,6 +4567,7 @@ dependencies = [
  "unicode-width",
  "uuid",
  "whisper-rs",
+ "windows-sys 0.61.2",
  "zbus",
 ]
 

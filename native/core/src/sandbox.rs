@@ -1361,6 +1361,7 @@ mod tests {
         assert!(host_relay_args(shared, relay, dir).is_err());
     }
 
+    #[cfg(unix)]
     #[test]
     fn relay_socket_refuses_paths_the_kernel_cannot_hold() {
         let root = tempfile::tempdir().unwrap();
@@ -1458,6 +1459,7 @@ mod tests {
         );
     }
 
+    #[cfg(unix)]
     #[test]
     fn flatpak_relay_fails_closed_without_the_proxy() {
         let temp = tempfile::tempdir().unwrap();

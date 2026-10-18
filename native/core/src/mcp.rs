@@ -90,17 +90,40 @@ impl Diagnostics {
     }
 }
 
+#[cfg(unix)]
+const TERMINATE: i32 = libc::SIGTERM;
+#[cfg(unix)]
+const KILL: i32 = libc::SIGKILL;
+#[cfg(not(unix))]
+const TERMINATE: i32 = 15;
+#[cfg(not(unix))]
+const KILL: i32 = 9;
 struct Group(u32);
 impl Group {
     fn signal(&self, signal: i32) {
-        if self.0 != 0 {
-            unsafe {
-                libc::kill(-(self.0 as i32), signal);
-            }
+        if self.0 == 0 {
+            return;
+        }
+        #[cfg(unix)]
+        unsafe {
+            libc::kill(-(self.0 as i32), signal);
+        }
+        // Windows has no polite stop for a console process tree: end the
+        // whole tree on KILL, without opening a console window.
+        #[cfg(windows)]
+        if signal == KILL {
+            use std::os::windows::process::CommandExt;
+            let _ = std::process::Command::new("taskkill")
+                .args(["/PID", &self.0.to_string(), "/T", "/F"])
+                .stdin(std::process::Stdio::null())
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .creation_flags(0x0800_0000)
+                .status();
         }
     }
     fn kill(&mut self) {
-        self.signal(libc::SIGKILL);
+        self.signal(KILL);
         self.0 = 0;
     }
 }
@@ -198,8 +221,9 @@ impl Client {
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
-            .kill_on_drop(true)
-            .process_group(0);
+            .kill_on_drop(true);
+        #[cfg(unix)]
+        command.process_group(0);
         let mut child = command.spawn().context("Cannot start MCP server")?;
         let pid = child.id().context("MCP process has no PID")?;
         let group = Arc::new(Mutex::new(Group(pid)));
@@ -232,7 +256,7 @@ impl Client {
             worker_group
                 .lock()
                 .unwrap_or_else(|e| e.into_inner())
-                .signal(libc::SIGTERM);
+                .signal(TERMINATE);
             tokio::time::sleep(Duration::from_millis(150)).await;
             worker_group
                 .lock()
