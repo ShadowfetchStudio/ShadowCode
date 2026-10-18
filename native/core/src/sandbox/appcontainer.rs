@@ -336,7 +336,7 @@ pub(super) fn prepare(
     let temp = scratch.path.join("tmp");
     std::fs::create_dir_all(&home)?;
     std::fs::create_dir_all(&temp)?;
-    let (shell, shell_args) = super::windows_shell(command);
+    let (shell, shell_args) = sandbox_shell(command)?;
     // Read-only: the toolchains the home layout shows, the user's own PATH
     // folders and the shell's folder, unless Windows already allows them.
     // Best effort: a folder ShadowCode may not change is skipped.
@@ -353,7 +353,7 @@ pub(super) fn prepare(
             );
         }
     }
-    if let Some(root) = Path::new(&shell).parent().and_then(Path::parent) {
+    if let Some(root) = Path::new(&shell).parent() {
         readable.push(root.to_owned());
     }
     let mut skipped = Vec::new();
@@ -399,16 +399,43 @@ pub(super) fn prepare(
                 ShellNetwork::Off => "no_network",
                 _ => "none",
             },
+            "shell": "PowerShell 7 (pwsh)",
             "home": "empty temporary folder",
             "home_read_only": layout.binds.iter().map(|(s, _)| s.to_string_lossy()).collect::<Vec<_>>(),
             "home_skipped": layout.skipped,
             "read_grants_skipped": skipped,
             "scratch": scratch.path.to_string_lossy(),
             "workspace_cow": false,
-            "note": "Windows sandbox (AppContainer): Windows and Program Files read-only, the home folder hidden except read-only toolchains and PATH folders, writable project, ephemeral scratch at SHADOWCODE_SCRATCH (also HOME, TEMP and TMP); network off unless on, and never to this computer's own services. Not a complete OS sandbox."
+            "note": "Windows sandbox (AppContainer), commands run in PowerShell 7: Windows and Program Files read-only, the home folder hidden except read-only toolchains and PATH folders, writable project, ephemeral scratch at SHADOWCODE_SCRATCH (also HOME, TEMP and TMP); network off unless on, and never to this computer's own services. Not a complete OS sandbox."
         }),
         warning: None,
     })
+}
+
+/// The shell inside the container. Git for Windows' bash (MSYS2) cannot start
+/// in an AppContainer (its runtime fails to initialize, 0xC0000142) and
+/// Windows PowerShell cannot load its own modules there; PowerShell 7 runs.
+fn sandbox_shell(command: &str) -> Result<(String, Vec<String>)> {
+    let pwsh = crate::sandbox::which("pwsh").or_else(|| {
+        ["ProgramW6432", "ProgramFiles"]
+            .iter()
+            .filter_map(std::env::var_os)
+            .map(|base| PathBuf::from(base).join(r"PowerShell\7\pwsh.exe"))
+            .find(|path| path.is_file())
+    });
+    let pwsh = pwsh.context(
+        "commands in the Windows sandbox run in PowerShell 7, which is not installed (winget install Microsoft.PowerShell)",
+    )?;
+    Ok((
+        pwsh.to_string_lossy().into_owned(),
+        vec![
+            "-NoLogo".into(),
+            "-NoProfile".into(),
+            "-NonInteractive".into(),
+            "-Command".into(),
+            command.into(),
+        ],
+    ))
 }
 
 /// One argument as the Windows C runtime (and MSYS) parse a command line:
