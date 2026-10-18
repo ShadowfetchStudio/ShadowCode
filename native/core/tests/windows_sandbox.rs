@@ -81,17 +81,17 @@ fn dunce_path(path: &Path) -> std::path::PathBuf {
 }
 
 /// Programs start in the container (a failed start is 0xC0000142): system
-/// programs and PowerShell 7, the sandbox's shell. Git for Windows' bash
-/// (MSYS2) cannot start in an AppContainer and Windows PowerShell cannot
-/// load its modules there; neither is used inside it.
+/// programs and busybox `sh`, the sandbox's shell. Git for Windows' bash
+/// (MSYS2) cannot start in an AppContainer; it is not used inside it.
 #[test]
-fn system_programs_and_powershell_7_start_in_the_container() {
+fn system_programs_and_busybox_start_in_the_container() {
     std::env::set_var(
         "SHADOWCODE_SANDBOX_LAUNCHER",
         env!("CARGO_BIN_EXE_shadowcode-sandbox"),
     );
     let sid = sandbox::appcontainer::container_sid().unwrap();
     let system = std::env::var("SystemRoot").unwrap();
+    let busybox = std::env::var("SHADOWCODE_BUSYBOX").expect("SHADOWCODE_BUSYBOX");
     let programs: Vec<Vec<String>> = vec![
         vec![format!(r"{system}\System32\whoami.exe")],
         vec![
@@ -100,10 +100,10 @@ fn system_programs_and_powershell_7_start_in_the_container() {
             "echo cmd-ok".into(),
         ],
         vec![
-            std::env::var("ProgramFiles").unwrap() + r"\PowerShell\7\pwsh.exe",
-            "-NoProfile".into(),
-            "-Command".into(),
-            "Write-Output pwsh-ok".into(),
+            busybox,
+            "sh".into(),
+            "-c".into(),
+            "echo busybox-ok; ls / >/dev/null".into(),
         ],
     ];
     let mut report = Vec::new();

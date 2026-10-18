@@ -39,3 +39,5 @@ src/shadow_agent/_assets/
 /tools/spirv-headers/
 /tools/spirv-headers-prefix/
 /.claude/
+/tools/busybox-w32/
+/packaging/busybox-w32/bin/

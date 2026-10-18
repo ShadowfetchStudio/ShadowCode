@@ -8,16 +8,32 @@ name: Windows
 on:
   push:
     branches: [main]
-    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml', 'scripts/build-llama.cpp.sh', 'tools/llama.cpp.pin', 'packaging/windows/**']
+    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml', 'scripts/build-llama.cpp.sh', 'tools/llama.cpp.pin', 'scripts/build-busybox-w32.sh', 'tools/busybox-w32.pin', 'packaging/windows/**']
   pull_request:
-    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml', 'scripts/build-llama.cpp.sh', 'tools/llama.cpp.pin', 'packaging/windows/**']
+    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml', 'scripts/build-llama.cpp.sh', 'tools/llama.cpp.pin', 'scripts/build-busybox-w32.sh', 'tools/busybox-w32.pin', 'packaging/windows/**']
 permissions:
   contents: read
 concurrency:
   group: windows-${{ github.ref }}
   cancel-in-progress: true
 jobs:
+  # The sandbox's shell, cross-compiled from pinned source (see the script).
+  busybox:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Cross compiler
+        run: sudo apt-get update && sudo apt-get install -y gcc-mingw-w64-x86-64 bzip2
+      - run: bash scripts/build-busybox-w32.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: busybox-w32
+          path: packaging/busybox-w32/bin/
+          if-no-files-found: error
+          retention-days: 7
   build:
+    needs: busybox
     runs-on: windows-latest
     timeout-minutes: 150
     env:
@@ -51,6 +67,10 @@ jobs:
         run: |
           echo "errors: $(grep -c ': error' windows-check.log || true)"
           { grep ': error' windows-check.log || true; } | sed -E 's/:[0-9]+:[0-9]+:/:/' | sort | uniq -c | sort -rn | head -80
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: busybox-w32
+          path: packaging/busybox-w32/bin
       # The runner's Git converts line endings on checkout (core.autocrlf);
       # the tests' repositories expect the bytes they committed.
       - name: Neutral Git settings for the tests
@@ -68,6 +88,7 @@ jobs:
         env:
           RUST_LIB_BACKTRACE: '1'
         run: |
+          export SHADOWCODE_BUSYBOX="$(cygpath -w "$PWD/packaging/busybox-w32/bin/busybox.exe")"
           set -o pipefail
           cargo +1.95.0 test -p shadowcode-core --test '*' --locked --no-fail-fast 2>&1 | tee windows-integration.log
       - name: Summarize the tests
@@ -92,6 +113,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
   installer:
+    needs: busybox
     runs-on: windows-latest
     timeout-minutes: 150
     env:
@@ -110,6 +132,10 @@ jobs:
       - name: Install pinned Rust toolchain
         run: rustup toolchain install 1.95.0 --profile minimal
       - run: npm --prefix ui ci
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: busybox-w32
+          path: packaging/busybox-w32/bin
       # The pinned llama.cpp (CPU variants, clang-cl), bundled as llama.cpp\.
       - name: Build the local model runtime
         run: bash scripts/build-llama.cpp.sh --no-user-install --cpu-only
