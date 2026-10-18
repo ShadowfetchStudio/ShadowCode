@@ -554,17 +554,21 @@ mod tests {
         tokio::time::sleep(Duration::from_millis(2500)).await;
         assert!(!late.exists(), "the background part outlived the timeout");
 
-        let killed = run_command(
-            dir.path(),
-            "kill -9 $$",
-            &env,
-            Duration::from_secs(10),
-            &never(),
-        )
-        .await;
-        assert_eq!(killed["stopped"], "signal");
-        assert_eq!(killed["signal"], 9);
-        assert!(killed["exit_code"].is_null());
+        // Windows has no signals to report.
+        #[cfg(unix)]
+        {
+            let killed = run_command(
+                dir.path(),
+                "kill -9 $$",
+                &env,
+                Duration::from_secs(10),
+                &never(),
+            )
+            .await;
+            assert_eq!(killed["stopped"], "signal");
+            assert_eq!(killed["signal"], 9);
+            assert!(killed["exit_code"].is_null());
+        }
         let missing = run_command(
             &dir.path().join("gone"),
             "true",

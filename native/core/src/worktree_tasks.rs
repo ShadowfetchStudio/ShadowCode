@@ -1765,7 +1765,7 @@ mod tests {
             &source,
             setup::Setup {
                 setup: vec!["printf \"$PORT\" > port.txt".into()],
-                teardown: vec![format!("touch {}", marker.display())],
+                teardown: vec![format!("touch {}", crate::paths::slash(&marker))],
                 ..setup::Setup::default()
             },
         )
@@ -1804,8 +1804,8 @@ mod tests {
             setup::Setup {
                 setup: vec![format!(
                     "touch {}; while [ ! -e {} ]; do sleep 0.05; done",
-                    entered.display(),
-                    gate.display()
+                    crate::paths::slash(&entered),
+                    crate::paths::slash(&gate)
                 )],
                 ..setup::Setup::default()
             },
@@ -1849,7 +1849,7 @@ mod tests {
             setup::Setup {
                 setup: vec![format!(
                     "touch {}; while true; do sleep 0.05; done",
-                    entered.display()
+                    crate::paths::slash(&entered)
                 )],
                 ..setup::Setup::default()
             },
