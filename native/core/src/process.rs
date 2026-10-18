@@ -31,6 +31,25 @@ pub struct ProcessSpec {
 }
 impl ProcessSpec {
     pub fn shell(command: &str, cwd: PathBuf, timeout: Duration) -> Self {
+        // Windows: Git Bash when installed, else PowerShell (see sandbox).
+        #[cfg(windows)]
+        {
+            let (program, args) = crate::sandbox::windows_shell(command);
+            Self {
+                program,
+                args,
+                cwd,
+                timeout,
+                output_limit: 256_000,
+                env: BTreeMap::new(),
+                child: None,
+            }
+        }
+        #[cfg(not(windows))]
+        Self::unix_shell(command, cwd, timeout)
+    }
+    #[cfg(not(windows))]
+    fn unix_shell(command: &str, cwd: PathBuf, timeout: Duration) -> Self {
         let bridge = crate::flatpak::host_bridge();
         Self {
             program: bridge.as_ref().map_or_else(
