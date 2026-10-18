@@ -114,6 +114,18 @@ fn system_programs_start_in_the_container() {
             "-c".into(),
             "echo gitbash-ok".into(),
         ],
+        vec![
+            format!(r"{system}\System32\WindowsPowerShell\v1.0\powershell.exe"),
+            "-NoProfile".into(),
+            "-Command".into(),
+            "[Console]::WriteLine('dotnet-ok'); [Console]::WriteLine($env:PSModulePath); Import-Module Microsoft.PowerShell.Utility -ErrorAction Continue; Get-Module -ListAvailable | Select-Object -First 3 | ForEach-Object { [Console]::WriteLine($_.Path) }".into(),
+        ],
+        vec![
+            std::env::var("ProgramFiles").unwrap() + r"\PowerShell\7\pwsh.exe",
+            "-NoProfile".into(),
+            "-Command".into(),
+            "Write-Output pwsh-ok; Get-ChildItem . | Select-Object -First 1 | Out-String".into(),
+        ],
     ];
     let mut report = Vec::new();
     let mut failed = false;
