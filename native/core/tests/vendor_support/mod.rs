@@ -278,19 +278,29 @@ impl FakeCodex {
     pub fn new(root: &Path, config: Value) -> Self {
         let dir = root.join("fake-bin");
         fs::create_dir_all(&dir).unwrap();
-        let script = dir.join("codex");
-        fs::write(&script, FAKE_CODEX).unwrap();
         #[cfg(unix)]
         {
+            let script = dir.join("codex");
+            fs::write(&script, FAKE_CODEX).unwrap();
             let mut perm = fs::metadata(&script).unwrap().permissions();
             perm.set_mode(0o755);
             fs::set_permissions(&script, perm).unwrap();
+        }
+        // Windows runs a script through a `.cmd` shim, as npm installs the
+        // real CLIs; Python is `python` there.
+        #[cfg(windows)]
+        {
+            fs::write(dir.join("codex.py"), FAKE_CODEX).unwrap();
+            fs::write(dir.join("codex.cmd"), "@python \"%~dp0codex.py\" %*\r\n").unwrap();
         }
         let fake = Self { dir };
         fake.configure(config);
         fake
     }
     pub fn binary(&self) -> String {
+        #[cfg(windows)]
+        return self.dir.join("codex.cmd").to_string_lossy().into_owned();
+        #[cfg(not(windows))]
         self.dir.join("codex").to_string_lossy().into_owned()
     }
     pub fn configure(&self, config: Value) {

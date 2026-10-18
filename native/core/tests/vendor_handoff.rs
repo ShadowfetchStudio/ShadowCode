@@ -2,8 +2,6 @@
 //! explicit bounded handoff, consent before local context or attachments go
 //! to a cloud route, plan-limit stops, and target changes during a turn.
 //! The vendor is a fake Codex app-server; no real vendor CLI runs.
-// The vendor runner is not ported to Windows yet.
-#![cfg(unix)]
 mod vendor_support;
 use serde_json::{json, Value};
 use shadowcode_core::{

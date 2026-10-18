@@ -2,8 +2,6 @@
 //! ShadowCode's editor while that turn ran. Changes the agent did not report
 //! are flagged in the rewind preview. The vendor is a fake Codex app-server
 //! that edits files, then waits while the test saves in the editor.
-// The vendor runner is not ported to Windows yet.
-#![cfg(unix)]
 mod vendor_support;
 use serde_json::{json, Value};
 use shadowcode_core::{
