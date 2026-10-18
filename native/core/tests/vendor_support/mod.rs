@@ -291,7 +291,12 @@ impl FakeCodex {
         #[cfg(windows)]
         {
             fs::write(dir.join("codex.py"), FAKE_CODEX).unwrap();
-            fs::write(dir.join("codex.cmd"), "@python \"%~dp0codex.py\" %*\r\n").unwrap();
+            // Its errors are kept and shown when the test ends.
+            fs::write(
+                dir.join("codex.cmd"),
+                "@python \"%~dp0codex.py\" %* 2>>\"%~dp0stderr.log\"\r\n",
+            )
+            .unwrap();
         }
         let fake = Self { dir };
         fake.configure(config);
@@ -308,6 +313,14 @@ impl FakeCodex {
     }
     pub fn marker(&self, name: &str) -> Option<String> {
         fs::read_to_string(self.dir.join(name)).ok()
+    }
+}
+#[cfg(windows)]
+impl Drop for FakeCodex {
+    fn drop(&mut self) {
+        if let Some(errors) = self.marker("stderr.log").filter(|e| !e.trim().is_empty()) {
+            eprintln!("fake codex stderr:\n{errors}");
+        }
     }
 }
 

@@ -279,6 +279,7 @@ fn each_use_of_the_action_starts_with_its_own_profile() {
     assert!(Path::new(&first_result).exists());
 }
 
+#[cfg(unix)]
 #[test]
 fn a_spending_stop_comment_names_the_limit_that_was_reached() {
     if shadowcode_core::sandbox::which("jq").is_none() {
