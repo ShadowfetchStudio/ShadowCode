@@ -37,7 +37,8 @@ use windows_sys::Win32::{
             CreateProcessW, DeleteProcThreadAttributeList, GetExitCodeProcess,
             InitializeProcThreadAttributeList, UpdateProcThreadAttribute, WaitForSingleObject,
             CREATE_UNICODE_ENVIRONMENT, EXTENDED_STARTUPINFO_PRESENT, INFINITE,
-            PROCESS_INFORMATION, PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE, STARTUPINFOEXW,
+            PROCESS_INFORMATION, PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE, STARTF_USESTDHANDLES,
+            STARTUPINFOEXW,
         },
     },
 };
@@ -544,6 +545,10 @@ fn spawn(shell: &Path, login: bool, cwd: &Path, cols: u16, rows: u16) -> Result<
     let directory = wide(cwd.as_os_str());
     let mut startup = STARTUPINFOEXW::default();
     startup.StartupInfo.cb = std::mem::size_of::<STARTUPINFOEXW>() as u32;
+    // Null standard handles: the pseudo console provides them. Without this
+    // flag a shell started from a process with redirected handles (the
+    // engine under a service, a test) inherits those instead.
+    startup.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
     startup.lpAttributeList = attributes;
     let mut process = PROCESS_INFORMATION::default();
     // SAFETY: every buffer is NUL-terminated and lives across the call; the
