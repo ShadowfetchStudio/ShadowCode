@@ -1666,6 +1666,7 @@ fn runtime_probe_does_not_hang_on_a_child_left_behind() {
 /// LOC-04: another program takes llama-server's port between choosing it and
 /// the server listening. The load retries on a fresh port on the same device
 /// instead of calling it a GPU failure and moving the model to the CPU.
+#[cfg(unix)]
 #[tokio::test]
 async fn an_occupied_port_is_retried_without_a_cpu_fallback() {
     let f = fixture(GPU);
@@ -1837,6 +1838,7 @@ async fn cancel_during_load_early_exit_tail_and_cpu_fallback() {
     engine.shutdown().await.unwrap();
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn ollama_manifest_import_references_blobs_without_copying() {
     let f = fixture(GPU);

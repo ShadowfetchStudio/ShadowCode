@@ -206,6 +206,7 @@ fn max_cost_outside_what_shadowcode_accepts_is_refused_up_front() {
     }
 }
 
+#[cfg(unix)]
 #[test]
 fn each_use_of_the_action_starts_with_its_own_profile() {
     // Two uses in one job share $RUNNER_TEMP. The second must not inherit the

@@ -13,9 +13,10 @@ use shadowcode_core::{
     rulebook::{self, VendorRules},
     service::{Request, Service},
 };
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use std::{
     fs,
-    os::unix::fs::PermissionsExt,
     path::{Path, PathBuf},
     time::Duration,
 };
@@ -678,6 +679,7 @@ for raw in sys.stdin:
     send({"type":"result","subtype":"success","is_error":False,"result":"PELICAN","usage":{"input_tokens":3,"output_tokens":1}})
 "#;
 
+#[cfg(unix)]
 #[tokio::test]
 async fn a_claude_run_reads_a_private_rules_file_that_is_removed_afterwards() {
     let s = setup("http://127.0.0.1:9/v1");

@@ -277,6 +277,7 @@ async fn mutations_require_trust_current_project_current_hash_and_idle_workspace
     remove(&s).await;
     s.engine.shutdown().await.unwrap();
 }
+#[cfg(unix)]
 #[tokio::test]
 async fn install_preflights_conflicts_symlinks_and_clears_stale_executable_grants() {
     let (root, s) = fixture("http://127.0.0.1:9/v1");

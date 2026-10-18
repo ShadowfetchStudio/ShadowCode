@@ -632,6 +632,7 @@ async fn ask_mode_asks_before_edits_and_durable_events_are_redacted() {
         .any(|e| e["type"] == "tool.completed" && e["payload"]["redacted"] == true));
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn edits_outside_the_project_are_refused_before_any_prompt() {
     let mut config = Config::default();

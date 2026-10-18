@@ -49,6 +49,7 @@ async fn call(service: &Service, method: &str, body: Value) -> Result<Value> {
         })
         .await
 }
+#[cfg(unix)]
 #[tokio::test]
 async fn isolated_checkout_preserves_dirty_source_and_disables_checkout_hooks() {
     use std::os::unix::fs::PermissionsExt;
@@ -358,6 +359,7 @@ async fn removal_refuses_changes_ignored_files_stale_review_and_busy_tasks_prese
         .exists());
     service.engine.shutdown().await.unwrap();
 }
+#[cfg(unix)]
 #[tokio::test]
 async fn worktree_inspection_rejects_detached_heads_symlinks_and_forged_paths() {
     use std::os::unix::fs::symlink;
@@ -755,6 +757,7 @@ async fn reviewed_return_does_not_overwrite_ignored_source_files() {
     service.engine.shutdown().await.unwrap();
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn copied_source_changes_preserve_staging_binary_untracked_modes_and_source() {
     use std::os::unix::fs::PermissionsExt;
@@ -839,6 +842,7 @@ async fn copied_source_changes_preserve_staging_binary_untracked_modes_and_sourc
     );
     service.engine.shutdown().await.unwrap();
 }
+#[cfg(unix)]
 #[tokio::test]
 async fn copy_review_rejects_symlinks_changed_contents_and_excludes_non_git_files() {
     use std::os::unix::fs::symlink;
@@ -1077,6 +1081,7 @@ async fn reviewed_connection_repair_preserves_index_files_and_rejects_stale_stat
     service.engine.shutdown().await.unwrap();
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn connection_repair_refuses_foreign_links_locks_and_lost_indexes() {
     use std::os::unix::fs::symlink;
