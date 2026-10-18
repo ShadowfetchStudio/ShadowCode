@@ -82,7 +82,9 @@ fn dunce_path(path: &Path) -> std::path::PathBuf {
 
 /// Programs start in the container (a failed start is 0xC0000142): system
 /// programs and busybox `sh`, the sandbox's shell. Git for Windows' bash
-/// (MSYS2) cannot start in an AppContainer; it is not used inside it.
+/// (MSYS2) cannot start in an AppContainer; it is not used inside it. The
+/// container may not open the null device (cmd's `>nul` is refused), so
+/// busybox's /dev/null is the handle the launcher opened for it.
 #[test]
 fn system_programs_and_busybox_start_in_the_container() {
     std::env::set_var(
@@ -103,12 +105,9 @@ fn system_programs_and_busybox_start_in_the_container() {
             busybox,
             "sh".into(),
             "-c".into(),
-            "echo busybox-ok; ls / >/dev/null; echo quiet 2>/dev/null </dev/null".into(),
-        ],
-        vec![
-            format!(r"{system}\System32\cmd.exe"),
-            "/c".into(),
-            "echo x >nul && echo nul-ok".into(),
+            "echo busybox-ok; echo hidden >/dev/null; ls / 2>/dev/null >/dev/null; \
+             cat </dev/null; echo null-ok"
+                .into(),
         ],
     ];
     let mut report = Vec::new();
@@ -124,9 +123,16 @@ fn system_programs_and_busybox_start_in_the_container() {
         report.push(format!(
             "{code:#x} {}: {}{}",
             program[0],
-            String::from_utf8_lossy(&output.stdout).trim(),
+            String::from_utf8_lossy(&output.stdout)
+                .replace("\r\n", "\n")
+                .trim(),
             String::from_utf8_lossy(&output.stderr).trim()
         ));
     }
-    assert!(!failed, "{}", report.join("\n"));
+    let report = report.join("\n");
+    assert!(!failed, "{report}");
+    assert!(
+        report.contains("busybox-ok\nnull-ok") && !report.contains("hidden"),
+        "{report}"
+    );
 }

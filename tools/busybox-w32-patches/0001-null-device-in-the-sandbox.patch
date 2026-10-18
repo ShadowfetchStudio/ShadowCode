@@ -1,0 +1,63 @@
+diff --git a/win32/mingw.c b/win32/mingw.c
+index 56fe22651..7dd05c75c 100644
+--- a/win32/mingw.c
++++ b/win32/mingw.c
+@@ -224,6 +224,31 @@ static int get_dev_fd(const char *filename)
+ }
+ 
+ static int mingw_is_directory(const char *path);
++
++/*
++ * ShadowCode's Windows sandbox (an AppContainer) may not open the null
++ * device. Its launcher opens one outside the sandbox and names the
++ * inherited handle in SHADOWCODE_NULL_HANDLE; a copy of that handle
++ * behaves exactly as "nul" would.
++ */
++static int sandbox_null_fd(int oflags)
++{
++	const char *value = getenv("SHADOWCODE_NULL_HANDLE");
++	HANDLE copy;
++	int fd;
++
++	if (!value || !*value)
++		return -1;
++	if (!DuplicateHandle(GetCurrentProcess(),
++			(HANDLE)(intptr_t)strtoull(value, NULL, 10),
++			GetCurrentProcess(), &copy, 0,
++			(oflags & O_NOINHERIT) ? FALSE : TRUE, DUPLICATE_SAME_ACCESS))
++		return -1;
++	fd = _open_osfhandle((intptr_t)copy, oflags & (O_APPEND | O_RDONLY | O_TEXT));
++	if (fd < 0)
++		CloseHandle(copy);
++	return fd;
++}
+ #undef open
+ int mingw_open (const char *filename, int oflags, ...)
+ {
+@@ -259,6 +284,13 @@ int mingw_open (const char *filename, int oflags, ...)
+ 					((mode & S_IRUSR) ? _S_IREAD : 0);
+ 
+ 	fd = open(filename, oflags&~O_SPECIAL, pmode);
++	if (fd < 0 && errno == EACCES && strcmp(filename, "nul") == 0) {
++		int null_fd = sandbox_null_fd(oflags);
++		if (null_fd >= 0)
++			fd = null_fd;
++		else
++			errno = EACCES;
++	}
+ 	if (fd >= 0) {
+ 		update_special_fd(dev, fd);
+ 	}
+@@ -311,6 +343,12 @@ FILE * FAST_FUNC mingw_fopen (const char *filename, const char *otype)
+ 	} else if ((fd=get_dev_fd(filename)) >= 0)
+ 		return fdopen(fd, otype);
+ 	stream = fopen(filename, otype);
++	if (stream == NULL && errno == EACCES && strcmp(filename, "nul") == 0 &&
++			(fd = sandbox_null_fd(strchr(otype, 'a') ? O_APPEND : 0)) >= 0) {
++		if ((stream = fdopen(fd, otype)) == NULL)
++			close(fd);
++		return stream;
++	}
+ 	if (stream == NULL && errno == EACCES && strcmp(otype, "r") == 0 &&
+ 			mingw_is_directory(filename))
+ 		errno = EISDIR;

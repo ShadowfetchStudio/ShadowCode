@@ -30,7 +30,7 @@ use anyhow::{bail, ensure, Context, Result};
 use serde_json::json;
 use std::{
     ffi::{c_void, OsStr, OsString},
-    os::windows::ffi::OsStrExt,
+    os::windows::{ffi::OsStrExt, io::AsRawHandle},
     path::{Path, PathBuf},
     sync::{Mutex, OnceLock},
 };
@@ -67,6 +67,8 @@ use windows_sys::Win32::{
 pub const LAUNCH_FLAG: &str = "--shadowcode-sandbox";
 /// ShadowCode's one AppContainer profile.
 const PROFILE: &str = "ShadowCode.Sandbox";
+/// Names the inherited null-device handle (see the busybox-w32 patch).
+const NULL_HANDLE_ENV: &str = "SHADOWCODE_NULL_HANDLE";
 /// internetClient, internetClientServer, privateNetworkClientServer.
 const NETWORK_CAPABILITIES: [&str; 3] = ["S-1-15-3-1", "S-1-15-3-2", "S-1-15-3-3"];
 const READ: u32 = FILE_GENERIC_READ | FILE_GENERIC_EXECUTE;
@@ -632,25 +634,45 @@ fn launch(args: Vec<OsString>) -> Result<i32> {
         CapabilityCount: entries.len() as u32,
         Reserved: 0,
     };
+    // An AppContainer may not open the null device itself, so it gets one
+    // opened here: busybox's /dev/null uses the handle the environment
+    // names, and it stands in for a missing standard handle.
+    let null = std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(r"\\.\NUL")
+        .context("Could not open the null device for the sandbox")?;
+    let null_handle = null.as_raw_handle() as HANDLE;
+    env.push((
+        NULL_HANDLE_ENV.into(),
+        (null_handle as usize).to_string().into(),
+    ));
     // This process's standard handles become the program's, and only they
-    // are inherited.
+    // and the null device are inherited.
     // SAFETY: GetStdHandle has no preconditions; SetHandleInformation only
     // marks these handles inheritable.
     let standard: Vec<HANDLE> = unsafe {
         [STD_INPUT_HANDLE, STD_OUTPUT_HANDLE, STD_ERROR_HANDLE]
             .iter()
             .map(|&which| GetStdHandle(which))
+            .map(|handle| {
+                if handle.is_null() || handle as isize == -1 {
+                    null_handle
+                } else {
+                    handle
+                }
+            })
             .collect()
     };
     let mut inherit: Vec<HANDLE> = Vec::new();
-    for &handle in &standard {
-        if !handle.is_null() && handle as isize != -1 && !inherit.contains(&handle) {
+    for &handle in standard.iter().chain([&null_handle]) {
+        if !inherit.contains(&handle) {
             // SAFETY: a live handle of this process.
             unsafe { SetHandleInformation(handle, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT) };
             inherit.push(handle);
         }
     }
-    let attribute_count = if inherit.is_empty() { 1 } else { 2 };
+    let attribute_count = 2;
     let mut size = 0usize;
     // SAFETY: a size query.
     unsafe {
@@ -671,16 +693,15 @@ fn launch(args: Vec<OsString>) -> Result<i32> {
                 std::ptr::null_mut(),
                 std::ptr::null(),
             ) != 0
-            && (inherit.is_empty()
-                || UpdateProcThreadAttribute(
-                    attributes,
-                    0,
-                    PROC_THREAD_ATTRIBUTE_HANDLE_LIST as usize,
-                    inherit.as_ptr().cast(),
-                    std::mem::size_of_val(inherit.as_slice()),
-                    std::ptr::null_mut(),
-                    std::ptr::null(),
-                ) != 0)
+            && UpdateProcThreadAttribute(
+                attributes,
+                0,
+                PROC_THREAD_ATTRIBUTE_HANDLE_LIST as usize,
+                inherit.as_ptr().cast(),
+                std::mem::size_of_val(inherit.as_slice()),
+                std::ptr::null_mut(),
+                std::ptr::null(),
+            ) != 0
     };
     ensure!(
         ready,
@@ -754,6 +775,7 @@ fn launch(args: Vec<OsString>) -> Result<i32> {
         CloseHandle(process.hProcess);
     }
     drop(capabilities);
+    drop(null);
     Ok(code as i32)
 }
 
