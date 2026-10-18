@@ -45,9 +45,9 @@ needed for phases 1 and 2.
   - Folder syncs after a rename (`paths::sync_directory`) are skipped on
     Windows, which cannot open a folder as a file.
   - File opens never follow a final symlink on Windows either.
-  - Not yet available on Windows, each with a clear error: subscription CLI
-    backends (the vendor runner), terminals, removing isolated checkouts,
-    and linking exported rules.
+  - Not yet available on Windows at the time, each with a clear error:
+    subscription CLI backends (the vendor runner), terminals, removing
+    isolated checkouts, and linking exported rules.
   - Integration tests built on Unix sockets, FIFOs, symlinks, file modes or
     the fake vendor CLIs (shell scripts) are Unix-only for now.
 - Phase 2 (done October 18): the engine's unit tests (596; 554 of 605 on
@@ -77,10 +77,28 @@ needed for phases 1 and 2.
     requests and folder listings use `/`; with `\`, an edit inside the
     chosen folder counted as outside it, and "Ignore this file" would have
     written an escape into `.gitignore`.
-- Not on Windows yet, and the tests that need them are Unix-only (each says
-  why): the vendor runner (subscription CLIs), terminals, local models (the
-  llama.cpp runtime), the SQLite inspector, and test fixtures that are shell
-  or Python scripts, Unix file modes, signals or file names.
+- Phase 3 (done October 18, CI run 39163828940): the rest of the engine
+  runs on Windows, and all 607 unit tests and 92 integration suites pass.
+  - The vendor runner (subscription CLIs) watches its pipes with
+    `PeekNamedPipe` and keeps each CLI and its children in a job object.
+  - Terminals are pseudoconsoles (ConPTY) running PowerShell.
+  - Local models: llama.cpp is built for Windows (MSVC, CPU; Vulkan when
+    its SDK is present) and installed beside the app.
+  - The SQLite inspector opens project databases without following links.
+  - The shell sandbox is an AppContainer running busybox-w32's `sh` (see
+    the table above). The container may not open the null device, so the
+    launcher opens it and busybox's `/dev/null` uses that handle (patched
+    in `tools/busybox-w32-patches`).
+  - Settings files replaced at the same moment by two writers are retried
+    (Windows refuses the second replacement), and this process's writers to
+    one database queue for its write lock instead of polling it: on Windows
+    a polling writer could time out with "database is locked".
+- Still not on Windows: the network allow-list (refused, see above) and
+  linking exported rules. Tests that need shell or Python fixtures, Unix
+  file modes, signals or file names stay Unix-only (each says why).
 - Preview installer: the Windows job also builds an unsigned NSIS
-  installer (per-user) and checks that the app reports its version. It is a
-  14-day CI artifact, not a release.
+  installer (per-user) with the llama.cpp runtime and the sandbox shell,
+  checks that the app reports its version, and checks that it keeps its
+  data in `%LOCALAPPDATA%` and `%APPDATA%`. It is a 14-day CI artifact, not
+  a release.
+- Not yet tried: the app on a real Windows PC (only CI runners so far).
