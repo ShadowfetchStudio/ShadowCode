@@ -103,7 +103,12 @@ fn system_programs_and_busybox_start_in_the_container() {
             busybox,
             "sh".into(),
             "-c".into(),
-            "echo busybox-ok; ls / >/dev/null".into(),
+            "echo busybox-ok; ls / >/dev/null; echo quiet 2>/dev/null </dev/null".into(),
+        ],
+        vec![
+            format!(r"{system}\System32\cmd.exe"),
+            "/c".into(),
+            "echo x >nul && echo nul-ok".into(),
         ],
     ];
     let mut report = Vec::new();

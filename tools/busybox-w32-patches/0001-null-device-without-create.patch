@@ -1,0 +1,18 @@
+diff --git a/win32/mingw.c b/win32/mingw.c
+index 56fe22651..82abc64c0 100644
+--- a/win32/mingw.c
++++ b/win32/mingw.c
+@@ -234,8 +234,12 @@ int mingw_open (const char *filename, int oflags, ...)
+ 	int special = (oflags & O_SPECIAL);
+ 	int dev = get_dev_type(filename);
+ 
+-	if (dev == DEV_NULL)
++	if (dev == DEV_NULL) {
++		/* The null device always exists: asking to create or truncate it
++		 * is refused in an AppContainer (ShadowCode's Windows sandbox). */
+ 		filename = "nul";
++		oflags &= ~(O_CREAT | O_TRUNC | O_EXCL);
++	}
+ 	else if (dev == DEV_TTY)
+ 		filename = "con";
+ 	else if (dev == DEV_STDIN || dev == DEV_STDOUT || dev == DEV_STDERR)

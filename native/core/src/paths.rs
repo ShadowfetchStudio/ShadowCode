@@ -322,7 +322,29 @@ pub fn atomic_write(path: &Path, bytes: &[u8], private: bool) -> Result<()> {
     }
     temp.write_all(bytes)?;
     temp.as_file().sync_all()?;
-    temp.persist(path).map_err(|e| e.error)?;
+    persist(temp, path)?;
     sync_directory(parent)?;
     Ok(())
+}
+
+/// Replace `path` with `temp`. Windows refuses a replacement (access denied)
+/// while another replacement of the same file is in flight or a scanner
+/// holds it; those clear within milliseconds, so it is retried briefly.
+fn persist(mut temp: tempfile::NamedTempFile, path: &Path) -> std::io::Result<()> {
+    let mut tries = 0;
+    loop {
+        match temp.persist(path) {
+            Ok(_) => return Ok(()),
+            Err(error)
+                if cfg!(windows)
+                    && error.error.kind() == std::io::ErrorKind::PermissionDenied
+                    && tries < 20 =>
+            {
+                tries += 1;
+                temp = error.file;
+                std::thread::sleep(std::time::Duration::from_millis(5 * tries));
+            }
+            Err(error) => return Err(error.error),
+        }
+    }
 }
