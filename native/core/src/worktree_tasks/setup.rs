@@ -230,6 +230,11 @@ async fn run_command(
             return json!({"command": command, "ok": false, "stopped": "not_started", "seconds": seconds(), "output": format!("Could not start: {error}")})
         }
     };
+    // Windows: the job holds what the command starts; dropping it ends them.
+    #[cfg(windows)]
+    let job = child
+        .raw_handle()
+        .and_then(|handle| crate::process::Job::for_process(handle).ok());
     let stdout = Tail::read(child.stdout.take());
     let stderr = Tail::read(child.stderr.take());
     let waited = tokio::select! {
@@ -244,6 +249,10 @@ async fn run_command(
             unsafe {
                 libc::kill(-(pid as i32), libc::SIGKILL);
             }
+        }
+        #[cfg(windows)]
+        if let Some(job) = &job {
+            job.terminate();
         }
         let _ = child.kill().await;
     }

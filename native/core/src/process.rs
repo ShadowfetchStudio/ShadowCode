@@ -225,18 +225,100 @@ pub(crate) fn exists(pid: u32) -> bool {
     alive || std::io::Error::last_os_error().raw_os_error() == Some(libc::EPERM)
 }
 
-struct ProcessGroup(u32);
+/// Windows' process group: every process a command starts joins its job
+/// (unless it breaks away on purpose); ending the job ends them all, and
+/// closing the last handle, ShadowCode's included, ends it too. A process
+/// started in the instant between spawn and joining is not covered.
+#[cfg(windows)]
+pub(crate) struct Job(windows_sys::Win32::Foundation::HANDLE);
+// SAFETY: a job handle may be used and closed from any thread.
+#[cfg(windows)]
+unsafe impl Send for Job {}
+#[cfg(windows)]
+unsafe impl Sync for Job {}
+#[cfg(windows)]
+impl Job {
+    /// A job holding the process behind `process`.
+    pub(crate) fn for_process(process: std::os::windows::io::RawHandle) -> std::io::Result<Self> {
+        use windows_sys::Win32::System::JobObjects::{
+            AssignProcessToJobObject, CreateJobObjectW, JobObjectExtendedLimitInformation,
+            SetInformationJobObject, JOBOBJECT_EXTENDED_LIMIT_INFORMATION,
+            JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+        };
+        // SAFETY: an unnamed job with default security; checked for null.
+        let handle = unsafe { CreateJobObjectW(std::ptr::null(), std::ptr::null()) };
+        if handle.is_null() {
+            return Err(std::io::Error::last_os_error());
+        }
+        let job = Self(handle);
+        // SAFETY: the limits are plain data passed with their own size; the
+        // process handle belongs to a live child.
+        unsafe {
+            let mut limits: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = std::mem::zeroed();
+            limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+            if SetInformationJobObject(
+                job.0,
+                JobObjectExtendedLimitInformation,
+                (&limits as *const JOBOBJECT_EXTENDED_LIMIT_INFORMATION).cast(),
+                std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
+            ) == 0
+                || AssignProcessToJobObject(
+                    job.0,
+                    process as windows_sys::Win32::Foundation::HANDLE,
+                ) == 0
+            {
+                return Err(std::io::Error::last_os_error());
+            }
+        }
+        Ok(job)
+    }
+    /// End every process in the job now.
+    pub(crate) fn terminate(&self) {
+        // SAFETY: the handle is open until drop.
+        unsafe { windows_sys::Win32::System::JobObjects::TerminateJobObject(self.0, 1) };
+    }
+}
+#[cfg(windows)]
+impl Drop for Job {
+    fn drop(&mut self) {
+        // SAFETY: opened in for_process and closed once.
+        unsafe { windows_sys::Win32::Foundation::CloseHandle(self.0) };
+    }
+}
+
+struct ProcessGroup {
+    pid: u32,
+    #[cfg(windows)]
+    job: Option<Job>,
+}
 impl ProcessGroup {
+    #[cfg(unix)]
+    fn of(child: &tokio::process::Child, pid: u32) -> Self {
+        let _ = child;
+        Self { pid }
+    }
+    #[cfg(windows)]
+    fn of(child: &tokio::process::Child, pid: u32) -> Self {
+        let job = child
+            .raw_handle()
+            .and_then(|handle| Job::for_process(handle).ok());
+        Self { pid, job }
+    }
     fn terminate(&self) {
+        // Windows has no polite stop for a console process tree.
+        #[cfg(windows)]
+        if let Some(job) = &self.job {
+            job.terminate();
+        }
         #[cfg(unix)]
-        if self.0 != 0 {
-            let descendants = crate::process::descendants(self.0);
+        if self.pid != 0 {
+            let descendants = crate::process::descendants(self.pid);
             unsafe {
-                libc::kill(-(self.0 as i32), libc::SIGTERM);
+                libc::kill(-(self.pid as i32), libc::SIGTERM);
                 // Some shells alter their process group while spawning a
                 // background job. Signal the leader directly as well so an
                 // owned task cannot outlive its cancellation scope.
-                libc::kill(self.0 as i32, libc::SIGTERM);
+                libc::kill(self.pid as i32, libc::SIGTERM);
                 for child in descendants {
                     libc::kill(child as i32, libc::SIGTERM);
                 }
@@ -245,17 +327,21 @@ impl ProcessGroup {
     }
     fn kill(&mut self) {
         #[cfg(unix)]
-        if self.0 != 0 {
-            let descendants = crate::process::descendants(self.0);
+        if self.pid != 0 {
+            let descendants = crate::process::descendants(self.pid);
             unsafe {
-                libc::kill(-(self.0 as i32), libc::SIGKILL);
-                libc::kill(self.0 as i32, libc::SIGKILL);
+                libc::kill(-(self.pid as i32), libc::SIGKILL);
+                libc::kill(self.pid as i32, libc::SIGKILL);
                 for child in descendants {
                     libc::kill(child as i32, libc::SIGKILL);
                 }
             }
         }
-        self.0 = 0;
+        #[cfg(windows)]
+        if let Some(job) = self.job.take() {
+            job.terminate();
+        }
+        self.pid = 0;
     }
 }
 impl Drop for ProcessGroup {
@@ -407,7 +493,7 @@ async fn run_internal(
         .spawn()
         .with_context(|| format!("Could not start {}", spec.program))?;
     let pid = child.id().context("Command has no process ID")?;
-    let mut group = ProcessGroup(pid);
+    let mut group = ProcessGroup::of(&child, pid);
     // Dropped (stopping the proxy) when this function returns.
     let _proxy = match &spec.child {
         Some(setup) => setup.after_spawn()?,
