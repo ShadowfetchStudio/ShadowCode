@@ -6,6 +6,7 @@
 //! plus `manifest.json` naming the records it created. Each one is rebuilt in
 //! a temporary profile and opened through `Service::open`, the way the
 //! desktop and CLI open a profile after an upgrade.
+#![cfg_attr(not(unix), allow(unused))]
 use serde_json::{json, Value};
 use shadowcode_core::paths::Canonical;
 use shadowcode_core::{
@@ -239,6 +240,9 @@ fn a_fixture_exists_for_every_release_and_schema_version() {
     assert!(schemas.iter().all(|s| *s <= SCHEMA_VERSION));
 }
 
+// Released profiles come from Linux and macOS, with Unix paths throughout;
+// no Windows release exists to upgrade from.
+#[cfg(unix)]
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn every_released_profile_opens_with_all_its_data() {
     let versions = versions();

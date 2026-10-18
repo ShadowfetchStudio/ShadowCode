@@ -1,8 +1,8 @@
 name: Windows
 # The Windows port (docs/WINDOWS_PORT.md). The whole workspace must compile
 # on Windows without warnings (every error is reported at once with
-# --keep-going), and the engine's unit tests must pass. The integration tests
-# run too but do not block yet (phase 2). The logs are kept as artifacts. The installer job
+# --keep-going), and the engine's unit and integration tests must pass. The
+# logs are kept as artifacts. The installer job
 # builds an unsigned preview installer (NSIS, per-user) as an artifact; it is
 # not attached to any release.
 on:
@@ -63,10 +63,8 @@ jobs:
         run: |
           set -o pipefail
           cargo +1.95.0 test -p shadowcode-core --lib --locked --no-fail-fast 2>&1 | tee windows-test.log
-      - name: Engine integration tests on Windows (phase 2, not yet required)
+      - name: Engine integration tests on Windows
         id: integration
-        if: steps.unit.outcome == 'success'
-        continue-on-error: true
         env:
           RUST_LIB_BACKTRACE: '1'
         run: |

@@ -50,10 +50,9 @@ needed for phases 1 and 2.
     and linking exported rules.
   - Integration tests built on Unix sockets, FIFOs, symlinks, file modes or
     the fake vendor CLIs (shell scripts) are Unix-only for now.
-- Phase 2 (in progress): all 596 of the engine's unit tests pass on Windows
-  (October 18; 554 of 605 on the first run) and are now required. The
-  integration tests run on Windows without blocking yet. Fixed along the
-  way:
+- Phase 2 (done October 18): the engine's unit tests (596; 554 of 605 on
+  the first run) and integration tests (90 suites) pass on Windows and are
+  required. Fixed along the way:
   - Randomness for remote-access tokens and the local server key comes
     from the system (getrandom), not `/dev/urandom`.
   - Canonical paths have no `\\?\` prefix (`paths::Canonical`, dunce), and
@@ -74,8 +73,14 @@ needed for phases 1 and 2.
     rename is `SetFileInformationByHandle` without replacement. Git writes
     and lists its own paths with `/`, which the checks expect.
   - Background processes use the Windows shell, not `/bin/sh`.
-- Still open in phase 2: the integration tests and the vendor runner
-  (subscription CLIs).
+  - Project paths in checkpoints, scope checks ("Only change these"), Git
+    requests and folder listings use `/`; with `\`, an edit inside the
+    chosen folder counted as outside it, and "Ignore this file" would have
+    written an escape into `.gitignore`.
+- Not on Windows yet, and the tests that need them are Unix-only (each says
+  why): the vendor runner (subscription CLIs), terminals, local models (the
+  llama.cpp runtime), the SQLite inspector, and test fixtures that are shell
+  or Python scripts, Unix file modes, signals or file names.
 - Preview installer: the Windows job also builds an unsigned NSIS
   installer (per-user) and checks that the app reports its version. It is a
   14-day CI artifact, not a release.
