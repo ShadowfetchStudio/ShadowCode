@@ -1,5 +1,6 @@
 use anyhow::Result;
 use serde_json::{json, Value};
+#[cfg(unix)]
 use shadowcode_core::paths::Canonical;
 use shadowcode_core::{
     config::Config,

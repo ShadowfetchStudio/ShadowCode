@@ -101,9 +101,9 @@ security-framework = { version = "3", default-features = false }
 [target.'cfg(windows)'.dependencies]
 # Voice input on Windows: the same cpal, through WASAPI.
 cpal = { version = "=0.18.2", default-features = false }
-# The control channel's named pipe (its access rules and peer identity) and
-# the memory figures for local models.
-windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Security", "Win32_Security_Authorization", "Win32_System_Pipes", "Win32_System_SystemInformation", "Win32_System_Threading"] }
+# The control channel's named pipe (its access rules and peer identity), the
+# memory figures and file identities for local models.
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_Security", "Win32_Security_Authorization", "Win32_Storage_FileSystem", "Win32_System_Pipes", "Win32_System_SystemInformation", "Win32_System_Threading"] }
 
 [dev-dependencies]
 # The same tokio, with its paused test clock (no new crate).

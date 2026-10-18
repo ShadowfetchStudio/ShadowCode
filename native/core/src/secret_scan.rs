@@ -1570,6 +1570,8 @@ diff --git a/t\\303\\251st/a b.env b/t\\303\\251st/a b.env\nnew file mode 100644
 
     /// A sandboxed command can write `.git/config`, and the check runs
     /// outside the sandbox: it must never start a program named there.
+    // The fixture program is a shell script that Git must be able to run.
+    #[cfg(unix)]
     #[tokio::test]
     async fn the_check_never_runs_the_repository_s_fsmonitor_or_signature_program() {
         let root = tempfile::tempdir().unwrap();

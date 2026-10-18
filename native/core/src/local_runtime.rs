@@ -73,20 +73,17 @@ impl LaunchSpec {
 }
 
 /// A filesystem snapshot, not a hash of file contents. Unix change time and
-/// inode catch same-size rewrites and replacements even when mtime is restored.
+/// inode (on Windows: the change time and file index on its volume) catch
+/// same-size rewrites and replacements even when mtime is restored.
 /// These observations cannot make a mutable file immutable during inference.
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]
 pub struct FileIdentity {
     pub path: PathBuf,
     pub bytes: u64,
     pub modified_ns: Option<String>,
-    #[cfg(unix)]
     pub device: String,
-    #[cfg(unix)]
     pub inode: String,
-    #[cfg(unix)]
     pub changed_seconds: i64,
-    #[cfg(unix)]
     pub changed_nanoseconds: i64,
 }
 
@@ -97,7 +94,17 @@ impl FileIdentity {
         let meta = std::fs::metadata(&resolved)?;
         ensure!(meta.is_file(), "Not a regular file: {}", path.display());
         #[cfg(unix)]
-        use std::os::unix::fs::MetadataExt;
+        let (device, inode, changed_seconds, changed_nanoseconds) = {
+            use std::os::unix::fs::MetadataExt;
+            (
+                meta.dev().to_string(),
+                meta.ino().to_string(),
+                meta.ctime(),
+                meta.ctime_nsec(),
+            )
+        };
+        #[cfg(windows)]
+        let (device, inode, changed_seconds, changed_nanoseconds) = windows_identity(&resolved)?;
         Ok(Self {
             path: resolved,
             bytes: meta.len(),
@@ -106,16 +113,51 @@ impl FileIdentity {
                 .ok()
                 .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
                 .map(|t| t.as_nanos().to_string()),
-            #[cfg(unix)]
-            device: meta.dev().to_string(),
-            #[cfg(unix)]
-            inode: meta.ino().to_string(),
-            #[cfg(unix)]
-            changed_seconds: meta.ctime(),
-            #[cfg(unix)]
-            changed_nanoseconds: meta.ctime_nsec(),
+            device,
+            inode,
+            changed_seconds,
+            changed_nanoseconds,
         })
     }
+}
+
+/// Volume serial number, file index and change time (100 ns units since
+/// 1601) of an open file.
+#[cfg(windows)]
+fn windows_identity(path: &Path) -> Result<(String, String, i64, i64)> {
+    use std::os::windows::io::AsRawHandle;
+    use windows_sys::Win32::Storage::FileSystem::{
+        FileBasicInfo, GetFileInformationByHandle, GetFileInformationByHandleEx,
+        BY_HANDLE_FILE_INFORMATION, FILE_BASIC_INFO,
+    };
+    let file = std::fs::File::open(path)?;
+    let handle = file.as_raw_handle() as windows_sys::Win32::Foundation::HANDLE;
+    // SAFETY: both structures are plain data written by the calls, sized as
+    // passed, while `file` keeps the handle open.
+    let (info, basic) = unsafe {
+        let mut info: BY_HANDLE_FILE_INFORMATION = std::mem::zeroed();
+        let mut basic: FILE_BASIC_INFO = std::mem::zeroed();
+        ensure!(
+            GetFileInformationByHandle(handle, &mut info) != 0
+                && GetFileInformationByHandleEx(
+                    handle,
+                    FileBasicInfo,
+                    (&mut basic as *mut FILE_BASIC_INFO).cast(),
+                    std::mem::size_of::<FILE_BASIC_INFO>() as u32,
+                ) != 0,
+            "Cannot read the identity of {}: {}",
+            path.display(),
+            std::io::Error::last_os_error()
+        );
+        (info, basic)
+    };
+    let index = (u64::from(info.nFileIndexHigh) << 32) | u64::from(info.nFileIndexLow);
+    Ok((
+        info.dwVolumeSerialNumber.to_string(),
+        index.to_string(),
+        basic.ChangeTime.div_euclid(10_000_000),
+        basic.ChangeTime.rem_euclid(10_000_000) * 100,
+    ))
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, serde::Serialize)]

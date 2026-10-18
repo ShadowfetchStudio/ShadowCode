@@ -53,6 +53,9 @@ jobs:
       - name: Engine unit tests on Windows (phase 2, not yet required)
         id: unit
         continue-on-error: true
+        env:
+          # An error's backtrace says which call failed, not only its message.
+          RUST_LIB_BACKTRACE: '1'
         run: |
           set -o pipefail
           cargo +1.95.0 test -p shadowcode-core --lib --locked --no-fail-fast 2>&1 | tee windows-test.log

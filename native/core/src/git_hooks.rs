@@ -439,6 +439,7 @@ mod tests {
     }
 
     /// Git expands `~` in core.hooksPath (a common global setting).
+    #[cfg(unix)]
     #[tokio::test]
     async fn a_hooks_path_from_the_home_folder_is_followed() {
         // `..` climbs the real folders, so count those.
@@ -496,11 +497,14 @@ mod tests {
         // A hook the question never listed.
         runnable(&hooks.join("post-checkout"), "#!/bin/sh\nexit 0\n");
         changed(&mut seen, fingerprint(project).await);
-        // A file made runnable.
+        // A file made runnable (Windows files have no mode bit to change).
         std::fs::write(hooks.join("post-merge"), "#!/bin/sh\n").unwrap();
         changed(&mut seen, fingerprint(project).await);
-        runnable(&hooks.join("post-merge"), "#!/bin/sh\n");
-        changed(&mut seen, fingerprint(project).await);
+        #[cfg(unix)]
+        {
+            runnable(&hooks.join("post-merge"), "#!/bin/sh\n");
+            changed(&mut seen, fingerprint(project).await);
+        }
         // husky: Git runs the stubs in `.husky/_`, which run `.husky/*`.
         let husky = project.join(".husky");
         std::fs::create_dir_all(husky.join("_")).unwrap();

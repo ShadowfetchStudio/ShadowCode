@@ -55,6 +55,15 @@ impl Advisory {
                 .mode(0o600)
                 .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK);
         }
+        // Windows opens a folder only with backup semantics; the reparse-point
+        // flag opens a link itself rather than its target, like O_NOFOLLOW.
+        #[cfg(windows)]
+        {
+            use std::os::windows::fs::OpenOptionsExt;
+            const FILE_FLAG_BACKUP_SEMANTICS: u32 = 0x0200_0000;
+            const FILE_FLAG_OPEN_REPARSE_POINT: u32 = 0x0020_0000;
+            parent.custom_flags(FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT);
+        }
         ensure!(
             directory.canonical()? == directory,
             "Worktree lock directory changed"
