@@ -345,6 +345,7 @@ pub fn failed_hook(events: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::paths::Canonical;
     use std::process::Command;
 
     #[tokio::test]
@@ -441,8 +442,7 @@ mod tests {
     #[tokio::test]
     async fn a_hooks_path_from_the_home_folder_is_followed() {
         // `..` climbs the real folders, so count those.
-        let Some(home) =
-            std::env::var_os("HOME").and_then(|h| PathBuf::from(h).canonicalize().ok())
+        let Some(home) = std::env::var_os("HOME").and_then(|h| PathBuf::from(h).canonical().ok())
         else {
             return;
         };

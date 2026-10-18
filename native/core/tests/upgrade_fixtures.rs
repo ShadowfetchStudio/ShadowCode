@@ -7,6 +7,7 @@
 //! a temporary profile and opened through `Service::open`, the way the
 //! desktop and CLI open a profile after an upgrade.
 use serde_json::{json, Value};
+use shadowcode_core::paths::Canonical;
 use shadowcode_core::{
     paths::AppPaths,
     service::{Request, Service},
@@ -87,7 +88,7 @@ fn write_private(path: &Path, text: &str) {
 fn profile(version: &str) -> Profile {
     let dir = fixtures().join(version);
     let temp = tempfile::tempdir().unwrap();
-    let root = temp.path().canonicalize().unwrap();
+    let root = temp.path().canonical().unwrap();
     let project = root.join("project");
     fs::create_dir_all(&project).unwrap();
     fs::write(project.join("README.md"), "# Fixture project\n").unwrap();

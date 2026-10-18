@@ -29,6 +29,7 @@
 //!   through [`redact_response`], which removes recognizable credentials.
 //! - A request body that carries a redaction placeholder is refused, so a
 //!   redacted value is never written back over the real one.
+use crate::paths::Canonical;
 use crate::{paths::AppPaths, redaction};
 use serde_json::Value;
 use std::path::{Path, PathBuf};
@@ -138,7 +139,7 @@ pub fn inside_profile(candidate: &str, paths: &AppPaths) -> bool {
         let mut rest = Vec::new();
         let mut current = p;
         loop {
-            if let Ok(real) = current.canonicalize() {
+            if let Ok(real) = current.canonical() {
                 return rest
                     .iter()
                     .rev()

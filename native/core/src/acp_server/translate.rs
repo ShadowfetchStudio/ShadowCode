@@ -95,12 +95,19 @@ pub(crate) fn tool_title(tool: &str, args: &Value) -> String {
     }
 }
 
+/// The editor wants an absolute path in the system's own form; collecting
+/// the parts turns `src/a.rs` under `C:\w` into `C:\w\src\a.rs` on Windows.
 fn absolute(workspace: &Path, path: &str) -> String {
     let path = Path::new(path);
     if path.is_absolute() {
         path.display().to_string()
     } else {
-        workspace.join(path).display().to_string()
+        workspace
+            .join(path)
+            .components()
+            .collect::<PathBuf>()
+            .display()
+            .to_string()
     }
 }
 
@@ -442,7 +449,14 @@ mod tests {
         ));
         assert_eq!(started[0]["sessionUpdate"], "tool_call");
         assert_eq!(started[0]["kind"], "edit");
-        assert_eq!(started[0]["locations"][0]["path"], "/w/src/a.rs");
+        assert_eq!(
+            started[0]["locations"][0]["path"],
+            Path::new("/w")
+                .join("src")
+                .join("a.rs")
+                .display()
+                .to_string()
+        );
         assert_eq!(started[0]["content"][0]["type"], "diff");
         assert_eq!(started[0]["content"][0]["oldText"], "a");
         assert_eq!(t.open_call("edit_file").unwrap().id, "c1");

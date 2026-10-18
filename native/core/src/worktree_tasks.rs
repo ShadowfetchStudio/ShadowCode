@@ -14,6 +14,7 @@
 //! A worktree task's folder is never listed as a project or remembered as
 //! the relaunch folder (see `Service::select_if`); its conversation is
 //! listed under its project (`worktree_source`).
+use crate::paths::Canonical;
 use crate::{
     compare::{self, Base, FileStat},
     engine::{Engine, Job},
@@ -325,7 +326,7 @@ fn copy_attachments(source: &Path, worktree: &Path, task: &str, images: &[String
     // ~/.ssh must never be read, and must never be copied onto through the same
     // symlink in the worktree (which would truncate the target).
     let base = source.join(PREFIX);
-    let (Ok(canon_base), Ok(canon_source)) = (base.canonicalize(), source.canonicalize()) else {
+    let (Ok(canon_base), Ok(canon_source)) = (base.canonical(), source.canonical()) else {
         return Ok(());
     };
     if !canon_base.starts_with(&canon_source) || !canon_base.is_dir() {
@@ -343,7 +344,7 @@ fn copy_attachments(source: &Path, worktree: &Path, task: &str, images: &[String
         let from = source.join(path);
         // Resolve every component: a symlink anywhere in the path that leaves
         // the attachments folder is refused.
-        let Ok(canon_from) = from.canonicalize() else {
+        let Ok(canon_from) = from.canonical() else {
             continue;
         };
         if !canon_from.starts_with(&canon_base) {
@@ -358,7 +359,7 @@ fn copy_attachments(source: &Path, worktree: &Path, task: &str, images: &[String
             fs::create_dir_all(parent)?;
             // The destination folder must resolve inside the worktree, so the
             // copy cannot follow a symlink out of it.
-            match (parent.canonicalize(), worktree.canonicalize()) {
+            match (parent.canonical(), worktree.canonical()) {
                 (Ok(canon_parent), Ok(canon_worktree))
                     if canon_parent.starts_with(&canon_worktree) => {}
                 _ => continue,
@@ -468,7 +469,7 @@ pub(crate) async fn prepare(
     };
     let record_guard = locks::record(&engine.store(), &record.id, &cancel).await?;
     let prepared: Result<setup::Setup> = async {
-        record.worktree = checkout.path.canonicalize()?;
+        record.worktree = checkout.path.canonical()?;
         compare::set_trust(engine, std::slice::from_ref(&record.worktree), true)?;
         copy_attachments(&source, &record.worktree, task, images)?;
         let store = engine.store();
@@ -1003,7 +1004,7 @@ mod tests {
     }
     impl Canonical {
         fn new(dir: tempfile::TempDir) -> Self {
-            let path = dir.path().canonicalize().unwrap();
+            let path = crate::paths::Canonical::canonical(dir.path()).unwrap();
             Self { _dir: dir, path }
         }
         fn path(&self) -> &std::path::Path {
@@ -1757,7 +1758,7 @@ mod tests {
     #[tokio::test]
     async fn abandoning_a_task_after_its_setup_ran_runs_the_teardown() {
         let f = fixture().await;
-        let source = f.source.canonicalize().unwrap();
+        let source = crate::paths::Canonical::canonical(&f.source).unwrap();
         let marker = f.root.path().join("teardown-ran");
         setup::save(
             &f.engine.store(),
@@ -1795,7 +1796,7 @@ mod tests {
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn setup_runs_without_holding_up_the_projects_other_tasks() {
         let f = fixture().await;
-        let source = f.source.canonicalize().unwrap();
+        let source = crate::paths::Canonical::canonical(&f.source).unwrap();
         let (entered, gate) = (f.root.path().join("entered"), f.root.path().join("gate"));
         setup::save(
             &f.engine.store(),
@@ -1840,7 +1841,7 @@ mod tests {
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn closing_shadowcode_stops_a_running_setup_instead_of_waiting_for_it() {
         let f = fixture().await;
-        let source = f.source.canonicalize().unwrap();
+        let source = crate::paths::Canonical::canonical(&f.source).unwrap();
         let entered = f.root.path().join("entered");
         setup::save(
             &f.engine.store(),

@@ -16,6 +16,7 @@
 //!   does not exist; `~/.codex/skills/shadowcode-<skill>` → each profile
 //!   skill folder (`CODEX_HOME` is respected).
 use super::{Book, ExportLink, State};
+use crate::paths::Canonical;
 use crate::{cli_agent::Vendor, paths::AppPaths};
 use anyhow::{bail, ensure, Context, Result};
 use serde_json::{json, Value};
@@ -95,7 +96,7 @@ fn planned(book: &Book, target: &str, vendor: &Path) -> Vec<(PathBuf, PathBuf)> 
 /// Two paths name the same place, also through a symlinked folder (on macOS
 /// /var is /private/var); paths that do not resolve must match as written.
 fn same_place(a: &Path, b: &Path) -> bool {
-    match (a.canonicalize(), b.canonicalize()) {
+    match (a.canonical(), b.canonical()) {
         (Ok(a), Ok(b)) => a == b,
         _ => a == b,
     }
@@ -115,7 +116,7 @@ fn points_to(link: &Path, target: &Path) -> bool {
 
 /// `link` is inside `home`, compared by where its folder really is.
 fn inside(link: &Path, home: &Path) -> bool {
-    let real = |p: &Path| p.canonicalize().unwrap_or_else(|_| p.to_path_buf());
+    let real = |p: &Path| p.canonical().unwrap_or_else(|_| p.to_path_buf());
     link.parent()
         .is_some_and(|dir| real(dir).starts_with(real(home)))
 }

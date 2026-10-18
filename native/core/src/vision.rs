@@ -315,7 +315,7 @@ pub fn view_image(workspace: &Workspace, args: &Value) -> Result<Value> {
         "That file looks like a secret and is not shown to the model"
     );
     let relative = workspace.relative(path)?;
-    let relative = relative.to_string_lossy().into_owned();
+    let relative = crate::paths::slash(&relative);
     let snap = workspace
         .snapshot(&relative)
         .with_context(|| format!("Cannot read image {relative}"))?;

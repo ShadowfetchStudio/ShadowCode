@@ -1072,6 +1072,7 @@ mod tests {
         assert!(!automatic(&config, &open));
     }
 
+    #[cfg(target_os = "linux")]
     #[test]
     fn install_type_is_detected_from_the_environment() {
         let detect = |bundle, appimage: Option<&str>, appdir: Option<&str>, exe: Option<&str>| {

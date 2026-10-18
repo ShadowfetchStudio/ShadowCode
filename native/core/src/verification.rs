@@ -1,6 +1,7 @@
 //! Verification receipts extend the existing command/task event stream.
 //! A successful process is not task acceptance. Only explicit/project check
 //! commands contribute a scoped check result, tied to observed file content.
+use crate::paths::Canonical;
 use crate::{
     models::ToolCall,
     tools::{ToolExecutor, ToolResult},
@@ -203,7 +204,7 @@ pub async fn execute(
         .workspace
         .relative(cwd_arg)
         .ok()
-        .and_then(|p| tools.workspace.path.join(p).canonicalize().ok());
+        .and_then(|p| tools.workspace.path.join(p).canonical().ok());
     let check = if explicit {
         true
     } else if cwd.as_ref() == Some(&tools.workspace.path) {

@@ -7,6 +7,7 @@
 //! attached to the tool result. Idle servers stop after
 //! `code_intel.lsp_idle_minutes`; a crashed server restarts on next use with
 //! exponential backoff; at most `code_intel.max_servers` run at once.
+use crate::paths::Canonical;
 pub mod client;
 pub mod diagnostics;
 pub mod install;
@@ -347,8 +348,8 @@ impl Env {
             return None;
         }
         // Symlinks may not lead out of the project.
-        let full = self.root.join(rel).canonicalize().ok()?;
-        let root = self.root.canonicalize().ok()?;
+        let full = self.root.join(rel).canonical().ok()?;
+        let root = self.root.canonical().ok()?;
         if !full.starts_with(&root) {
             return None;
         }

@@ -2,6 +2,7 @@
 //! registration even when deleting the checkout fails. A pre-removal journal
 //! preserves that registration; missing registration alone is never authority.
 use super::{git, Record};
+use crate::paths::Canonical;
 use crate::{paths, paths::AppPaths};
 use anyhow::{ensure, Context, Result};
 use base64::{engine::general_purpose::STANDARD, Engine as _};
@@ -40,10 +41,7 @@ fn directory(path: &Path) -> Result<Dir> {
         .custom_flags(libc::O_DIRECTORY | libc::O_NOFOLLOW | libc::O_NONBLOCK)
         .open(path)
         .with_context(|| format!("Cleanup requires a real directory: {}", path.display()))?;
-    ensure!(
-        path.canonicalize()? == path,
-        "Cleanup directory path changed"
-    );
+    ensure!(path.canonical()? == path, "Cleanup directory path changed");
     Ok(Dir::from_std_file(file))
 }
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
@@ -301,7 +299,7 @@ impl Session {
         )
         .await?;
         ensure!(
-            Path::new(&common).canonicalize()? == record.common_directory,
+            Path::new(&common).canonical()? == record.common_directory,
             "Source repository identity changed"
         );
         lock.validate(&record.source, &record.common_directory)?;

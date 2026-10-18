@@ -1,5 +1,6 @@
 use super::*;
 use crate::cli_agent::Vendor;
+use crate::paths::Canonical;
 use delivery::{plan, Runner};
 use std::fs;
 
@@ -14,14 +15,14 @@ fn fixture() -> Fixture {
     let root = tempfile::tempdir().unwrap();
     // Canonical, as product paths are (on macOS the temporary folder is under
     // /var, a symlink to /private/var).
-    let base = root.path().canonicalize().unwrap();
+    let base = root.path().canonical().unwrap();
     let paths = AppPaths::isolated(&base.join("app")).unwrap();
     let profile = profile_dir(&paths);
     let project = base.join("project");
     fs::create_dir_all(&project).unwrap();
     Fixture {
         profile,
-        project: project.canonicalize().unwrap(),
+        project: project.canonical().unwrap(),
         paths,
         _root: root,
     }
@@ -1053,7 +1054,7 @@ fn managed_worktree(paths: &AppPaths, source: &Path) -> PathBuf {
         serde_json::to_vec(&record).unwrap(),
     )
     .unwrap();
-    path.canonicalize().unwrap()
+    path.canonical().unwrap()
 }
 
 #[test]
@@ -1112,7 +1113,7 @@ fn project_switches_hold_in_the_projects_managed_worktrees() {
     // Another project keeps its own switches.
     let other = f._root.path().join("other");
     put(&other, "AGENTS.md", "Untrusted repository notes.\n");
-    let other = other.canonicalize().unwrap();
+    let other = other.canonical().unwrap();
     let book = Book::load(&f.paths, Some(&other));
     assert!(book
         .guidance(&Workspace::open(&other).unwrap())

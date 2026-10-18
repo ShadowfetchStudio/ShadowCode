@@ -21,6 +21,7 @@
 //! reachable only for user lookup, logging and (with network) DNS and
 //! certificate checks.
 use super::{HomeLayout, Net};
+use crate::paths::Canonical;
 use anyhow::{ensure, Context, Result};
 use std::{
     path::{Path, PathBuf},
@@ -219,7 +220,7 @@ pub fn path_roots(home: Option<&Path>) -> Vec<PathBuf> {
     let path = std::env::var_os("PATH").unwrap_or_default();
     let mut roots: Vec<PathBuf> = Vec::new();
     for dir in std::env::split_paths(&path) {
-        let Ok(dir) = dir.canonicalize() else {
+        let Ok(dir) = dir.canonical() else {
             continue;
         };
         if home
@@ -281,7 +282,7 @@ pub fn user_temp() -> Option<PathBuf> {
     }
     buffer.truncate(len - 1);
     PathBuf::from(String::from_utf8(buffer).ok()?)
-        .canonicalize()
+        .canonical()
         .ok()
 }
 

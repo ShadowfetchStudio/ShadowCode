@@ -195,7 +195,7 @@ pub struct GgufEntry {
 }
 
 fn canonical(path: &Path) -> PathBuf {
-    fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
+    crate::paths::Canonical::canonical(path).unwrap_or_else(|_| path.to_path_buf())
 }
 
 /// Stable id: a hash of the canonical path. Never derived from a display name.
@@ -852,8 +852,25 @@ pub fn available_memory() -> u64 {
     pages.saturating_mul(page as u64)
 }
 
+/// Windows: physical memory and what is available now.
+#[cfg(windows)]
+fn memory_status() -> Option<windows_sys::Win32::System::SystemInformation::MEMORYSTATUSEX> {
+    use windows_sys::Win32::System::SystemInformation::{GlobalMemoryStatusEx, MEMORYSTATUSEX};
+    // SAFETY: MEMORYSTATUSEX is plain data; dwLength is set as required.
+    let mut status: MEMORYSTATUSEX = unsafe { std::mem::zeroed() };
+    status.dwLength = std::mem::size_of::<MEMORYSTATUSEX>() as u32;
+    // SAFETY: the call writes only into `status`.
+    (unsafe { GlobalMemoryStatusEx(&mut status) } != 0).then_some(status)
+}
+
 /// See the macOS version.
-#[cfg(not(target_os = "macos"))]
+#[cfg(windows)]
+pub fn available_memory() -> u64 {
+    memory_status().map_or(0, |status| status.ullAvailPhys)
+}
+
+/// See the macOS version.
+#[cfg(all(unix, not(target_os = "macos")))]
 pub fn available_memory() -> u64 {
     let Ok(text) = fs::read_to_string("/proc/meminfo") else {
         return 0;
@@ -887,7 +904,13 @@ pub fn read_meminfo() -> u64 {
 }
 
 /// Installed memory in bytes (0 when unknown).
-#[cfg(not(target_os = "macos"))]
+#[cfg(windows)]
+pub fn read_meminfo() -> u64 {
+    memory_status().map_or(0, |status| status.ullTotalPhys)
+}
+
+/// Installed memory in bytes (0 when unknown).
+#[cfg(all(unix, not(target_os = "macos")))]
 pub fn read_meminfo() -> u64 {
     let Ok(text) = fs::read_to_string("/proc/meminfo") else {
         return 0;

@@ -1,6 +1,7 @@
 //! Approval cards explain each action, and "Always allow in this project"
 //! covers exactly one low-risk command from then on.
 use serde_json::json;
+use shadowcode_core::paths::Canonical;
 use shadowcode_core::{
     approvals::{always, Answer, ApprovalHub},
     config::{Config, PermissionMode},
@@ -31,7 +32,7 @@ fn fixture() -> Fixture {
     let project = root.path().join("project");
     fs::create_dir(&project).unwrap();
     fs::write(project.join("Makefile"), "test:\n\t@echo checks passed\n").unwrap();
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     let store = Arc::new(Store::open(&root.path().join("db")).unwrap());
     let session = store.create_session(&project, "mock", "").unwrap()["id"]
         .as_str()
@@ -174,7 +175,7 @@ async fn a_subagent_in_its_own_worktree_uses_the_projects_rules() {
     let worktree = f._root.path().join("worktree");
     fs::create_dir(&worktree).unwrap();
     fs::copy(f.project.join("Makefile"), worktree.join("Makefile")).unwrap();
-    let worktree = worktree.canonicalize().unwrap();
+    let worktree = worktree.canonical().unwrap();
     let child = f.store.create_session(&worktree, "mock", "").unwrap()["id"]
         .as_str()
         .unwrap()

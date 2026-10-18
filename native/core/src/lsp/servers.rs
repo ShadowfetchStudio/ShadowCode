@@ -17,6 +17,7 @@
 //! - clangd: no background index (it would write `.cache/` into the project).
 //! - pyright: analyzes open files only.
 use crate::code_intel::{CodeIntelConfig, ServerOverride};
+use crate::paths::Canonical;
 use serde_json::{json, Value};
 use std::path::{Path, PathBuf};
 
@@ -207,7 +208,7 @@ fn managed_program(managed: Option<&Path>, lang: ServerLang, program: &str) -> O
 /// `typescript/lib` shipped beside a typescript-language-server install
 /// (managed prefix, global npm prefix, or the server's own node_modules).
 pub fn typescript_lib_for(server: &Path) -> Option<PathBuf> {
-    let real = server.canonicalize().ok()?;
+    let real = server.canonical().ok()?;
     let mut roots = Vec::new();
     for ancestor in real.ancestors() {
         if ancestor.file_name().is_some_and(|n| n == "node_modules") {
@@ -436,6 +437,7 @@ mod tests {
         assert_eq!(for_path(Path::new("README.md")), None);
     }
 
+    #[cfg(unix)]
     #[test]
     fn overrides_win_and_bad_overrides_are_reported() {
         let mut config = CodeIntelConfig::default();
@@ -477,6 +479,7 @@ mod tests {
         assert!(env.contains(&("CARGO_NET_OFFLINE".into(), "true".into())));
     }
 
+    #[cfg(unix)]
     #[test]
     fn typescript_needs_its_own_typescript() {
         let dir = tempfile::tempdir().unwrap();
@@ -504,7 +507,7 @@ mod tests {
         assert_eq!(launch.source, "managed");
         assert_eq!(
             launch.init_options["tsserver"]["path"],
-            json!(lib.canonicalize().unwrap().join("tsserver.js"))
+            json!(lib.canonical().unwrap().join("tsserver.js"))
         );
         assert_eq!(
             launch.init_options["disableAutomaticTypingAcquisition"],

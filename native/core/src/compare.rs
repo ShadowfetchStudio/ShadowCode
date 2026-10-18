@@ -7,6 +7,7 @@
 //! The source checkout is never reset, stashed, checked out or committed in.
 //! The starting state is captured with a temporary index file, so neither the
 //! source index nor its working tree is written while the compare starts.
+use crate::paths::Canonical;
 use crate::{
     config::{self, Config},
     engine::{Engine, Job, JobOwner, StartRequest},
@@ -908,7 +909,7 @@ pub(crate) async fn repository_root_for(
         .await
         .with_context(|| format!("{needs} a Git repository"))?;
     ensure!(
-        Path::new(&top).canonicalize()? == workspace,
+        Path::new(&top).canonical()? == workspace,
         "Open the repository root before {action}"
     );
     Ok(())
@@ -1071,7 +1072,7 @@ pub(crate) async fn start(engine: &Engine, options: StartOptions<'_>) -> Result<
                 } else {
                     model.name.clone()
                 },
-                worktree: checkout.path.canonicalize()?,
+                worktree: checkout.path.canonical()?,
                 worktree_id: checkout.id,
                 branch: checkout.branch,
                 base_commit: base.commit.clone(),

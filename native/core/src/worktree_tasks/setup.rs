@@ -8,6 +8,7 @@
 //! `PORT` and `SHADOWCODE_PORT` set. Each task's port is free on this
 //! computer and not used by another open worktree task of the project, and
 //! the task's shells and subscription CLIs get it too (`keys::TASK_ENV`).
+use crate::paths::Canonical;
 use crate::store::{keys, Store};
 use anyhow::{ensure, Result};
 use serde::{Deserialize, Serialize};
@@ -298,11 +299,9 @@ fn copy_file(source: &Path, worktree: &Path, path: &str) -> std::result::Result<
     if !copyable {
         return Err("missing, not a regular file, or over 10 MB".into());
     }
-    let (Ok(source), Ok(worktree), Ok(real)) = (
-        source.canonicalize(),
-        worktree.canonicalize(),
-        from.canonicalize(),
-    ) else {
+    let (Ok(source), Ok(worktree), Ok(real)) =
+        (source.canonical(), worktree.canonical(), from.canonical())
+    else {
         return Err(refused());
     };
     match real.strip_prefix(&source) {

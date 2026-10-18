@@ -3,6 +3,7 @@
 //! `/props`, and `/v1/chat/completions` (canned tool calls), requires the
 //! per-launch bearer key, records every launch and request, and exits on
 //! SIGTERM. Nothing here touches a GPU or a real model.
+use shadowcode_core::paths::Canonical;
 mod support;
 mod vendor_support;
 use serde_json::{json, Value};
@@ -1491,7 +1492,7 @@ async fn load_switch_lease_unload_and_shutdown_stop_the_server() {
     assert_eq!(provenance["identity_kind"], "filesystem_metadata");
     assert_eq!(
         provenance["files"]["model"]["path"],
-        b.canonicalize().unwrap().display().to_string()
+        b.canonical().unwrap().display().to_string()
     );
     assert_eq!(provenance["model"]["architecture"], "gemma4");
     assert_eq!(

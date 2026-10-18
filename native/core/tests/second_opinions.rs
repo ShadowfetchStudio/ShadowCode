@@ -3,6 +3,7 @@
 //! registered loopback models on one fake OpenAI-compatible server (the
 //! reply depends on the requested model name); the cloud reviewer is the
 //! fake Codex app-server. No real vendor CLI or network is used.
+use shadowcode_core::paths::Canonical;
 mod support;
 mod vendor_support;
 use serde_json::{json, Value};
@@ -117,7 +118,7 @@ async fn fixture(extra: Value) -> Fixture {
     fs::write(project.join(".env"), "TOKEN=committed\n").unwrap();
     git(&project, &["add", "."]);
     git(&project, &["commit", "-qm", "Base"]);
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     let paths = AppPaths::isolated(&root.path().join("profile")).unwrap();
     let mut config = json!({
         "trusted_workspaces": [project.clone()],
@@ -590,7 +591,7 @@ async fn local_work_reaches_a_cloud_reviewer_only_with_consent() {
     git(&project, &["add", "."]);
     git(&project, &["commit", "-qm", "Base"]);
     fs::write(project.join("parser.rs"), "fn parse() { todo!() }\n").unwrap();
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     let fake = FakeCodex::new(root.path(), json!({"auth":"chatgpt","turn":"ok"}));
     let paths = AppPaths::isolated(&root.path().join("profile")).unwrap();
     Config::patch(
@@ -673,7 +674,7 @@ async fn a_change_a_local_implement_role_wrote_asks_before_a_cloud_reviewer() {
     git(&project, &["add", "."]);
     git(&project, &["commit", "-qm", "Base"]);
     fs::write(project.join("parser.rs"), "fn parse() { todo!() }\n").unwrap();
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     let fake = FakeCodex::new(root.path(), json!({"auth":"chatgpt","turn":"ok"}));
     let paths = AppPaths::isolated(&root.path().join("profile")).unwrap();
     Config::patch(
@@ -821,7 +822,7 @@ async fn live_review_of_a_staged_change_by_a_real_model() {
     let changed = "def add(a, b):\n    \"\"\"Return the sum of a and b.\"\"\"\n    return a - b\n";
     fs::write(project.join("calc.py"), changed).unwrap();
     git(&project, &["add", "calc.py"]);
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     let paths = AppPaths::isolated(&root.path().join("profile")).unwrap();
     let endpoint = std::env::var("SHADOWCODE_LIVE_REVIEW_ENDPOINT").ok();
     Config::patch(
@@ -916,7 +917,7 @@ async fn a_second_opinion_that_hits_a_plan_limit_stays_on_its_model() {
     git(&project, &["commit", "-qm", "Base"]);
     fs::write(project.join("a.txt"), "two\n").unwrap();
     git(&project, &["add", "a.txt"]);
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     let fake = FakeCodex::new(root.path(), json!({"auth":"chatgpt","turn":"limit"}));
     let paths = AppPaths::isolated(&root.path().join("profile")).unwrap();
     Config::patch(

@@ -1,5 +1,6 @@
 // Helpers used only by Unix-only tests are unused on Windows.
 #![cfg_attr(not(unix), allow(unused))]
+use shadowcode_core::paths::Canonical;
 mod support;
 use serde_json::{json, Value};
 use shadowcode_core::{
@@ -505,7 +506,7 @@ fn host_pid(project: &std::path::Path, namespace_pid: u32) -> u32 {
     if !cfg!(target_os = "linux") {
         return namespace_pid;
     }
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     let matches: Vec<_> = fs::read_dir("/proc")
         .unwrap()
         .filter_map(|e| {

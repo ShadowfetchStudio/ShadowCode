@@ -1,5 +1,6 @@
 //! Permission modes, network modes, config migration, durable redaction,
 //! the engine trust gate (goals included) and checkpoint.restored events.
+use shadowcode_core::paths::Canonical;
 mod support;
 use serde_json::{json, Value};
 use shadowcode_core::{
@@ -311,7 +312,7 @@ async fn a_command_run_in_a_project_subfolder_by_absolute_path_does_not_ask() {
     let (root, tools) = executor(config);
     let sub = root.path().join("project").join("sub");
     fs::create_dir(&sub).unwrap();
-    let cwd = sub.canonicalize().unwrap();
+    let cwd = sub.canonical().unwrap();
     let result = tokio::time::timeout(
         Duration::from_secs(30),
         run(

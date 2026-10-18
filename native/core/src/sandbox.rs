@@ -14,6 +14,7 @@
 //! Availability is probed before a user command runs; commands are never
 //! replayed outside the sandbox after a runtime failure.
 use crate::config::{Config, ShellNetwork};
+use crate::paths::Canonical;
 use anyhow::{bail, ensure, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -179,7 +180,7 @@ pub fn create_scratch(base: &Path) -> Result<ScratchSession> {
     let owned = tempfile::Builder::new()
         .prefix("shadowcode-scratch-")
         .tempdir_in(base)?;
-    let path = owned.path().canonicalize()?;
+    let path = owned.path().canonical()?;
     SCRATCH
         .lock()
         .map_err(|_| anyhow::anyhow!("Scratch lock poisoned"))?
@@ -277,7 +278,7 @@ pub struct HomeLayout {
 }
 
 fn real(path: &Path) -> PathBuf {
-    path.canonicalize().unwrap_or_else(|_| path.to_path_buf())
+    path.canonical().unwrap_or_else(|_| path.to_path_buf())
 }
 
 impl HomeLayout {
@@ -304,7 +305,7 @@ impl HomeLayout {
                 continue;
             }
             let dest = home.join(entry);
-            let Ok(source) = dest.canonicalize() else {
+            let Ok(source) = dest.canonical() else {
                 continue;
             };
             // A symlink must not smuggle in a credential folder or the whole home.
@@ -429,7 +430,7 @@ pub fn isolated_args(
     match net {
         Net::On => {
             // /etc/resolv.conf often links into /run, which is not mounted.
-            if let Ok(resolv) = Path::new("/etc/resolv.conf").canonicalize() {
+            if let Ok(resolv) = Path::new("/etc/resolv.conf").canonical() {
                 if let Some(dir) = resolv.parent().filter(|d| d.starts_with("/run")) {
                     args.extend(["--ro-bind".into(), s(dir), s(dir)]);
                 }
@@ -1098,7 +1099,7 @@ fn landlock_paths(layout: &HomeLayout, network: ShellNetwork) -> (Vec<PathBuf>, 
         .collect();
     read_only.extend(layout.binds.iter().map(|(source, _)| source.clone()));
     if network != ShellNetwork::Off {
-        if let Ok(resolv) = Path::new("/etc/resolv.conf").canonicalize() {
+        if let Ok(resolv) = Path::new("/etc/resolv.conf").canonical() {
             if let Some(dir) = resolv.parent() {
                 read_only.push(dir.to_path_buf());
             }
@@ -1249,7 +1250,7 @@ mod tests {
     /// A fake home with credentials and toolchains, and a project elsewhere.
     fn fake_home() -> (tempfile::TempDir, PathBuf, PathBuf) {
         let root = tempfile::tempdir().unwrap();
-        let home = root.path().canonicalize().unwrap().join("home").join("me");
+        let home = root.path().canonical().unwrap().join("home").join("me");
         for dir in [
             ".ssh",
             ".aws",
@@ -1264,7 +1265,7 @@ mod tests {
         fs::write(home.join(".config/shadow-agent/secrets.env"), "X=not-real").unwrap();
         fs::write(home.join(".cargo/credentials.toml"), "token = \"not-real\"").unwrap();
         fs::write(home.join(".gitconfig"), "[user]\n").unwrap();
-        let ws = root.path().canonicalize().unwrap().join("project");
+        let ws = root.path().canonical().unwrap().join("project");
         fs::create_dir_all(&ws).unwrap();
         (root, home, ws)
     }
@@ -1568,7 +1569,7 @@ mod tests {
     }
 
     // macOS always uses its own sandbox (see the seatbelt tests below).
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(target_os = "linux")]
     #[test]
     fn missing_bubblewrap_reports_honest_fallback_and_fails_closed_when_required() {
         // PATH is process-global and tests share one process: run the mutation
@@ -1699,7 +1700,7 @@ mod tests {
     #[test]
     fn seatbelt_confines_files_to_the_project_and_hides_home_and_credentials() {
         let (root, home, ws) = fake_home();
-        let root = root.path().canonicalize().unwrap();
+        let root = root.path().canonical().unwrap();
         fs::write(root.join("outside.txt"), "outside").unwrap();
         // A project that contains a credential folder of its own home.
         let layout = HomeLayout::build(
@@ -1755,7 +1756,7 @@ mod tests {
     #[test]
     fn seatbelt_hides_credential_folders_inside_the_project() {
         let root = tempfile::tempdir().unwrap();
-        let home = root.path().canonicalize().unwrap().join("me");
+        let home = root.path().canonical().unwrap().join("me");
         fs::create_dir_all(home.join(".ssh")).unwrap();
         fs::write(home.join(".ssh/id_ed25519"), "not a real key").unwrap();
         // The project is the home folder itself.
@@ -1781,7 +1782,7 @@ mod tests {
         let listener = std::net::TcpListener::bind(("127.0.0.1", 0)).unwrap();
         let port = listener.local_addr().unwrap().port();
         let ws = tempfile::tempdir().unwrap();
-        let ws = ws.path().canonicalize().unwrap();
+        let ws = ws.path().canonical().unwrap();
         let layout = HomeLayout::build(None, &[], &ws);
         let probe = format!("/usr/bin/nc -z -w 2 127.0.0.1 {port}");
         let run = |network: ShellNetwork, command: &str| {
@@ -1824,7 +1825,7 @@ mod tests {
     #[test]
     fn apple_developer_tools_run_cleanly_in_the_seatbelt() {
         let ws = tempfile::tempdir().unwrap();
-        let ws = ws.path().canonicalize().unwrap();
+        let ws = ws.path().canonical().unwrap();
         let layout = HomeLayout::current(
             &DEFAULT_HOME_BINDS
                 .iter()

@@ -9,7 +9,6 @@ use anyhow::{anyhow, bail, ensure, Context, Result};
 use serde_json::{json, Value};
 use std::{
     collections::{HashMap, VecDeque},
-    io::Read,
     net::TcpListener,
     path::{Path, PathBuf},
     sync::{
@@ -93,7 +92,7 @@ pub struct FileIdentity {
 
 impl FileIdentity {
     pub fn capture(path: &Path) -> Result<Self> {
-        let resolved = std::fs::canonicalize(path)
+        let resolved = crate::paths::Canonical::canonical(path)
             .with_context(|| format!("Cannot resolve model or runtime file {}", path.display()))?;
         let meta = std::fs::metadata(&resolved)?;
         ensure!(meta.is_file(), "Not a regular file: {}", path.display());
@@ -762,8 +761,8 @@ fn free_loopback_port() -> Result<u16> {
 /// 32 random bytes from the kernel, hex encoded.
 pub fn random_key() -> Result<String> {
     let mut bytes = [0u8; 32];
-    std::fs::File::open("/dev/urandom")
-        .and_then(|mut f| f.read_exact(&mut bytes))
+    getrandom::fill(&mut bytes)
+        .map_err(|error| anyhow!("{error}"))
         .context("Could not read random bytes for the local server key")?;
     Ok(bytes.iter().map(|b| format!("{b:02x}")).collect())
 }

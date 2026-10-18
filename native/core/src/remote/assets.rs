@@ -9,6 +9,7 @@
 //! made of safe characters, with no `.`/`..` segments, hidden files or
 //! backslashes, reach a provider, and the folder provider also refuses
 //! anything that resolves outside its root (symlinks included).
+use crate::paths::Canonical;
 use std::{
     borrow::Cow,
     path::{Path, PathBuf},
@@ -38,14 +39,14 @@ pub struct DirAssets {
 impl DirAssets {
     pub fn new(root: impl Into<PathBuf>) -> std::io::Result<Self> {
         Ok(Self {
-            root: root.into().canonicalize()?,
+            root: root.into().canonical()?,
         })
     }
 }
 impl UiAssets for DirAssets {
     fn get(&self, path: &str) -> Option<Cow<'_, [u8]>> {
         let relative = path.strip_prefix('/')?;
-        let candidate = self.root.join(relative).canonicalize().ok()?;
+        let candidate = self.root.join(relative).canonical().ok()?;
         if !candidate.starts_with(&self.root) || !candidate.is_file() {
             return None;
         }

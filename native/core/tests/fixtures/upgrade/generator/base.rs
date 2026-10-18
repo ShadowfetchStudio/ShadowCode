@@ -12,6 +12,7 @@
 //! and its JSON routes, `Config::patch`, `set_secret` and a few `Store`
 //! calls. Everything that can fail on an older release is recorded as
 //! skipped instead of aborting.
+use shadowcode_core::paths::Canonical;
 use serde_json::{json, Map, Value};
 use shadowcode_core::{
     config::{self, Config},
@@ -179,7 +180,7 @@ async fn model_server() -> String {
 async fn generate_upgrade_fixture() {
     let out = PathBuf::from(std::env::var("SHADOWCODE_FIXTURE_OUT").expect("SHADOWCODE_FIXTURE_OUT"));
     let temp = tempfile::tempdir().unwrap();
-    let root = temp.path().canonicalize().unwrap();
+    let root = temp.path().canonical().unwrap();
     let project = root.join("project");
     fs::create_dir_all(&project).unwrap();
     fs::write(project.join("README.md"), "# Fixture project\n").unwrap();

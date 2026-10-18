@@ -5,6 +5,7 @@
 //! runs and nothing is written to a vendor's home folder.
 // Helpers used only by Unix-only tests are unused on Windows.
 #![cfg_attr(not(unix), allow(unused))]
+use shadowcode_core::paths::Canonical;
 mod support;
 mod vendor_support;
 use serde_json::{json, Value};
@@ -277,7 +278,7 @@ fn setup(endpoint: &str) -> Setup {
     let root = tempfile::tempdir().unwrap();
     let project = root.path().join("project");
     fs::create_dir(&project).unwrap();
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     let fake = FakeCodex::new(root.path(), json!({"auth":"chatgpt","turn":"ok"}));
     let paths = AppPaths::isolated(&root.path().join("app")).unwrap();
     let mut agents = cli_agents(&fake);

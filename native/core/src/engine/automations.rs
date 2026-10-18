@@ -10,6 +10,7 @@
 //! stops (or waits, if the automation says so), and every run has a time
 //! limit. The result, duration and usage land in `automation_runs`.
 use super::*;
+use crate::paths::Canonical;
 use crate::tools::truncate;
 use crate::{
     automations::{self as rules, Automation, Checkout, Due, OnApproval, Permission},
@@ -466,7 +467,7 @@ impl Engine {
                 )
                 .await
                 .context("Could not create a fresh worktree for this run. The project must be the top folder of a Git repository with at least one commit; or set the automation to run in the main checkout")?;
-                let path = record.path.canonicalize()?;
+                let path = record.path.canonical()?;
                 set_trust(self, &path, true)?;
                 run.worktree = Some(json!({
                     "id": record.id,

@@ -1,5 +1,6 @@
 //! Optional read-only health checks. State and pending proposal approvals belong
 //! to one Service/profile and are additionally scoped to the selected workspace.
+use crate::paths::Canonical;
 use anyhow::{ensure, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -50,7 +51,7 @@ impl Guardian {
             .state
             .lock()
             .map_err(|_| anyhow::anyhow!("Guardian lock poisoned"))?;
-        let current = state.get(&workspace.canonicalize()?);
+        let current = state.get(&workspace.canonical()?);
         Ok(json!({"enabled":cfg.enabled,"default":"off",
             "last_run":current.and_then(|s|s.last_run),"last_result":current.and_then(|s|s.last_result.clone()),
             "pending_patch_approval":current.is_some_and(|s|s.pending.is_some()),
@@ -58,7 +59,7 @@ impl Guardian {
     }
     pub fn run_health_check(&self, cfg: &GuardianConfig, workspace: &Path) -> Result<Value> {
         ensure!(cfg.enabled, "Guardian is disabled (default off)");
-        let workspace = workspace.canonicalize()?;
+        let workspace = workspace.canonical()?;
         ensure!(workspace.is_dir(), "Workspace is not a directory");
         let doctor = crate::sandbox::doctor_check();
         let hint = if workspace.join("Cargo.toml").is_file() {
@@ -102,7 +103,7 @@ impl Guardian {
         self.state
             .lock()
             .map_err(|_| anyhow::anyhow!("Guardian lock poisoned"))?
-            .entry(workspace.canonicalize()?)
+            .entry(workspace.canonical()?)
             .or_default()
             .pending = Some(proposal.clone());
         Ok(
@@ -121,7 +122,7 @@ impl Guardian {
             cfg.enabled && cfg.allow_prepare_patch,
             "Guardian proposal drafts are disabled"
         );
-        let workspace = workspace.canonicalize()?;
+        let workspace = workspace.canonical()?;
         ensure!(
             !root.starts_with(&workspace),
             "Proposal storage must be outside the workspace"
@@ -143,7 +144,7 @@ impl Guardian {
         );
         crate::paths::private_directory(root)?;
         ensure!(
-            !root.canonicalize()?.starts_with(&workspace),
+            !root.canonical()?.starts_with(&workspace),
             "Proposal storage must be outside the workspace"
         );
         let draft = tempfile::Builder::new()

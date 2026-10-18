@@ -13,6 +13,7 @@
 //! macOS has no `/proc`: [`mac`] lists this user's listening sockets with the
 //! system's `lsof` and reads each process's working folder through libproc.
 //! [`servers`], [`own_ports_now`] and [`listening_now`] pick the right one.
+use crate::paths::Canonical;
 use regex::Regex;
 use serde::Serialize;
 use std::{
@@ -162,7 +163,7 @@ pub fn project_servers(proc_root: &Path, project: &Path, exclude_pid: u32) -> Ve
     }
     let by_inode: HashMap<u64, &Listener> = listeners.iter().map(|l| (l.inode, l)).collect();
     let project = project
-        .canonicalize()
+        .canonical()
         .unwrap_or_else(|_| project.to_path_buf());
     let mut found = Vec::new();
     for pid in pids(proc_root) {
@@ -383,7 +384,7 @@ pub mod mac {
     /// and that listen on a loopback-reachable port.
     pub fn project_servers(project: &Path, exclude_pid: u32) -> Vec<Found> {
         let project = project
-            .canonicalize()
+            .canonical()
             .unwrap_or_else(|_| project.to_path_buf());
         let mut found = Vec::new();
         for socket in listeners() {
@@ -588,7 +589,7 @@ mod tests {
     fn finds_project_servers_from_proc_fixture() {
         let dir = tempfile::tempdir().unwrap();
         // A real path, as the kernel reports working folders (macOS: /private/var).
-        let base = dir.path().canonicalize().unwrap();
+        let base = dir.path().canonical().unwrap();
         let root = base.join("proc");
         let project = base.join("app");
         let other = base.join("elsewhere");

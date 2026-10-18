@@ -1,3 +1,4 @@
+use crate::paths::Canonical;
 use anyhow::{bail, ensure, Context, Result};
 use cap_std::{
     ambient_authority,
@@ -55,7 +56,7 @@ pub struct Snapshot {
 /// Stable reservation key for an existing workspace or a managed checkout whose
 /// final directory was removed. Never resolve a missing ancestor or traversal.
 pub(crate) fn reservation_path(path: &Path) -> Result<PathBuf> {
-    match path.canonicalize() {
+    match path.canonical() {
         Ok(path) => {
             ensure!(path.is_dir(), "Workspace must be a directory");
             Ok(path)
@@ -76,7 +77,7 @@ pub(crate) fn reservation_path(path: &Path) -> Result<PathBuf> {
             let parent = path
                 .parent()
                 .context("Missing workspace parent")?
-                .canonicalize()?;
+                .canonical()?;
             ensure!(parent.is_dir(), "Workspace parent must be a directory");
             Ok(parent.join(path.file_name().context("Missing workspace name")?))
         }
@@ -86,7 +87,7 @@ pub(crate) fn reservation_path(path: &Path) -> Result<PathBuf> {
 
 impl Workspace {
     pub fn open(path: &Path) -> Result<Self> {
-        let path = path.canonicalize().context("Workspace does not exist")?;
+        let path = path.canonical().context("Workspace does not exist")?;
         ensure!(path.is_dir(), "Workspace must be a directory");
         let dir = Dir::open_ambient_dir(&path, ambient_authority())?;
         Ok(Self { path, dir })
@@ -689,7 +690,7 @@ fn canonical_ancestor(path: &Path) -> Option<PathBuf> {
     let mut rest = Vec::new();
     let mut current = path;
     loop {
-        if let Ok(real) = current.canonicalize() {
+        if let Ok(real) = current.canonical() {
             return Some(rest.iter().rev().fold(real, |acc, part| acc.join(part)));
         }
         rest.push(current.file_name()?.to_owned());

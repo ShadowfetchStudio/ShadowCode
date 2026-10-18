@@ -108,7 +108,7 @@ fn listing(root: &Path) -> Listing {
             continue;
         };
         entries.push(Entry {
-            path: relative.to_string_lossy().into_owned(),
+            path: crate::paths::slash(relative),
             dir: entry.file_type().is_some_and(|t| t.is_dir()),
         });
     }
@@ -229,7 +229,7 @@ pub fn validate(workspace: &Workspace, mentions: Vec<Mention>) -> Result<Vec<Men
     let mut out: Vec<Mention> = Vec::new();
     for mention in mentions {
         let relative = workspace.relative(&mention.path)?;
-        let path = relative.to_string_lossy().into_owned();
+        let path = crate::paths::slash(&relative);
         ensure!(path != "." || mention.kind == "dir", "Choose a file");
         let kind = if mention.kind == "dir" { "dir" } else { "file" };
         if !out.iter().any(|m| m.path == path) {

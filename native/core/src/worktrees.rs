@@ -1,4 +1,5 @@
 //! Managed Git worktrees. The source checkout is never reset or stashed.
+use crate::paths::Canonical;
 pub mod changes;
 #[cfg(unix)]
 mod cleanup;
@@ -39,7 +40,7 @@ fn roots(paths: &AppPaths) -> Result<(PathBuf, PathBuf)> {
     paths::private_directory(&checkouts)?;
     // Checkouts are recorded and later checked by their real path (on macOS
     // the data folder may be reached through /var, a link to /private/var).
-    Ok((records, checkouts.canonicalize()?))
+    Ok((records, checkouts.canonical()?))
 }
 fn save(root: &Path, record: &Record) -> Result<()> {
     let bytes = serde_json::to_vec_pretty(record)?;
@@ -118,7 +119,7 @@ pub(crate) async fn task_common_directory(
         cancel.clone(),
     )
     .await?;
-    Ok(Path::new(&common).canonicalize()?)
+    Ok(Path::new(&common).canonical()?)
 }
 
 /// The project a managed checkout was made from, given the checkout's own
@@ -126,11 +127,11 @@ pub(crate) async fn task_common_directory(
 pub(crate) fn source_of_checkout(paths: &AppPaths, folder: &Path) -> Option<PathBuf> {
     let checkouts = paths.data.join("managed-worktrees/checkouts");
     let id = folder
-        .strip_prefix(checkouts.canonicalize().ok()?)
+        .strip_prefix(checkouts.canonical().ok()?)
         .ok()?
         .to_str()?;
     let record = task_record(paths, id).ok()?;
-    (record.path.canonicalize().ok()? == folder).then_some(record.source)
+    (record.path.canonical().ok()? == folder).then_some(record.source)
 }
 
 /// Verify a task's persisted checkout binding without requiring its source or
@@ -174,7 +175,7 @@ async fn create_locked(
     );
     let top = git(&source, &["rev-parse", "--show-toplevel"], cancel.clone()).await?;
     ensure!(
-        Path::new(&top).canonicalize()? == source,
+        Path::new(&top).canonical()? == source,
         "Open the repository root before creating an isolated worktree"
     );
     let commit = git(
@@ -200,7 +201,7 @@ async fn create_locked(
         )
         .await?,
     )
-    .canonicalize()?;
+    .canonical()?;
     let (records, checkouts) = roots(paths)?;
     ownership.validate(&source, &common)?;
     let id = crate::id();
@@ -269,7 +270,7 @@ pub fn sources_of(paths: &AppPaths, path: &Path) -> Vec<PathBuf> {
         .data
         .join("managed-worktrees")
         .join("checkouts")
-        .canonicalize()
+        .canonical()
     else {
         return Vec::new();
     };
@@ -356,7 +357,7 @@ pub(crate) async fn validate_task_checkout(
     );
     let meta = fs::symlink_metadata(checkout)?;
     ensure!(
-        meta.is_dir() && !meta.file_type().is_symlink() && checkout.canonicalize()? == checkout,
+        meta.is_dir() && !meta.file_type().is_symlink() && checkout.canonical()? == checkout,
         "Managed checkout path changed"
     );
     let pointer = fs::symlink_metadata(checkout.join(".git"))?;
@@ -366,7 +367,7 @@ pub(crate) async fn validate_task_checkout(
     );
     let root = git(checkout, &["rev-parse", "--show-toplevel"], cancel.clone()).await?;
     ensure!(
-        Path::new(&root).canonicalize()? == record.path,
+        Path::new(&root).canonical()? == record.path,
         "Managed checkout repository root changed"
     );
     for path in [&record.source, &record.path] {
@@ -377,7 +378,7 @@ pub(crate) async fn validate_task_checkout(
         )
         .await?;
         ensure!(
-            Path::new(&common).canonicalize()? == record.common_directory,
+            Path::new(&common).canonical()? == record.common_directory,
             "Managed checkout repository identity changed"
         );
     }
@@ -388,12 +389,12 @@ pub(crate) async fn validate_task_checkout(
     )
     .await?;
     ensure!(
-        Path::new(&admin).canonicalize()?
+        Path::new(&admin).canonical()?
             == record
                 .common_directory
                 .join("worktrees")
                 .join(id)
-                .canonicalize()?,
+                .canonical()?,
         "Managed checkout administrative identity changed"
     );
     let current = git(
@@ -451,7 +452,7 @@ pub async fn inspect(
         "Managed checkout must be a real directory"
     );
     ensure!(
-        record.path.canonicalize()? == record.path,
+        record.path.canonical()? == record.path,
         "Managed checkout path changed"
     );
     let actual = git(
@@ -461,7 +462,7 @@ pub async fn inspect(
     )
     .await?;
     ensure!(
-        Path::new(&actual).canonicalize()? == record.path,
+        Path::new(&actual).canonical()? == record.path,
         "Managed checkout repository root changed"
     );
     for path in [&record.source, &record.path] {
@@ -472,7 +473,7 @@ pub async fn inspect(
         )
         .await?;
         ensure!(
-            Path::new(&common).canonicalize()? == record.common_directory,
+            Path::new(&common).canonical()? == record.common_directory,
             "Managed checkout repository identity changed"
         );
     }
@@ -669,7 +670,7 @@ async fn dispose_checkout(
 /// taken before the checkout is removed.
 fn index_root(paths: &AppPaths, id: &str) -> Option<PathBuf> {
     let path = task_record(paths, id).ok()?.path;
-    Some(path.canonicalize().unwrap_or(path))
+    Some(path.canonical().unwrap_or(path))
 }
 /// A removed checkout's code index (kept in the profile's cache) goes with
 /// it; otherwise every task, lane and run would leave one behind.
@@ -711,7 +712,7 @@ pub async fn recovery(
         )
         .await?,
     )
-    .canonicalize()?;
+    .canonical()?;
     ensure!(
         common == record.common_directory,
         "Source repository identity changed"
@@ -803,7 +804,7 @@ pub async fn review_return(
     let inspected = inspect(paths, source, id, cancel.clone()).await?;
     let source_top = git(source, &["rev-parse", "--show-toplevel"], cancel.clone()).await?;
     ensure!(
-        Path::new(&source_top).canonicalize()? == Workspace::open(source)?.path,
+        Path::new(&source_top).canonical()? == Workspace::open(source)?.path,
         "Source checkout repository root changed"
     );
     ensure!(

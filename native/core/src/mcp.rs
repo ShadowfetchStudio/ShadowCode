@@ -1,6 +1,7 @@
 //! Native MCP transport. Callers must obtain explicit server activation and
 //! tool approval before using this low-level client; discovery never starts it.
 //! The application-facing registration/approval layer is a separate component.
+use crate::paths::Canonical;
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use rmcp::{
     model::{
@@ -186,7 +187,7 @@ impl Client {
             .clone()
             .try_acquire_owned()
             .context("Native MCP connection limit reached")?;
-        let workspace = workspace.canonicalize()?;
+        let workspace = workspace.canonical()?;
         ensure!(workspace.is_dir(), "MCP workspace is not a directory");
         let mut command = Command::new(&spec.command[0]);
         // Do not pass the application's provider credentials, control-socket

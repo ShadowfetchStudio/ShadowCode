@@ -6,6 +6,7 @@
 //! with the usual approval; subagents routed to their role's model. No real
 //! vendor CLI or model runs.
 #![cfg(unix)]
+use shadowcode_core::paths::Canonical;
 mod vendor_support;
 use serde_json::{json, Value};
 use shadowcode_core::{
@@ -163,7 +164,7 @@ async fn setup(
     let root = tempfile::tempdir().unwrap();
     let project = root.path().join("project");
     fs::create_dir(&project).unwrap();
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     git(&project, &["init", "-q"]);
     fs::write(project.join("note.txt"), "old\n").unwrap();
     git(&project, &["add", "note.txt"]);

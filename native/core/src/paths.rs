@@ -5,6 +5,30 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// A path inside a project as the agent and the interface show it: `/`
+/// between its parts on every system. (On Unix a `\` is part of a name.)
+pub fn slash(path: &Path) -> String {
+    let text = path.to_string_lossy();
+    if cfg!(windows) {
+        text.replace('\\', "/")
+    } else {
+        text.into_owned()
+    }
+}
+
+/// `canonicalize` that returns `C:\project` rather than `\\?\C:\project` on
+/// Windows whenever both name the same file (dunce). Verbatim paths confuse
+/// Git, other programs and anyone reading them. Identical to the standard
+/// one on Unix.
+pub trait Canonical {
+    fn canonical(&self) -> std::io::Result<PathBuf>;
+}
+impl<P: AsRef<Path> + ?Sized> Canonical for P {
+    fn canonical(&self) -> std::io::Result<PathBuf> {
+        dunce::canonicalize(self)
+    }
+}
+
 /// Preserve the existing XDG identity so upgrades retain settings and history.
 #[derive(Clone, Debug)]
 pub struct AppPaths {
@@ -96,12 +120,12 @@ impl AppPaths {
                 .ok()?
                 .trim(),
         );
-        path.canonicalize().ok().filter(|p| p.is_dir())
+        path.canonical().ok().filter(|p| p.is_dir())
     }
     pub fn remember_workspace(&self, path: &Path) -> Result<()> {
         atomic_write(
             &self.state.join("last-workspace.txt"),
-            format!("{}\n", path.canonicalize()?.display()).as_bytes(),
+            format!("{}\n", path.canonical()?.display()).as_bytes(),
             false,
         )
     }

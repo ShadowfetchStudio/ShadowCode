@@ -1,3 +1,4 @@
+use shadowcode_core::paths::Canonical;
 mod support;
 use serde_json::{json, Value};
 use shadowcode_core::{
@@ -294,7 +295,7 @@ fn concurrent_task_appends_do_not_lose_notes_and_migration_keeps_a_backup() {
     let paths = AppPaths::isolated(root.path()).unwrap();
     let project = root.path().join("project");
     fs::create_dir(&project).unwrap();
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     let store = Store::open(&paths.database()).unwrap();
     let sid = store.create_session(&project, "fixture", "").unwrap();
     let tid = store

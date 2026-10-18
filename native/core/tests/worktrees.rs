@@ -1,5 +1,6 @@
 use anyhow::Result;
 use serde_json::{json, Value};
+use shadowcode_core::paths::Canonical;
 use shadowcode_core::{
     config::Config,
     paths::AppPaths,
@@ -56,7 +57,7 @@ async fn isolated_checkout_preserves_dirty_source_and_disables_checkout_hooks() 
     let root = tempfile::tempdir().unwrap();
     let project = root.path().join("project");
     repository(&project);
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     let paths = AppPaths::isolated(&root.path().join("profile")).unwrap();
     fs::write(project.join("tracked.txt"), "staged change\n").unwrap();
     git(&project, &["add", "tracked.txt"]);
@@ -1800,7 +1801,7 @@ mod profile_admission {
         let checkouts = paths
             .data
             .join("managed-worktrees/checkouts")
-            .canonicalize()
+            .canonical()
             .unwrap();
         for _ in 0..62 {
             let mut pending = first.clone();

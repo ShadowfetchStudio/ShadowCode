@@ -1,3 +1,4 @@
+use shadowcode_core::paths::Canonical;
 mod support;
 use serde_json::{json, Value};
 use shadowcode_core::{
@@ -151,7 +152,7 @@ async fn editor_drafts_survive_restart_without_overwriting_workspace_files() {
     assert_eq!(listed["drafts"][0]["draft"], "let answer = 2;\n");
     let other = root.path().join("other");
     fs::create_dir(&other).unwrap();
-    let other = other.canonicalize().unwrap();
+    let other = other.canonical().unwrap();
     let second_project = reopened.fork_selection(other.clone(), None).unwrap();
     assert_eq!(
         call(

@@ -73,7 +73,7 @@ pub fn task_paths(store: &Store, ws: &Workspace, task: &str) -> Result<Vec<Strin
         let Ok(relative) = ws.relative(&reported) else {
             continue;
         };
-        let relative = relative.to_string_lossy().into_owned();
+        let relative = crate::paths::slash(&relative);
         if relative != "." && !paths.contains(&relative) {
             paths.push(relative);
         }

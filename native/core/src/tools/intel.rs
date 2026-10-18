@@ -32,7 +32,7 @@ impl ToolExecutor {
             let Ok(rel) = self.workspace.relative(&path) else {
                 continue;
             };
-            let rel = rel.to_string_lossy().into_owned();
+            let rel = crate::paths::slash(&rel);
             if crate::redaction::is_secret_path(&rel) || !crate::lsp::handles(&env, &rel) {
                 continue;
             }

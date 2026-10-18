@@ -1,4 +1,5 @@
 use serde_json::json;
+use shadowcode_core::paths::Canonical;
 use shadowcode_core::{
     config::{self, Config},
     paths::AppPaths,
@@ -123,7 +124,7 @@ async fn simultaneous_projects_keep_trust_settings_and_integration_grants() {
     for worker in 0..8 {
         let project = root.path().join(format!("project-{worker}"));
         std::fs::create_dir(&project).unwrap();
-        let project = project.canonicalize().unwrap();
+        let project = project.canonical().unwrap();
         let client = service.fork_selection(project.clone(), None).unwrap();
         let barrier = barrier.clone();
         handles.push(tokio::spawn(async move {

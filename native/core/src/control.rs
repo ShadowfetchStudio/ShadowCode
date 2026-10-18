@@ -2,6 +2,7 @@
 //! Filesystem permissions and peer credentials (a named pipe's access rules
 //! and owner on Windows, see `transport`) restrict access to this OS user; it
 //! deliberately opens no TCP listener and does not accept browser requests.
+use crate::paths::Canonical;
 use crate::{
     paths::AppPaths,
     service::{Request, Service},
@@ -78,7 +79,7 @@ impl Endpoint {
     pub fn for_paths(paths: &AppPaths) -> Result<Self> {
         let mut identity = Vec::new();
         for root in [&paths.config, &paths.data, &paths.state] {
-            identity.extend_from_slice(root.canonicalize()?.as_os_str().as_encoded_bytes());
+            identity.extend_from_slice(root.canonical()?.as_os_str().as_encoded_bytes());
             identity.push(0);
         }
         let profile = format!("{:x}", Sha256::digest(&identity));

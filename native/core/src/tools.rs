@@ -1079,7 +1079,7 @@ impl ToolExecutor {
                         !rel.components().any(|c| c.as_os_str() == ".git"),
                         "Cannot stage Git metadata"
                     );
-                    v.push(rel.to_string_lossy().into_owned());
+                    v.push(crate::paths::slash(&rel));
                 }
                 v
             }

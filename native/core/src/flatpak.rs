@@ -55,6 +55,7 @@ pub fn shared_socket_base() -> Option<PathBuf> {
 mod tests {
     use super::*;
 
+    #[cfg(target_os = "linux")]
     #[test]
     fn app_path_is_read_from_flatpak_info() {
         let info = "[Application]\nname=com.shadowfetch.shadowcode\n\n[Instance]\napp-path=/var/lib/flatpak/app/com.shadowfetch.shadowcode/x86_64/master/abc/files\n";

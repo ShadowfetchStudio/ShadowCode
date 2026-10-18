@@ -428,6 +428,7 @@ mod tests {
         .is_null());
     }
 
+    #[cfg(unix)]
     #[test]
     fn commands_show_the_full_command_and_folder() {
         let (_dir, ws) = project();

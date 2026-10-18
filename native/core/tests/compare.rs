@@ -2,6 +2,7 @@
 //! Two registered loopback models share one fake OpenAI-compatible server;
 //! the reply depends on the requested model name, so the lanes make
 //! different edits. No vendor CLI or network is used.
+use shadowcode_core::paths::Canonical;
 mod support;
 use anyhow::Result;
 use serde_json::{json, Value};
@@ -141,7 +142,7 @@ async fn fixture_with_checks(delay: Duration, checks: bool) -> Fixture {
     fs::write(project.join(".gitignore"), "ignored.log\n").unwrap();
     git(&project, &["add", "."]);
     git(&project, &["commit", "-qm", "Base"]);
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     let paths = AppPaths::isolated(&root.path().join("profile")).unwrap();
     Config::patch(
         &paths,
@@ -1800,7 +1801,7 @@ exec {git} "$@"
     // host process in this lane before reading its kernel start time, as in
     // the existing project-inspection cancellation fixtures.
     fn host_pid(project: &Path, namespace_pid: u32) -> u32 {
-        let project = project.canonicalize().unwrap();
+        let project = project.canonical().unwrap();
         let matches: Vec<_> = fs::read_dir("/proc")
             .unwrap()
             .filter_map(|entry| {
@@ -1938,7 +1939,7 @@ exec {git} "$@"
         fs::write(project_b.join("lib.txt"), "project B unchanged\n").unwrap();
         git(&project_b, &["add", "."]);
         git(&project_b, &["commit", "-qm", "B base"]);
-        let project_b = project_b.canonicalize().unwrap();
+        let project_b = project_b.canonical().unwrap();
         let b_head = git(&project_b, &["rev-parse", "HEAD"]);
         let b_index = git(&project_b, &["write-tree"]);
         let mut trusted = Config::load(&f.paths, None).unwrap().trusted_workspaces;

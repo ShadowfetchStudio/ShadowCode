@@ -1,5 +1,6 @@
 //! Native command-line frontend. The same command service, permissions, event
 //! journal, and engine are used by local runs and an already open desktop.
+use crate::paths::Canonical;
 macro_rules! outln {
     ($($arg:tt)*) => { writeln!(std::io::stdout(), $($arg)*).context("Could not write terminal output")? };
 }
@@ -359,7 +360,7 @@ async fn acp(
         if let Some(profile) = &options.profile {
             // The profile may not exist yet; the agent creates it on start.
             let profile = expand(profile)?;
-            let profile = match profile.canonicalize() {
+            let profile = match profile.canonical() {
                 Ok(path) => path,
                 Err(_) => std::path::absolute(&profile)?,
             };
@@ -521,7 +522,7 @@ pub async fn run(options: Options) -> Result<i32> {
                 args.extend([
                     "--profile".into(),
                     expand(profile)?
-                        .canonicalize()?
+                        .canonical()?
                         .to_str()
                         .context("MCP profile path must be UTF-8")?
                         .to_owned(),

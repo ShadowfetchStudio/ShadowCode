@@ -1,5 +1,6 @@
 //! Copy a reviewed dirty snapshot without stashing or resetting the source.
 use super::{git, AppPaths, Record, Workspace};
+use crate::paths::Canonical;
 use anyhow::{ensure, Context, Result};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -33,7 +34,7 @@ async fn capture(source: &Path, cancel: CancellationToken) -> Result<Capture> {
     let workspace = Workspace::open(source)?;
     let top = git(source, &["rev-parse", "--show-toplevel"], cancel.clone()).await?;
     ensure!(
-        Path::new(&top).canonicalize()? == workspace.path,
+        Path::new(&top).canonical()? == workspace.path,
         "Open the repository root before copying changes"
     );
     for marker in [

@@ -2,6 +2,7 @@
 //! repository local/advisory lock, then short profile admission. Never acquire
 //! repository ownership while holding profile admission, and never unlink locks.
 use super::{git, AppPaths, Record, Workspace};
+use crate::paths::Canonical;
 use anyhow::{ensure, Context, Result};
 use fs2::FileExt;
 use std::{
@@ -55,7 +56,7 @@ impl Advisory {
                 .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK);
         }
         ensure!(
-            directory.canonicalize()? == directory,
+            directory.canonical()? == directory,
             "Worktree lock directory changed"
         );
         let parent = parent.open(directory)?;
@@ -143,7 +144,7 @@ async fn common(source: &Path, cancel: &CancellationToken) -> Result<PathBuf> {
         cancel.clone(),
     )
     .await?;
-    Ok(Path::new(&common).canonicalize()?)
+    Ok(Path::new(&common).canonical()?)
 }
 pub(super) async fn mutation(source: &Path, cancel: &CancellationToken) -> Result<Mutation> {
     let source = Workspace::open(source)?.path;
@@ -188,7 +189,7 @@ pub(super) async fn reserve_record(
         expected == records,
         "Worktree admission belongs to another profile"
     );
-    let directory = records.canonicalize()?;
+    let directory = records.canonical()?;
     let lock = keyed(Kind::Admission, &directory)?;
     let _local = tokio::select! {biased; _=cancel.cancelled()=>anyhow::bail!("Worktree admission cancelled"), guard=lock.lock_owned()=>guard};
     ensure!(!cancel.is_cancelled(), "Worktree admission cancelled");
@@ -198,7 +199,7 @@ pub(super) async fn reserve_record(
         "Another process owns worktree admission; retry later",
     )?;
     ensure!(
-        records.canonicalize()? == directory,
+        records.canonical()? == directory,
         "Worktree inventory changed during admission"
     );
     let mut count = 0;
@@ -231,7 +232,7 @@ mod tests {
     }
     impl Canonical {
         fn new(dir: tempfile::TempDir) -> Self {
-            let path = dir.path().canonicalize().unwrap();
+            let path = crate::paths::Canonical::canonical(dir.path()).unwrap();
             Self { _dir: dir, path }
         }
         fn path(&self) -> &std::path::Path {
