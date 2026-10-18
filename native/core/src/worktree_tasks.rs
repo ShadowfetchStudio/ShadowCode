@@ -1153,7 +1153,8 @@ mod tests {
         }
     }
     async fn until(mut ready: impl FnMut() -> bool, message: &str) {
-        tokio::time::timeout(Duration::from_secs(3), async {
+        // A shell can take seconds to start on a loaded Windows runner.
+        tokio::time::timeout(Duration::from_secs(10), async {
             while !ready() {
                 tokio::time::sleep(Duration::from_millis(5)).await;
             }
