@@ -20,12 +20,18 @@ use std::{
 };
 
 const MAX_SCAN_FILES: usize = 256;
-#[cfg(not(target_os = "macos"))]
+#[cfg(all(unix, not(target_os = "macos")))]
 pub const MANAGED_RELATIVE: &str = ".local/lib/shadowcode";
 /// macOS keeps the user-installed runtime with the app's other data.
 #[cfg(target_os = "macos")]
 pub const MANAGED_RELATIVE: &str = "Library/Application Support/ShadowCode/llama.cpp";
+/// Windows: under `%LOCALAPPDATA%` (see [`managed_dir`]).
+#[cfg(windows)]
+pub const MANAGED_RELATIVE: &str = "ShadowCode/llama.cpp";
+#[cfg(not(windows))]
 pub const MANAGED_SERVER: &str = "llama-server";
+#[cfg(windows)]
+pub const MANAGED_SERVER: &str = "llama-server.exe";
 /// Default upper bound for the server context window (tokens).
 pub const DEFAULT_CONTEXT_CAP: u64 = 16384;
 /// Never plan a smaller window than this unless the model itself is smaller.
@@ -317,17 +323,24 @@ pub fn find_projector(model_path: &Path, model: &GgufHeader) -> Option<PathBuf> 
 // ---------------------------------------------------------------------------
 
 pub fn managed_dir() -> Option<PathBuf> {
-    std::env::var_os("HOME").map(|home| PathBuf::from(home).join(MANAGED_RELATIVE))
+    #[cfg(windows)]
+    let base = std::env::var_os("LOCALAPPDATA");
+    #[cfg(not(windows))]
+    let base = std::env::var_os("HOME");
+    base.map(|base| PathBuf::from(base).join(MANAGED_RELATIVE))
 }
 
 /// `usr/lib/shadowcode` next to the executable (AppImage `usr/bin/..`, deb
 /// `/usr/bin/..`); on macOS the app bundle's `Contents/Resources/llama.cpp`
-/// (the executable is in `Contents/MacOS`).
+/// (the executable is in `Contents/MacOS`); on Windows `llama.cpp` beside
+/// the installed executable.
 pub fn bundled_dir() -> Option<PathBuf> {
     let exe = std::env::current_exe().ok()?;
     #[cfg(target_os = "macos")]
     return Some(exe.parent()?.join("../Resources/llama.cpp"));
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(windows)]
+    return Some(exe.parent()?.join("llama.cpp"));
+    #[cfg(all(unix, not(target_os = "macos")))]
     Some(exe.parent()?.join("../lib/shadowcode"))
 }
 
@@ -508,9 +521,31 @@ pub fn runtime_env(binary: &Path) -> Vec<(String, std::ffi::OsString)> {
             env.push((name.to_owned(), value));
         }
     }
+    // Windows: system DLLs (and the Vulkan loader) need these to load.
+    #[cfg(windows)]
+    for name in [
+        "SystemRoot",
+        "windir",
+        "SystemDrive",
+        "TEMP",
+        "TMP",
+        "USERPROFILE",
+        "LOCALAPPDATA",
+        "APPDATA",
+        "NUMBER_OF_PROCESSORS",
+        "PROCESSOR_ARCHITECTURE",
+    ] {
+        if let Some(value) = std::env::var_os(name) {
+            env.push((name.to_owned(), value));
+        }
+    }
+    // Windows finds a program's DLLs beside it without help.
+    #[cfg(unix)]
     if let Some(dir) = binary.parent() {
         env.push(("LD_LIBRARY_PATH".into(), dir.as_os_str().to_owned()));
     }
+    #[cfg(not(unix))]
+    let _ = binary;
     env
 }
 

@@ -27,9 +27,16 @@
 #     outside a logged-in desktop session. Needs Xcode (its metal compiler)
 #     and cmake.
 #
-# Outputs: packaging/llama.cpp/bin (bundled into the AppImage, the deb and the
-# macOS app) and, unless --no-user-install is given, ~/.local/lib/shadowcode
-# (macOS: ~/Library/Application Support/ShadowCode/llama.cpp).
+#   * Windows (Git Bash): the same loadable CPU variants, compiled by clang-cl
+#     through the Visual Studio generator (the variants need GCC/Clang-style
+#     target flags, as upstream's own Windows builds do), without OpenMP, plus
+#     a Vulkan module when the Vulkan SDK is installed (VULKAN_SDK with glslc).
+#     Needs Visual Studio 2022 with its C++ and Clang tools, and cmake.
+#
+# Outputs: packaging/llama.cpp/bin (bundled into the AppImage, the deb, the
+# macOS app and the Windows installer) and, unless --no-user-install is given,
+# ~/.local/lib/shadowcode (macOS: ~/Library/Application Support/ShadowCode/
+# llama.cpp; Windows: %LOCALAPPDATA%\ShadowCode\llama.cpp).
 # The tracked source pin and reference manifest are inputs, never build outputs.
 # Build timestamps and selected backends belong only in the generated runtime.
 #
@@ -46,8 +53,14 @@ PIN="$ROOT/tools/llama.cpp.pin"
 OUT_REPO="$ROOT/packaging/llama.cpp"
 DARWIN=0
 [[ "$(uname -s)" == Darwin ]] && DARWIN=1
+WINDOWS=0
+case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) WINDOWS=1 ;; esac
+EXE=""
+[[ "$WINDOWS" == "1" ]] && EXE=".exe"
 if [[ "$DARWIN" == "1" ]]; then
   OUT_USER="${SHADOWCODE_LLAMA_PREFIX:-$HOME/Library/Application Support/ShadowCode/llama.cpp}"
+elif [[ "$WINDOWS" == "1" ]]; then
+  OUT_USER="${SHADOWCODE_LLAMA_PREFIX:-$(cygpath -u "${LOCALAPPDATA:-$USERPROFILE/AppData/Local}")/ShadowCode/llama.cpp}"
 else
   OUT_USER="${SHADOWCODE_LLAMA_PREFIX:-$HOME/.local/lib/shadowcode}"
 fi
@@ -84,7 +97,9 @@ if [[ -z "$CMAKE" ]]; then
   fi
 fi
 GENERATOR=()
-if command -v ninja >/dev/null 2>&1; then
+if [[ "$WINDOWS" == "1" ]]; then
+  GENERATOR=(-G "Visual Studio 17 2022" -A x64 -T ClangCL)
+elif command -v ninja >/dev/null 2>&1; then
   GENERATOR=(-G Ninja)
 fi
 CPUS="$(nproc 2>/dev/null || sysctl -n hw.ncpu)"
@@ -179,7 +194,7 @@ write_commit() {
 
 if [[ "$NOTICES_ONLY" == "1" ]]; then
   EXISTING="$OUT_REPO/bin/COMMIT"
-  [[ -x "$OUT_REPO/bin/llama-server" && -f "$EXISTING" ]] || { echo "No built runtime in $OUT_REPO/bin" >&2; exit 1; }
+  [[ -x "$OUT_REPO/bin/llama-server$EXE" && -f "$EXISTING" ]] || { echo "No built runtime in $OUT_REPO/bin" >&2; exit 1; }
   if [[ "$(field "$EXISTING" commit)" != "$COMMIT" ]]; then
     echo "The runtime in $OUT_REPO/bin was built from $(field "$EXISTING" commit), not the pinned $COMMIT; rebuild it." >&2
     exit 1
@@ -196,6 +211,7 @@ if [[ "$NOTICES_ONLY" == "1" ]]; then
 fi
 
 VULKAN_FLAGS=(-DGGML_VULKAN=OFF)
+EXTRA_FLAGS=()
 BACKEND="cpu"
 RPATH='$ORIGIN'
 if [[ "$DARWIN" == "1" ]]; then
@@ -204,6 +220,17 @@ if [[ "$DARWIN" == "1" ]]; then
   VULKAN_FLAGS=(-DGGML_VULKAN=OFF -DGGML_METAL=ON -DGGML_METAL_EMBED_LIBRARY=OFF -DGGML_BLAS=OFF)
   BACKEND="metal+cpu"
   RPATH='@loader_path'
+fi
+if [[ "$WINDOWS" == "1" ]]; then
+  # The Vulkan SDK brings the headers, loader library and glslc together.
+  EXTRA_FLAGS=(-DGGML_OPENMP=OFF)
+  if [[ "$WANT_VULKAN" == "1" && -n "${VULKAN_SDK:-}" && -x "$(cygpath -u "$VULKAN_SDK")/Bin/glslc.exe" ]]; then
+    VULKAN_FLAGS=(-DGGML_VULKAN=ON)
+    BACKEND="vulkan+cpu"
+  else
+    [[ "$WANT_VULKAN" == "1" ]] && echo "No Vulkan SDK (VULKAN_SDK with glslc); building a CPU-only runtime." >&2
+  fi
+  WANT_VULKAN=0
 fi
 if [[ "$WANT_VULKAN" == "1" ]]; then
   GLSLC="$ROOT/tools/glslc-flatpak.sh"
@@ -264,6 +291,7 @@ fi
   -DGGML_NATIVE=OFF \
   -DGGML_CUDA=OFF \
   "${VULKAN_FLAGS[@]}" \
+  ${EXTRA_FLAGS[@]+"${EXTRA_FLAGS[@]}"} \
   -DLLAMA_BUILD_TESTS=OFF \
   -DLLAMA_BUILD_EXAMPLES=OFF \
   -DLLAMA_BUILD_TOOLS=ON \
@@ -271,17 +299,19 @@ fi
   -DLLAMA_CURL=OFF \
   -DCMAKE_INSTALL_RPATH="$RPATH" \
   -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
-"$CMAKE" --build "$BUILD_DIR" --parallel "$JOBS"
+"$CMAKE" --build "$BUILD_DIR" --config Release --parallel "$JOBS"
 BIN_DIR="$BUILD_DIR/bin"
-[[ -x "$BIN_DIR/llama-server" && -x "$BIN_DIR/llama-cli" ]] || { echo "llama.cpp build did not produce llama-cli/llama-server" >&2; exit 1; }
+# The Visual Studio generator puts each configuration in its own folder.
+[[ "$WINDOWS" == "1" ]] && BIN_DIR="$BUILD_DIR/bin/Release"
+[[ -x "$BIN_DIR/llama-server$EXE" && -x "$BIN_DIR/llama-cli$EXE" ]] || { echo "llama.cpp build did not produce llama-cli/llama-server" >&2; exit 1; }
 BUILT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
 install_runtime() {
   local dest="$1"
   rm -rf "$dest.new"
   mkdir -p "$dest.new"
-  install -m 755 "$BIN_DIR/llama-cli" "$dest.new/llama-cli"
-  install -m 755 "$BIN_DIR/llama-server" "$dest.new/llama-server"
+  install -m 755 "$BIN_DIR/llama-cli$EXE" "$dest.new/llama-cli$EXE"
+  install -m 755 "$BIN_DIR/llama-server$EXE" "$dest.new/llama-server$EXE"
   # Core libraries, the two tool implementations, and every loadable backend
   # module (libggml-cpu-*.so, libggml-vulkan.so). Other tool libraries from
   # the build tree (bench, quantize, perplexity, ...) are not shipped.
@@ -291,7 +321,9 @@ install_runtime() {
     -o -name 'libggml*.so*' -o -name 'libmtmd*.so*' \
     -o -name 'libllama.*dylib' -o -name 'libllama-common.*dylib' \
     -o -name 'libllama-server-impl.dylib' -o -name 'libllama-cli-impl.dylib' \
-    -o -name 'libggml*.dylib' -o -name 'libmtmd*.dylib' -o -name '*.metallib' \) \
+    -o -name 'libggml*.dylib' -o -name 'libmtmd*.dylib' -o -name '*.metallib' \
+    -o -name 'llama.dll' -o -name 'llama-common.dll' -o -name 'llama-server-impl.dll' \
+    -o -name 'llama-cli-impl.dll' -o -name 'ggml*.dll' -o -name 'mtmd*.dll' \) \
     -exec cp -a {} "$dest.new/" \;
   # Model architectures the pinned runtime can load, from its own source, so
   # the catalog can say "unsupported architecture" instead of guessing.
@@ -321,7 +353,7 @@ install_runtime "$OUT_REPO/bin"
 if [[ "$USER_INSTALL" == "1" ]]; then
   install_runtime "$OUT_USER"
 fi
-"$OUT_REPO/bin/llama-server" --version
+"$OUT_REPO/bin/llama-server$EXE" --version
 printf 'Built managed llama.cpp %s (%s) -> %s\n' "$COMMIT" "$BACKEND" "$OUT_REPO/bin"
 if [[ "$USER_INSTALL" == "1" ]]; then
   printf 'Installed managed llama.cpp -> %s\n' "$OUT_USER"

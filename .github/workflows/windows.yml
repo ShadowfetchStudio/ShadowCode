@@ -8,9 +8,9 @@ name: Windows
 on:
   push:
     branches: [main]
-    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml']
+    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml', 'scripts/build-llama.cpp.sh', 'tools/llama.cpp.pin', 'packaging/windows/**']
   pull_request:
-    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml']
+    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml', 'scripts/build-llama.cpp.sh', 'tools/llama.cpp.pin', 'packaging/windows/**']
 permissions:
   contents: read
 concurrency:
@@ -93,7 +93,7 @@ jobs:
           retention-days: 14
   installer:
     runs-on: windows-latest
-    timeout-minutes: 120
+    timeout-minutes: 150
     env:
       RUSTUP_TOOLCHAIN: '1.95.0'
       CARGO_TERM_COLOR: never
@@ -110,8 +110,16 @@ jobs:
       - name: Install pinned Rust toolchain
         run: rustup toolchain install 1.95.0 --profile minimal
       - run: npm --prefix ui ci
+      # The pinned llama.cpp (CPU variants, clang-cl), bundled as llama.cpp\.
+      - name: Build the local model runtime
+        run: bash scripts/build-llama.cpp.sh --no-user-install --cpu-only
+      - name: The runtime starts and reports its version
+        run: |
+          ls packaging/llama.cpp/bin
+          packaging/llama.cpp/bin/llama-server.exe --version
+          packaging/llama.cpp/bin/llama-server.exe --list-devices
       - name: Build the preview installer (NSIS, current user)
-        run: CI=true ui/node_modules/.bin/tauri build --bundles nsis
+        run: CI=true ui/node_modules/.bin/tauri build --bundles nsis --config packaging/windows/bundle-runtime.conf.json
       - name: The app starts and reports its version
         run: |
           version="$(node -p "require('./src-tauri/tauri.conf.json').version")"

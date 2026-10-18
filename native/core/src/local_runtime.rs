@@ -234,6 +234,10 @@ impl Ring {
 
 struct Server {
     child: Child,
+    /// Windows: the server and anything it starts end with this job, which
+    /// closes with ShadowCode.
+    #[cfg(windows)]
+    _job: Option<crate::process::Job>,
     spec: LaunchSpec,
     info: Loaded,
     stderr: Arc<Mutex<Ring>>,
@@ -961,6 +965,10 @@ async fn launch(
         .spawn()
         .with_context(|| format!("Failed to start {}", spec.binary.display()))
         .map_err(other)?;
+    #[cfg(windows)]
+    let job = child
+        .raw_handle()
+        .and_then(|handle| crate::process::Job::for_process(handle).ok());
     let stderr = Arc::new(Mutex::new(Ring::default()));
     if let Some(mut pipe) = child.stderr.take() {
         let ring = stderr.clone();
@@ -1087,6 +1095,8 @@ async fn launch(
         GpuMode::Off => "off",
     };
     Ok(Server {
+        #[cfg(windows)]
+        _job: job,
         info: Loaded {
             id: spec.id.clone(),
             name: spec.name.clone(),
