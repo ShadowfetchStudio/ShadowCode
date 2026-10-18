@@ -85,7 +85,12 @@ async fn native_queries_preserve_types_parameters_and_database_bytes() {
         .is_empty());
     assert_eq!(fs::read(ws.path.join("data.db")).unwrap(), before);
     assert_eq!(fs::read_dir(&ws.path).unwrap().count(), 1);
-    let renamed = "query ? # % ü.db";
+    // URI-sensitive characters in the name (Windows forbids `?` in names).
+    let renamed = if cfg!(windows) {
+        "query # % ü.db"
+    } else {
+        "query ? # % ü.db"
+    };
     fs::rename(ws.path.join("data.db"), ws.path.join(renamed)).unwrap();
     assert_eq!(
         read(&ws, json!({"path":renamed})).await.unwrap()["tables"],
