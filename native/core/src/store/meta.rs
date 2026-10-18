@@ -17,8 +17,11 @@ use std::sync::{Arc, LazyLock, Mutex};
 /// connections' commits until it times out. Writers in this process queue
 /// here instead; other processes still wait in busy_timeout.
 fn write_gate(path: &std::path::Path) -> Arc<Mutex<()>> {
-    static GATES: LazyLock<Mutex<HashMap<PathBuf, Arc<Mutex<()>>>>> = LazyLock::new(Default::default);
-    let mut gates = GATES.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    static GATES: LazyLock<Mutex<HashMap<PathBuf, Arc<Mutex<()>>>>> =
+        LazyLock::new(Default::default);
+    let mut gates = GATES
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
     gates.entry(path.to_path_buf()).or_default().clone()
 }
 
