@@ -2117,6 +2117,9 @@ impl Engine {
             }
         }
     }
+    // Windows: the vendor runner is not ported yet; the turn stops with an
+    // error after preparing, and the rest of this function is not reached.
+    #[cfg_attr(not(unix), allow(unreachable_code))]
     async fn run_cli_agent(
         &self,
         running: &Running,
@@ -2360,8 +2363,8 @@ impl Engine {
         };
         #[cfg(not(unix))]
         let outcome: crate::cli_agent::runner::RunOutcome = {
-            let _ = (options, prompt, events);
-            bail!("Vendor CLI backends require a Unix host")
+            let _ = (options, prompt, events, images);
+            bail!("Subscription CLI backends are not available on Windows yet")
         };
         if let Some(native) = outcome.native_session.clone() {
             let session_id = job.session_id.clone();

@@ -44,6 +44,7 @@ impl<R: AsyncRead + Unpin> BoundedLines<R> {
 
     /// An approval decision cannot treat consumed but unfinished protocol
     /// bytes as an empty stream. Keep waiting within the caller's deadline.
+    #[cfg_attr(not(unix), allow(dead_code))]
     pub(super) fn has_partial_frame(&self) -> bool {
         !self.pending.is_empty() || self.discarding
     }

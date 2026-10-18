@@ -595,8 +595,8 @@ pub async fn remove(
                 records.join(format!("{}.json", record.id)),
                 archive.join(format!("{}.json", record.id)),
             )?;
-            fs::File::open(&records)?.sync_all()?;
-            fs::File::open(&archive)?.sync_all()?;
+            paths::sync_directory(&records)?;
+            paths::sync_directory(&archive)?;
             forget_index(index);
             Ok(record)
         }

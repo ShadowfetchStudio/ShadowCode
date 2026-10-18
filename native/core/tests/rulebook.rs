@@ -3,6 +3,8 @@
 //! and the Rules & skills routes show and change it. Vendor protocols are
 //! replayed from recorded fixtures or driven by fake CLIs; no real vendor
 //! runs and nothing is written to a vendor's home folder.
+// Helpers used only by Unix-only tests are unused on Windows.
+#![cfg_attr(not(unix), allow(unused))]
 mod support;
 mod vendor_support;
 use serde_json::{json, Value};

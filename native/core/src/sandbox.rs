@@ -198,6 +198,7 @@ pub fn discard_scratch(path: &Path) -> Result<Value> {
         json!({"ok":true,"discarded":path,"note":"Removed this command's managed temporary directory."}),
     )
 }
+#[cfg_attr(not(unix), allow(dead_code))]
 fn scratch_base() -> PathBuf {
     #[cfg(unix)]
     // SAFETY: geteuid cannot fail.
@@ -1379,6 +1380,7 @@ mod tests {
     }
 
     /// Build the relay shipped in the Flatpak, or skip when no C compiler.
+    #[cfg(unix)]
     fn build_relay(out: &Path) -> Option<PathBuf> {
         let source =
             Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packaging/flatpak/proxy-relay.c");
@@ -1392,6 +1394,7 @@ mod tests {
         status.success().then_some(binary)
     }
 
+    #[cfg(unix)]
     fn free_port() -> u16 {
         std::net::TcpListener::bind("127.0.0.1:0")
             .unwrap()

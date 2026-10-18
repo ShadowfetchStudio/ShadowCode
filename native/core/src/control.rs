@@ -12,9 +12,11 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
 #[cfg(unix)]
-use std::os::unix::fs::{DirBuilderExt, FileTypeExt, MetadataExt, PermissionsExt};
 use std::{
     fs,
+    os::unix::fs::{DirBuilderExt, FileTypeExt, MetadataExt, PermissionsExt},
+};
+use std::{
     io::Write,
     path::{Path, PathBuf},
     sync::{
@@ -439,6 +441,7 @@ impl Server {
             clients.abort_all();
             while clients.join_next().await.is_some() {}
             drop(listener);
+            #[cfg(unix)]
             drop(_lease);
             drop(service);
         });

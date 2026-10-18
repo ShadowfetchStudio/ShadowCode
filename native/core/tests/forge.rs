@@ -1,6 +1,8 @@
 //! The drawer's Git panel end to end: branch, suggested messages, commit,
 //! push to a local bare remote, and a pull request through a fake `gh` on
 //! PATH (no network, no real GitHub).
+// Helpers used only by Unix-only tests are unused on Windows.
+#![cfg_attr(not(unix), allow(unused))]
 mod support;
 use serde_json::{json, Value};
 use shadowcode_core::{

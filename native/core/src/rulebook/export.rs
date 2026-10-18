@@ -285,6 +285,14 @@ fn make_link(link: &Path, to: &Path) -> Result<()> {
     #[cfg(unix)]
     std::os::unix::fs::symlink(to, link)
         .with_context(|| format!("Cannot create {}", link.display()))?;
+    // Symlinks on Windows need Developer Mode or administrator rights.
+    #[cfg(not(unix))]
+    anyhow::bail!(
+        "Linking {} to {} is not available on Windows yet",
+        link.display(),
+        to.display()
+    );
+    #[cfg(unix)]
     Ok(())
 }
 

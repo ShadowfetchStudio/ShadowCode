@@ -881,6 +881,7 @@ fn only_https_and_ssh_repositories_are_accepted() {
     assert_eq!(import::name_for("https://example.com/"), "example-com");
 }
 
+#[cfg(unix)]
 fn git(dir: &Path, args: &[&str]) {
     let status = std::process::Command::new("git")
         .args([

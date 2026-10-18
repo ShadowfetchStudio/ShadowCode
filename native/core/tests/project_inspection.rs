@@ -1,3 +1,5 @@
+// Helpers used only by Unix-only tests are unused on Windows.
+#![cfg_attr(not(unix), allow(unused))]
 mod support;
 use serde_json::{json, Value};
 use shadowcode_core::{

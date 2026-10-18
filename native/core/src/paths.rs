@@ -204,11 +204,23 @@ pub(crate) fn private_directory(path: &Path) -> Result<()> {
     Ok(())
 }
 
+/// Make a rename or new entry in `directory` durable. Windows cannot open a
+/// folder as a file; NTFS journals its metadata, so there is nothing to do.
+pub fn sync_directory(directory: &Path) -> Result<()> {
+    #[cfg(unix)]
+    fs::File::open(directory)?.sync_all()?;
+    #[cfg(not(unix))]
+    let _ = directory;
+    Ok(())
+}
+
 pub fn atomic_write(path: &Path, bytes: &[u8], private: bool) -> Result<()> {
     use std::io::Write;
     let parent = path.parent().context("Path has no parent")?;
     fs::create_dir_all(parent)?;
     let mut temp = tempfile::NamedTempFile::new_in(parent)?;
+    #[cfg(not(unix))]
+    let _ = private;
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -225,6 +237,6 @@ pub fn atomic_write(path: &Path, bytes: &[u8], private: bool) -> Result<()> {
     temp.write_all(bytes)?;
     temp.as_file().sync_all()?;
     temp.persist(path).map_err(|e| e.error)?;
-    fs::File::open(parent)?.sync_all()?;
+    sync_directory(parent)?;
     Ok(())
 }
