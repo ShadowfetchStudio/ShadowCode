@@ -89,7 +89,8 @@ file name. See
 From 2.2.0 each release also carries Flatpak bundles for both architectures
 (`ShadowCode_VERSION_x86_64.flatpak`, `ShadowCode_VERSION_aarch64.flatpak`,
 checked with `ShadowCode_VERSION_flatpak.sha256`; see [Flatpak](docs/FLATPAK.md))
-and macOS disk images (see [macOS](#macos)).
+and macOS disk images (see [macOS](#macos)); from 2.3.0 a Windows installer
+too (see [Windows](#windows)).
 Check [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases)
 for published versions. The 2.2.0 x86_64 packages and checksums are:
 
@@ -125,6 +126,38 @@ Support/ShadowCode`, shell commands run in the macOS sandbox (Seatbelt) and
 API keys can be kept in the Keychain. To build the app yourself, run
 `scripts/build-macos-app.sh` on a Mac with Xcode, Rust 1.95, Node 22 and
 cmake.
+
+### Windows
+
+From 2.3.0, releases also carry `ShadowCode_VERSION_x64-setup.exe` for
+64-bit Windows 10 (version 1809 or later) and 11, with its SHA-256 checksum in
+`ShadowCode_VERSION_windows.sha256`. It installs for your user only (no
+administrator rights) and includes llama.cpp for local models (CPU) and the
+shell used by the Windows sandbox (busybox-w32, GPL-2.0; its complete source
+is published beside the installer as
+`ShadowCode_VERSION_busybox-w32-source.tar.gz`).
+
+Install or update with one command in PowerShell; it checks the installer
+against the release's checksums, installs it for the current user and adds
+the `shadowcode` command to your PATH:
+
+```powershell
+irm https://raw.githubusercontent.com/ShadowfetchStudio/ShadowCode/main/scripts/install-windows.ps1 | iex
+```
+
+Or download the installer from the release page and run it. It is
+distributed on GitHub only and is not code-signed, so Windows SmartScreen
+shows **Windows protected your PC** for a copy downloaded in a browser:
+choose **More info**, then **Run anyway** (the command above does not need
+this).
+
+On Windows the app is in `%LOCALAPPDATA%\ShadowCode`, settings in
+`%APPDATA%\ShadowCode\config` and history in `%LOCALAPPDATA%\ShadowCode`.
+Shell commands run in an AppContainer sandbox with busybox `sh`, so they
+keep their POSIX syntax; the network allow-list is not available on
+Windows. The Windows version is new: it is tested on GitHub's Windows
+runners, not yet on a wide range of PCs. See
+[the Windows port notes](docs/WINDOWS_PORT.md).
 
 ### AppImage (recommended)
 

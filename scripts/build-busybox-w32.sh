@@ -10,7 +10,17 @@
 #     the source notice): the null device opens inside an AppContainer.
 #   * Output: packaging/busybox-w32/bin/busybox.exe with LICENSE (GPL-2.0),
 #     COMMIT naming the exact upstream source, and the applied patches.
+#   * --source-archive FILE also writes the complete corresponding source
+#     (the upstream tree at the pinned commit, ShadowCode's patches and the
+#     pin) as a .tar.gz, published beside each Windows release.
 set -euo pipefail
+ARCHIVE=""
+while (($#)); do
+  case "$1" in
+    --source-archive) ARCHIVE="${2:?--source-archive needs a file}"; shift 2 ;;
+    *) echo "Unknown argument: $1" >&2; exit 2 ;;
+  esac
+done
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PIN="$ROOT/tools/busybox-w32.pin"
 field() { awk -F= -v key="$2" '$1 == key { print substr($0, length(key) + 2); exit }' "$1"; }
@@ -43,3 +53,23 @@ printf 'url=%s\ncommit=%s\nbuilt=%s\n' "$URL" "$COMMIT" "$(date -u +%Y-%m-%dT%H:
 rm -rf "$OUT"
 mv "$OUT.new" "$OUT"
 sha256sum "$OUT/busybox.exe"
+if [[ -n "$ARCHIVE" ]]; then
+  STAGE="$(mktemp -d)"
+  trap 'rm -rf "$STAGE"' EXIT
+  NAME="busybox-w32-${COMMIT:0:12}"
+  mkdir -p "$STAGE/$NAME/shadowcode-patches"
+  git -C "$SRC" archive --format=tar "$COMMIT" | tar -x -C "$STAGE/$NAME"
+  cp "$ROOT"/tools/busybox-w32-patches/*.patch "$STAGE/$NAME/shadowcode-patches/"
+  cp "$PIN" "$STAGE/$NAME/shadowcode-patches/busybox-w32.pin"
+  cat > "$STAGE/$NAME/shadowcode-patches/README" <<NOTE
+busybox-w32 as shipped in ShadowCode for Windows (busybox.exe, GPL-2.0).
+Source: $URL at commit $COMMIT, unmodified in this folder's parent.
+ShadowCode applies the patches here in order (git apply), then builds with
+  make mingw64_defconfig && make CROSS_COMPILE=x86_64-w64-mingw32-
+(see scripts/build-busybox-w32.sh in ShadowCode's source).
+NOTE
+  mkdir -p "$(dirname "$ARCHIVE")"
+  tar -C "$STAGE" --sort=name --owner=0 --group=0 --numeric-owner \
+    --mtime="@$(git -C "$SRC" show -s --format=%ct "$COMMIT")" -cf - "$NAME" | gzip -n -9 > "$ARCHIVE"
+  sha256sum "$ARCHIVE"
+fi

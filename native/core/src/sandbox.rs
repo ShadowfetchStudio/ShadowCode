@@ -1151,7 +1151,39 @@ pub fn status(config: &Config) -> Value {
 }
 
 /// What shell isolation this computer and configuration provide.
-#[cfg(not(target_os = "macos"))]
+#[cfg(windows)]
+pub fn status(config: &Config) -> Value {
+    let works = appcontainer::probe();
+    let network = config.shell_network();
+    let effective = match (&works, config.sandbox.require, network) {
+        // The allow-list is refused on Windows (see prepare_windows).
+        (_, _, ShellNetwork::Allowlist) => "blocked",
+        (Ok(()), _, _) => "appcontainer",
+        (Err(_), true, _) => "blocked",
+        _ => "none",
+    };
+    let layout = HomeLayout::current(&config.sandbox.home_binds, Path::new("/nonexistent"));
+    json!({
+        "platform": "windows",
+        "effective": effective,
+        "appcontainer": {
+            "works": works.is_ok(),
+            "detail": match &works { Ok(()) => "The Windows sandbox works".to_owned(), Err(e) => format!("{e:#}") },
+        },
+        "bubblewrap": {"installed": false, "works": false, "detail": "bubblewrap is Linux-only"},
+        "landlock_abi": 0,
+        "network_namespace": {"available": false, "detail": "Windows commands get no network when it is off, and the internet and private networks when it is on; never this computer's own services"},
+        "require": config.sandbox.require,
+        "shell_network": network_label(network),
+        "allow": config.network.allow,
+        "home_read_only": layout.binds.iter().map(|(_, d)| d.to_string_lossy()).collect::<Vec<_>>(),
+        "home_skipped": layout.skipped,
+        "never_mounted": DENIED_HOME,
+    })
+}
+
+/// What shell isolation this computer and configuration provide.
+#[cfg(not(any(target_os = "macos", windows)))]
 pub fn status(config: &Config) -> Value {
     let installed = which("bwrap").is_some();
     let bwrap = (|| -> Result<()> {
@@ -1209,7 +1241,23 @@ pub fn doctor_checks() -> Vec<Value> {
     ]
 }
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(windows)]
+pub fn doctor_checks() -> Vec<Value> {
+    let works = appcontainer::probe();
+    vec![
+        json!({"id":"appcontainer","status":if works.is_ok() {"pass"} else {"warn"},
+        "title":"Shell sandbox (Windows)","detail":match &works {
+            Ok(()) => "The Windows sandbox works: shell commands run in busybox sh inside an AppContainer that writes only to the project and a scratch folder, reads Windows, Program Files and read-only toolchains, and cannot see the rest of the home folder.".to_owned(),
+            Err(e) => format!("{e:#}. Shell commands run unsandboxed with a warning."),
+        },
+        "fix":"Turn on 'Require sandbox' to refuse commands when the sandbox cannot run. The network allow-list is not available on Windows. A command is never replayed after a sandbox failure."}),
+        json!({"id":"workspace-cow","status":"info","title":"Live workspace writes",
+        "detail":"Shell writes affect the current workspace. Scratch storage is temporary, not copy-on-write. A checkpoint taken before each command lets rewind restore project files.",
+        "fix":"Use an isolated Git worktree for changes you want to review before integrating."}),
+    ]
+}
+
+#[cfg(not(any(target_os = "macos", windows)))]
 pub fn doctor_checks() -> Vec<Value> {
     let report = probe_workspace_cow();
     #[cfg(target_os = "linux")]

@@ -416,6 +416,39 @@ pub(super) fn prepare(
     })
 }
 
+/// Whether commands can run in the container: the launcher, the profile and
+/// the bundled shell are there, and busybox `sh` starts in the container
+/// and exits cleanly. For `shadowcode doctor`.
+pub fn probe() -> Result<()> {
+    let program = launcher()?;
+    let sid_text = container_sid()?;
+    let sid = Sid::parse(&sid_text)?;
+    let (shell, args) = sandbox_shell("exit 0")?;
+    let folder = Path::new(&shell)
+        .parent()
+        .context("the sandbox's shell has no folder")?
+        .to_owned();
+    if !system_readable(&folder) {
+        grant(&folder, &sid, READ, true)?;
+    }
+    let output = std::process::Command::new(&program)
+        .arg(LAUNCH_FLAG)
+        .args(["--sid", &sid_text, "--network", "off", "--"])
+        .arg(&shell)
+        .args(&args)
+        .current_dir(&folder)
+        .stdin(std::process::Stdio::null())
+        .output()
+        .with_context(|| format!("could not start the sandbox launcher {}", program.display()))?;
+    ensure!(
+        output.status.success(),
+        "the sandbox's shell did not run in the container ({}): {}",
+        output.status,
+        String::from_utf8_lossy(&output.stderr).trim()
+    );
+    Ok(())
+}
+
 /// The shell inside the container: the bundled busybox-w32 `sh` (a native
 /// Windows build, see scripts/build-busybox-w32.sh), so commands keep their
 /// POSIX syntax. Git for Windows' bash (MSYS2) cannot start in an
