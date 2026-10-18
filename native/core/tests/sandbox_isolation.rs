@@ -235,6 +235,7 @@ async fn network_off_and_on_inside_bubblewrap() {
     }
 }
 
+#[cfg(unix)]
 #[test]
 fn landlock_limits_commands_when_bubblewrap_is_missing() {
     // PATH is process-global: hide bubblewrap in a child test process only.

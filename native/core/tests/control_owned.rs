@@ -1,3 +1,5 @@
+// The control socket is the Unix transport; the Windows pipe needs its own tests.
+#![cfg(unix)]
 mod support;
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};

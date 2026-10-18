@@ -1330,8 +1330,12 @@ async fn execute(backend: &Backend, workspace: &Path, options: &Options) -> Resu
                 let mut body = json!({"workspace":workspace,"name":name});
                 if let Some(path) = file {
                     use std::io::Read;
-                    use std::os::unix::fs::OpenOptionsExt;
-                    let input = std::fs::OpenOptions::new().read(true).custom_flags(libc::O_NONBLOCK).open(path).context("Cannot open plugin bundle")?;
+                    let mut options = std::fs::OpenOptions::new();
+                    options.read(true);
+                    // A FIFO must not hang the open; the file check follows.
+                    #[cfg(unix)]
+                    std::os::unix::fs::OpenOptionsExt::custom_flags(&mut options, libc::O_NONBLOCK);
+                    let input = options.open(path).context("Cannot open plugin bundle")?;
                     ensure!(input.metadata()?.is_file(), "Plugin bundle must be a regular file");
                     let mut text = String::new();
                     input.take((crate::plugins::MAX_BYTES + 1) as u64).read_to_string(&mut text)?;

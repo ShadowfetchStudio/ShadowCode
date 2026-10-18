@@ -65,7 +65,6 @@ mod feed;
 mod forge;
 mod git;
 mod goals;
-#[cfg(unix)]
 mod inspection;
 mod issues;
 mod jobs;
@@ -75,7 +74,6 @@ mod memory;
 mod model_catalog;
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 mod preview;
-#[cfg(unix)]
 mod remote;
 mod review;
 mod rules;
@@ -125,7 +123,6 @@ pub struct Service {
     #[cfg(any(target_os = "linux", target_os = "macos"))]
     previews: Arc<crate::preview::Previews>,
     /// Remote access and phone notifications (one per engine).
-    #[cfg(unix)]
     remote: Arc<crate::remote::Manager>,
     /// How the process that owns this engine runs (`control::Server`
     /// modes: desktop, server, tui, acp, command); shared by every view.
@@ -147,7 +144,6 @@ impl Service {
             .or_else(|| paths.remembered_workspace())
             .unwrap_or(std::env::current_dir()?);
         let workspace = Workspace::open(&workspace)?.path;
-        #[cfg(unix)]
         let remote = Arc::new(crate::remote::Manager::new(paths.clone()));
         let engine = Engine::open(paths.clone())?;
         // The app log for bug reports (events, errors and timings only). It
@@ -180,7 +176,6 @@ impl Service {
             terminals,
             #[cfg(any(target_os = "linux", target_os = "macos"))]
             previews: Arc::default(),
-            #[cfg(unix)]
             remote,
             engine_mode: Arc::default(),
             remote_device: false,
@@ -218,7 +213,6 @@ impl Service {
             terminals: Arc::new(crate::terminal::Terminals::new(self.engine.notifier())),
             #[cfg(any(target_os = "linux", target_os = "macos"))]
             previews: self.previews.clone(),
-            #[cfg(unix)]
             remote: self.remote.clone(),
             engine_mode: self.engine_mode.clone(),
             remote_device: self.remote_device,
@@ -238,7 +232,6 @@ impl Service {
         self
     }
     /// Remote access (web interface, pairing, phone notifications).
-    #[cfg(unix)]
     pub fn remote(&self) -> &Arc<crate::remote::Manager> {
         &self.remote
     }
@@ -257,7 +250,6 @@ impl Service {
         Ok(workspace)
     }
     fn check_remote_workspace(&self, workspace: &Path) -> Result<()> {
-        #[cfg(unix)]
         ensure!(
             !self.remote_device
                 || !crate::remote::policy::inside_profile(
@@ -391,7 +383,6 @@ impl Service {
             "second-opinions" => self.second_opinion_routes(&call).await,
             "feed" => self.feed_routes(&call).await,
             "terminals" => self.terminal_routes(&call).await,
-            #[cfg(unix)]
             "remote" => self.remote_routes(&call).await,
             "git" => self.forge_routes(&call).await,
             "background" => self.background_routes(&call).await,

@@ -1,3 +1,5 @@
+// Helpers used only by Unix-only tests are unused on Windows.
+#![cfg_attr(not(unix), allow(unused))]
 mod support;
 use serde_json::{json, Value};
 use shadowcode_core::{
@@ -7,7 +9,9 @@ use shadowcode_core::{
     service::{Request, Service},
     workspace::Workspace,
 };
-use std::{fs, os::unix::fs::symlink, path::Path, sync::Arc, time::Duration};
+#[cfg(unix)]
+use std::os::unix::fs::symlink;
+use std::{fs, path::Path, sync::Arc, time::Duration};
 fn fixture() -> (tempfile::TempDir, Service) {
     let root = tempfile::tempdir().unwrap();
     let path = root.path().join("project");
@@ -46,6 +50,7 @@ async fn wait(service: &Service, job: &Value) -> Value {
     .unwrap()
     .unwrap())
 }
+#[cfg(unix)]
 #[tokio::test]
 async fn project_scan_is_bounded_confined_and_explicit_about_ambiguous_tests() {
     let (root, service) = fixture();
@@ -114,6 +119,7 @@ async fn project_scan_is_bounded_confined_and_explicit_about_ambiguous_tests() {
     service.engine.shutdown().await.unwrap();
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn project_scan_caps_aggregate_reads_and_skips_special_files() {
     use std::os::unix::ffi::OsStrExt;

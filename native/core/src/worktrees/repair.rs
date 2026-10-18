@@ -186,7 +186,7 @@ pub async fn apply(
                 temporary
                     .persist_noclobber(&path)
                     .map_err(|error| error.error)?;
-                fs::File::open(path.parent().unwrap())?.sync_all()?;
+                crate::paths::sync_directory(path.parent().unwrap())?;
             }
         }
         let top = git(

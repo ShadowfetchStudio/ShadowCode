@@ -19,6 +19,7 @@ pub fn plain(text: &str) -> String {
         .collect()
 }
 pub use crate::lifecycle::interrupted;
+#[cfg(unix)]
 async fn line() -> Result<String> {
     ensure!(
         std::io::stdin().is_terminal(),
@@ -67,6 +68,23 @@ async fn line() -> Result<String> {
             tokio::time::sleep(Duration::from_millis(30)).await;
         }
     }
+}
+/// Windows consoles have no nonblocking read: a detached thread reads the
+/// line, so dropping this future (Ctrl-C) never holds up runtime shutdown.
+#[cfg(not(unix))]
+async fn line() -> Result<String> {
+    ensure!(
+        std::io::stdin().is_terminal(),
+        "Interactive approval requires a terminal on stdin"
+    );
+    let (sender, receiver) = tokio::sync::oneshot::channel();
+    std::thread::spawn(move || {
+        let mut text = String::new();
+        let _ = sender.send(std::io::stdin().read_line(&mut text).map(|_| text));
+    });
+    let text = receiver.await.context("Terminal input closed")??;
+    ensure!(text.len() < 8000, "Approval response is too long");
+    Ok(text.trim().into())
 }
 async fn approve(backend: &Backend, approval: &Value) -> Result<()> {
     errln!(

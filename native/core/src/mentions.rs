@@ -540,6 +540,8 @@ mod tests {
         .is_err());
     }
 
+    // Creating a symlink needs extra privileges on Windows.
+    #[cfg(unix)]
     #[test]
     fn mentioned_secret_files_are_not_attached_and_tokens_are_redacted() {
         let dir = project();

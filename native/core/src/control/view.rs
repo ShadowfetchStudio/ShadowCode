@@ -5,10 +5,7 @@ use std::{
     collections::HashMap,
     sync::{Mutex as StdMutex, RwLock},
 };
-use tokio::{
-    net::unix::OwnedWriteHalf,
-    sync::{broadcast, Mutex},
-};
+use tokio::sync::{broadcast, Mutex};
 use tokio_util::task::AbortOnDropHandle;
 const EVENT_LIMIT: usize = 16_384;
 
@@ -58,7 +55,7 @@ impl Drop for Lease {
 /// cannot prevent status reads or cancellation from the same window.
 pub struct ViewClient {
     client: StdMutex<Client>,
-    writer: Mutex<Option<OwnedWriteHalf>>,
+    writer: Mutex<Option<transport::WriteHalf>>,
     reader: Mutex<Option<AbortOnDropHandle<Result<()>>>>,
     events: broadcast::Sender<Value>,
     closed: Arc<AtomicBool>,
@@ -103,7 +100,7 @@ impl Client {
         );
         let mut client = self.clone();
         client.view = Some(id.to_owned());
-        let (mut reader, writer) = stream.into_split();
+        let (mut reader, writer) = transport::split(stream);
         closed.store(false, Ordering::Release);
         let event_sender = events.clone();
         let ended = closed.clone();
@@ -283,7 +280,7 @@ fn notification(event: &Value) -> Value {
 }
 
 pub(super) async fn serve(
-    stream: &mut UnixStream,
+    stream: &mut Stream,
     service: Service,
     profile: &str,
     registry: Registry,
@@ -321,7 +318,7 @@ pub(super) async fn serve(
     Ok(json!({"closed": true}))
 }
 
-#[cfg(test)]
+#[cfg(all(test, unix))]
 mod tests {
     use super::*;
     #[tokio::test]
@@ -332,8 +329,8 @@ mod tests {
                 self.0.store(true, Ordering::Release);
             }
         }
-        let (stream, mut peer) = UnixStream::pair().unwrap();
-        let (mut reader, writer) = stream.into_split();
+        let (stream, mut peer) = tokio::net::UnixStream::pair().unwrap();
+        let (mut reader, writer) = transport::split(stream);
         let released = Arc::new(AtomicBool::new(false));
         let marker = Dropped(released.clone());
         let task = tokio::spawn(async move {

@@ -83,6 +83,7 @@ pub struct ProcessResult {
 /// Every live descendant of `pid`, children first. A shell's background
 /// job may leave the shell's process group; signalling these as well keeps
 /// an owned task from outliving its cancellation.
+#[cfg(unix)]
 pub(crate) fn descendants(pid: u32) -> Vec<u32> {
     let mut all = Vec::new();
     let mut pending = vec![pid];
@@ -132,7 +133,7 @@ fn children(pid: u32) -> Vec<u32> {
         .collect()
 }
 
-#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+#[cfg(all(unix, not(any(target_os = "linux", target_os = "macos"))))]
 fn children(_pid: u32) -> Vec<u32> {
     Vec::new()
 }
@@ -214,7 +215,7 @@ pub(crate) unsafe fn die_with_parent(parent: u32) -> std::io::Result<()> {
 }
 
 /// Whether a process id is still taken, zombies included (not yet reaped).
-#[cfg(test)]
+#[cfg(all(test, unix))]
 pub(crate) fn exists(pid: u32) -> bool {
     let Ok(pid) = libc::pid_t::try_from(pid) else {
         return false;

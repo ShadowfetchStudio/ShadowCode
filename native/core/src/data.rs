@@ -154,9 +154,7 @@ fn seal(path: &Path) -> Result<()> {
 }
 
 fn sync_dir(path: &Path) {
-    if let Ok(dir) = fs::File::open(path) {
-        let _ = dir.sync_all();
-    }
+    let _ = crate::paths::sync_directory(path);
 }
 
 /// `config/x`, `state/x`, `data/x` or `agents/x` to a real path, refusing
@@ -478,6 +476,7 @@ fn new_backup_folder(parent: &Path, reason: &str) -> Result<NewFolder> {
             format!("shadowcode-backup-{stamp}{suffix}-{attempt}")
         };
         let folder = parent.join(name);
+        #[cfg_attr(not(unix), allow(unused_mut))]
         let mut builder = fs::DirBuilder::new();
         #[cfg(unix)]
         {

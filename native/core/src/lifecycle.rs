@@ -53,11 +53,23 @@ pub fn extraction_parent() -> Option<u32> {
     {
         return None;
     }
-    // SAFETY: getppid reads process metadata and takes no pointer arguments.
-    let parent = unsafe { libc::getppid() } as u32;
+    let parent = parent_pid()?;
     // If the wrapper already exited, the native process must also stop before
     // accepting work. An impossible PID causes the first check to resolve.
     Some(if parent <= 1 { 0 } else { parent })
+}
+
+/// Only AppImages have an extraction parent; elsewhere there is none.
+fn parent_pid() -> Option<u32> {
+    #[cfg(unix)]
+    {
+        // SAFETY: getppid reads process metadata and takes no pointer arguments.
+        Some(unsafe { libc::getppid() } as u32)
+    }
+    #[cfg(not(unix))]
+    {
+        None
+    }
 }
 
 pub async fn parent_exited(parent: Option<u32>) {
@@ -67,7 +79,7 @@ pub async fn parent_exited(parent: Option<u32>) {
     };
     loop {
         // Reparenting, rather than PID existence, also handles PID reuse.
-        if unsafe { libc::getppid() } as u32 != parent {
+        if parent_pid() != Some(parent) {
             return;
         }
         tokio::time::sleep(Duration::from_millis(50)).await;

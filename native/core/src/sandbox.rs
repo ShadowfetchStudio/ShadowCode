@@ -198,9 +198,15 @@ pub fn discard_scratch(path: &Path) -> Result<Value> {
         json!({"ok":true,"discarded":path,"note":"Removed this command's managed temporary directory."}),
     )
 }
+#[cfg_attr(not(unix), allow(dead_code))]
 fn scratch_base() -> PathBuf {
+    #[cfg(unix)]
     // SAFETY: geteuid cannot fail.
-    std::env::temp_dir().join(format!("shadowcode-scratch-{}", unsafe { libc::geteuid() }))
+    let user = unsafe { libc::geteuid() }.to_string();
+    // Windows: the temporary folder is already the user's own.
+    #[cfg(not(unix))]
+    let user = "user";
+    std::env::temp_dir().join(format!("shadowcode-scratch-{user}"))
 }
 
 fn probe(program: &Path, workspace: &Path) -> Result<()> {
@@ -479,6 +485,7 @@ pub struct ChildSetup {
     gate: Option<Arc<proxy::Gate>>,
     /// Flatpak host commands: the proxy's Unix socket, reached through the
     /// relay inside the host bubblewrap network namespace.
+    #[cfg(unix)]
     relay: Option<Arc<RelaySocket>>,
     /// macOS: the proxy's loopback listener, the only address the
     /// command's Seatbelt profile may connect to.
@@ -487,10 +494,12 @@ pub struct ChildSetup {
 }
 /// The proxy's listening Unix socket and the private folder holding it,
 /// removed when the command's setup is dropped.
+#[cfg(unix)]
 pub struct RelaySocket {
     listener: Mutex<Option<std::os::unix::net::UnixListener>>,
     dir: tempfile::TempDir,
 }
+#[cfg(unix)]
 impl RelaySocket {
     /// Bind a fresh socket in a private folder below `base`.
     pub fn bind(base: &Path) -> Result<Self> {
@@ -516,6 +525,7 @@ impl RelaySocket {
         self.dir.path()
     }
 }
+#[cfg(unix)]
 impl std::fmt::Debug for RelaySocket {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("RelaySocket")
@@ -576,9 +586,10 @@ impl std::fmt::Debug for ChildSetup {
         #[cfg(target_os = "linux")]
         d.field("netns", &self.netns.is_some())
             .field("landlock", &self.landlock.is_some());
-        d.field("proxy", &self.gate.is_some())
-            .field("relay", &self.relay)
-            .finish()
+        d.field("proxy", &self.gate.is_some());
+        #[cfg(unix)]
+        d.field("relay", &self.relay);
+        d.finish()
     }
 }
 /// Stops the allow-list proxy when the command's process is finished.
@@ -619,6 +630,7 @@ impl ChildSetup {
                 .context("The allow-list proxy listener was already used")?;
             return Ok(Some(ProxyGuard(proxy::spawn(listener, gate.clone())?)));
         }
+        #[cfg(unix)]
         if let (Some(relay), Some(gate)) = (&self.relay, &self.gate) {
             let listener = relay
                 .listener
@@ -690,7 +702,12 @@ pub fn prepare_shell(
         let _ = cwd;
         prepare_seatbelt(workspace, command, policy, &layout)
     };
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(windows)]
+    let result = {
+        let _ = (cwd, &layout);
+        prepare_windows(command, policy)
+    };
+    #[cfg(all(unix, not(target_os = "macos")))]
     let result = match working_bwrap(workspace) {
         Ok(program) => {
             let net = match policy.network {
@@ -875,6 +892,70 @@ pub fn prepare_shell(
         }
     };
     result
+}
+
+/// Windows: no shell sandbox yet (docs/WINDOWS_PORT.md). Commands run as
+/// the user with a warning, and are refused when the sandbox is required or
+/// the network allow-list is on, exactly like a Linux host without
+/// bubblewrap or Landlock.
+#[cfg(windows)]
+fn prepare_windows(command: &str, policy: &ShellPolicy) -> Result<PreparedShell> {
+    if policy.require {
+        bail!("The command did not run: 'Require sandbox' is on and ShadowCode has no shell sandbox on Windows yet. Turn off 'Require sandbox' in Settings > Permissions & network to run commands without it.");
+    }
+    if policy.network == ShellNetwork::Allowlist {
+        bail!("The command did not run: the network allow-list needs a shell sandbox, which ShadowCode does not have on Windows yet. Change 'Shell commands and the network' in Settings > Permissions & network.");
+    }
+    let (program, args) = windows_shell(command);
+    Ok(PreparedShell {
+        program,
+        args,
+        child: None,
+        scratch: None,
+        gate: None,
+        note: json!({
+            "mode": "none",
+            "reason": "no shell sandbox on Windows yet",
+            "network": network_label(policy.network),
+            "network_requested": network_label(policy.network),
+            "network_enforcement": "none",
+            "note": "Windows: the command runs as your user without isolation; only the approval policy applies."
+        }),
+        warning: Some("Shell commands are running without a sandbox (ShadowCode has none on Windows yet): they can read and change anything your user can. Turn on 'Require sandbox' in Settings > Permissions & network to refuse commands instead.".into()),
+    })
+}
+
+/// The shell for agent commands on Windows. Commands are usually written for
+/// `sh`, so Git for Windows' bash comes first (from its install folders: the
+/// `bash.exe` in System32 is WSL's, which would run them in Linux);
+/// PowerShell otherwise.
+#[cfg(windows)]
+pub fn windows_shell(command: &str) -> (String, Vec<String>) {
+    let installed =
+        |var: &str, rest: &str| std::env::var_os(var).map(|base| PathBuf::from(base).join(rest));
+    let git_bash = [
+        installed("ProgramFiles", "Git/bin/bash.exe"),
+        installed("ProgramW6432", "Git/bin/bash.exe"),
+        installed("LOCALAPPDATA", "Programs/Git/bin/bash.exe"),
+    ]
+    .into_iter()
+    .flatten()
+    .find(|path| path.is_file());
+    match git_bash {
+        Some(bash) => (
+            bash.to_string_lossy().into_owned(),
+            vec!["-c".into(), command.into()],
+        ),
+        None => (
+            "powershell.exe".into(),
+            vec![
+                "-NoProfile".into(),
+                "-NonInteractive".into(),
+                "-Command".into(),
+                command.into(),
+            ],
+        ),
+    }
 }
 
 /// macOS: the command under Seatbelt, or (when `sandbox-exec` cannot run)
@@ -1281,6 +1362,7 @@ mod tests {
         assert!(host_relay_args(shared, relay, dir).is_err());
     }
 
+    #[cfg(unix)]
     #[test]
     fn relay_socket_refuses_paths_the_kernel_cannot_hold() {
         let root = tempfile::tempdir().unwrap();
@@ -1298,6 +1380,7 @@ mod tests {
     }
 
     /// Build the relay shipped in the Flatpak, or skip when no C compiler.
+    #[cfg(unix)]
     fn build_relay(out: &Path) -> Option<PathBuf> {
         let source =
             Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packaging/flatpak/proxy-relay.c");
@@ -1311,6 +1394,7 @@ mod tests {
         status.success().then_some(binary)
     }
 
+    #[cfg(unix)]
     fn free_port() -> u16 {
         std::net::TcpListener::bind("127.0.0.1:0")
             .unwrap()
@@ -1378,6 +1462,7 @@ mod tests {
         );
     }
 
+    #[cfg(unix)]
     #[test]
     fn flatpak_relay_fails_closed_without_the_proxy() {
         let temp = tempfile::tempdir().unwrap();

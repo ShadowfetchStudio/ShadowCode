@@ -112,6 +112,7 @@ async fn dropping_execution_does_not_leave_the_process_group_alive() {
     assert!(status.is_empty() || status.contains("State:\tZ"));
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn a_detached_pipe_cannot_hang_completion() {
     let root = tempfile::tempdir().unwrap();

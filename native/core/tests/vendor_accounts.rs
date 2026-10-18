@@ -1,6 +1,8 @@
 //! Subscription accounts: official sign-in/out, catalog states, usage
 //! persistence, and the vendor runner's safety rules. Every vendor process
 //! here is a fake script; no real vendor CLI is started.
+// The vendor runner and its fake CLIs (shell scripts) are Unix-only so far.
+#![cfg(unix)]
 mod vendor_support;
 use serde_json::{json, Value};
 use shadowcode_core::{

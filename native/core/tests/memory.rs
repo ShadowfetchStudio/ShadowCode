@@ -7,7 +7,9 @@ use shadowcode_core::{
     service::{Request, Service},
     store::Store,
 };
-use std::{fs, os::unix::fs::symlink, sync::Arc, time::Duration};
+#[cfg(unix)]
+use std::os::unix::fs::symlink;
+use std::{fs, sync::Arc, time::Duration};
 
 fn fixture() -> (tempfile::TempDir, Service, String, String) {
     let root = tempfile::tempdir().unwrap();
@@ -246,6 +248,7 @@ async fn task_memory_continues_branches_and_exports_without_source_coupling() {
     service.engine.shutdown().await.unwrap();
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn legacy_notes_reject_symlinks_special_files_and_oversized_content() {
     let (root, service, _sid, tid) = fixture();

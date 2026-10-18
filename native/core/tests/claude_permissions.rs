@@ -1,4 +1,6 @@
 //! Claude's documented stdio permission contract, without a vendor account.
+// Helpers used only by Unix-only tests are unused on Windows.
+#![cfg_attr(not(unix), allow(unused))]
 use serde_json::{json, Value};
 use shadowcode_core::cli_agent::{
     adapter_for, CliAgentsConfig, LaunchOptions, Update, Vendor, VendorAnswer,

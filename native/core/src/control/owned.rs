@@ -6,7 +6,7 @@ use tokio::sync::{Mutex, OwnedSemaphorePermit};
 
 pub struct OwnedJobs {
     client: Client,
-    stream: Mutex<Option<UnixStream>>,
+    stream: Mutex<Option<Stream>>,
 }
 impl Client {
     pub async fn own_jobs(&self) -> Result<OwnedJobs> {
@@ -80,7 +80,7 @@ impl OwnedJobs {
 }
 
 pub(super) async fn serve(
-    stream: &mut UnixStream,
+    stream: &mut Stream,
     service: Service,
     profile: &str,
     _permit: OwnedSemaphorePermit,

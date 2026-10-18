@@ -13,7 +13,8 @@ use std::{
 /// Never follow a symlink at the path's last component. On Linux cap-std
 /// opens with openat2 and O_NOFOLLOW is enough; on macOS it resolves the path
 /// itself and follows a final symlink unless told not to, before the flag
-/// reaches the last openat.
+/// reaches the last openat. On Windows it opens a link itself, which is
+/// then refused as not a regular file.
 fn no_follow(options: &mut OpenOptions) -> &mut OpenOptions {
     use cap_fs_ext::{FollowSymlinks, OpenOptionsFollowExt};
     options.follow(FollowSymlinks::No)
@@ -295,11 +296,11 @@ impl Workspace {
     pub(crate) fn inspect(&self, path: &str, limit: usize) -> Result<(Vec<u8>, u64)> {
         let mut options = OpenOptions::new();
         options.read(true);
+        no_follow(&mut options);
         #[cfg(unix)]
         {
             use cap_std::fs::OpenOptionsExt;
             options.custom_flags(libc::O_NONBLOCK | libc::O_NOFOLLOW);
-            no_follow(&mut options);
         }
         let relative = self.relative(path)?;
         #[cfg(unix)]
@@ -467,6 +468,8 @@ impl Workspace {
             file.write_all(bytes)?;
             file.sync_all()?;
             parent.rename(&temporary, &parent, name)?;
+            // Windows cannot open a folder as a file (see paths::sync_directory).
+            #[cfg(unix)]
             parent.open(".")?.sync_all()?;
             Ok(())
         })();
@@ -512,6 +515,9 @@ impl Workspace {
         Ok(())
     }
     pub fn set_mode(&self, path: &str, mode: u32) -> Result<()> {
+        // Windows files have no mode bits to keep.
+        #[cfg(not(unix))]
+        let _ = (path, mode);
         #[cfg(unix)]
         {
             use cap_std::fs::{Permissions, PermissionsExt};
@@ -711,11 +717,11 @@ fn open_mutation_directory(parent: &Dir, name: &std::ffi::OsStr) -> std::io::Res
 fn open_mutation_file(parent: &Dir, name: &std::ffi::OsStr) -> std::io::Result<cap_std::fs::File> {
     let mut options = OpenOptions::new();
     options.read(true);
+    no_follow(&mut options);
     #[cfg(unix)]
     {
         use cap_std::fs::OpenOptionsExt;
         options.custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK);
-        no_follow(&mut options);
     }
     parent.open_with(name, &options)
 }

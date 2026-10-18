@@ -593,7 +593,6 @@ fn run() -> Result<()> {
                     }
                 }
             });
-            #[cfg(unix)]
             {
                 let handle = app.handle().clone();
                 tauri::async_runtime::spawn(async move {

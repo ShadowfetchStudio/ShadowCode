@@ -1,3 +1,5 @@
+// Helpers used only by Unix-only tests are unused on Windows.
+#![cfg_attr(not(unix), allow(unused))]
 use serde_json::json;
 use shadowcode_core::{
     config::{secret, set_secret, Config, PermissionLevel},
