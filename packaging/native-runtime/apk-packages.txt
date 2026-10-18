@@ -48,6 +48,7 @@ libcap-getcap=2.78-r0
 libcap-ng=0.8.5-r0
 libcap2=2.78-r0
 libcurl=8.14.1-r3
+aarch64:libcurl=8.14.1-r2
 libeconf=0.6.3-r0
 libexpat=2.9.0-r0
 libfdisk=2.40.4-r1
