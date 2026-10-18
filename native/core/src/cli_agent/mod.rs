@@ -36,41 +36,7 @@ pub mod handoff;
 mod lines;
 pub mod picker;
 mod probe_lifecycle;
-#[cfg(unix)]
 pub mod runner;
-/// The vendor CLI runner drives subscription CLIs over Unix pipes and process
-/// groups; on Windows it is not ported yet (docs/WINDOWS_PORT.md) and the
-/// engine refuses vendor turns. These are the types the engine names.
-#[cfg(not(unix))]
-pub mod runner {
-    use super::Vendor;
-
-    pub struct RunOutcome {
-        pub text: String,
-        pub usage: crate::models::Usage,
-        pub usage_reported: bool,
-        pub native_session: Option<String>,
-    }
-
-    /// See the Unix runner: the vendor account hit its plan limit.
-    #[derive(Debug, Clone)]
-    pub struct LimitReached {
-        pub vendor: Vendor,
-        pub detail: String,
-        pub usage: super::usage::UsageSnapshot,
-    }
-    impl std::fmt::Display for LimitReached {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            write!(
-                f,
-                "{} plan limit reached: {}",
-                self.vendor.product_label(),
-                self.detail
-            )
-        }
-    }
-    impl std::error::Error for LimitReached {}
-}
 pub mod usage;
 
 /// Provider prefix used in `ModelConfig.provider` for vendor CLI backends.

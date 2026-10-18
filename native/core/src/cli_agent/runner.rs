@@ -89,9 +89,39 @@ fn pipe_has_readable_event(fd: RawFd) -> Result<bool> {
     Ok(poll.revents != 0)
 }
 
-#[cfg(not(unix))]
-fn pipe_has_readable_event(_: ()) -> Result<bool> {
-    bail!("Vendor approval reconciliation cannot verify pipe readiness on this platform")
+/// Windows: the pipe's handle, as a number so the run stays `Send`.
+#[cfg(windows)]
+type RawFd = usize;
+
+/// See the Unix version: bytes waiting (or the writer gone, which reading
+/// will report) count as an event; nothing is consumed.
+#[cfg(windows)]
+fn pipe_has_readable_event(handle: RawFd) -> Result<bool> {
+    use windows_sys::Win32::{Foundation::HANDLE, System::Pipes::PeekNamedPipe};
+    /// ERROR_BROKEN_PIPE: the vendor closed its end.
+    const BROKEN_PIPE: i32 = 109;
+    let mut available = 0u32;
+    // SAFETY: a size query only (no buffer); the reader owns the handle for
+    // the whole run.
+    let peeked = unsafe {
+        PeekNamedPipe(
+            handle as HANDLE,
+            std::ptr::null_mut(),
+            0,
+            std::ptr::null_mut(),
+            &mut available,
+            std::ptr::null_mut(),
+        )
+    };
+    if peeked == 0 {
+        let error = std::io::Error::last_os_error();
+        if error.raw_os_error() == Some(BROKEN_PIPE) {
+            return Ok(true);
+        }
+        return Err(anyhow::Error::from(error)
+            .context("Vendor stdout closed during approval reconciliation"));
+    }
+    Ok(available > 0)
 }
 
 /// A resource/deadline failure must never be mistaken for an unsupported
@@ -179,8 +209,14 @@ fn append_assistant_text(collected: &mut String, text: &str) -> Result<()> {
     Ok(())
 }
 
+#[cfg(unix)]
 struct ProcessGroup(u32);
+#[cfg(unix)]
 impl ProcessGroup {
+    fn new(child: &Child, pid: u32) -> Self {
+        let _ = child;
+        Self(pid)
+    }
     fn terminate(&self) {
         if self.0 == 0 {
             return;
@@ -207,6 +243,31 @@ impl ProcessGroup {
             }
         }
         self.0 = 0;
+    }
+}
+/// Windows: the vendor and everything it starts run in one job; ending the
+/// job ends them all, and the job closes with ShadowCode. Windows has no
+/// polite stop for a console process tree, so `terminate` ends it too.
+#[cfg(windows)]
+struct ProcessGroup(Option<crate::process::Job>);
+#[cfg(windows)]
+impl ProcessGroup {
+    fn new(child: &Child, _pid: u32) -> Self {
+        Self(
+            child
+                .raw_handle()
+                .and_then(|handle| crate::process::Job::for_process(handle).ok()),
+        )
+    }
+    fn terminate(&self) {
+        if let Some(job) = &self.0 {
+            job.terminate();
+        }
+    }
+    fn kill(&mut self) {
+        if let Some(job) = self.0.take() {
+            job.terminate();
+        }
     }
 }
 impl Drop for ProcessGroup {
@@ -415,13 +476,13 @@ async fn run_once(
     let (mut child, _run_dir) =
         spawn_vendor(vendor, &program, &args, &env, &request.options.workspace)?;
     let pid = child.id().context("Vendor CLI has no process ID")?;
-    let mut group = ProcessGroup(pid);
+    let mut group = ProcessGroup::new(&child, pid);
     let mut stdin = Some(child.stdin.take().context("Vendor CLI stdin missing")?);
     let stdout = child.stdout.take().context("Vendor CLI stdout missing")?;
     #[cfg(unix)]
     let stdout_fd = stdout.as_raw_fd();
-    #[cfg(not(unix))]
-    let stdout_fd = ();
+    #[cfg(windows)]
+    let stdout_fd = std::os::windows::io::AsRawHandle::as_raw_handle(&stdout) as RawFd;
     let stderr = child.stderr.take().context("Vendor CLI stderr missing")?;
     let mut reader = BoundedLines::new(stdout, MAX_LINE_BYTES);
     let sign_in_needed = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));

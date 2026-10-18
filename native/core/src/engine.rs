@@ -2019,7 +2019,6 @@ impl Engine {
     }
     /// Record what a subscription CLI changed in the project into the task's
     /// file checkpoint. A failure never fails the turn; it is reported.
-    #[cfg(unix)]
     async fn record_vendor_changes(
         &self,
         before: crate::checkpoint::capture::Before,
@@ -2117,9 +2116,6 @@ impl Engine {
             }
         }
     }
-    // Windows: the vendor runner is not ported yet; the turn stops with an
-    // error after preparing, and the rest of this function is not reached.
-    #[cfg_attr(not(unix), allow(unreachable_code, unused_variables))]
     async fn run_cli_agent(
         &self,
         running: &Running,
@@ -2281,15 +2277,11 @@ impl Engine {
             resume,
             effort: crate::effort::vendor(vendor, running.turn.effort.as_deref()),
             legacy_effort,
-            #[cfg(unix)]
             mcp_servers: crate::mcp::vendor::servers(&running.workspace, &running.config),
-            #[cfg(not(unix))]
-            mcp_servers: Vec::new(),
             rulebook,
         };
         // A project checkpoint around the turn: the CLI writes with its own
         // tools, so the changes are recorded afterwards for rewind.
-        #[cfg(unix)]
         let checkpoint = if checkpoints {
             crate::checkpoint::capture::before(
                 &running.workspace.path,
@@ -2304,7 +2296,6 @@ impl Engine {
         // From here until the turn's changes are recorded, the user may save
         // files in ShadowCode's editor; Rewind keeps those saves.
         running.edit_window.store(checkpoints, Ordering::Release);
-        #[cfg(unix)]
         let (outcome, reported) =
             crate::cli_agent::runner::run_reporting_usage(crate::cli_agent::runner::Request {
                 vendor,
@@ -2326,12 +2317,10 @@ impl Engine {
             })
             .await;
         self.close_edit_window(running).await;
-        #[cfg(unix)]
         self.record_vendor_changes(checkpoint, running, &job, &events, vendor.label())
             .await;
         // Usage may have moved: refresh after every vendor turn, bounded by
         // the catalog's refresh window unless the turn hit the plan limit.
-        #[cfg(unix)]
         {
             let limited = outcome.as_ref().err().is_some_and(|e| {
                 e.downcast_ref::<crate::cli_agent::runner::LimitReached>()
@@ -2345,7 +2334,6 @@ impl Engine {
         }
         // A failed, limited or cancelled turn keeps the tokens and cost the
         // vendor already reported: they count against the user's plan.
-        #[cfg(unix)]
         let outcome = match outcome {
             Ok(outcome) => outcome,
             Err(error) => {
@@ -2360,11 +2348,6 @@ impl Engine {
                 }
                 return Err(error);
             }
-        };
-        #[cfg(not(unix))]
-        let outcome: crate::cli_agent::runner::RunOutcome = {
-            let _ = (options, prompt, events, images);
-            bail!("Subscription CLI backends are not available on Windows yet")
         };
         if let Some(native) = outcome.native_session.clone() {
             let session_id = job.session_id.clone();
