@@ -224,7 +224,7 @@ for raw in sys.stdin:
             # Edit, report some of the edits (fileChange items), then wait for
             # the test to act while the turn is still running.
             for name, text in (C.get("edits") or {}).items():
-                with open(os.path.join(os.getcwd(), name), "w") as f:
+                with open(os.path.join(os.getcwd(), name), "w", newline="\n") as f:
                     f.write(text)
             for name in C.get("reported") or []:
                 send({"jsonrpc":"2.0","method":"item/completed","params":{"threadId":active_thread,"turnId":active_turn,"item":{"id":"f-" + name,"type":"fileChange","status":"completed","changes":[{"path":os.path.join(os.getcwd(), name),"kind":{"type":"update"},"diff":""}]}}})
@@ -233,7 +233,7 @@ for raw in sys.stdin:
             while not os.path.exists(os.path.join(HERE, "release_turn")) and time.monotonic() < until:
                 time.sleep(0.01)
             for name, text in (C.get("late_edits") or {}).items():
-                with open(os.path.join(os.getcwd(), name), "w") as f:
+                with open(os.path.join(os.getcwd(), name), "w", newline="\n") as f:
                     f.write(text)
             send({"jsonrpc":"2.0","method":"item/agentMessage/delta","params":{"threadId":active_thread,"turnId":active_turn,"itemId":"m1","delta":"edited"}})
             send({"jsonrpc":"2.0","method":"turn/completed","params":{"threadId":active_thread,"turn":{"id":active_turn,"status":"completed"}}})
@@ -242,7 +242,7 @@ for raw in sys.stdin:
             # Write and delete project files with the CLI's own tools, as a
             # real vendor would, relative to the working directory.
             for name, text in (C.get("edits") or {}).items():
-                with open(os.path.join(os.getcwd(), name), "w") as f:
+                with open(os.path.join(os.getcwd(), name), "w", newline="\n") as f:
                     f.write(text)
             for name in C.get("deletes") or []:
                 os.remove(os.path.join(os.getcwd(), name))

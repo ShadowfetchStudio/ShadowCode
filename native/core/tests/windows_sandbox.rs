@@ -79,3 +79,58 @@ fn dunce_path(path: &Path) -> std::path::PathBuf {
     let text = path.to_string_lossy();
     std::path::PathBuf::from(text.strip_prefix(r"\\?\").unwrap_or(&text))
 }
+
+/// Which programs start in the container at all (a failed start is
+/// 0xC0000142): every result is printed when one of them fails.
+#[test]
+fn system_programs_start_in_the_container() {
+    std::env::set_var(
+        "SHADOWCODE_SANDBOX_LAUNCHER",
+        env!("CARGO_BIN_EXE_shadowcode-sandbox"),
+    );
+    let sid = sandbox::appcontainer::container_sid().unwrap();
+    let system = std::env::var("SystemRoot").unwrap();
+    let git = std::env::var("ProgramFiles").unwrap() + r"\Git";
+    let programs: Vec<Vec<String>> = vec![
+        vec![format!(r"{system}\System32\whoami.exe")],
+        vec![
+            format!(r"{system}\System32\cmd.exe"),
+            "/c".into(),
+            "echo cmd-ok".into(),
+        ],
+        vec![
+            format!(r"{system}\System32\WindowsPowerShell\v1.0\powershell.exe"),
+            "-NoProfile".into(),
+            "-Command".into(),
+            "echo powershell-ok".into(),
+        ],
+        vec![
+            format!(r"{git}\usr\bin\bash.exe"),
+            "-c".into(),
+            "echo msys-ok".into(),
+        ],
+        vec![
+            format!(r"{git}\bin\bash.exe"),
+            "-c".into(),
+            "echo gitbash-ok".into(),
+        ],
+    ];
+    let mut report = Vec::new();
+    let mut failed = false;
+    for program in programs {
+        let output = Command::new(env!("CARGO_BIN_EXE_shadowcode-sandbox"))
+            .args(["--sid", &sid, "--network", "off", "--"])
+            .args(&program)
+            .output()
+            .unwrap();
+        let code = output.status.code().unwrap_or(-1);
+        failed |= code != 0;
+        report.push(format!(
+            "{code:#x} {}: {}{}",
+            program[0],
+            String::from_utf8_lossy(&output.stdout).trim(),
+            String::from_utf8_lossy(&output.stderr).trim()
+        ));
+    }
+    assert!(!failed, "{}", report.join("\n"));
+}
