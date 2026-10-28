@@ -73,7 +73,7 @@ pub fn task_paths(store: &Store, ws: &Workspace, task: &str) -> Result<Vec<Strin
         let Ok(relative) = ws.relative(&reported) else {
             continue;
         };
-        let relative = relative.to_string_lossy().into_owned();
+        let relative = crate::paths::slash(&relative);
         if relative != "." && !paths.contains(&relative) {
             paths.push(relative);
         }
@@ -209,7 +209,7 @@ pub fn contents(
 /// One file's hunks: `{path, status, source, binary, hunks: [{id, header,
 /// lines}]}`.
 pub fn file(store: &Store, ws: &Workspace, task: &str, path: &str) -> Result<Value> {
-    let path = ws.relative(path)?.to_string_lossy().into_owned();
+    let path = ws.relative_text(path)?;
     let base = baseline(store, ws, task, &path)?;
     let now = current(ws, &path)?;
     let mut out = summary(&path, &base, &now);
@@ -255,7 +255,7 @@ pub fn undo(
     path: &str,
     hunk: Option<&str>,
 ) -> Result<Undone> {
-    let path = ws.relative(path)?.to_string_lossy().into_owned();
+    let path = ws.relative_text(path)?;
     let base = baseline(store, ws, task, &path)?;
     let now = current(ws, &path)?;
     let now_hash = now.hash.clone().unwrap_or_else(|| "missing".into());

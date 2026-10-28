@@ -102,15 +102,28 @@ pub fn running(pid: u32) -> bool {
         };
         written == size && info.pbi_status != libc::SZOMB
     }
+    // Windows keeps no zombies: a process exists until its last handle closes.
+    #[cfg(windows)]
+    {
+        exists(pid)
+    }
 }
 
 /// Whether a process id is still taken, zombies included (not yet reaped).
+#[cfg(unix)]
 pub fn exists(pid: u32) -> bool {
     let Ok(pid) = i32::try_from(pid) else {
         return false;
     };
     // SAFETY: signal 0 only checks that the process exists.
     unsafe { libc::kill(pid, 0) == 0 || *errno() == libc::EPERM }
+}
+#[cfg(windows)]
+pub fn exists(pid: u32) -> bool {
+    std::process::Command::new("tasklist")
+        .args(["/NH", "/FO", "CSV", "/FI", &format!("PID eq {pid}")])
+        .output()
+        .is_ok_and(|out| String::from_utf8_lossy(&out.stdout).contains(&format!("\"{pid}\"")))
 }
 #[cfg(target_os = "linux")]
 unsafe fn errno() -> *mut i32 {

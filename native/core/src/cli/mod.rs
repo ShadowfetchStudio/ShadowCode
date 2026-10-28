@@ -1,5 +1,6 @@
 //! Native command-line frontend. The same command service, permissions, event
 //! journal, and engine are used by local runs and an already open desktop.
+use crate::paths::Canonical;
 macro_rules! outln {
     ($($arg:tt)*) => { writeln!(std::io::stdout(), $($arg)*).context("Could not write terminal output")? };
 }
@@ -96,9 +97,11 @@ impl Options {
 fn expand(path: &Path) -> Result<PathBuf> {
     let text = path.to_string_lossy();
     Ok(if text == "~" {
-        PathBuf::from(std::env::var_os("HOME").context("HOME is not set")?)
+        crate::paths::home_dir().context("HOME is not set")?
     } else if let Some(rest) = text.strip_prefix("~/") {
-        PathBuf::from(std::env::var_os("HOME").context("HOME is not set")?).join(rest)
+        crate::paths::home_dir()
+            .context("HOME is not set")?
+            .join(rest)
     } else {
         path.into()
     })
@@ -359,7 +362,7 @@ async fn acp(
         if let Some(profile) = &options.profile {
             // The profile may not exist yet; the agent creates it on start.
             let profile = expand(profile)?;
-            let profile = match profile.canonicalize() {
+            let profile = match profile.canonical() {
                 Ok(path) => path,
                 Err(_) => std::path::absolute(&profile)?,
             };
@@ -385,7 +388,7 @@ async fn acp(
         options.workspace.as_deref().map(expand).transpose()?,
         std::env::current_dir().ok(),
         paths.remembered_workspace(),
-        std::env::var_os("HOME").map(PathBuf::from),
+        crate::paths::home_dir(),
     ]
     .into_iter()
     .flatten()
@@ -521,7 +524,7 @@ pub async fn run(options: Options) -> Result<i32> {
                 args.extend([
                     "--profile".into(),
                     expand(profile)?
-                        .canonicalize()?
+                        .canonical()?
                         .to_str()
                         .context("MCP profile path must be UTF-8")?
                         .to_owned(),
@@ -1330,8 +1333,12 @@ async fn execute(backend: &Backend, workspace: &Path, options: &Options) -> Resu
                 let mut body = json!({"workspace":workspace,"name":name});
                 if let Some(path) = file {
                     use std::io::Read;
-                    use std::os::unix::fs::OpenOptionsExt;
-                    let input = std::fs::OpenOptions::new().read(true).custom_flags(libc::O_NONBLOCK).open(path).context("Cannot open plugin bundle")?;
+                    let mut options = std::fs::OpenOptions::new();
+                    options.read(true);
+                    // A FIFO must not hang the open; the file check follows.
+                    #[cfg(unix)]
+                    std::os::unix::fs::OpenOptionsExt::custom_flags(&mut options, libc::O_NONBLOCK);
+                    let input = options.open(path).context("Cannot open plugin bundle")?;
                     ensure!(input.metadata()?.is_file(), "Plugin bundle must be a regular file");
                     let mut text = String::new();
                     input.take((crate::plugins::MAX_BYTES + 1) as u64).read_to_string(&mut text)?;

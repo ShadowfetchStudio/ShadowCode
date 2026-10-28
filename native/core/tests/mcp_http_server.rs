@@ -1,4 +1,5 @@
 #![cfg(unix)]
+use shadowcode_core::paths::Canonical;
 mod support;
 use reqwest::{header, StatusCode};
 use serde_json::{json, Value};
@@ -39,10 +40,7 @@ impl Fixture {
         fs::create_dir(&project).unwrap();
         fs::create_dir(&other).unwrap();
         // Real paths, as the service names them (macOS: /var is /private/var).
-        let (project, other) = (
-            project.canonicalize().unwrap(),
-            other.canonicalize().unwrap(),
-        );
+        let (project, other) = (project.canonical().unwrap(), other.canonical().unwrap());
         let paths = AppPaths::isolated(&root.path().join("profile")).unwrap();
         Config::patch(&paths,json!({"model":{"provider":"local","name":"fixture","default":"fixture","endpoint":endpoint,"context_limit":16384},"trusted_workspaces":[project,other],"agent":{"max_steps":5,"model_retries":0}})).unwrap();
         let service = Service::open(paths.clone(), Some(other.clone())).unwrap();
@@ -149,7 +147,7 @@ fn host_pid(project: &std::path::Path, namespace_pid: u32) -> u32 {
     if !cfg!(target_os = "linux") {
         return namespace_pid;
     }
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     let matches: Vec<_> = fs::read_dir("/proc")
         .unwrap()
         .filter_map(|e| {

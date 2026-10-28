@@ -43,7 +43,8 @@ fn request(service: &Service, mode: &str) -> StartRequest {
     }
 }
 async fn wait(service: &Service, id: &str) -> Job {
-    tokio::time::timeout(Duration::from_secs(8), service.engine.wait(id))
+    // A refused local connection takes seconds on Windows, not milliseconds.
+    tokio::time::timeout(Duration::from_secs(30), service.engine.wait(id))
         .await
         .unwrap()
         .unwrap()

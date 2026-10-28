@@ -1,0 +1,3 @@
+# Bundled templates, scripts and sources are hashed, embedded and run as
+# written: keep LF line endings in every checkout, Windows included.
+* text=auto eol=lf

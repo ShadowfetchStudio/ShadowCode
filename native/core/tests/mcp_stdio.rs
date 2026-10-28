@@ -1,4 +1,5 @@
 #![cfg(unix)]
+use shadowcode_core::paths::Canonical;
 mod support;
 use serde_json::{json, Value};
 use shadowcode_core::mcp::{Client, StdioSpec};
@@ -101,7 +102,7 @@ async fn native_mcp_handshake_paginated_catalog_literal_arguments_and_error_resu
         fixture
             .root
             .path()
-            .canonicalize()
+            .canonical()
             .unwrap()
             .to_string_lossy()
             .as_ref()

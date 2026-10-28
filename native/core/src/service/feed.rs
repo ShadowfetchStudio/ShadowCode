@@ -92,7 +92,7 @@ impl Service {
         let mut asked = Vec::new();
         for value in requested {
             let given = value.as_str().context("Paths must be text")?;
-            let relative = workspace.relative(given)?.to_string_lossy().into_owned();
+            let relative = workspace.relative_text(given)?;
             ensure!(relative != ".", "Choose files, not the project folder");
             asked.push((given.to_owned(), relative));
         }

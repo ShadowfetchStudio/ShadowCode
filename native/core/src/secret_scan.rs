@@ -1093,6 +1093,8 @@ pub async fn unpushed(workspace: &Path, commit: &str, remote: &str) -> Result<Sc
 }
 
 #[cfg(test)]
+// Helpers of Unix-only tests are unused on Windows.
+#[cfg_attr(not(unix), allow(unused))]
 mod tests {
     use super::*;
 
@@ -1559,13 +1561,19 @@ diff --git a/t\\303\\251st/a b.env b/t\\303\\251st/a b.env\nnew file mode 100644
     }
 
     fn executable(path: &Path, text: &str) {
-        use std::os::unix::fs::PermissionsExt;
         std::fs::write(path, text).unwrap();
-        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755)).unwrap();
+        // Windows has no execute bit; Git runs hooks through its own sh.
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o755)).unwrap();
+        }
     }
 
     /// A sandboxed command can write `.git/config`, and the check runs
     /// outside the sandbox: it must never start a program named there.
+    // The fixture program is a shell script that Git must be able to run.
+    #[cfg(unix)]
     #[tokio::test]
     async fn the_check_never_runs_the_repository_s_fsmonitor_or_signature_program() {
         let root = tempfile::tempdir().unwrap();

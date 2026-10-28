@@ -104,10 +104,7 @@ impl Service {
         let path = if path.is_empty() {
             String::new()
         } else {
-            Workspace::open(workspace)?
-                .relative(path)?
-                .to_string_lossy()
-                .into_owned()
+            Workspace::open(workspace)?.relative_text(path)?
         };
         let git = |args| Self::git_in(workspace, args, cancel.clone());
         let mut args = vec![
@@ -176,10 +173,7 @@ impl Service {
     }
     pub(super) async fn hunk_action(&self, body: &Value) -> Result<Value> {
         let ws = self.mutable_workspace()?;
-        let path = ws
-            .relative(body["path"].as_str().context("Choose a file")?)?
-            .to_string_lossy()
-            .into_owned();
+        let path = ws.relative_text(body["path"].as_str().context("Choose a file")?)?;
         ensure!(
             !path.contains(['\n', '\r', '\t', '"']),
             "Stage files with special path characters as a whole file"
@@ -263,11 +257,7 @@ impl Service {
         );
         let mut args = vec!["add".into(), "--".into()];
         for path in paths {
-            args.push(
-                ws.relative(path.as_str().context("Invalid path")?)?
-                    .to_string_lossy()
-                    .into_owned(),
-            );
+            args.push(ws.relative_text(path.as_str().context("Invalid path")?)?);
         }
         let result = Self::git_in(&ws.path, args, ws.reservation.cancellation()).await?;
         ensure!(result["ok"] == true, "{}", result["stderr"]);
@@ -395,11 +385,7 @@ impl Service {
         );
         let mut args: Vec<String> = vec!["reset".into(), "-q".into(), "--".into()];
         for path in paths {
-            args.push(
-                ws.relative(path.as_str().context("Invalid path")?)?
-                    .to_string_lossy()
-                    .into_owned(),
-            );
+            args.push(ws.relative_text(path.as_str().context("Invalid path")?)?);
         }
         let result = Self::git_in(&ws.path, args, ws.reservation.cancellation()).await?;
         ensure!(result["ok"] == true, "{}", result["stderr"]);
@@ -413,10 +399,7 @@ impl Service {
     /// and the answer says `tracked: true`.
     pub(super) async fn git_ignore(&self, body: &Value) -> Result<Value> {
         let ws = self.mutable_workspace()?;
-        let path = ws
-            .relative(body["path"].as_str().context("path required")?)?
-            .to_string_lossy()
-            .into_owned();
+        let path = ws.relative_text(body["path"].as_str().context("path required")?)?;
         ensure!(
             !path.is_empty() && !path.contains('\n') && !path.starts_with(".git/"),
             "Choose a file in the project"

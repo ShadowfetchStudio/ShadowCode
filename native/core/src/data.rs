@@ -140,8 +140,8 @@ fn private_file(_path: &Path) -> Result<()> {
 
 /// `~/x` to the home folder; other paths unchanged.
 fn expand(path: &Path) -> PathBuf {
-    match (path.strip_prefix("~"), std::env::var_os("HOME")) {
-        (Ok(rest), Some(home)) => PathBuf::from(home).join(rest),
+    match (path.strip_prefix("~"), crate::paths::home_dir()) {
+        (Ok(rest), Some(home)) => home.join(rest),
         _ => path.to_path_buf(),
     }
 }
@@ -149,14 +149,11 @@ fn expand(path: &Path) -> PathBuf {
 /// Make a copied file private and durable before anything relies on it.
 fn seal(path: &Path) -> Result<()> {
     private_file(path)?;
-    fs::File::open(path)?.sync_all()?;
-    Ok(())
+    crate::paths::sync_file(path)
 }
 
 fn sync_dir(path: &Path) {
-    if let Ok(dir) = fs::File::open(path) {
-        let _ = dir.sync_all();
-    }
+    let _ = crate::paths::sync_directory(path);
 }
 
 /// `config/x`, `state/x`, `data/x` or `agents/x` to a real path, refusing
@@ -478,6 +475,7 @@ fn new_backup_folder(parent: &Path, reason: &str) -> Result<NewFolder> {
             format!("shadowcode-backup-{stamp}{suffix}-{attempt}")
         };
         let folder = parent.join(name);
+        #[cfg_attr(not(unix), allow(unused_mut))]
         let mut builder = fs::DirBuilder::new();
         #[cfg(unix)]
         {
@@ -1228,7 +1226,7 @@ fn apply_restore(paths: &AppPaths, pending: &Pending) -> Result<Value> {
         ));
         fs::copy(staging.join(&file.path), &temporary)?;
         private_file(&temporary)?;
-        fs::File::open(&temporary)?.sync_all()?;
+        crate::paths::sync_file(&temporary)?;
         prepared.push((temporary, target, file.path.clone()));
     }
     let database = paths.database();

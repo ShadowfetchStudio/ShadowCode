@@ -2,6 +2,7 @@
 //! worktree runs beside a task in the project's main checkout, and its result
 //! is applied, kept as a branch or discarded. Loopback models on one fake
 //! OpenAI-compatible server; no vendor CLI or network is used.
+use shadowcode_core::paths::Canonical;
 mod support;
 use anyhow::Result;
 use serde_json::{json, Value};
@@ -120,7 +121,7 @@ async fn fixture() -> Fixture {
     fs::write(project.join(".gitignore"), "ignored.log\n").unwrap();
     git(&project, &["add", "."]);
     git(&project, &["commit", "-qm", "Base"]);
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     let paths = AppPaths::isolated(&root.path().join("profile")).unwrap();
     Config::patch(
         &paths,
@@ -511,7 +512,7 @@ async fn a_new_worktree_gets_its_files_its_setup_its_own_port_and_a_teardown() {
         json!({"setup":{
             "copy":[".env"],
             "setup":["printf \"$PORT\" > port.txt"],
-            "teardown":[format!("touch {}", marker.display())],
+            "teardown":[format!("touch {}", shadowcode_core::paths::slash(&marker))],
             "port_start":41000,
             "port_end":41999
         }}),

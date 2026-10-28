@@ -1,3 +1,4 @@
+use crate::paths::Canonical;
 use crate::paths::{atomic_write, AppPaths};
 use anyhow::{bail, ensure, Context, Result};
 use serde::{Deserialize, Serialize};
@@ -377,11 +378,11 @@ impl Config {
             .with_context(|| format!("{} needs a fix", file.display()))?;
         config.apply_runtime(false);
         if let Some(workspace) = workspace {
-            let canonical = workspace.canonicalize()?;
+            let canonical = workspace.canonical()?;
             let overlay = canonical.join(".shadow/config/config.yaml");
             if config.is_trusted(&canonical) && overlay.exists() {
                 ensure!(
-                    overlay.canonicalize()?.starts_with(&canonical),
+                    overlay.canonical()?.starts_with(&canonical),
                     "Project configuration escapes the workspace"
                 );
                 let project = read_yaml(&overlay)?;
@@ -581,7 +582,7 @@ impl Config {
     }
     /// Persist the canonical project path so later job checks match aliases.
     pub fn grant_trust(&mut self, workspace: &Path) {
-        let stored = workspace.canonicalize().unwrap_or_else(|_| slim(workspace));
+        let stored = workspace.canonical().unwrap_or_else(|_| slim(workspace));
         if stored.as_os_str().is_empty() || self.is_trusted(&stored) {
             return;
         }
@@ -717,7 +718,7 @@ fn read_text(path: &Path) -> Result<String> {
 /// True when both paths name the same directory after resolving symlinks,
 /// trailing slashes, `.` / `..`, and bind-mount aliases that share an inode.
 pub fn same_workspace(left: &Path, right: &Path) -> bool {
-    if let (Ok(left), Ok(right)) = (left.canonicalize(), right.canonicalize()) {
+    if let (Ok(left), Ok(right)) = (left.canonical(), right.canonical()) {
         if left == right {
             return true;
         }

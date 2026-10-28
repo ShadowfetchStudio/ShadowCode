@@ -1,0 +1,8 @@
+{
+  "bundle": {
+    "resources": {
+      "../packaging/llama.cpp/bin/": "llama.cpp/",
+      "../packaging/busybox-w32/bin/": "busybox/"
+    }
+  }
+}

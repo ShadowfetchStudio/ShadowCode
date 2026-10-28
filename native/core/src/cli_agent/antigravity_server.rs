@@ -74,7 +74,7 @@ pub fn home() -> PathBuf {
     let data = std::env::var_os("XDG_DATA_HOME")
         .filter(|v| !v.is_empty())
         .map(PathBuf::from)
-        .or_else(|| std::env::var_os("HOME").map(|h| PathBuf::from(h).join(".local/share")))
+        .or_else(|| crate::paths::home_dir().map(|h| h.join(".local/share")))
         .unwrap_or_else(|| PathBuf::from("."));
     data.join("shadowcode").join("antigravity-acp")
 }
@@ -468,6 +468,7 @@ pub fn unzip(archive: &Path, into: &Path) -> Result<Vec<String>> {
         let name_len = u16_at(&cd, at + 28) as usize;
         let extra_len = u16_at(&cd, at + 30) as usize;
         let comment_len = u16_at(&cd, at + 32) as usize;
+        #[cfg_attr(not(unix), allow(unused_variables))]
         let external = u32_at(&cd, at + 38);
         let local = u32_at(&cd, at + 42);
         let name = String::from_utf8(cd[at + 46..at + 46 + name_len].to_vec())?;

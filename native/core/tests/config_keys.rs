@@ -3,6 +3,7 @@
 //! reported with its key and how to fix it; settings from older and newer
 //! versions are kept.
 use serde_json::{json, Value};
+use shadowcode_core::paths::Canonical;
 use shadowcode_core::{
     code_intel::CodeIntelConfig, config::Config, paths::AppPaths, subagents::SubagentsConfig,
     voice::VoiceConfig,
@@ -414,7 +415,7 @@ fn settings_see_the_profile_agent_values_and_what_the_project_changes() {
         "agent:\n  max_steps: 200\n",
     )
     .unwrap();
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     Config::patch(&paths, json!({"trusted_workspaces": [project]})).unwrap();
     let service = Service::open(paths, Some(project)).unwrap();
     let runtime = tokio::runtime::Builder::new_current_thread()

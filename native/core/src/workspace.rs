@@ -1,3 +1,4 @@
+use crate::paths::Canonical;
 use anyhow::{bail, ensure, Context, Result};
 use cap_std::{
     ambient_authority,
@@ -13,7 +14,8 @@ use std::{
 /// Never follow a symlink at the path's last component. On Linux cap-std
 /// opens with openat2 and O_NOFOLLOW is enough; on macOS it resolves the path
 /// itself and follows a final symlink unless told not to, before the flag
-/// reaches the last openat.
+/// reaches the last openat. On Windows it opens a link itself, which is
+/// then refused as not a regular file.
 fn no_follow(options: &mut OpenOptions) -> &mut OpenOptions {
     use cap_fs_ext::{FollowSymlinks, OpenOptionsFollowExt};
     options.follow(FollowSymlinks::No)
@@ -54,7 +56,7 @@ pub struct Snapshot {
 /// Stable reservation key for an existing workspace or a managed checkout whose
 /// final directory was removed. Never resolve a missing ancestor or traversal.
 pub(crate) fn reservation_path(path: &Path) -> Result<PathBuf> {
-    match path.canonicalize() {
+    match path.canonical() {
         Ok(path) => {
             ensure!(path.is_dir(), "Workspace must be a directory");
             Ok(path)
@@ -75,7 +77,7 @@ pub(crate) fn reservation_path(path: &Path) -> Result<PathBuf> {
             let parent = path
                 .parent()
                 .context("Missing workspace parent")?
-                .canonicalize()?;
+                .canonical()?;
             ensure!(parent.is_dir(), "Workspace parent must be a directory");
             Ok(parent.join(path.file_name().context("Missing workspace name")?))
         }
@@ -85,10 +87,15 @@ pub(crate) fn reservation_path(path: &Path) -> Result<PathBuf> {
 
 impl Workspace {
     pub fn open(path: &Path) -> Result<Self> {
-        let path = path.canonicalize().context("Workspace does not exist")?;
+        let path = path.canonical().context("Workspace does not exist")?;
         ensure!(path.is_dir(), "Workspace must be a directory");
         let dir = Dir::open_ambient_dir(&path, ambient_authority())?;
         Ok(Self { path, dir })
+    }
+    /// [`Workspace::relative`] as the agent, the interface and stored records
+    /// name it: `/` between its parts on every system.
+    pub fn relative_text(&self, path: &str) -> Result<String> {
+        Ok(crate::paths::slash(&self.relative(path)?))
     }
     pub fn relative(&self, path: &str) -> Result<PathBuf> {
         ensure!(!path.contains('\0'), "Path contains a NUL byte");
@@ -238,11 +245,7 @@ impl Workspace {
             };
             entries.push(FileEntry {
                 name,
-                path: child
-                    .strip_prefix(".")
-                    .unwrap_or(&child)
-                    .to_string_lossy()
-                    .into_owned(),
+                path: crate::paths::slash(child.strip_prefix(".").unwrap_or(&child)),
                 kind: kind.into(),
             });
         }
@@ -295,11 +298,11 @@ impl Workspace {
     pub(crate) fn inspect(&self, path: &str, limit: usize) -> Result<(Vec<u8>, u64)> {
         let mut options = OpenOptions::new();
         options.read(true);
+        no_follow(&mut options);
         #[cfg(unix)]
         {
             use cap_std::fs::OpenOptionsExt;
             options.custom_flags(libc::O_NONBLOCK | libc::O_NOFOLLOW);
-            no_follow(&mut options);
         }
         let relative = self.relative(path)?;
         #[cfg(unix)]
@@ -358,7 +361,7 @@ impl Workspace {
             "Binary files cannot be displayed as text"
         );
         Ok(FileContent {
-            path: self.relative(path)?.to_string_lossy().into_owned(),
+            path: crate::paths::slash(&self.relative(path)?),
             hash: hash(&bytes),
             bytes: bytes.len(),
             content: String::from_utf8(bytes).context("File is not valid UTF-8")?,
@@ -389,6 +392,43 @@ impl Workspace {
                         .context("Database parent must be a real workspace directory")?
                         .into_std(),
                 );
+            }
+        }
+        Ok((parent, name))
+    }
+    /// Windows: each folder on the way is opened without following a link and
+    /// without sharing delete access, so the parent this returns cannot be
+    /// renamed or removed while it is held.
+    #[cfg(windows)]
+    pub(crate) fn confined_parent(&self, path: &str) -> Result<(Dir, String)> {
+        use cap_std::fs::OpenOptionsExt;
+        const FILE_SHARE_READ: u32 = 0x1;
+        const FILE_SHARE_WRITE: u32 = 0x2;
+        const FILE_FLAG_BACKUP_SEMANTICS: u32 = 0x0200_0000;
+        let relative = self.relative(path)?;
+        let name = relative
+            .file_name()
+            .and_then(|n| n.to_str())
+            .context("A regular file path with a UTF-8 name is required")?
+            .to_owned();
+        let mut parent = self.dir.try_clone()?;
+        let mut options = OpenOptions::new();
+        options
+            .read(true)
+            .share_mode(FILE_SHARE_READ | FILE_SHARE_WRITE)
+            .custom_flags(FILE_FLAG_BACKUP_SEMANTICS);
+        no_follow(&mut options);
+        for part in relative.parent().unwrap_or(Path::new(".")).components() {
+            if let Component::Normal(name) = part {
+                let next = parent
+                    .open_with(name, &options)
+                    .context("Database parent must be a real workspace directory")?;
+                let meta = next.metadata()?;
+                ensure!(
+                    meta.is_dir() && !meta.file_type().is_symlink(),
+                    "Database parent must be a real workspace directory"
+                );
+                parent = Dir::from_std_file(next.into_std());
             }
         }
         Ok((parent, name))
@@ -467,6 +507,8 @@ impl Workspace {
             file.write_all(bytes)?;
             file.sync_all()?;
             parent.rename(&temporary, &parent, name)?;
+            // Windows cannot open a folder as a file (see paths::sync_directory).
+            #[cfg(unix)]
             parent.open(".")?.sync_all()?;
             Ok(())
         })();
@@ -512,6 +554,9 @@ impl Workspace {
         Ok(())
     }
     pub fn set_mode(&self, path: &str, mode: u32) -> Result<()> {
+        // Windows files have no mode bits to keep.
+        #[cfg(not(unix))]
+        let _ = (path, mode);
         #[cfg(unix)]
         {
             use cap_std::fs::{Permissions, PermissionsExt};
@@ -610,11 +655,7 @@ impl Workspace {
                     serde_json::json!({"matches":matches,"truncated":true,"scanned":scanned-1}),
                 );
             }
-            let rel = entry
-                .path()
-                .strip_prefix(&self.path)?
-                .to_string_lossy()
-                .into_owned();
+            let rel = crate::paths::slash(entry.path().strip_prefix(&self.path)?);
             // A glob override outranks the hidden-file rule, so it could reach
             // `.env` and other secret files: never return their contents.
             if crate::redaction::is_secret_path(&rel) {
@@ -664,13 +705,7 @@ impl Workspace {
                     .to_lowercase()
                     .contains(&needle)
             {
-                hits.push(
-                    entry
-                        .path()
-                        .strip_prefix(&self.path)?
-                        .to_string_lossy()
-                        .into_owned(),
-                );
+                hits.push(crate::paths::slash(entry.path().strip_prefix(&self.path)?));
             }
         }
         Ok(serde_json::json!({"hits":hits,"truncated":false}))
@@ -683,7 +718,7 @@ fn canonical_ancestor(path: &Path) -> Option<PathBuf> {
     let mut rest = Vec::new();
     let mut current = path;
     loop {
-        if let Ok(real) = current.canonicalize() {
+        if let Ok(real) = current.canonical() {
             return Some(rest.iter().rev().fold(real, |acc, part| acc.join(part)));
         }
         rest.push(current.file_name()?.to_owned());
@@ -711,11 +746,11 @@ fn open_mutation_directory(parent: &Dir, name: &std::ffi::OsStr) -> std::io::Res
 fn open_mutation_file(parent: &Dir, name: &std::ffi::OsStr) -> std::io::Result<cap_std::fs::File> {
     let mut options = OpenOptions::new();
     options.read(true);
+    no_follow(&mut options);
     #[cfg(unix)]
     {
         use cap_std::fs::OpenOptionsExt;
         options.custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK);
-        no_follow(&mut options);
     }
     parent.open_with(name, &options)
 }

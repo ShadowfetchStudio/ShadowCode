@@ -2,6 +2,7 @@
 //! damaged and incomplete backups, and the `shadowcode backup|restore|reset|
 //! doctor --repair` commands.
 use serde_json::{json, Value};
+use shadowcode_core::paths::Canonical;
 use shadowcode_core::{
     config::{self, Config},
     data::{self, BackupOptions, Manifest, RestoreOptions},
@@ -33,7 +34,7 @@ struct Profile {
 
 fn profile() -> Profile {
     let temp = tempfile::tempdir().unwrap();
-    let root = temp.path().canonicalize().unwrap();
+    let root = temp.path().canonical().unwrap();
     let project = root.join("project");
     fs::create_dir_all(&project).unwrap();
     let paths = AppPaths::isolated(&root.join("profile")).unwrap();
@@ -428,7 +429,8 @@ async fn an_upgrade_copy_restores_and_is_upgraded_again() {
                 .join("tests/fixtures/upgrade/0.28.0/shadow-agent.sql"),
         )
         .unwrap()
-        .replace("@ROOT@", &p.root.to_string_lossy());
+        // Inside JSON values too: `/` needs no escaping, `\` would.
+        .replace("@ROOT@", &shadowcode_core::paths::slash(&p.root));
         let db = rusqlite::Connection::open(&old).unwrap();
         db.pragma_update(None, "synchronous", "OFF").unwrap();
         db.execute_batch(&format!("BEGIN;\n{sql}\nCOMMIT;"))
@@ -529,7 +531,7 @@ async fn reset_moves_everything_aside_and_keeps_backups_worktrees_and_downloads(
 async fn a_reset_that_cannot_finish_puts_everything_back() {
     use std::os::unix::fs::PermissionsExt;
     let temp = tempfile::tempdir().unwrap();
-    let root = temp.path().canonicalize().unwrap();
+    let root = temp.path().canonical().unwrap();
     // XDG-like: the three folders live in different parents.
     let paths = AppPaths {
         config: root.join("xdg-config/shadow-agent"),
@@ -1190,7 +1192,7 @@ async fn a_large_agents_folder_never_blocks_a_backup_or_a_restore() {
 #[test]
 fn a_reset_keeps_the_lock_and_backups_when_the_xdg_folders_are_one() {
     let temp = tempfile::tempdir().unwrap();
-    let root = temp.path().canonicalize().unwrap();
+    let root = temp.path().canonical().unwrap();
     // XDG_CONFIG_HOME, XDG_DATA_HOME and XDG_STATE_HOME all name one folder.
     let one = root.join("xdg/shadow-agent");
     let paths = AppPaths {

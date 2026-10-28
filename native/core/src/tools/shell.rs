@@ -2,6 +2,7 @@
 //! it (so rewind can undo what it wrote), and the bounded process run.
 use super::*;
 use crate::checkpoint::capture;
+use crate::paths::Canonical;
 
 impl ToolExecutor {
     pub(super) async fn shell(&self, args: &Value) -> Result<Value> {
@@ -20,7 +21,7 @@ impl ToolExecutor {
         .min(self.config.agent.tool_timeout_sec as usize);
         let cwd = if let Some(path) = args["cwd"].as_str() {
             let relative = self.workspace.relative(path)?;
-            let cwd = self.workspace.path.join(relative).canonicalize()?;
+            let cwd = self.workspace.path.join(relative).canonical()?;
             ensure!(
                 cwd.starts_with(&self.workspace.path),
                 "Command directory escapes the workspace"

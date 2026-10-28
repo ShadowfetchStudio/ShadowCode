@@ -5,6 +5,30 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// A path inside a project as the agent and the interface show it: `/`
+/// between its parts on every system. (On Unix a `\` is part of a name.)
+pub fn slash(path: &Path) -> String {
+    let text = path.to_string_lossy();
+    if cfg!(windows) {
+        text.replace('\\', "/")
+    } else {
+        text.into_owned()
+    }
+}
+
+/// `canonicalize` that returns `C:\project` rather than `\\?\C:\project` on
+/// Windows whenever both name the same file (dunce). Verbatim paths confuse
+/// Git, other programs and anyone reading them. Identical to the standard
+/// one on Unix.
+pub trait Canonical {
+    fn canonical(&self) -> std::io::Result<PathBuf>;
+}
+impl<P: AsRef<Path> + ?Sized> Canonical for P {
+    fn canonical(&self) -> std::io::Result<PathBuf> {
+        dunce::canonicalize(self)
+    }
+}
+
 /// Preserve the existing XDG identity so upgrades retain settings and history.
 #[derive(Clone, Debug)]
 pub struct AppPaths {
@@ -31,10 +55,43 @@ impl Drop for ProfileLock {
     }
 }
 
+/// `name` in the folders of `path`. Windows also tries the program
+/// extensions (npm installs `codex` as `codex.cmd`), in `PATHEXT` order.
+pub fn find_program_in(name: &str, path: &std::ffi::OsStr) -> Option<PathBuf> {
+    #[cfg(windows)]
+    let names: Vec<String> = if Path::new(name).extension().is_some() {
+        vec![name.to_owned()]
+    } else {
+        let extensions = std::env::var("PATHEXT").unwrap_or_else(|_| ".COM;.EXE;.BAT;.CMD".into());
+        extensions
+            .split(';')
+            .filter(|e| !e.is_empty())
+            .map(|e| format!("{name}{}", e.to_ascii_lowercase()))
+            .collect()
+    };
+    #[cfg(not(windows))]
+    let names = [name.to_owned()];
+    std::env::split_paths(path).find_map(|dir| {
+        names
+            .iter()
+            .map(|name| dir.join(name))
+            .find(|p| p.is_file())
+    })
+}
+
+/// The user's home folder. Windows names it `USERPROFILE`; a program started
+/// from Explorer has no `HOME` (Git Bash sets one).
+pub fn home_dir() -> Option<PathBuf> {
+    #[cfg(windows)]
+    let home = env::var_os("USERPROFILE").or_else(|| env::var_os("HOME"));
+    #[cfg(not(windows))]
+    let home = env::var_os("HOME");
+    home.map(PathBuf::from)
+}
+
 impl AppPaths {
     pub fn discover() -> Result<Self> {
-        let home = env::var_os("HOME").context("HOME is not set")?;
-        let home = PathBuf::from(home);
+        let home = home_dir().context("HOME is not set")?;
         // macOS keeps app settings and history under ~/Library; an XDG
         // variable someone set on purpose still wins there too.
         #[cfg(target_os = "macos")]
@@ -44,7 +101,25 @@ impl AppPaths {
             ".local/share" => home.join("Library/Application Support/ShadowCode/data"),
             _ => home.join("Library/Application Support/ShadowCode/state"),
         };
-        #[cfg(not(target_os = "macos"))]
+        // Windows: settings roam with the account (%APPDATA%); history,
+        // models and caches stay on this computer (%LOCALAPPDATA%).
+        #[cfg(windows)]
+        let fallback = |base: &str| {
+            let folder = |key: &str, default: &str| {
+                env::var_os(key)
+                    .map(PathBuf::from)
+                    .filter(|p| p.is_absolute())
+                    .unwrap_or_else(|| home.join(default))
+                    .join("ShadowCode")
+            };
+            match base {
+                ".config" => folder("APPDATA", "AppData/Roaming").join("config"),
+                ".local/share" => folder("LOCALAPPDATA", "AppData/Local").join("data"),
+                ".cache" => folder("LOCALAPPDATA", "AppData/Local").join("cache"),
+                _ => folder("LOCALAPPDATA", "AppData/Local").join("state"),
+            }
+        };
+        #[cfg(all(unix, not(target_os = "macos")))]
         let fallback = |base: &str| home.join(base).join("shadow-agent");
         let xdg = |key: &str, base: &str| {
             env::var_os(key)
@@ -96,12 +171,12 @@ impl AppPaths {
                 .ok()?
                 .trim(),
         );
-        path.canonicalize().ok().filter(|p| p.is_dir())
+        path.canonical().ok().filter(|p| p.is_dir())
     }
     pub fn remember_workspace(&self, path: &Path) -> Result<()> {
         atomic_write(
             &self.state.join("last-workspace.txt"),
-            format!("{}\n", path.canonicalize()?.display()).as_bytes(),
+            format!("{}\n", path.canonical()?.display()).as_bytes(),
             false,
         )
     }
@@ -145,6 +220,7 @@ impl AppPaths {
 /// descriptor itself; macOS has no /proc and asks the kernel for the
 /// directory's current path, so callers that later act through the held
 /// descriptor fail closed if the directory moved in between.
+#[cfg(unix)]
 pub(crate) fn held_directory(fd: std::os::fd::RawFd) -> Result<PathBuf> {
     #[cfg(target_os = "linux")]
     {
@@ -203,11 +279,34 @@ pub(crate) fn private_directory(path: &Path) -> Result<()> {
     Ok(())
 }
 
+/// Make a rename or new entry in `directory` durable. Windows cannot open a
+/// folder as a file; NTFS journals its metadata, so there is nothing to do.
+pub fn sync_directory(directory: &Path) -> Result<()> {
+    #[cfg(unix)]
+    fs::File::open(directory)?.sync_all()?;
+    #[cfg(not(unix))]
+    let _ = directory;
+    Ok(())
+}
+
+/// Make a file's written bytes durable. Windows flushes only through a
+/// handle that may write.
+pub fn sync_file(path: &Path) -> Result<()> {
+    let mut options = fs::OpenOptions::new();
+    options.read(true);
+    #[cfg(windows)]
+    options.write(true);
+    options.open(path)?.sync_all()?;
+    Ok(())
+}
+
 pub fn atomic_write(path: &Path, bytes: &[u8], private: bool) -> Result<()> {
     use std::io::Write;
     let parent = path.parent().context("Path has no parent")?;
     fs::create_dir_all(parent)?;
     let mut temp = tempfile::NamedTempFile::new_in(parent)?;
+    #[cfg(not(unix))]
+    let _ = private;
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -223,7 +322,29 @@ pub fn atomic_write(path: &Path, bytes: &[u8], private: bool) -> Result<()> {
     }
     temp.write_all(bytes)?;
     temp.as_file().sync_all()?;
-    temp.persist(path).map_err(|e| e.error)?;
-    fs::File::open(parent)?.sync_all()?;
+    persist(temp, path)?;
+    sync_directory(parent)?;
     Ok(())
+}
+
+/// Replace `path` with `temp`. Windows refuses a replacement (access denied)
+/// while another replacement of the same file is in flight or a scanner
+/// holds it; those clear within milliseconds, so it is retried briefly.
+fn persist(mut temp: tempfile::NamedTempFile, path: &Path) -> std::io::Result<()> {
+    let mut tries = 0;
+    loop {
+        match temp.persist(path) {
+            Ok(_) => return Ok(()),
+            Err(error)
+                if cfg!(windows)
+                    && error.error.kind() == std::io::ErrorKind::PermissionDenied
+                    && tries < 20 =>
+            {
+                tries += 1;
+                temp = error.file;
+                std::thread::sleep(std::time::Duration::from_millis(5 * tries));
+            }
+            Err(error) => return Err(error.error),
+        }
+    }
 }

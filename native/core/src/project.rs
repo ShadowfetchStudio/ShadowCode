@@ -98,7 +98,7 @@ fn scan(workspace: &Workspace, cancel: &CancellationToken) -> Result<Value> {
             break;
         }
         let rel = entry.path().strip_prefix(&workspace.path)?;
-        let path = rel.to_string_lossy();
+        let path = crate::paths::slash(rel);
         if path.len() > 4096 {
             truncated = true;
             continue;

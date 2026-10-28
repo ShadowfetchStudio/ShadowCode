@@ -4,9 +4,10 @@
 //! probes clear the environment. They never reach a real vendor.
 #![allow(dead_code)]
 use serde_json::{json, Value};
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use std::{
     fs,
-    os::unix::fs::PermissionsExt,
     path::{Path, PathBuf},
     time::Duration,
 };
@@ -223,7 +224,7 @@ for raw in sys.stdin:
             # Edit, report some of the edits (fileChange items), then wait for
             # the test to act while the turn is still running.
             for name, text in (C.get("edits") or {}).items():
-                with open(os.path.join(os.getcwd(), name), "w") as f:
+                with open(os.path.join(os.getcwd(), name), "w", newline="\n") as f:
                     f.write(text)
             for name in C.get("reported") or []:
                 send({"jsonrpc":"2.0","method":"item/completed","params":{"threadId":active_thread,"turnId":active_turn,"item":{"id":"f-" + name,"type":"fileChange","status":"completed","changes":[{"path":os.path.join(os.getcwd(), name),"kind":{"type":"update"},"diff":""}]}}})
@@ -232,7 +233,7 @@ for raw in sys.stdin:
             while not os.path.exists(os.path.join(HERE, "release_turn")) and time.monotonic() < until:
                 time.sleep(0.01)
             for name, text in (C.get("late_edits") or {}).items():
-                with open(os.path.join(os.getcwd(), name), "w") as f:
+                with open(os.path.join(os.getcwd(), name), "w", newline="\n") as f:
                     f.write(text)
             send({"jsonrpc":"2.0","method":"item/agentMessage/delta","params":{"threadId":active_thread,"turnId":active_turn,"itemId":"m1","delta":"edited"}})
             send({"jsonrpc":"2.0","method":"turn/completed","params":{"threadId":active_thread,"turn":{"id":active_turn,"status":"completed"}}})
@@ -241,7 +242,7 @@ for raw in sys.stdin:
             # Write and delete project files with the CLI's own tools, as a
             # real vendor would, relative to the working directory.
             for name, text in (C.get("edits") or {}).items():
-                with open(os.path.join(os.getcwd(), name), "w") as f:
+                with open(os.path.join(os.getcwd(), name), "w", newline="\n") as f:
                     f.write(text)
             for name in C.get("deletes") or []:
                 os.remove(os.path.join(os.getcwd(), name))
@@ -277,16 +278,42 @@ impl FakeCodex {
     pub fn new(root: &Path, config: Value) -> Self {
         let dir = root.join("fake-bin");
         fs::create_dir_all(&dir).unwrap();
-        let script = dir.join("codex");
-        fs::write(&script, FAKE_CODEX).unwrap();
-        let mut perm = fs::metadata(&script).unwrap().permissions();
-        perm.set_mode(0o755);
-        fs::set_permissions(&script, perm).unwrap();
+        #[cfg(unix)]
+        {
+            let script = dir.join("codex");
+            fs::write(&script, FAKE_CODEX).unwrap();
+            let mut perm = fs::metadata(&script).unwrap().permissions();
+            perm.set_mode(0o755);
+            fs::set_permissions(&script, perm).unwrap();
+        }
+        // Windows runs a script through a `.cmd` shim, as npm installs the
+        // real CLIs; Python is `python` there.
+        #[cfg(windows)]
+        {
+            fs::write(dir.join("codex.py"), FAKE_CODEX).unwrap();
+            // Its errors are kept and shown when the test ends.
+            // The interpreter by its full path: the shim must not depend on
+            // what PATH the vendor process sees.
+            let python = std::env::var_os("PATH")
+                .and_then(|path| shadowcode_core::paths::find_program_in("python", &path))
+                .expect("python must be on PATH to run the fake Codex");
+            fs::write(
+                dir.join("codex.cmd"),
+                format!(
+                    "@\"{}\" \"%~dp0codex.py\" %* 2>>\"%~dp0stderr.log\"\r\n",
+                    python.display()
+                ),
+            )
+            .unwrap();
+        }
         let fake = Self { dir };
         fake.configure(config);
         fake
     }
     pub fn binary(&self) -> String {
+        #[cfg(windows)]
+        return self.dir.join("codex.cmd").to_string_lossy().into_owned();
+        #[cfg(not(windows))]
         self.dir.join("codex").to_string_lossy().into_owned()
     }
     pub fn configure(&self, config: Value) {
@@ -294,6 +321,14 @@ impl FakeCodex {
     }
     pub fn marker(&self, name: &str) -> Option<String> {
         fs::read_to_string(self.dir.join(name)).ok()
+    }
+}
+#[cfg(windows)]
+impl Drop for FakeCodex {
+    fn drop(&mut self) {
+        if let Some(errors) = self.marker("stderr.log").filter(|e| !e.trim().is_empty()) {
+            eprintln!("fake codex stderr:\n{errors}");
+        }
     }
 }
 

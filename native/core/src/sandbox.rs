@@ -14,6 +14,7 @@
 //! Availability is probed before a user command runs; commands are never
 //! replayed outside the sandbox after a runtime failure.
 use crate::config::{Config, ShellNetwork};
+use crate::paths::Canonical;
 use anyhow::{bail, ensure, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -25,6 +26,8 @@ use std::{
     time::{Duration, Instant},
 };
 
+#[cfg(windows)]
+pub mod appcontainer;
 #[cfg(target_os = "linux")]
 mod lsm;
 #[cfg(target_os = "linux")]
@@ -141,6 +144,9 @@ static SCRATCH: LazyLock<Mutex<HashMap<PathBuf, tempfile::TempDir>>> =
 static WARNED: LazyLock<Mutex<HashSet<String>>> = LazyLock::new(|| Mutex::new(HashSet::new()));
 
 pub fn which(name: &str) -> Option<PathBuf> {
+    #[cfg(windows)]
+    return crate::paths::find_program_in(name, &std::env::var_os("PATH")?);
+    #[cfg(not(windows))]
     std::env::var_os("PATH").and_then(|paths| {
         std::env::split_paths(&paths).find_map(|dir| {
             let candidate = dir.join(name);
@@ -179,7 +185,7 @@ pub fn create_scratch(base: &Path) -> Result<ScratchSession> {
     let owned = tempfile::Builder::new()
         .prefix("shadowcode-scratch-")
         .tempdir_in(base)?;
-    let path = owned.path().canonicalize()?;
+    let path = owned.path().canonical()?;
     SCRATCH
         .lock()
         .map_err(|_| anyhow::anyhow!("Scratch lock poisoned"))?
@@ -199,8 +205,13 @@ pub fn discard_scratch(path: &Path) -> Result<Value> {
     )
 }
 fn scratch_base() -> PathBuf {
+    #[cfg(unix)]
     // SAFETY: geteuid cannot fail.
-    std::env::temp_dir().join(format!("shadowcode-scratch-{}", unsafe { libc::geteuid() }))
+    let user = unsafe { libc::geteuid() }.to_string();
+    // Windows: the temporary folder is already the user's own.
+    #[cfg(not(unix))]
+    let user = "user";
+    std::env::temp_dir().join(format!("shadowcode-scratch-{user}"))
 }
 
 fn probe(program: &Path, workspace: &Path) -> Result<()> {
@@ -271,14 +282,12 @@ pub struct HomeLayout {
 }
 
 fn real(path: &Path) -> PathBuf {
-    path.canonicalize().unwrap_or_else(|_| path.to_path_buf())
+    path.canonical().unwrap_or_else(|_| path.to_path_buf())
 }
 
 impl HomeLayout {
     pub fn current(entries: &[String], workspace: &Path) -> Self {
-        let home = std::env::var_os("HOME")
-            .map(PathBuf::from)
-            .filter(|h| h.is_absolute() && h.parent().is_some());
+        let home = crate::paths::home_dir().filter(|h| h.is_absolute() && h.parent().is_some());
         Self::build(home, entries, workspace)
     }
     pub fn build(home: Option<PathBuf>, entries: &[String], workspace: &Path) -> Self {
@@ -298,7 +307,7 @@ impl HomeLayout {
                 continue;
             }
             let dest = home.join(entry);
-            let Ok(source) = dest.canonicalize() else {
+            let Ok(source) = dest.canonical() else {
                 continue;
             };
             // A symlink must not smuggle in a credential folder or the whole home.
@@ -423,7 +432,7 @@ pub fn isolated_args(
     match net {
         Net::On => {
             // /etc/resolv.conf often links into /run, which is not mounted.
-            if let Ok(resolv) = Path::new("/etc/resolv.conf").canonicalize() {
+            if let Ok(resolv) = Path::new("/etc/resolv.conf").canonical() {
                 if let Some(dir) = resolv.parent().filter(|d| d.starts_with("/run")) {
                     args.extend(["--ro-bind".into(), s(dir), s(dir)]);
                 }
@@ -479,6 +488,7 @@ pub struct ChildSetup {
     gate: Option<Arc<proxy::Gate>>,
     /// Flatpak host commands: the proxy's Unix socket, reached through the
     /// relay inside the host bubblewrap network namespace.
+    #[cfg(unix)]
     relay: Option<Arc<RelaySocket>>,
     /// macOS: the proxy's loopback listener, the only address the
     /// command's Seatbelt profile may connect to.
@@ -487,10 +497,12 @@ pub struct ChildSetup {
 }
 /// The proxy's listening Unix socket and the private folder holding it,
 /// removed when the command's setup is dropped.
+#[cfg(unix)]
 pub struct RelaySocket {
     listener: Mutex<Option<std::os::unix::net::UnixListener>>,
     dir: tempfile::TempDir,
 }
+#[cfg(unix)]
 impl RelaySocket {
     /// Bind a fresh socket in a private folder below `base`.
     pub fn bind(base: &Path) -> Result<Self> {
@@ -516,6 +528,7 @@ impl RelaySocket {
         self.dir.path()
     }
 }
+#[cfg(unix)]
 impl std::fmt::Debug for RelaySocket {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("RelaySocket")
@@ -576,9 +589,10 @@ impl std::fmt::Debug for ChildSetup {
         #[cfg(target_os = "linux")]
         d.field("netns", &self.netns.is_some())
             .field("landlock", &self.landlock.is_some());
-        d.field("proxy", &self.gate.is_some())
-            .field("relay", &self.relay)
-            .finish()
+        d.field("proxy", &self.gate.is_some());
+        #[cfg(unix)]
+        d.field("relay", &self.relay);
+        d.finish()
     }
 }
 /// Stops the allow-list proxy when the command's process is finished.
@@ -619,6 +633,7 @@ impl ChildSetup {
                 .context("The allow-list proxy listener was already used")?;
             return Ok(Some(ProxyGuard(proxy::spawn(listener, gate.clone())?)));
         }
+        #[cfg(unix)]
         if let (Some(relay), Some(gate)) = (&self.relay, &self.gate) {
             let listener = relay
                 .listener
@@ -690,7 +705,9 @@ pub fn prepare_shell(
         let _ = cwd;
         prepare_seatbelt(workspace, command, policy, &layout)
     };
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(windows)]
+    let result = prepare_windows(workspace, cwd, command, policy, &layout);
+    #[cfg(all(unix, not(target_os = "macos")))]
     let result = match working_bwrap(workspace) {
         Ok(program) => {
             let net = match policy.network {
@@ -877,6 +894,82 @@ pub fn prepare_shell(
     result
 }
 
+/// Windows: the command in ShadowCode's AppContainer ([`appcontainer`]).
+/// When the sandbox cannot be set up, commands run as the user with a
+/// warning and are refused when the sandbox is required, like a Linux host
+/// without bubblewrap or Landlock. The allow-list is always refused.
+#[cfg(windows)]
+fn prepare_windows(
+    workspace: &Path,
+    cwd: &Path,
+    command: &str,
+    policy: &ShellPolicy,
+    layout: &HomeLayout,
+) -> Result<PreparedShell> {
+    // The allow-list proxy listens on this computer, which the Windows
+    // sandbox cannot reach; it is refused rather than weakened.
+    if policy.network == ShellNetwork::Allowlist {
+        bail!("The command did not run: the network allow-list is not available on Windows (the Windows sandbox cannot reach the allow-list proxy on this computer). Choose 'off' or 'on' in Settings > Permissions & network > Shell commands and the network.");
+    }
+    let error = match appcontainer::prepare(workspace, cwd, command, policy, layout) {
+        Ok(prepared) => return Ok(prepared),
+        Err(error) => error,
+    };
+    if policy.require {
+        bail!("The command did not run: 'Require sandbox' is on and the Windows sandbox is unavailable ({error:#}). Turn off 'Require sandbox' in Settings > Permissions & network to run commands without it.");
+    }
+    let (program, args) = windows_shell(command);
+    Ok(PreparedShell {
+        program,
+        args,
+        child: None,
+        scratch: None,
+        gate: None,
+        note: json!({
+            "mode": "none",
+            "reason": format!("{error:#}"),
+            "network": network_label(policy.network),
+            "network_requested": network_label(policy.network),
+            "network_enforcement": "none",
+            "note": "No Windows sandbox: the command runs as your user without isolation; only the approval policy applies."
+        }),
+        warning: Some(format!("Shell commands are running without a sandbox ({error:#}): they can read and change anything your user can. Turn on 'Require sandbox' in Settings > Permissions & network to refuse commands instead.")),
+    })
+}
+
+/// The shell for agent commands on Windows. Commands are usually written for
+/// `sh`, so Git for Windows' bash comes first (from its install folders: the
+/// `bash.exe` in System32 is WSL's, which would run them in Linux);
+/// PowerShell otherwise.
+#[cfg(windows)]
+pub fn windows_shell(command: &str) -> (String, Vec<String>) {
+    let installed =
+        |var: &str, rest: &str| std::env::var_os(var).map(|base| PathBuf::from(base).join(rest));
+    let git_bash = [
+        installed("ProgramFiles", "Git/bin/bash.exe"),
+        installed("ProgramW6432", "Git/bin/bash.exe"),
+        installed("LOCALAPPDATA", "Programs/Git/bin/bash.exe"),
+    ]
+    .into_iter()
+    .flatten()
+    .find(|path| path.is_file());
+    match git_bash {
+        Some(bash) => (
+            bash.to_string_lossy().into_owned(),
+            vec!["-c".into(), command.into()],
+        ),
+        None => (
+            "powershell.exe".into(),
+            vec![
+                "-NoProfile".into(),
+                "-NonInteractive".into(),
+                "-Command".into(),
+                command.into(),
+            ],
+        ),
+    }
+}
+
 /// macOS: the command under Seatbelt, or (when `sandbox-exec` cannot run)
 /// unsandboxed with a warning unless the sandbox is required or the
 /// allow-list is on. See [`seatbelt`].
@@ -1017,7 +1110,7 @@ fn landlock_paths(layout: &HomeLayout, network: ShellNetwork) -> (Vec<PathBuf>, 
         .collect();
     read_only.extend(layout.binds.iter().map(|(source, _)| source.clone()));
     if network != ShellNetwork::Off {
-        if let Ok(resolv) = Path::new("/etc/resolv.conf").canonicalize() {
+        if let Ok(resolv) = Path::new("/etc/resolv.conf").canonical() {
             if let Some(dir) = resolv.parent() {
                 read_only.push(dir.to_path_buf());
             }
@@ -1058,7 +1151,39 @@ pub fn status(config: &Config) -> Value {
 }
 
 /// What shell isolation this computer and configuration provide.
-#[cfg(not(target_os = "macos"))]
+#[cfg(windows)]
+pub fn status(config: &Config) -> Value {
+    let works = appcontainer::probe();
+    let network = config.shell_network();
+    let effective = match (&works, config.sandbox.require, network) {
+        // The allow-list is refused on Windows (see prepare_windows).
+        (_, _, ShellNetwork::Allowlist) => "blocked",
+        (Ok(()), _, _) => "appcontainer",
+        (Err(_), true, _) => "blocked",
+        _ => "none",
+    };
+    let layout = HomeLayout::current(&config.sandbox.home_binds, Path::new("/nonexistent"));
+    json!({
+        "platform": "windows",
+        "effective": effective,
+        "appcontainer": {
+            "works": works.is_ok(),
+            "detail": match &works { Ok(()) => "The Windows sandbox works".to_owned(), Err(e) => format!("{e:#}") },
+        },
+        "bubblewrap": {"installed": false, "works": false, "detail": "bubblewrap is Linux-only"},
+        "landlock_abi": 0,
+        "network_namespace": {"available": false, "detail": "Windows commands get no network when it is off, and the internet and private networks when it is on; never this computer's own services"},
+        "require": config.sandbox.require,
+        "shell_network": network_label(network),
+        "allow": config.network.allow,
+        "home_read_only": layout.binds.iter().map(|(_, d)| d.to_string_lossy()).collect::<Vec<_>>(),
+        "home_skipped": layout.skipped,
+        "never_mounted": DENIED_HOME,
+    })
+}
+
+/// What shell isolation this computer and configuration provide.
+#[cfg(not(any(target_os = "macos", windows)))]
 pub fn status(config: &Config) -> Value {
     let installed = which("bwrap").is_some();
     let bwrap = (|| -> Result<()> {
@@ -1116,7 +1241,23 @@ pub fn doctor_checks() -> Vec<Value> {
     ]
 }
 
-#[cfg(not(target_os = "macos"))]
+#[cfg(windows)]
+pub fn doctor_checks() -> Vec<Value> {
+    let works = appcontainer::probe();
+    vec![
+        json!({"id":"appcontainer","status":if works.is_ok() {"pass"} else {"warn"},
+        "title":"Shell sandbox (Windows)","detail":match &works {
+            Ok(()) => "The Windows sandbox works: shell commands run in busybox sh inside an AppContainer that writes only to the project and a scratch folder, reads Windows, Program Files and read-only toolchains, and cannot see the rest of the home folder.".to_owned(),
+            Err(e) => format!("{e:#}. Shell commands run unsandboxed with a warning."),
+        },
+        "fix":"Turn on 'Require sandbox' to refuse commands when the sandbox cannot run. The network allow-list is not available on Windows. A command is never replayed after a sandbox failure."}),
+        json!({"id":"workspace-cow","status":"info","title":"Live workspace writes",
+        "detail":"Shell writes affect the current workspace. Scratch storage is temporary, not copy-on-write. A checkpoint taken before each command lets rewind restore project files.",
+        "fix":"Use an isolated Git worktree for changes you want to review before integrating."}),
+    ]
+}
+
+#[cfg(not(any(target_os = "macos", windows)))]
 pub fn doctor_checks() -> Vec<Value> {
     let report = probe_workspace_cow();
     #[cfg(target_os = "linux")]
@@ -1140,6 +1281,8 @@ pub fn doctor_check() -> Value {
 }
 
 #[cfg(test)]
+// Helpers of Unix-only tests are unused on Windows.
+#[cfg_attr(not(unix), allow(unused))]
 mod tests {
     use super::*;
     use std::fs;
@@ -1168,7 +1311,7 @@ mod tests {
     /// A fake home with credentials and toolchains, and a project elsewhere.
     fn fake_home() -> (tempfile::TempDir, PathBuf, PathBuf) {
         let root = tempfile::tempdir().unwrap();
-        let home = root.path().canonicalize().unwrap().join("home").join("me");
+        let home = root.path().canonical().unwrap().join("home").join("me");
         for dir in [
             ".ssh",
             ".aws",
@@ -1183,7 +1326,7 @@ mod tests {
         fs::write(home.join(".config/shadow-agent/secrets.env"), "X=not-real").unwrap();
         fs::write(home.join(".cargo/credentials.toml"), "token = \"not-real\"").unwrap();
         fs::write(home.join(".gitconfig"), "[user]\n").unwrap();
-        let ws = root.path().canonicalize().unwrap().join("project");
+        let ws = root.path().canonical().unwrap().join("project");
         fs::create_dir_all(&ws).unwrap();
         (root, home, ws)
     }
@@ -1281,6 +1424,7 @@ mod tests {
         assert!(host_relay_args(shared, relay, dir).is_err());
     }
 
+    #[cfg(unix)]
     #[test]
     fn relay_socket_refuses_paths_the_kernel_cannot_hold() {
         let root = tempfile::tempdir().unwrap();
@@ -1298,6 +1442,7 @@ mod tests {
     }
 
     /// Build the relay shipped in the Flatpak, or skip when no C compiler.
+    #[cfg(unix)]
     fn build_relay(out: &Path) -> Option<PathBuf> {
         let source =
             Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packaging/flatpak/proxy-relay.c");
@@ -1311,6 +1456,7 @@ mod tests {
         status.success().then_some(binary)
     }
 
+    #[cfg(unix)]
     fn free_port() -> u16 {
         std::net::TcpListener::bind("127.0.0.1:0")
             .unwrap()
@@ -1378,6 +1524,7 @@ mod tests {
         );
     }
 
+    #[cfg(unix)]
     #[test]
     fn flatpak_relay_fails_closed_without_the_proxy() {
         let temp = tempfile::tempdir().unwrap();
@@ -1483,7 +1630,7 @@ mod tests {
     }
 
     // macOS always uses its own sandbox (see the seatbelt tests below).
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(target_os = "linux")]
     #[test]
     fn missing_bubblewrap_reports_honest_fallback_and_fails_closed_when_required() {
         // PATH is process-global and tests share one process: run the mutation
@@ -1614,7 +1761,7 @@ mod tests {
     #[test]
     fn seatbelt_confines_files_to_the_project_and_hides_home_and_credentials() {
         let (root, home, ws) = fake_home();
-        let root = root.path().canonicalize().unwrap();
+        let root = root.path().canonical().unwrap();
         fs::write(root.join("outside.txt"), "outside").unwrap();
         // A project that contains a credential folder of its own home.
         let layout = HomeLayout::build(
@@ -1670,7 +1817,7 @@ mod tests {
     #[test]
     fn seatbelt_hides_credential_folders_inside_the_project() {
         let root = tempfile::tempdir().unwrap();
-        let home = root.path().canonicalize().unwrap().join("me");
+        let home = root.path().canonical().unwrap().join("me");
         fs::create_dir_all(home.join(".ssh")).unwrap();
         fs::write(home.join(".ssh/id_ed25519"), "not a real key").unwrap();
         // The project is the home folder itself.
@@ -1696,7 +1843,7 @@ mod tests {
         let listener = std::net::TcpListener::bind(("127.0.0.1", 0)).unwrap();
         let port = listener.local_addr().unwrap().port();
         let ws = tempfile::tempdir().unwrap();
-        let ws = ws.path().canonicalize().unwrap();
+        let ws = ws.path().canonical().unwrap();
         let layout = HomeLayout::build(None, &[], &ws);
         let probe = format!("/usr/bin/nc -z -w 2 127.0.0.1 {port}");
         let run = |network: ShellNetwork, command: &str| {
@@ -1739,7 +1886,7 @@ mod tests {
     #[test]
     fn apple_developer_tools_run_cleanly_in_the_seatbelt() {
         let ws = tempfile::tempdir().unwrap();
-        let ws = ws.path().canonicalize().unwrap();
+        let ws = ws.path().canonical().unwrap();
         let layout = HomeLayout::current(
             &DEFAULT_HOME_BINDS
                 .iter()

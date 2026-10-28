@@ -8,7 +8,6 @@ use base64::Engine as _;
 use sha2::{Digest, Sha256};
 use std::{
     collections::HashMap,
-    io::Read,
     net::IpAddr,
     time::{Duration, Instant},
 };
@@ -28,8 +27,8 @@ const MAX_TRACKED: usize = 4096;
 
 fn random_bytes() -> Result<[u8; 32]> {
     let mut bytes = [0u8; 32];
-    std::fs::File::open("/dev/urandom")
-        .and_then(|mut f| f.read_exact(&mut bytes))
+    getrandom::fill(&mut bytes)
+        .map_err(|error| anyhow::anyhow!("{error}"))
         .context("Could not read random bytes for a remote access token")?;
     Ok(bytes)
 }

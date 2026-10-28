@@ -44,7 +44,10 @@ export function sandboxPatch(values: SandboxValues) {
 
 function statusLine(status: SandboxStatus): string {
   const mac = status.platform === "macos";
+  const windows = status.platform === "windows";
   switch (status.effective) {
+    case "appcontainer":
+      return "Sandbox active (Windows): commands run in a contained shell that reads Windows, Program Files and read-only toolchains, cannot see the rest of your home folder, and writes only to this project.";
     case "bubblewrap":
       return "Sandbox active (bubblewrap): commands see an empty home folder with read-only toolchains, and only this project is writable.";
     case "seatbelt":
@@ -52,6 +55,11 @@ function statusLine(status: SandboxStatus): string {
     case "landlock":
       return "bubblewrap is unavailable. Commands can fall back to Landlock file limits; network and process isolation are incomplete. Turn on Require sandbox to refuse fallback.";
     case "blocked":
+      if (windows) {
+        return status.shell_network === "allowlist"
+          ? "Only allowed hosts is not available on Windows, so shell commands will be refused. Choose No network or Full network."
+          : "The Windows sandbox is not available, so shell commands will be refused. Turn off Require sandbox to run them unsandboxed.";
+      }
       if (mac) {
         return "The macOS sandbox is not available, so shell commands will be refused. Turn off Require sandbox and the host allow-list to run them unsandboxed.";
       }
@@ -59,27 +67,35 @@ function statusLine(status: SandboxStatus): string {
         ? "The host allow-list needs private network namespaces, which this system does not allow. Shell commands will be refused."
         : "bubblewrap is not available, so shell commands will be refused. Install bubblewrap, or turn off Require sandbox and the host allow-list.";
     default:
+      if (windows) {
+        return "The Windows sandbox is not available: commands run with your user's full access.";
+      }
       return mac
         ? "The macOS sandbox is not available: commands run with your user's full access."
         : "No sandbox is available: commands run with your user's full access. Install bubblewrap to isolate them.";
   }
 }
 
-function networkOptions(mac: boolean): [ShellNetwork, string, string][] {
+function networkOptions(
+  platform: SandboxStatus["platform"],
+): [ShellNetwork, string, string][] {
+  const linux = platform !== "macos" && platform !== "windows";
   return [
     [
       "off",
       "No network",
-      mac
-        ? "No network access at all, not even this computer's own services."
-        : "Request no network access. Full isolation needs working bubblewrap.",
+      linux
+        ? "Request no network access. Full isolation needs working bubblewrap."
+        : "No network access at all, not even this computer's own services.",
     ],
     [
       "allowlist",
       "Only allowed hosts",
-      mac
-        ? "Web requests go through a filter that lets only the hosts below through."
-        : "Web requests go through a filter that lets only the hosts below through. Needs bubblewrap.",
+      platform === "windows"
+        ? "Not available on Windows: shell commands are refused while this is chosen."
+        : linux
+          ? "Web requests go through a filter that lets only the hosts below through. Needs bubblewrap."
+          : "Web requests go through a filter that lets only the hosts below through.",
     ],
     ["on", "Full network", "Approved shell commands can reach any host."],
   ];
@@ -124,10 +140,14 @@ export function SandboxSettings({
           onChange={(e) => onChange({ ...values, require: e.target.checked })}
         />{" "}
         Require sandbox: refuse shell commands when{" "}
-        {status?.platform === "macos" ? "the macOS sandbox" : "bubblewrap"} is
-        unavailable
+        {status?.platform === "macos"
+          ? "the macOS sandbox"
+          : status?.platform === "windows"
+            ? "the Windows sandbox"
+            : "bubblewrap"}{" "}
+        is unavailable
       </label>
-      {networkOptions(status?.platform === "macos").map(([id, label, hint]) => (
+      {networkOptions(status?.platform).map(([id, label, hint]) => (
         <label className="mode-option" key={id}>
           <input
             type="radio"

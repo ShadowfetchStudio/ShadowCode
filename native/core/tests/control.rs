@@ -1,3 +1,6 @@
+// The control socket is the Unix transport; the Windows pipe needs its own tests.
+#![cfg(unix)]
+use shadowcode_core::paths::Canonical;
 mod support;
 use serde_json::{json, Value};
 use shadowcode_core::{
@@ -273,7 +276,7 @@ async fn attached_views_keep_navigation_independent_and_detach_without_stopping_
     let primary = service.workspace().unwrap();
     let other = root.path().join("view-project");
     fs::create_dir(&other).unwrap();
-    let other = other.canonicalize().unwrap();
+    let other = other.canonical().unwrap();
     let server = Server::start_with_mode(service.clone(), "server").unwrap();
     let client = server.endpoint().client(primary.clone(), None);
     let first = client.open_view().await.unwrap();

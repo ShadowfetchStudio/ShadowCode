@@ -210,6 +210,39 @@ it("Permissions: saves only permissions and network groups", async () => {
   });
 });
 
+it("Permissions: the Windows sandbox and its refused allow-list", async () => {
+  fake.state.sandboxStatus = {
+    platform: "windows",
+    effective: "appcontainer",
+    appcontainer: { works: true, detail: "The Windows sandbox works" },
+    bubblewrap: { installed: false, works: false, detail: "Linux-only" },
+  };
+  render(
+    <PermissionsPage
+      cfg={{
+        permissions: { mode: "ask", level: "workspace", network: true },
+        network: { mode: "online", shell: "on", allow: [] },
+        sandbox: { require: false },
+      }}
+      onSave={vi.fn(async () => {})}
+    />,
+  );
+  expect(await screen.findByRole("status")).toHaveProperty(
+    "textContent",
+    expect.stringContaining("Sandbox active (Windows)"),
+  );
+  expect(
+    screen.getByLabelText(/Require sandbox/).closest("label"),
+  ).toHaveProperty(
+    "textContent",
+    expect.stringContaining("the Windows sandbox is unavailable"),
+  );
+  expect(
+    screen.getByText(/Not available on Windows: shell commands are refused/),
+  ).toBeTruthy();
+  expect(document.body.textContent).not.toContain("bubblewrap");
+});
+
 it("Permissions: Require sandbox and the shell host allow-list", async () => {
   const onSave = vi.fn(async () => {});
   render(

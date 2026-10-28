@@ -1,3 +1,4 @@
+#![cfg_attr(not(unix), allow(unused))]
 use shadowcode_core::process::{run, ProcessSpec};
 use std::time::{Duration, Instant};
 use tokio_util::sync::CancellationToken;
@@ -17,6 +18,7 @@ async fn output_flood_is_bounded_without_pipe_deadlock() {
     assert!(result.stdout.len() + result.stderr.len() <= 8192);
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn timeout_kills_shell_and_grandchildren() {
     let root = tempfile::tempdir().unwrap();
@@ -112,6 +114,7 @@ async fn dropping_execution_does_not_leave_the_process_group_alive() {
     assert!(status.is_empty() || status.contains("State:\tZ"));
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn a_detached_pipe_cannot_hang_completion() {
     let root = tempfile::tempdir().unwrap();

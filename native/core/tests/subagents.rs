@@ -3,6 +3,7 @@
 //! the parent, `@agent` mentions, and model-loaded skills.
 #![cfg(unix)]
 use serde_json::{json, Value};
+use shadowcode_core::paths::Canonical;
 use shadowcode_core::{
     config::Config,
     engine::{Engine, Job, StartRequest},
@@ -156,7 +157,7 @@ fn setup(endpoint: &str, extra: Value) -> (tempfile::TempDir, Engine, PathBuf) {
     let root = tempfile::tempdir().unwrap();
     let project = root.path().join("project");
     fs::create_dir(&project).unwrap();
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     let paths = AppPaths::isolated(&root.path().join("profile")).unwrap();
     let mut config = json!({"model":{"provider":"local","endpoint":endpoint,"name":"fixture","context_limit":32768},"trusted_workspaces":[project],"permissions":{"approve_shell":false},"agent":{"max_steps":12,"model_retries":0}});
     merge(&mut config, extra);

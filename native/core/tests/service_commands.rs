@@ -1,3 +1,4 @@
+use shadowcode_core::paths::Canonical;
 mod support;
 use serde_json::{json, Value};
 use shadowcode_core::{
@@ -151,7 +152,7 @@ async fn editor_drafts_survive_restart_without_overwriting_workspace_files() {
     assert_eq!(listed["drafts"][0]["draft"], "let answer = 2;\n");
     let other = root.path().join("other");
     fs::create_dir(&other).unwrap();
-    let other = other.canonicalize().unwrap();
+    let other = other.canonical().unwrap();
     let second_project = reopened.fork_selection(other.clone(), None).unwrap();
     assert_eq!(
         call(
@@ -1322,7 +1323,13 @@ async fn session_listing_and_literal_search_work_after_tasks_are_saved() {
         .await
         .unwrap();
     assert_eq!(all["sessions"].as_array().unwrap().len(), 2);
-    for query in ["100%25", "%25_", "%21", "%5C", "Literal"] {
+    // Windows project paths contain `\`, so a search for it finds both.
+    let queries: &[&str] = if cfg!(windows) {
+        &["100%25", "%25_", "%21", "Literal"]
+    } else {
+        &["100%25", "%25_", "%21", "%5C", "Literal"]
+    };
+    for query in queries {
         let found = call(
             &service,
             "GET",

@@ -16,6 +16,7 @@
 //! Git commands that write your repository's real index or history for you
 //! (staging, committing, discarding from the Changes view) keep the filters,
 //! so a filter such as git-crypt still protects what you commit.
+use crate::paths::Canonical;
 use anyhow::{bail, ensure, Context, Result};
 use std::{collections::BTreeSet, path::Path, process::Output};
 
@@ -247,7 +248,7 @@ pub async fn freeze_gitlinks(dir: &Path, index: Option<&Path>) -> Result<()> {
 /// The repository's own configuration files for `dir` (its local and
 /// worktree-scope files), or `None` when they cannot be worked out here.
 fn local_config_files(dir: &Path) -> Option<Vec<std::path::PathBuf>> {
-    let mut current = dir.canonicalize().ok()?;
+    let mut current = dir.canonical().ok()?;
     let dot_git = loop {
         let candidate = current.join(".git");
         if candidate.symlink_metadata().is_ok() {

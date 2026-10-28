@@ -1,6 +1,8 @@
 //! The drawer's Git panel end to end: branch, suggested messages, commit,
 //! push to a local bare remote, and a pull request through a fake `gh` on
 //! PATH (no network, no real GitHub).
+// Helpers used only by Unix-only tests are unused on Windows.
+#![cfg_attr(not(unix), allow(unused))]
 mod support;
 use serde_json::{json, Value};
 use shadowcode_core::{
@@ -57,8 +59,11 @@ fn fake_gh_on_path() {
         fs::create_dir_all(&dir).unwrap();
         let gh = dir.join("gh");
         fs::write(&gh, FAKE_GH).unwrap();
-        use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(&gh, fs::Permissions::from_mode(0o755)).unwrap();
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            fs::set_permissions(&gh, fs::Permissions::from_mode(0o755)).unwrap();
+        }
         let path = std::env::var("PATH").unwrap_or_default();
         std::env::set_var("PATH", format!("{}:{path}", dir.display()));
         dir
@@ -151,6 +156,7 @@ async fn call(service: &Service, method: &str, path: &str, body: Value) -> anyho
         .await
 }
 
+#[cfg(unix)]
 #[tokio::test(flavor = "multi_thread")]
 async fn branch_commit_push_and_pull_request_with_checks() {
     let f = setup("http://127.0.0.1:9/v1");
@@ -496,6 +502,7 @@ fn fake_token() -> String {
     format!("ghp_{}", "aB3dE5fG7hI9jK1lM3nO5pQ7rS9tU1vW3xY5")
 }
 
+#[cfg(unix)]
 #[tokio::test(flavor = "multi_thread")]
 async fn secrets_are_caught_before_commit_and_push_and_hooks_are_asked_once() {
     let f = setup("http://127.0.0.1:9/v1");

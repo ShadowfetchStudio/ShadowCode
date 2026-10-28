@@ -3027,6 +3027,8 @@ export function installFakeBackend(options: FakeOptions = {}) {
         home_read_only: ["/home/dev/.cargo"],
         home_skipped: [],
         never_mounted: [".ssh", ".config"],
+        // A test may report another platform (e.g. Windows).
+        ...(state.sandboxStatus || {}),
       };
     if (path === "/api/workspace/status")
       return {

@@ -1046,7 +1046,7 @@ fn locate(findings: Vec<Finding>, diff: &[DiffFile], workspace: &Path) -> Vec<Fi
 fn match_file<'a>(named: &str, diff: &'a [DiffFile], workspace: &Path) -> Option<&'a DiffFile> {
     let mut name = named.trim().trim_matches('`').to_owned();
     if let Ok(relative) = Path::new(&name).strip_prefix(workspace) {
-        name = relative.to_string_lossy().into_owned();
+        name = crate::paths::slash(relative);
     }
     let name = name.trim_start_matches("./");
     let exact = |candidate: &str| diff.iter().find(|file| file.path == candidate);

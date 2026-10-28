@@ -1,5 +1,7 @@
 use anyhow::Result;
 use serde_json::{json, Value};
+#[cfg(unix)]
+use shadowcode_core::paths::Canonical;
 use shadowcode_core::{
     config::Config,
     paths::AppPaths,
@@ -49,13 +51,14 @@ async fn call(service: &Service, method: &str, body: Value) -> Result<Value> {
         })
         .await
 }
+#[cfg(unix)]
 #[tokio::test]
 async fn isolated_checkout_preserves_dirty_source_and_disables_checkout_hooks() {
     use std::os::unix::fs::PermissionsExt;
     let root = tempfile::tempdir().unwrap();
     let project = root.path().join("project");
     repository(&project);
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     let paths = AppPaths::isolated(&root.path().join("profile")).unwrap();
     fs::write(project.join("tracked.txt"), "staged change\n").unwrap();
     git(&project, &["add", "tracked.txt"]);
@@ -182,7 +185,8 @@ async fn cancelled_checkout_leaves_a_recovery_record_and_source_intact() {
         xdg.join("git/config"),
         format!(
             "[filter \"slow\"]\n\tsmudge = \"touch '{}'; sleep 60; cat\"\n",
-            marker.display()
+            // Git config reads `\` as an escape; `/` works on Windows too.
+            shadowcode_core::paths::slash(&marker)
         ),
     )
     .unwrap();
@@ -358,6 +362,7 @@ async fn removal_refuses_changes_ignored_files_stale_review_and_busy_tasks_prese
         .exists());
     service.engine.shutdown().await.unwrap();
 }
+#[cfg(unix)]
 #[tokio::test]
 async fn worktree_inspection_rejects_detached_heads_symlinks_and_forged_paths() {
     use std::os::unix::fs::symlink;
@@ -500,7 +505,9 @@ async fn missing_checkout_rescue_retains_commits_index_and_original_registration
     assert_eq!(fs::read(record_file).unwrap(), record_bytes);
     assert_eq!(git(&project, &["rev-parse", &record.branch]), commit);
     assert!(
-        git(&project, &["worktree", "list", "--porcelain"]).contains(record.path.to_str().unwrap())
+        // Git lists paths with `/` on Windows too.
+        git(&project, &["worktree", "list", "--porcelain"])
+            .contains(&shadowcode_core::paths::slash(&record.path))
     );
     assert_eq!(
         fs::read_to_string(saved.join("tracked.txt")).unwrap(),
@@ -755,6 +762,7 @@ async fn reviewed_return_does_not_overwrite_ignored_source_files() {
     service.engine.shutdown().await.unwrap();
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn copied_source_changes_preserve_staging_binary_untracked_modes_and_source() {
     use std::os::unix::fs::PermissionsExt;
@@ -839,6 +847,7 @@ async fn copied_source_changes_preserve_staging_binary_untracked_modes_and_sourc
     );
     service.engine.shutdown().await.unwrap();
 }
+#[cfg(unix)]
 #[tokio::test]
 async fn copy_review_rejects_symlinks_changed_contents_and_excludes_non_git_files() {
     use std::os::unix::fs::symlink;
@@ -1077,6 +1086,7 @@ async fn reviewed_connection_repair_preserves_index_files_and_rejects_stale_stat
     service.engine.shutdown().await.unwrap();
 }
 
+#[cfg(unix)]
 #[tokio::test]
 async fn connection_repair_refuses_foreign_links_locks_and_lost_indexes() {
     use std::os::unix::fs::symlink;
@@ -1795,7 +1805,7 @@ mod profile_admission {
         let checkouts = paths
             .data
             .join("managed-worktrees/checkouts")
-            .canonicalize()
+            .canonical()
             .unwrap();
         for _ in 0..62 {
             let mut pending = first.clone();

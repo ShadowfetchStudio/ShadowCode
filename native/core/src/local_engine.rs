@@ -20,12 +20,18 @@ use std::{
 };
 
 const MAX_SCAN_FILES: usize = 256;
-#[cfg(not(target_os = "macos"))]
+#[cfg(all(unix, not(target_os = "macos")))]
 pub const MANAGED_RELATIVE: &str = ".local/lib/shadowcode";
 /// macOS keeps the user-installed runtime with the app's other data.
 #[cfg(target_os = "macos")]
 pub const MANAGED_RELATIVE: &str = "Library/Application Support/ShadowCode/llama.cpp";
+/// Windows: under `%LOCALAPPDATA%` (see [`managed_dir`]).
+#[cfg(windows)]
+pub const MANAGED_RELATIVE: &str = "ShadowCode/llama.cpp";
+#[cfg(not(windows))]
 pub const MANAGED_SERVER: &str = "llama-server";
+#[cfg(windows)]
+pub const MANAGED_SERVER: &str = "llama-server.exe";
 /// Default upper bound for the server context window (tokens).
 pub const DEFAULT_CONTEXT_CAP: u64 = 16384;
 /// Never plan a smaller window than this unless the model itself is smaller.
@@ -195,7 +201,7 @@ pub struct GgufEntry {
 }
 
 fn canonical(path: &Path) -> PathBuf {
-    fs::canonicalize(path).unwrap_or_else(|_| path.to_path_buf())
+    crate::paths::Canonical::canonical(path).unwrap_or_else(|_| path.to_path_buf())
 }
 
 /// Stable id: a hash of the canonical path. Never derived from a display name.
@@ -317,17 +323,24 @@ pub fn find_projector(model_path: &Path, model: &GgufHeader) -> Option<PathBuf> 
 // ---------------------------------------------------------------------------
 
 pub fn managed_dir() -> Option<PathBuf> {
-    std::env::var_os("HOME").map(|home| PathBuf::from(home).join(MANAGED_RELATIVE))
+    #[cfg(windows)]
+    let base = std::env::var_os("LOCALAPPDATA");
+    #[cfg(not(windows))]
+    let base = std::env::var_os("HOME");
+    base.map(|base| PathBuf::from(base).join(MANAGED_RELATIVE))
 }
 
 /// `usr/lib/shadowcode` next to the executable (AppImage `usr/bin/..`, deb
 /// `/usr/bin/..`); on macOS the app bundle's `Contents/Resources/llama.cpp`
-/// (the executable is in `Contents/MacOS`).
+/// (the executable is in `Contents/MacOS`); on Windows `llama.cpp` beside
+/// the installed executable.
 pub fn bundled_dir() -> Option<PathBuf> {
     let exe = std::env::current_exe().ok()?;
     #[cfg(target_os = "macos")]
     return Some(exe.parent()?.join("../Resources/llama.cpp"));
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(windows)]
+    return Some(exe.parent()?.join("llama.cpp"));
+    #[cfg(all(unix, not(target_os = "macos")))]
     Some(exe.parent()?.join("../lib/shadowcode"))
 }
 
@@ -508,9 +521,19 @@ pub fn runtime_env(binary: &Path) -> Vec<(String, std::ffi::OsString)> {
             env.push((name.to_owned(), value));
         }
     }
+    // Windows: system DLLs (and the Vulkan loader) need these to load.
+    env.extend(
+        crate::process::platform_env()
+            .into_iter()
+            .map(|(name, value)| (name.to_owned(), value)),
+    );
+    // Windows finds a program's DLLs beside it without help.
+    #[cfg(unix)]
     if let Some(dir) = binary.parent() {
         env.push(("LD_LIBRARY_PATH".into(), dir.as_os_str().to_owned()));
     }
+    #[cfg(not(unix))]
+    let _ = binary;
     env
 }
 
@@ -852,8 +875,25 @@ pub fn available_memory() -> u64 {
     pages.saturating_mul(page as u64)
 }
 
+/// Windows: physical memory and what is available now.
+#[cfg(windows)]
+fn memory_status() -> Option<windows_sys::Win32::System::SystemInformation::MEMORYSTATUSEX> {
+    use windows_sys::Win32::System::SystemInformation::{GlobalMemoryStatusEx, MEMORYSTATUSEX};
+    // SAFETY: MEMORYSTATUSEX is plain data; dwLength is set as required.
+    let mut status: MEMORYSTATUSEX = unsafe { std::mem::zeroed() };
+    status.dwLength = std::mem::size_of::<MEMORYSTATUSEX>() as u32;
+    // SAFETY: the call writes only into `status`.
+    (unsafe { GlobalMemoryStatusEx(&mut status) } != 0).then_some(status)
+}
+
 /// See the macOS version.
-#[cfg(not(target_os = "macos"))]
+#[cfg(windows)]
+pub fn available_memory() -> u64 {
+    memory_status().map_or(0, |status| status.ullAvailPhys)
+}
+
+/// See the macOS version.
+#[cfg(all(unix, not(target_os = "macos")))]
 pub fn available_memory() -> u64 {
     let Ok(text) = fs::read_to_string("/proc/meminfo") else {
         return 0;
@@ -887,7 +927,13 @@ pub fn read_meminfo() -> u64 {
 }
 
 /// Installed memory in bytes (0 when unknown).
-#[cfg(not(target_os = "macos"))]
+#[cfg(windows)]
+pub fn read_meminfo() -> u64 {
+    memory_status().map_or(0, |status| status.ullTotalPhys)
+}
+
+/// Installed memory in bytes (0 when unknown).
+#[cfg(all(unix, not(target_os = "macos")))]
 pub fn read_meminfo() -> u64 {
     let Ok(text) = fs::read_to_string("/proc/meminfo") else {
         return 0;
@@ -1859,6 +1905,8 @@ pub async fn prepare_with_progress(
 }
 
 #[cfg(test)]
+// Helpers of Unix-only tests are unused on Windows.
+#[cfg_attr(not(unix), allow(unused))]
 mod tests {
     use super::*;
     use crate::gguf::test_support::{write_gguf, V};
@@ -2134,7 +2182,15 @@ mod tests {
         )
         .unwrap();
         assert!(entry.vision);
-        projector(&dir.path().join("mmproj-bf16.gguf"), 4096);
+        // Replaced as a download does (a new file renamed into place): an
+        // in-place rewrite of the same size within one tick of Windows'
+        // file clock keeps every identity Windows reports.
+        projector(&dir.path().join("mmproj-new.gguf"), 4096);
+        std::fs::rename(
+            dir.path().join("mmproj-new.gguf"),
+            dir.path().join("mmproj-bf16.gguf"),
+        )
+        .unwrap();
         let entry = inspect(
             &Candidate {
                 path: m,

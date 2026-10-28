@@ -2,6 +2,7 @@
 //! Two registered loopback models share one fake OpenAI-compatible server;
 //! the reply depends on the requested model name, so the lanes make
 //! different edits. No vendor CLI or network is used.
+use shadowcode_core::paths::Canonical;
 mod support;
 use anyhow::Result;
 use serde_json::{json, Value};
@@ -141,7 +142,7 @@ async fn fixture_with_checks(delay: Duration, checks: bool) -> Fixture {
     fs::write(project.join(".gitignore"), "ignored.log\n").unwrap();
     git(&project, &["add", "."]);
     git(&project, &["commit", "-qm", "Base"]);
-    let project = project.canonicalize().unwrap();
+    let project = project.canonical().unwrap();
     let paths = AppPaths::isolated(&root.path().join("profile")).unwrap();
     Config::patch(
         &paths,
@@ -1800,7 +1801,7 @@ exec {git} "$@"
     // host process in this lane before reading its kernel start time, as in
     // the existing project-inspection cancellation fixtures.
     fn host_pid(project: &Path, namespace_pid: u32) -> u32 {
-        let project = project.canonicalize().unwrap();
+        let project = project.canonical().unwrap();
         let matches: Vec<_> = fs::read_dir("/proc")
             .unwrap()
             .filter_map(|entry| {
@@ -1938,7 +1939,7 @@ exec {git} "$@"
         fs::write(project_b.join("lib.txt"), "project B unchanged\n").unwrap();
         git(&project_b, &["add", "."]);
         git(&project_b, &["commit", "-qm", "B base"]);
-        let project_b = project_b.canonicalize().unwrap();
+        let project_b = project_b.canonical().unwrap();
         let b_head = git(&project_b, &["rev-parse", "HEAD"]);
         let b_index = git(&project_b, &["write-tree"]);
         let mut trusted = Config::load(&f.paths, None).unwrap().trusted_workspaces;
@@ -2659,7 +2660,7 @@ async fn failed_generation_preserves_checked_candidate_through_reopen_and_keep()
         ensure!(completed_id > 0, "invalid output reference");
         let completion = service.as_ref().unwrap().engine.store().events_after(&alpha.session_id, completed_id - 1, Some(completed_id), 1)?.pop().context("referenced command completion missing")?;
         ensure!(completion["id"] == completed_id && completion["task_id"] == alpha.task_id && completion["session_id"] == alpha.session_id && completion["type"] == "tool.completed", "foreign/non-completion output reference");
-        ensure!(completion["payload"]["tool"] == "exec" && completion["payload"]["call_id"] == call_id && completion["payload"]["success"] == true && completion["payload"]["output"]["exit_code"] == 0 && completion["payload"]["output"]["stdout"] == "candidate-check-passed\n", "receipt does not name the actual successful check output: {completion}");
+        ensure!(completion["payload"]["tool"] == "exec" && completion["payload"]["call_id"] == call_id && completion["payload"]["success"] == true && completion["payload"]["output"]["exit_code"] == 0 && completion["payload"]["output"]["stdout"].as_str().is_some_and(|out| out == "candidate-check-passed\n" || out == "candidate-check-passed\r\n"), "receipt does not name the actual successful check output: {completion}");
         let events = service.as_ref().unwrap().engine.store().recent_events(&alpha.session_id, 100)?;
         let starts: Vec<_> = events.iter().filter(|e| e["task_id"] == alpha.task_id && e["type"] == "tool.started" && e["payload"]["tool"] == "exec" && e["payload"]["call_id"] == call_id).collect();
         ensure!(starts.len() == 1 && starts[0]["payload"]["arguments"]["command"] == CHECK, "command identity did not start exact check");

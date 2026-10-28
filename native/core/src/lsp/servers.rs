@@ -17,6 +17,7 @@
 //! - clangd: no background index (it would write `.cache/` into the project).
 //! - pyright: analyzes open files only.
 use crate::code_intel::{CodeIntelConfig, ServerOverride};
+use crate::paths::Canonical;
 use serde_json::{json, Value};
 use std::path::{Path, PathBuf};
 
@@ -152,7 +153,7 @@ pub struct Launch {
 
 /// Usual per-user install folders that GUI sessions often omit from PATH.
 pub fn extra_dirs() -> Vec<PathBuf> {
-    let Some(home) = std::env::var_os("HOME").map(PathBuf::from) else {
+    let Some(home) = crate::paths::home_dir() else {
         return Vec::new();
     };
     vec![
@@ -170,10 +171,8 @@ pub fn find_program(name: &str) -> Option<PathBuf> {
         return is_executable(&path).then_some(path);
     }
     crate::sandbox::which(name).or_else(|| {
-        extra_dirs()
-            .into_iter()
-            .map(|dir| dir.join(name))
-            .find(|p| is_executable(p))
+        let extra = std::env::join_paths(extra_dirs()).ok()?;
+        crate::paths::find_program_in(name, &extra).filter(|p| is_executable(p))
     })
 }
 
@@ -207,7 +206,7 @@ fn managed_program(managed: Option<&Path>, lang: ServerLang, program: &str) -> O
 /// `typescript/lib` shipped beside a typescript-language-server install
 /// (managed prefix, global npm prefix, or the server's own node_modules).
 pub fn typescript_lib_for(server: &Path) -> Option<PathBuf> {
-    let real = server.canonicalize().ok()?;
+    let real = server.canonical().ok()?;
     let mut roots = Vec::new();
     for ancestor in real.ancestors() {
         if ancestor.file_name().is_some_and(|n| n == "node_modules") {
@@ -415,6 +414,8 @@ pub fn environment(launch: &Launch) -> Vec<(String, std::ffi::OsString)> {
 }
 
 #[cfg(test)]
+// Helpers of Unix-only tests are unused on Windows.
+#[cfg_attr(not(unix), allow(unused))]
 mod tests {
     use super::*;
 
@@ -436,6 +437,7 @@ mod tests {
         assert_eq!(for_path(Path::new("README.md")), None);
     }
 
+    #[cfg(unix)]
     #[test]
     fn overrides_win_and_bad_overrides_are_reported() {
         let mut config = CodeIntelConfig::default();
@@ -477,6 +479,7 @@ mod tests {
         assert!(env.contains(&("CARGO_NET_OFFLINE".into(), "true".into())));
     }
 
+    #[cfg(unix)]
     #[test]
     fn typescript_needs_its_own_typescript() {
         let dir = tempfile::tempdir().unwrap();
@@ -504,7 +507,7 @@ mod tests {
         assert_eq!(launch.source, "managed");
         assert_eq!(
             launch.init_options["tsserver"]["path"],
-            json!(lib.canonicalize().unwrap().join("tsserver.js"))
+            json!(lib.canonical().unwrap().join("tsserver.js"))
         );
         assert_eq!(
             launch.init_options["disableAutomaticTypingAcquisition"],

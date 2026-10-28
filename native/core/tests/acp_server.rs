@@ -1,6 +1,7 @@
 //! `shadowcode acp` driven by an in-process fake ACP client (the editor
 //! side) over a duplex pipe, against a fake OpenAI-compatible model.
 #![cfg(unix)]
+use shadowcode_core::paths::Canonical;
 mod support;
 use serde_json::{json, Value};
 use shadowcode_core::{
@@ -100,8 +101,8 @@ impl Fixture {
         fs::create_dir(&project).unwrap();
         fs::create_dir(&untrusted).unwrap();
         fs::write(project.join("notes.txt"), "saved text").unwrap();
-        let project = project.canonicalize().unwrap();
-        let untrusted = untrusted.canonicalize().unwrap();
+        let project = project.canonical().unwrap();
+        let untrusted = untrusted.canonical().unwrap();
         let paths = AppPaths::isolated(&root.path().join("profile")).unwrap();
         Config::patch(
             &paths,

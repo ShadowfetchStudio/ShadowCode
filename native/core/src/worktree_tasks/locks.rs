@@ -2,6 +2,7 @@
 //! worktree ownership. Readers acquire only record ownership. This module never
 //! acquires the core mutation mutex or advisory file, so a task may safely call
 //! create/dispose/release while it owns this distinct outer guard.
+use crate::paths::Canonical;
 use crate::{store::Store, worktrees};
 use anyhow::{ensure, Result};
 use std::{
@@ -65,11 +66,7 @@ pub(super) async fn record(
     cancel: &CancellationToken,
 ) -> Result<OwnedMutexGuard<()>> {
     super::valid_id(id)?;
-    acquire(
-        Key::Record(store.path.canonicalize()?, id.to_owned()),
-        cancel,
-    )
-    .await
+    acquire(Key::Record(store.path.canonical()?, id.to_owned()), cancel).await
 }
 
 #[cfg(test)]
@@ -85,9 +82,6 @@ pub(super) fn record_references(store: &Store, id: &str) -> usize {
     REGISTRY
         .lock()
         .unwrap()
-        .get(&Key::Record(
-            store.path.canonicalize().unwrap(),
-            id.to_owned(),
-        ))
+        .get(&Key::Record(store.path.canonical().unwrap(), id.to_owned()))
         .map_or(0, Weak::strong_count)
 }

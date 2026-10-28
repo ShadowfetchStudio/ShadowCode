@@ -18,6 +18,7 @@ use crate::code_intel::{
     chunks,
     langs::{self, Lang},
 };
+use crate::paths::Canonical;
 use crate::workspace::Workspace;
 use anyhow::{ensure, Context, Result};
 use rusqlite::{params, Connection};
@@ -121,7 +122,7 @@ pub fn use_cache(dir: PathBuf) {
 }
 
 fn db_path(root: &Path) -> Result<PathBuf> {
-    db_path_for(&root.canonicalize()?)
+    db_path_for(&root.canonical()?)
 }
 /// The index file of a project by its canonical path (which may be gone).
 fn db_path_for(root: &Path) -> Result<PathBuf> {
@@ -221,7 +222,7 @@ pub fn set_focus(root: &Path, focus: Option<&str>) -> Result<Value> {
             let workspace = Workspace::open(root)?;
             let rel = workspace.relative(folder)?;
             ensure!(root.join(&rel).is_dir(), "Choose a folder in the project");
-            set_meta(&conn, "focus", &rel.to_string_lossy())?;
+            set_meta(&conn, "focus", &crate::paths::slash(&rel))?;
         }
         None => {
             conn.execute("DELETE FROM meta WHERE key='focus'", [])?;
@@ -235,7 +236,7 @@ pub fn set_focus(root: &Path, focus: Option<&str>) -> Result<Value> {
 /// Delete this project's index (it is rebuilt when needed). A folder that is
 /// already gone (a removed worktree) is named by the canonical path it had.
 pub fn clear(root: &Path) -> Result<()> {
-    let root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
+    let root = root.canonical().unwrap_or_else(|_| root.to_path_buf());
     remove_db(&db_path_for(&root)?);
     if let Ok(mut scans) = LAST_SCAN.lock() {
         if let Some(scans) = scans.as_mut() {
@@ -252,7 +253,7 @@ pub(crate) fn index_path(root: &Path) -> PathBuf {
 }
 
 fn forget_recent_scan(root: &Path) {
-    if let (Ok(key), Ok(mut scans)) = (root.canonicalize(), LAST_SCAN.lock()) {
+    if let (Ok(key), Ok(mut scans)) = (root.canonical(), LAST_SCAN.lock()) {
         if let Some(scans) = scans.as_mut() {
             scans.remove(&key);
         }
@@ -610,7 +611,7 @@ fn run_index(
         }
     }
     let wants_scan = scan || touched.is_empty();
-    let key = root.canonicalize()?;
+    let key = root.canonical()?;
     let recent_scan = reuse_recent
         && LAST_SCAN
             .lock()
@@ -949,7 +950,7 @@ static RECENT: Mutex<Vec<(PathBuf, String)>> = Mutex::new(Vec::new());
 const MAX_RECENT: usize = 64;
 
 fn remember_edit(root: &Path, rel: &str) {
-    let Ok(root) = root.canonicalize() else {
+    let Ok(root) = root.canonical() else {
         return;
     };
     if let Ok(mut recent) = RECENT.lock() {
@@ -960,7 +961,7 @@ fn remember_edit(root: &Path, rel: &str) {
 }
 
 pub fn recent_edits(root: &Path, max: usize) -> Vec<String> {
-    let Ok(root) = root.canonicalize() else {
+    let Ok(root) = root.canonical() else {
         return Vec::new();
     };
     RECENT
@@ -1298,7 +1299,7 @@ mod tests {
         fs::create_dir(&worktree).unwrap();
         fs::write(worktree.join("a.rs"), "pub fn a() {}\n").unwrap();
         ensure_index(&worktree, &[], true).unwrap();
-        let canonical = worktree.canonicalize().unwrap();
+        let canonical = worktree.canonical().unwrap();
         let file = index_path(&canonical);
         assert!(file.exists());
         fs::remove_dir_all(&worktree).unwrap();

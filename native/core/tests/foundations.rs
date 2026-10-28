@@ -1,4 +1,7 @@
+// Helpers used only by Unix-only tests are unused on Windows.
+#![cfg_attr(not(unix), allow(unused))]
 use serde_json::json;
+use shadowcode_core::paths::Canonical;
 use shadowcode_core::{
     config::{secret, set_secret, Config, PermissionLevel},
     paths::AppPaths,
@@ -219,7 +222,7 @@ fn trust_matches_canonical_symlink_and_trailing_slash_aliases() {
     )
     .unwrap();
     let config = Config::load(&paths, None).unwrap();
-    let canonical = project.canonicalize().unwrap();
+    let canonical = project.canonical().unwrap();
     assert!(config.is_trusted(&canonical));
     assert!(config.is_trusted(&project));
     assert!(config.is_trusted(&project.join(".")));

@@ -1,6 +1,7 @@
 //! Durable, workspace-scoped preparation of at most four Git worktrees.
 //! This prepares checkouts; it does not dispatch model workers. Model
 //! workers that run in parallel are subagents (`crate::subagents`).
+use crate::paths::Canonical;
 use anyhow::{ensure, Context, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -99,7 +100,7 @@ fn plan_file(source: &Path, root: &Path) -> Result<PathBuf> {
     crate::paths::private_directory(root)?;
     let key = format!(
         "{:x}",
-        Sha256::digest(source.canonicalize()?.as_os_str().as_encoded_bytes())
+        Sha256::digest(source.canonical()?.as_os_str().as_encoded_bytes())
     );
     Ok(root.join(format!("plan-{key}.json")))
 }
@@ -110,7 +111,7 @@ fn load(source: &Path, root: &Path) -> Result<Option<ParallelPlan>> {
     }
     let plan: ParallelPlan = serde_json::from_slice(&fs::read(path)?)?;
     ensure!(
-        plan.source == source.canonicalize()? && plan.workers.len() <= MAX_WORKERS,
+        plan.source == source.canonical()? && plan.workers.len() <= MAX_WORKERS,
         "Invalid parallel plan scope"
     );
     uuid::Uuid::parse_str(&plan.id).context("Invalid plan id")?;
@@ -119,7 +120,7 @@ fn load(source: &Path, root: &Path) -> Result<Option<ParallelPlan>> {
         ensure!(
             worker.item.id == id
                 && worker.branch == format!("shadowcode/parallel-{}-{id}", plan.id)
-                && worker.worktree_path == root.canonicalize()?.join(format!("{}-{id}", plan.id)),
+                && worker.worktree_path == root.canonical()?.join(format!("{}-{id}", plan.id)),
             "Invalid managed worktree record"
         );
     }
@@ -179,9 +180,9 @@ pub fn prepare(source: &Path, goal: &str, root: &Path) -> Result<Value> {
             json!({"ok":false,"enabled":false,"error":"Open a Git repository to prepare worker worktrees.","max_workers":MAX_WORKERS}),
         );
     }
-    let source = source.canonicalize()?;
+    let source = source.canonical()?;
     ensure!(
-        PathBuf::from(git(&source, &["rev-parse", "--show-toplevel"])?).canonicalize()? == source,
+        PathBuf::from(git(&source, &["rev-parse", "--show-toplevel"])?).canonical()? == source,
         "Open the repository root to prepare worktrees"
     );
     ensure!(
@@ -194,9 +195,7 @@ pub fn prepare(source: &Path, goal: &str, root: &Path) -> Result<Value> {
     save(&plan, root)?;
     for item in items {
         let branch = format!("shadowcode/parallel-{}-{}", plan.id, item.id);
-        let path = root
-            .canonicalize()?
-            .join(format!("{}-{}", plan.id, item.id));
+        let path = root.canonical()?.join(format!("{}-{}", plan.id, item.id));
         git(
             &source,
             &[

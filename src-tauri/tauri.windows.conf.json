@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "bundle": {
+    "icon": [
+      "../assets/icons/shadow-agent.ico",
+      "../assets/icons/shadow-agent-32.png",
+      "../assets/icons/shadow-agent-128.png",
+      "../assets/icons/shadow-agent-256.png",
+      "../assets/icons/shadow-agent-512.png"
+    ],
+    "targets": [
+      "nsis"
+    ],
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser"
+      },
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": true
+      }
+    }
+  }
+}

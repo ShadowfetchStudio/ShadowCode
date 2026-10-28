@@ -590,12 +590,7 @@ impl ToolExecutor {
         paths
             .into_iter()
             .filter_map(|path| {
-                let rel = self
-                    .workspace
-                    .relative(&path)
-                    .ok()?
-                    .to_string_lossy()
-                    .into_owned();
+                let rel = self.workspace.relative_text(&path).ok()?;
                 (!crate::mentions::in_scope(scope, &rel)).then_some(rel)
             })
             .collect()
@@ -891,7 +886,6 @@ impl ToolExecutor {
         if call.name.starts_with("git_") {
             return self.git(&call.name, &call.arguments).await;
         }
-        #[cfg(unix)]
         if matches!(call.name.as_str(), "mcp_sqlite_tables" | "mcp_sqlite_query") {
             let mut request: crate::sqlite::Request =
                 serde_json::from_value(call.arguments.clone())?;
@@ -1079,7 +1073,7 @@ impl ToolExecutor {
                         !rel.components().any(|c| c.as_os_str() == ".git"),
                         "Cannot stage Git metadata"
                     );
-                    v.push(rel.to_string_lossy().into_owned());
+                    v.push(crate::paths::slash(&rel));
                 }
                 v
             }
@@ -1403,11 +1397,7 @@ impl ToolExecutor {
                 "expected_hash must be 'missing' for a new file or the current SHA-256 hash returned by read_file. Omit it to use this task's recorded read; do not pass an empty string"
             );
         }
-        let path = self
-            .workspace
-            .relative(path)?
-            .to_string_lossy()
-            .into_owned();
+        let path = self.workspace.relative_text(path)?;
         let reads = self
             .observed
             .lock()
@@ -1481,11 +1471,7 @@ impl ToolExecutor {
                     change.path
                 )
             })?;
-            let path = self
-                .workspace
-                .relative(&change.path)?
-                .to_string_lossy()
-                .into_owned();
+            let path = self.workspace.relative_text(&change.path)?;
             self.observed
                 .lock()
                 .map_err(|_| anyhow::anyhow!("Read history lock poisoned"))?

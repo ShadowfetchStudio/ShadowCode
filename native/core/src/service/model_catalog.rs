@@ -239,8 +239,7 @@ impl Service {
             "The offline preview is not a coding model"
         );
         if let Some(vendor) = crate::cli_agent::Vendor::from_provider(&model.provider) {
-            let home = std::env::var_os("HOME")
-                .map(std::path::PathBuf::from)
+            let home = crate::paths::home_dir()
                 .unwrap_or_else(|| std::path::PathBuf::from("/nonexistent"));
             let check =
                 crate::cli_agent::doctor::check_vendor(vendor, &cfg.cli_agents, &home, None).await;

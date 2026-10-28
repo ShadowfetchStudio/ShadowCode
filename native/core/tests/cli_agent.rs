@@ -1,5 +1,7 @@
 //! Vendor CLI backend tests. Protocol cases use hand-written fixtures.
 //! Spawn tests use a fake binary; they never call real vendor CLIs.
+// The vendor runner and its fake CLIs (shell scripts) are Unix-only so far.
+#![cfg(unix)]
 use serde_json::{json, Value};
 use shadowcode_core::cli_agent::{
     adapter_for, catalog_models, doctor, resolve_vendor, vendor_model, CliAdapter, CliAgentsConfig,

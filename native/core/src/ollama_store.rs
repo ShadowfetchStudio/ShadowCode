@@ -42,10 +42,7 @@ pub struct OllamaModel {
 /// Ollama units, then `~/.ollama/models`. The first root that has a
 /// `manifests` directory wins; otherwise the first candidate is reported.
 pub fn discover() -> Option<StoreRoot> {
-    discover_with(
-        std::env::var_os("OLLAMA_MODELS"),
-        std::env::var_os("HOME").map(PathBuf::from),
-    )
+    discover_with(std::env::var_os("OLLAMA_MODELS"), crate::paths::home_dir())
 }
 
 pub fn discover_with(env: Option<OsString>, home: Option<PathBuf>) -> Option<StoreRoot> {

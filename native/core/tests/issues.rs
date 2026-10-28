@@ -1,6 +1,8 @@
 //! "Start from an issue" through fake `gh` and `glab` on PATH (no network):
 //! listing open issues, turning one into a bounded task with a branch name,
 //! a signed-out CLI, and remotes that are not GitHub or GitLab.
+// The fake `gh` and `glab` are shell scripts found on PATH.
+#![cfg(unix)]
 use serde_json::{json, Value};
 use shadowcode_core::{
     config::Config,
@@ -89,11 +91,14 @@ fn fake_tools_on_path() {
         let dir =
             std::env::temp_dir().join(format!("shadowcode-fake-issues-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
-        use std::os::unix::fs::PermissionsExt;
         for (name, script) in [("gh", FAKE_GH), ("glab", FAKE_GLAB)] {
             let path = dir.join(name);
             fs::write(&path, script).unwrap();
-            fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+            }
         }
         let path = std::env::var("PATH").unwrap_or_default();
         std::env::set_var("PATH", format!("{}:{path}", dir.display()));

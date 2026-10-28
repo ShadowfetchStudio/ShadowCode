@@ -193,6 +193,7 @@ async fn run(npm: &Path, managed: &Path, package: &Package) -> Result<String> {
         .args(&args)
         .current_dir(&staging)
         .env_clear()
+        .envs(crate::process::platform_env())
         .stdin(std::process::Stdio::null())
         .stdout(std::process::Stdio::piped())
         .stderr(std::process::Stdio::piped())

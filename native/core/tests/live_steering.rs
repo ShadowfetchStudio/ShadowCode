@@ -109,9 +109,20 @@ async fn pause_does_not_replay_shell_and_steering_enters_next_context() {
             Some("db/v2.sql"),
         )
         .unwrap();
-    // Let the in-flight shell finish under pause; resume afterward.
-    tokio::time::sleep(Duration::from_millis(1200)).await;
-    assert_eq!(engine.rewind_job(&job.id).unwrap()["ok"], true);
+    // Let the in-flight shell finish under pause (seconds on a loaded
+    // runner): rewinding waits for the pause boundary.
+    let deadline = std::time::Instant::now() + Duration::from_secs(15);
+    let rewound = loop {
+        tokio::time::sleep(Duration::from_millis(200)).await;
+        match engine.rewind_job(&job.id) {
+            Ok(value) => break value,
+            Err(error) if std::time::Instant::now() < deadline => {
+                assert!(error.to_string().contains("pause boundary"), "{error:#}");
+            }
+            Err(error) => panic!("{error:#}"),
+        }
+    };
+    assert_eq!(rewound["ok"], true);
     engine.resume_job(&job.id).unwrap();
     let completed = tokio::time::timeout(Duration::from_secs(8), engine.wait(&job.id))
         .await
