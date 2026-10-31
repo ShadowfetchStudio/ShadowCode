@@ -193,6 +193,16 @@ fn schema(name: &str, description: &str, properties: Value, required: &[&str]) -
         "parameters":{"type":"object","properties":properties,"required":required,"additionalProperties":false}}})
 }
 
+async fn require_write_history(
+    workspace: &std::path::Path,
+    cancel: &CancellationToken,
+) -> Result<()> {
+    compare::git(workspace, &["rev-parse", "--verify", "HEAD^{commit}"], cancel)
+        .await
+        .context("Write delegation is unavailable without a readable existing Git commit. Continue with your own file-editing tools or a read-only agent; do not initialize or commit a repository just to delegate")?;
+    Ok(())
+}
+
 pub fn spawn_schema() -> Value {
     let s = json!({"type":"string"});
     let task = json!({
@@ -200,13 +210,13 @@ pub fn spawn_schema() -> Value {
         "prompt": {"type":"string","description":"Complete, self-contained task. The subagent does not see this conversation."},
         "description": {"type":"string","description":"Short label (3-6 words)"},
         "model": s,
-        "write": {"type":"boolean","description":"Edit files in an isolated worktree (write agents only); the diff comes back to you"},
+        "write": {"type":"boolean","description":"Edit in a Git worktree; needs an existing commit. Returns a diff."},
     });
     let mut properties = task.clone();
     properties["tasks"] = json!({"type":"array","maxItems":MAX_BATCH,"description":"Several subagents to run in parallel","items":{"type":"object","properties":task,"required":["prompt"],"additionalProperties":false}});
     schema(
         "spawn_agent",
-        "Start subagents with their own context for focused work (search, planning, review, isolated edits). Give prompt, or tasks to run several in parallel. Returns each result summary and any diff.",
+        "Delegate focused work. Write agents need an existing Git commit; otherwise edit directly or use read-only agents. Give prompt or tasks for a batch. Returns summaries and diffs.",
         properties,
         &[],
     )
@@ -242,7 +252,7 @@ impl ToolExtensions {
         let offered = |name: &str| schemas.iter().any(|s| s["function"]["name"] == name);
         let mut note = String::new();
         if let Some(host) = self.host.as_ref().filter(|_| offered("spawn_agent")) {
-            note.push_str("\n\nSubagents (spawn_agent): delegate focused, self-contained work so your own context stays small; independent tasks can run in parallel via tasks. A subagent sees only the prompt you give it. Read-only agents cannot change files; write agents edit an isolated worktree and return a diff that you review and apply with apply_agent_changes. Available agents:");
+            note.push_str("\n\nSubagents (spawn_agent): delegate focused work; independent tasks can run in parallel via tasks. Children see only your prompt. Write agents require an existing Git commit and return a worktree diff for apply_agent_changes. Without Git history, edit directly or use read-only agents; do not initialize or commit a repository just to delegate. Available agents:");
             for agent in host.catalog().agents.iter().take(32) {
                 // The project's roles say which model runs an agent.
                 let runs_on = match host.role_model(agent) {
@@ -965,6 +975,7 @@ impl SubagentHost {
         // Write children start from the parent's current files, in a worktree.
         let mut checkout = None;
         let workspace = if write {
+            require_write_history(&self.parent.workspace, &cancel).await?;
             let base =
                 compare::snapshot(&self.engine.paths().data, &self.parent.workspace, &cancel)
                     .await
@@ -1370,5 +1381,55 @@ mod validate_change_tests {
             let error = validate_change(&bad).unwrap_err().to_string();
             assert!(error.contains(says), "{bad}: {error}");
         }
+    }
+}
+
+#[cfg(test)]
+mod write_history_tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn write_delegation_requires_history_without_creating_it() {
+        let root = tempfile::tempdir().unwrap();
+        let file = root.path().join("work.txt");
+        std::fs::write(&file, "unchanged").unwrap();
+        let cancel = CancellationToken::new();
+        let error = require_write_history(root.path(), &cancel)
+            .await
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("file-editing tools"), "{error}");
+        assert!(!root.path().join(".git").exists());
+        compare::git(root.path(), &["init", "--quiet", "--template="], &cancel)
+            .await
+            .unwrap();
+        assert!(require_write_history(root.path(), &cancel).await.is_err());
+        compare::git(
+            root.path(),
+            &[
+                "-c",
+                "user.name=Delegation Test",
+                "-c",
+                "user.email=test@example.invalid",
+                "-c",
+                "commit.gpgsign=false",
+                "commit",
+                "--allow-empty",
+                "-m",
+                "Fixture",
+            ],
+            &cancel,
+        )
+        .await
+        .unwrap();
+        let before = compare::git(root.path(), &["rev-parse", "HEAD"], &cancel)
+            .await
+            .unwrap();
+        require_write_history(root.path(), &cancel).await.unwrap();
+        let after = compare::git(root.path(), &["rev-parse", "HEAD"], &cancel)
+            .await
+            .unwrap();
+        assert_eq!(before, after);
+        assert_eq!(std::fs::read_to_string(file).unwrap(), "unchanged");
     }
 }
