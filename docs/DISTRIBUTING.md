@@ -49,7 +49,7 @@ The Flatpak bundles are attached after publication by
 `.github/workflows/release-flatpak.yml` (from 2.2.0), with SHA-256 checksums
 in `ShadowCode_VERSION_flatpak.sha256` rather than publisher signatures; the
 macOS disk images likewise (`release-macos.yml`, `ShadowCode_VERSION_macos.sha256`),
-and from 2.3.0 the Windows installer with the complete source of its bundled
+and, once 2.3.0 is published (Windows is not released yet), the Windows installer with the complete source of its bundled
 busybox-w32 (`release-windows.yml`, `ShadowCode_VERSION_windows.sha256`).
 
 Releases before 2.1.0 have no aarch64 packages; build them from source (below)
