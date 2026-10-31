@@ -216,3 +216,32 @@ and zlib source records now match their actual package revisions, including
 all distribution patches verified against APKBUILD SHA-512 values. Full
 packaging qualification must pass on the refreshed inputs. Both Apple
 silicon and Intel macOS builds passed in run 41219097984.
+
+## Latest merged-main candidate
+
+Source commit: `0b255b89874b1216530b3e8b7c51470f30d7020e` (PR #11).
+The Windows release-workflow artifact from
+[run 41223980845](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/41223980845)
+was downloaded, hash-verified and installed on the laptop. Its installer
+SHA-256 is
+`bf2dcb028cef292d4f0fe883748565e36a3be9c4525ec1f5c2f77f8fafe2dad9`;
+its installed executable SHA-256 is
+`31fc75f0d9ae0a22f979a8663633cd6f2eaaaac87e50e64c8d4666430d98f112`.
+Installation and clean-PATH runtime checks passed. Native WebView editor
+replace-all, undo, both redo bindings, disk-verified save and local-model
+settings passed with no observed page errors. The first connection to the
+UI debug endpoint was attempted before startup completed; retrying against
+the same application process succeeded.
+
+A fresh Gemma run started at 17:53:47 UTC on October 31, 2026 and completed
+in 391.23 seconds, with agent exit 0 and independent verifier exit 0.
+All five original tests were preserved and passed. This run used the same
+verified model, 16,384-token context, 100k task-token budget and disposable
+repair fixture described above. It is a qualification of these exact PR
+artifact bytes, not a published release or a general model benchmark.
+
+The accompanying BusyBox source archive is byte-identical to the previously
+validated archive, SHA-256
+`c6345e913686ff61ab46757b19fad23e9bb1b5e1e273f132bc4333770bd55a96`.
+Windows and both macOS architectures passed at this source commit; Linux
+qualification remains pending and must pass before release.
