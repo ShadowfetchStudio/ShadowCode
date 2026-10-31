@@ -15,6 +15,10 @@ use std::{
 pub const FAKE_CODEX: &str = r#"#!/usr/bin/env python3
 import json, os, sys, time
 HERE = os.path.dirname(os.path.abspath(__file__))
+if os.name == "nt":
+    # cmd.exe redirection exclusively locks the log while the old server
+    # exits, preventing a resumed turn from starting its next fake server.
+    sys.stderr = open(os.path.join(HERE, "stderr.log"), "a", encoding="utf-8")
 def cfg():
     try:
         with open(os.path.join(HERE, "fake.json")) as f:
@@ -299,10 +303,7 @@ impl FakeCodex {
                 .expect("python must be on PATH to run the fake Codex");
             fs::write(
                 dir.join("codex.cmd"),
-                format!(
-                    "@\"{}\" \"%~dp0codex.py\" %* 2>>\"%~dp0stderr.log\"\r\n",
-                    python.display()
-                ),
+                format!("@\"{}\" \"%~dp0codex.py\" %*\r\n", python.display()),
             )
             .unwrap();
         }

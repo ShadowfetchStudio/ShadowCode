@@ -8,9 +8,9 @@ name: Windows
 on:
   push:
     branches: [main]
-    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml', 'scripts/build-llama.cpp.sh', 'tools/llama.cpp.pin', 'scripts/build-busybox-w32.sh', 'tools/busybox-w32.pin', 'packaging/windows/**']
+    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml', 'scripts/build-llama.cpp.sh', 'scripts/stage-windows-crt.ps1', 'scripts/test-windows-installed-runtime.ps1', 'tools/llama.cpp.pin', 'scripts/build-busybox-w32.sh', 'tools/busybox-w32.pin', 'tools/busybox-w32-patches/**', 'packaging/windows/**']
   pull_request:
-    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml', 'scripts/build-llama.cpp.sh', 'tools/llama.cpp.pin', 'scripts/build-busybox-w32.sh', 'tools/busybox-w32.pin', 'packaging/windows/**']
+    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml', 'scripts/build-llama.cpp.sh', 'scripts/stage-windows-crt.ps1', 'scripts/test-windows-installed-runtime.ps1', 'tools/llama.cpp.pin', 'scripts/build-busybox-w32.sh', 'tools/busybox-w32.pin', 'tools/busybox-w32-patches/**', 'packaging/windows/**']
 permissions:
   contents: read
 concurrency:
@@ -58,6 +58,11 @@ jobs:
       # The desktop crate embeds the built interface (tauri.conf.json frontendDist).
       - run: npm --prefix ui ci
       - run: npm --prefix ui run build
+      - name: Windows editor shortcuts and native clipboard regression tests
+        working-directory: ui
+        run: |
+          npx playwright install chromium
+          npx playwright test e2e/editor.spec.ts e2e/markdownWorker.spec.ts
       - name: Compile everything for Windows (all errors at once)
         run: |
           set -o pipefail
@@ -144,6 +149,9 @@ jobs:
           ls packaging/llama.cpp/bin
           packaging/llama.cpp/bin/llama-server.exe --version
           packaging/llama.cpp/bin/llama-server.exe --list-devices
+      - name: Stage app-local Microsoft CRT
+        shell: powershell
+        run: ./scripts/stage-windows-crt.ps1
       - name: Build the preview installer (NSIS, current user)
         run: CI=true ui/node_modules/.bin/tauri build --bundles nsis --config packaging/windows/bundle-runtime.conf.json
       - name: The app starts and reports its version
@@ -162,6 +170,16 @@ jobs:
           ! grep -q "HOME is not set" <<<"$out"
           test -d "$(cygpath -u "$LOCALAPPDATA")/ShadowCode/state"
           test -d "$(cygpath -u "$APPDATA")/ShadowCode/config"
+      - name: Install and check with a clean runtime search path
+        shell: powershell
+        run: |
+          $setup = Get-ChildItem target/release/bundle/nsis/*-setup.exe | Select-Object -First 1
+          if (!$setup) { throw 'Preview installer missing' }
+          $install = Start-Process $setup.FullName -ArgumentList '/S' -PassThru
+          $handle = $install.Handle
+          $install.WaitForExit()
+          if ($install.ExitCode -ne 0) { throw "Installer failed: $($install.ExitCode)" }
+          ./scripts/test-windows-installed-runtime.ps1 -AppDirectory "$env:LOCALAPPDATA\ShadowCode"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: windows-preview-installer

@@ -131,6 +131,12 @@ test("renders syntax, searches and replaces, then undoes and saves through the l
   await expectEditorText(editor, original);
   await editor.press("Control+Shift+z");
   await expectEditorText(editor, replaced);
+  if (process.platform === "win32") {
+    await editor.press("Control+z");
+    await expectEditorText(editor, original);
+    await editor.press("Control+y");
+    await expectEditorText(editor, replaced);
+  }
   await editor.press("Control+s");
   await expect.poll(() => savedFile(page, "sample.ts")).toBe(replaced);
   await expect(drawer.getByText("Saved", { exact: true })).toBeVisible();

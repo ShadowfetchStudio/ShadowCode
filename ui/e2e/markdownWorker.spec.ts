@@ -90,15 +90,22 @@ for (const [mode, csp] of [
     await expect(answer).toContainText("<script>unsafe()</script>");
     await expect(answer).toContainText("© ≂̸");
     await answer.getByRole("button", { name: "Copy code" }).click();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-      "const n = 1;\n\nconsole.log(n);\n",
-    );
+    // Windows' native clipboard converts line endings to CRLF.
+    expect(
+      (await page.evaluate(() => navigator.clipboard.readText())).replace(
+        /\r\n/g,
+        "\n",
+      ),
+    ).toBe("const n = 1;\n\nconsole.log(n);\n");
     await answer
       .getByRole("button", { name: "Copy answer", exact: true })
       .click();
-    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
-      completed,
-    );
+    expect(
+      (await page.evaluate(() => navigator.clipboard.readText())).replace(
+        /\r\n/g,
+        "\n",
+      ),
+    ).toBe(completed);
     const workers = await page.evaluate(
       () => (window as any).__SHADOW_MARKDOWN_WORKERS__,
     );

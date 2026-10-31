@@ -1846,7 +1846,7 @@ pub fn schemas_tiered(tier: DescriptionTier) -> Vec<Value> {
         ("create_directory","Create a workspace directory and parents.",json!({"path":s}),vec!["path"]),
         ("move_file","Move a regular file without overwriting its destination; checkpoint both paths.",json!({"src":s,"dest":s}),vec!["src","dest"]),
         ("delete_file","Delete one regular workspace file after approval; retain a checkpoint.",json!({"path":s,"expected_hash":s}),vec!["path"]),
-        ("exec","Run a shell command after approval, in the bubblewrap sandbox when available (empty home, writable project, network per settings). Project files it changes are checkpointed for rewind. Output and runtime are bounded.",json!({"command":s,"cwd":s,"timeout_sec":n}),vec!["command"]),
+        ("exec","Run a shell command after approval, in the platform sandbox when available (empty home, writable project, network per settings). Use cwd '.' for the project root; do not guess or rewrite absolute paths. Project files it changes are checkpointed for rewind. Output and runtime are bounded.",json!({"command":s,"cwd":{"type":"string","description":"Working directory inside the workspace. Omit or use '.' for the project root; use a relative subdirectory otherwise."},"timeout_sec":n}),vec!["command"]),
         ("git_status","Show repository status.",json!({}),vec![]),
         ("git_diff","Show staged or unstaged changes. External diff helpers and textconv are disabled.",json!({"staged":b}),vec![]),
         ("git_log","Show recent commits.",json!({"limit":n}),vec![]),

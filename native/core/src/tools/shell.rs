@@ -20,7 +20,9 @@ impl ToolExecutor {
         )?
         .min(self.config.agent.tool_timeout_sec as usize);
         let cwd = if let Some(path) = args["cwd"].as_str() {
-            let relative = self.workspace.relative(path)?;
+            let relative = self.workspace.relative(path).context(
+                "Invalid exec cwd: use '.' for the project root or a workspace-relative subdirectory",
+            )?;
             let cwd = self.workspace.path.join(relative).canonical()?;
             ensure!(
                 cwd.starts_with(&self.workspace.path),

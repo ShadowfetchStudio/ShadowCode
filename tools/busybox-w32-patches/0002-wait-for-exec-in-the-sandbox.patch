@@ -1,0 +1,17 @@
+diff --git a/win32/process.c b/win32/process.c
+--- a/win32/process.c
++++ b/win32/process.c
+@@ -493,7 +493,12 @@
+ 	DWORD code;
+ 	int status;
+ 
+-	if (getppid() == 1)
++	/* AppContainer process enumeration may hide our live parent.  The
++	 * ShadowCode launcher supplies the inherited null-device handle in
++	 * this environment: do not detach an exec child in that sandbox.
++	 * Its output and actual exit code belong to the foreground command.
++	 */
++	if (getppid() == 1 && !getenv("SHADOWCODE_NULL_HANDLE"))
+ 		exit(0);
+ 
+ 	kill_child_ctrl_handler(GetProcessId(child));

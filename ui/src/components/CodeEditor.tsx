@@ -7,7 +7,7 @@ import {
   type Extension,
 } from "@codemirror/state";
 import { EditorView, keymap } from "@codemirror/view";
-import { indentWithTab } from "@codemirror/commands";
+import { indentWithTab, redo } from "@codemirror/commands";
 import {
   HighlightStyle,
   indentUnit,
@@ -151,6 +151,9 @@ export function CodeEditor(props: CodeEditorProps) {
         // Register our explicit save/exit policy first so Escape reaches it.
         Prec.highest(
           keymap.of([
+            // CodeMirror's Windows default is Ctrl+Y. Keep that binding and
+            // also accept the cross-platform Shift+Mod+Z shortcut.
+            { key: "Mod-Shift-z", run: redo, preventDefault: true },
             {
               key: "Mod-s",
               scope: "editor search-panel",

@@ -433,7 +433,9 @@ mod tests {
             Some(local(2026, 10, 1, 15, 40))
         );
         assert_eq!(
-            from_text("quota resets at 2026-09-29T18:00:00Z", now),
+            // This absolute timestamp must be in the future regardless of the
+            // machine's local time zone (noon Pacific is already past 18 UTC).
+            from_text("quota resets at 2026-09-29T18:00:00Z", 1_790_701_200.0),
             chrono::DateTime::parse_from_rfc3339("2026-09-29T18:00:00Z")
                 .ok()
                 .map(|t| t.timestamp() as f64)
