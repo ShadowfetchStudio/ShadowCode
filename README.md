@@ -801,7 +801,7 @@ node scripts/check-secrets.mjs
 
 The Rust tests use fake vendor CLIs and a fake `llama-server`, so they need no
 account or GPU. The Playwright suite runs against `vite preview` of a test
-build with a fake engine. `e2e/check-bundle.mjs` checks that the fake engine is
+build with a fake engine. `ui/e2e/check-bundle.mjs` checks that the fake engine is
 not in the production bundle. `scripts/check-secrets.mjs` fails if a tracked
 file looks like it holds a real API key or private key, or if a `.env` or
 `secrets.env` file is tracked. See [CONTRIBUTING.md](CONTRIBUTING.md).
