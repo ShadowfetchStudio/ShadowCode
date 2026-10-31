@@ -20,7 +20,7 @@ server is installed from **Settings › Accounts** (see
 | Claude Code | `claude` | [Claude Code](https://code.claude.com/docs/en/headless) | **Connect** runs `claude auth login` |
 | Cursor | `cursor-agent` | [Cursor CLI](https://cursor.com/docs/cli/acp) | **Connect** runs `cursor-agent login` |
 | Antigravity | `agy_acp_server.par` (Google's ACP agent server) | **Install** in **Settings › Accounts** downloads Google's official agent server (334 MB from dl.google.com, checked against a pinned SHA-256) | **Connect** signs in with Google in the browser |
-| Grok | `grok` | [xAI CLI](https://docs.x.ai/build) | **Connect** runs `grok login` |
+| Grok | `grok` | [xAI CLI](https://docs.x.ai/build/cli/reference) | **Connect** runs `grok login` |
 
 - **Connect** runs the login command with your environment, minus provider API
   keys. The vendor opens your browser or prints a URL or device code, and
