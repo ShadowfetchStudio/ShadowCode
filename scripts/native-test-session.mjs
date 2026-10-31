@@ -260,7 +260,16 @@ export async function inspectPrivateActivations(session, { io = linuxProc, ignor
           }
         }
       }
-      throw error;
+      // Record only public process identity fields, never environment values.
+      // This distinguishes exit/PID races from an unreadable live helper in
+      // hosted-runner failures without changing ownership or signal rules.
+      const snapshot = value => value && Object.fromEntries(
+        ['pid', 'parent', 'start', 'state', 'uid'].map(key => [key, value[key]]),
+      );
+      throw Object.assign(new Error(`${error.message}; private-session identity ${JSON.stringify({
+        observed: snapshot(info), current: snapshot(current), daemon: snapshot(daemon),
+        daemon_ancestors: ancestors ? [...ancestors] : null,
+      })}`, { cause: error }), { code: error.code });
     }
     if (!(env?.DBUS_SESSION_BUS_ADDRESS === address && env.DBUS_STARTER_ADDRESS === address && env.DBUS_STARTER_BUS_TYPE === 'session')) return;
     const value = await io.identity(pid);

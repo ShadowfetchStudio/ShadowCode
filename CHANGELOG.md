@@ -18,8 +18,8 @@
   read-only toolchains readable, the rest of the home folder hidden; the
   network is off (no capabilities, this computer's own services included)
   or on. Commands run in a bundled busybox-w32 `sh`, built from a pinned
-  commit with one patch (the container may not open the null device, so
-  `/dev/null` uses a handle the launcher opens for it); its complete source
+  commit with patches for the sandbox null-device handle and waiting for
+  foreground commands to finish inside AppContainer; its complete source
   is attached to each release as `ShadowCode_VERSION_busybox-w32-source.tar.gz`.
   The network allow-list is refused on Windows. `shadowcode doctor` and
   **Settings › Permissions & network** report the Windows sandbox.
@@ -31,6 +31,15 @@
 - **Contested writes.** Settings files replaced by two writers at the same
   moment are retried (Windows refuses the second replacement), and writers
   in one process queue for a database's write lock instead of polling it.
+- **Windows startup and command results.** Bundle the required Microsoft CRT
+  beside the app and managed runtime, remove the runtime's unused OpenSSL
+  dependency, and preserve sandboxed child output and exit status. Debug
+  desktop builds reserve enough stack for the async CLI.
+- **Windows editing and worktrees.** Support both Ctrl+Y and Ctrl+Shift+Z
+  redo, and use the platform shell when setting up a worktree.
+- **Local model selection.** Selecting a configured GGUF model from a fresh
+  CLI process no longer requires opening the picker first; stale catalog
+  entries cannot select files removed from the profile's configuration.
 - **Native runtime pins** follow Alpine 3.21's libcurl and libexpat security
   updates.
 

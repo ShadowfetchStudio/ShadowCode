@@ -87,6 +87,48 @@ fn dunce_path(path: &Path) -> std::path::PathBuf {
     std::path::PathBuf::from(text.strip_prefix(r"\\?\").unwrap_or(&text))
 }
 
+#[test]
+fn foreground_external_commands_keep_their_output_and_exit_code_in_a_job() {
+    let _serial = SERIAL
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    std::env::set_var(
+        "SHADOWCODE_SANDBOX_LAUNCHER",
+        env!("CARGO_BIN_EXE_shadowcode-sandbox"),
+    );
+    let root = tempfile::tempdir().unwrap();
+    let workspace = dunce_path(&root.path().canonicalize().unwrap());
+    let runtime = tokio::runtime::Runtime::new().unwrap();
+    for code in [7, 0] {
+        // No trailing shell builtin: exercise busybox's final-command exec
+        // path under the same job cleanup used by the real agent.
+        let command = format!("cmd.exe /c \"echo external-output & exit /b {code}\"");
+        let prepared =
+            sandbox::prepare_shell(&workspace, &workspace, &command, &policy(true)).unwrap();
+        let result = runtime
+            .block_on(shadowcode_core::process::run(
+                shadowcode_core::process::ProcessSpec {
+                    program: prepared.program,
+                    args: prepared.args,
+                    cwd: workspace.clone(),
+                    timeout: std::time::Duration::from_secs(15),
+                    output_limit: 4096,
+                    env: Default::default(),
+                    child: prepared.child,
+                },
+                tokio_util::sync::CancellationToken::new(),
+                None,
+            ))
+            .unwrap();
+        assert_eq!(result.exit_code, code, "{result:?}");
+        assert_eq!(result.ok, code == 0, "{result:?}");
+        assert!(result.stdout.contains("external-output"), "{result:?}");
+        if let Some(scratch) = prepared.scratch {
+            sandbox::discard_scratch(&scratch).unwrap();
+        }
+    }
+}
+
 /// Programs start in the container (a failed start is 0xC0000142): system
 /// programs and busybox `sh`, the sandbox's shell. Git for Windows' bash
 /// (MSYS2) cannot start in an AppContainer; it is not used inside it. The

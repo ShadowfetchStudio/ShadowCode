@@ -529,10 +529,20 @@ fn repeated_compact_under_context_pressure_keeps_the_task() {
     messages.push(json!({"role":"assistant","content":"Decision: we will use the tester route."}));
     messages.push(json!({"role":"user","content":"Continue feature X and verify it"}));
     let schemas = shadowcode_core::tools::schemas();
+    // Keep small-context models supported as the tool schema changes.
+    // The generated history exceeds this window: prove compaction runs.
+    let context_limit = 4096;
+    let before = context::estimate_tokens(&json!(messages));
+    let mut compacted = false;
     for _ in 0..8 {
-        let _ = context::compact(&mut messages, &schemas, 4096, 0.55).unwrap();
+        compacted |= context::compact(&mut messages, &schemas, context_limit, 0.55)
+            .unwrap()
+            .is_some();
         context::validate_pairs(&messages).unwrap();
     }
+    assert!(compacted, "fixture must exercise context pressure");
+    assert!(context::estimate_tokens(&json!(messages)) < before);
+    context::response_budget(&messages, &schemas, context_limit).unwrap();
     let tape = serde_json::to_string(&messages).unwrap();
     assert!(
         tape.contains("feature X") || tape.contains("never overwrite"),
@@ -542,7 +552,7 @@ fn repeated_compact_under_context_pressure_keeps_the_task() {
         messages.last().unwrap()["content"],
         "Continue feature X and verify it"
     );
-    let budget = autonomy::account(&messages, &schemas, 4096).unwrap();
+    let budget = autonomy::account(&messages, &schemas, context_limit).unwrap();
     eprintln!(
         "context_pressure fits={} used={} remaining={}",
         budget["fits"], budget["used_estimated_tokens"], budget["remaining"]

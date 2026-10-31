@@ -793,6 +793,37 @@ async fn hermes_incomplete_calls_and_prose_xml_never_execute_tools() {
 }
 
 #[tokio::test]
+async fn selecting_local_model_refreshes_cold_catalog_and_rejects_removed_files() {
+    let f = fixture(GPU);
+    let path = f.models.join("cold-selection.gguf");
+    qwen_like(&path, "qwen3", TOOLS_TEMPLATE);
+    let id = local_engine::entry_id(&path);
+    Config::patch(&f.paths, json!({"local_engine":{"files":[path]}})).unwrap();
+    let service = Service::open(f.paths.clone(), Some(f.project.clone())).unwrap();
+    assert!(local_engine::known(&id).is_none());
+    let selected = call(&service, "POST", "/api/models/select", json!({"id":id}))
+        .await
+        .unwrap();
+    assert_eq!(selected["model"]["default"], id);
+    assert_eq!(selected["model"]["provider"], "llamacpp");
+    assert_eq!(Config::load(&f.paths, None).unwrap().model.default, id);
+    assert!(lines(&f.bin.join("launches.jsonl")).is_empty());
+
+    // A stale entry in the process-global cache cannot resurrect a model
+    // removed from this profile's configured files.
+    Config::patch(&f.paths, json!({"local_engine":{"files":[]}})).unwrap();
+    assert!(local_engine::known(&id).is_some());
+    let error = call(&service, "POST", "/api/models/select", json!({"id":id}))
+        .await
+        .unwrap_err();
+    assert!(
+        error.to_string().contains("configured catalog"),
+        "{error:#}"
+    );
+    service.engine.shutdown().await.unwrap();
+}
+
+#[tokio::test]
 async fn catalog_routes_add_list_remove_picker_and_weights_stay() {
     let f = fixture(GPU);
     let qwen = f.models.join("qwen3-14b.gguf");

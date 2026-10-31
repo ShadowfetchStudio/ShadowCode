@@ -168,6 +168,13 @@ impl Service {
                 let model = if !call.text("provider").is_empty() {
                     self.model_from_body(&call.body, &cfg.model)
                 } else {
+                    // A fresh CLI process has not opened the picker. Resolve
+                    // only files in this profile's current catalog, rather
+                    // than requiring (or trusting) a process-global cache.
+                    if body.id.as_str().starts_with("local:gguf:") {
+                        crate::local_engine::entry_for_id(&cfg.local_engine, body.id.as_str())
+                            .context("That local model is not in the configured catalog")?;
+                    }
                     self.resolve_model(body.id.as_str(), &cfg.model)?
                 };
                 self.check_model_identity(&model)?;

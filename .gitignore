@@ -41,3 +41,4 @@ src/shadow_agent/_assets/
 /.claude/
 /tools/busybox-w32/
 /packaging/busybox-w32/bin/
+/packaging/windows/crt/

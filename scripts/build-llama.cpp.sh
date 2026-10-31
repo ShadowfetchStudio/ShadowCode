@@ -284,6 +284,9 @@ if [[ "$(uname -m)" == aarch64 && "$DARWIN" == "0" ]]; then
   COMPILER_FLAGS=(-DCMAKE_C_COMPILER="$LLAMA_CC" -DCMAKE_CXX_COMPILER="$LLAMA_CXX")
 fi
 
+# The managed server is loopback HTTP only; ShadowCode handles downloads.
+# LLAMA_CURL is deprecated at this pin and no longer disables OpenSSL. Leaving
+# HTTPS enabled can bind Windows artifacts to unbundled CI-machine SSL DLLs.
 # ${array[@]+...}: empty arrays are "unbound" under set -u in bash 3.2 (macOS).
 "$CMAKE" -S "$SRC" -B "$BUILD_DIR" ${GENERATOR[@]+"${GENERATOR[@]}"} ${COMPILER_FLAGS[@]+"${COMPILER_FLAGS[@]}"} \
   -DCMAKE_BUILD_TYPE=Release \
@@ -298,7 +301,7 @@ fi
   -DLLAMA_BUILD_EXAMPLES=OFF \
   -DLLAMA_BUILD_TOOLS=ON \
   -DLLAMA_BUILD_SERVER=ON \
-  -DLLAMA_CURL=OFF \
+  -DLLAMA_OPENSSL=OFF \
   -DCMAKE_INSTALL_RPATH="$RPATH" \
   -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
 "$CMAKE" --build "$BUILD_DIR" --config Release --parallel "$JOBS"

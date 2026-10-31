@@ -75,10 +75,17 @@ print('SHADOWCODE_EVALUATOR:5:PASS' if passed else 'SHADOWCODE_EVALUATOR:FAIL')
 sys.exit(0 if passed else 1)
 "#,
     )?;
+    // Windows has no /usr/bin. Use the same PATH interpreter as the task's
+    // check; the independently owned grader and isolated mode stay unchanged.
+    let interpreter = if cfg!(windows) {
+        "python3 -I grade.py"
+    } else {
+        "/usr/bin/python3 -I grade.py"
+    };
     let prepared = sandbox::prepare_shell(
         verifier.path(),
         verifier.path(),
-        "/usr/bin/python3 -I grade.py",
+        interpreter,
         &ShellPolicy {
             network: ShellNetwork::Off,
             allow: Vec::new(),

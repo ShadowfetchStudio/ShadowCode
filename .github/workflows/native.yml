@@ -29,6 +29,12 @@ jobs:
     timeout-minutes: 120
     env:
       RUSTUP_TOOLCHAIN: '1.95.0'
+      # Full debug info plus incremental objects exhaust the hosted runner's
+      # disk before the integration binaries link. Keep line-number backtraces
+      # and every test; these jobs do not reuse incremental build state.
+      CARGO_PROFILE_DEV_DEBUG: line-tables-only
+      CARGO_PROFILE_TEST_DEBUG: line-tables-only
+      CARGO_INCREMENTAL: '0'
       SHADOWCODE_BUILD_JOBS: '4'
       # The Debian package must pass lintian (errors fail; warnings are reported).
       SHADOWCODE_REQUIRE_LINTIAN: '1'

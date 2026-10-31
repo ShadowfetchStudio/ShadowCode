@@ -72,10 +72,17 @@ The code is open source; the Shadowfetch and ShadowCode product identity is cove
   own terminal, go from commit to pull request, preview the app you're
   building, dictate with your voice, and follow along from your phone.
 
-ShadowCode **2.2.0** is the current release, available in [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.2.0) for x86_64 and 64-bit ARM Linux, from the signed APT repository below and for macOS (Apple silicon and Intel).
-See the [2.2.0 release notes](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.2.0) for changes and qualification
-limits, and the [release history](CHANGELOG.md). Windows is in development
-for the next release and is not released yet (see [Windows](#windows)).
+ShadowCode **2.2.0** is the current public release for Linux and macOS,
+available from [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.2.0)
+and [shadowcode.org](https://shadowcode.org/).
+
+**2.3.0 is a release candidate**, adding Windows. Its Windows installers
+have passed CI and physical-laptop qualification, but public publication
+is still pending. See the [candidate release notes](docs/RELEASE_NOTES.md),
+[Windows qualification record](docs/WINDOWS_LAPTOP_QUALIFICATION.md), and
+[release history](CHANGELOG.md). Download instructions below use published
+versions; the Windows section describes the forthcoming release.
+
 
 ## Install
 
@@ -162,7 +169,7 @@ On Windows the app is in `%LOCALAPPDATA%\ShadowCode`, settings in
 Shell commands run in an AppContainer sandbox with busybox `sh`, so they
 keep their POSIX syntax; the network allow-list is not available on
 Windows. The Windows version is new: it is tested on GitHub's Windows
-runners, not yet on a wide range of PCs. See
+runners and one Windows 11 laptop, not yet on a wide range of PCs. See
 [the Windows port notes](docs/WINDOWS_PORT.md).
 
 ### AppImage (recommended)

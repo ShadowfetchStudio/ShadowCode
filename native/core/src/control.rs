@@ -405,7 +405,7 @@ impl Server {
         let (mut listener, lease) = bind(&endpoint)?;
         // A pipe disappears with its last handle; there is nothing to sweep.
         #[cfg(windows)]
-        let (mut listener, lease) = (transport::Listener::bind(&endpoint.path)?, ());
+        let mut listener = transport::Listener::bind(&endpoint.path)?;
         let state = Arc::new(State {
             cancel: CancellationToken::new(),
             finished: AtomicBool::new(false),
@@ -422,6 +422,7 @@ impl Server {
         let profile = endpoint.profile.clone();
         tokio::spawn(async move {
             let _completion = Completion(running.clone());
+            #[cfg(unix)]
             let _lease = lease;
             let mut clients = JoinSet::new();
             let owners = Arc::new(Semaphore::new(8));

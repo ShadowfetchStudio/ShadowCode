@@ -206,7 +206,12 @@ async fn resumed_codex_turns_count_each_turn_once() {
     )
     .await;
     let second = finished(service, second["id"].as_str().unwrap()).await;
-    assert_eq!(second["status"], "completed", "{second}");
+    assert_eq!(
+        second["status"],
+        "completed",
+        "{second}; fake stderr: {:?}",
+        setup.fake.marker("stderr.log")
+    );
     let threads = setup.fake.marker("threads.log").unwrap();
     assert!(
         threads

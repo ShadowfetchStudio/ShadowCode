@@ -53,6 +53,37 @@ async fn call(tools: &ToolExecutor, name: &str, args: Value) -> shadowcode_core:
 }
 
 #[tokio::test]
+async fn exec_cwd_guidance_preserves_workspace_boundary_and_root_execution() {
+    let mut config = Config::default();
+    config.permissions.approve_shell = false;
+    // Even a preapproved command cannot escape the workspace cwd boundary.
+    config.permissions.require_approval_for_dangerous = false;
+    let (root, tools) = fixture(config);
+    let denied = call(
+        &tools,
+        "exec",
+        json!({"command":"printf escaped > must-not-exist", "cwd":".."}),
+    )
+    .await;
+    assert!(!denied.success);
+    assert!(
+        denied.error.contains("use '.' for the project root"),
+        "{}",
+        denied.error
+    );
+    assert!(!root.path().join("must-not-exist").exists());
+    assert!(!tools.workspace.path.join("must-not-exist").exists());
+    let ran = call(
+        &tools,
+        "exec",
+        json!({"command":"printf root-ok", "cwd":"."}),
+    )
+    .await;
+    assert!(ran.success, "{}", ran.error);
+    assert_eq!(ran.output["stdout"], "root-ok");
+}
+
+#[tokio::test]
 async fn system_info_is_read_only_and_cannot_read_an_arbitrary_path() {
     let mut config = Config::default();
     config.permissions.level = PermissionLevel::ReadOnly;

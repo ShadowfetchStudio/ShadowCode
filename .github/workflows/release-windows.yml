@@ -24,6 +24,8 @@ on:
       - 'scripts/build-busybox-w32.sh'
       - 'scripts/build-llama.cpp.sh'
       - 'scripts/install-windows.ps1'
+      - 'scripts/stage-windows-crt.ps1'
+      - 'scripts/test-windows-installed-runtime.ps1'
       - 'packaging/windows/**'
       - 'src-tauri/tauri.windows.conf.json'
       - 'tools/busybox-w32.pin'
@@ -98,6 +100,9 @@ jobs:
           path: packaging/busybox-w32/bin
       - name: Build the local model runtime (llama.cpp, CPU)
         run: bash scripts/build-llama.cpp.sh --no-user-install --cpu-only
+      - name: Stage app-local Microsoft CRT
+        shell: powershell
+        run: ./scripts/stage-windows-crt.ps1
       - name: Build the installer (NSIS, current user)
         env:
           SHADOWCODE_COMMIT: ${{ github.sha }}
@@ -128,6 +133,9 @@ jobs:
           profile="$(mktemp -d)"
           timeout 120 "$app/shadowcode.exe" --profile "$(cygpath -w "$profile")" doctor --json > "$profile/doctor.json" || true
           node -e "const d=require(process.argv[1]); const c=(d.checks||[]).find(x=>x.id==='appcontainer'); if(!c||c.status!=='pass') throw new Error('Windows sandbox check: '+JSON.stringify(c))" "$(cygpath -w "$profile/doctor.json")"
+      - name: Check installed binaries without toolchain DLLs on PATH
+        shell: powershell
+        run: ./scripts/test-windows-installed-runtime.ps1 -AppDirectory "$env:LOCALAPPDATA\ShadowCode"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: windows-installer

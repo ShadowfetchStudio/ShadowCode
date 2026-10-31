@@ -1123,6 +1123,9 @@ mod tests {
         let source = root.path().join("source");
         fs::create_dir(&source).unwrap();
         command(&source, &["init", "-q"]);
+        // These tests assert exact file bytes after a checkout; isolate them
+        // from the developer's global Windows line-ending preference.
+        command(&source, &["config", "core.autocrlf", "false"]);
         fs::write(source.join("tracked.txt"), b"source bytes\n").unwrap();
         command(&source, &["add", "tracked.txt"]);
         command(&source, &["commit", "-qm", "Base"]);

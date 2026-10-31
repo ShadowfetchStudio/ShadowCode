@@ -1,3 +1,5 @@
 # Bundled templates, scripts and sources are hashed, embedded and run as
 # written: keep LF line endings in every checkout, Windows included.
 * text=auto eol=lf
+# Unified diffs require a leading context space before upstream tabs/blank lines.
+tools/busybox-w32-patches/*.patch whitespace=-space-before-tab,-blank-at-eol

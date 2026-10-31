@@ -212,9 +212,10 @@ async fn run_command(
     if cancel.is_cancelled() {
         return json!({"command": command, "ok": false, "stopped": "cancelled", "seconds": 0.0, "output": "Not started: ShadowCode is closing"});
     }
-    let mut process = tokio::process::Command::new("sh");
+    let shell = crate::process::ProcessSpec::shell(command, dir.to_path_buf(), timeout);
+    let mut process = tokio::process::Command::new(&shell.program);
     process
-        .args(["-c", command])
+        .args(&shell.args)
         .current_dir(dir)
         .envs(env)
         .env("CI", "1")
