@@ -162,6 +162,21 @@ function unreadable(f, pid) {
     throw Object.assign(new Error('fixture environment denied'), { code: 'EACCES' });
   };
 }
+test('unreadable activation diagnostics include identity but not environment or executable data', async () => {
+  const f = fixture(); const session = await capturePrivateSession({ address, io: f.io });
+  f.rows.set(22, { ...f.proc(22, 2, 14, '/private/executable-path'), secret: 'private-fixture-value' });
+  unreadable(f, 22);
+  const result = await session.cleanup();
+  assert.equal(result.ok, false);
+  assert.deepEqual(f.signals, []);
+  const failure = result.failures.join(' ');
+  assert.match(failure, /"observed":\{"pid":22,"parent":2,"start":"14","state":"S","uid":1000\}/);
+  assert.match(failure, /"current":/);
+  assert.match(failure, /"daemon":/);
+  assert(!failure.includes('/private/executable-path'));
+  assert(!failure.includes('private-fixture-value'));
+  assert(!failure.includes(address));
+});
 test('an unreadable live process in an older, unrelated branch is ignored and reported', async () => {
   const f = fixture(); const session = await capturePrivateSession({ address, io: f.io });
   f.rows.set(20, f.proc(20, 0, 5, '/runner/worker'));
