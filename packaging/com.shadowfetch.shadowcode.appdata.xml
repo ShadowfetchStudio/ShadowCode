@@ -29,6 +29,9 @@
     <binary>shadowcode</binary>
   </provides>
   <releases>
+    <release version="2.3.1" date="2026-10-31">
+      <description><p>Clarify Git-history requirements for write subagents and guide plain-folder tasks toward direct edits or read-only delegation.</p></description>
+    </release>
     <release version="2.3.0" date="2026-10-19">
       <description><p>ShadowCode for Windows: a per-user installer with local models (llama.cpp), terminals, subscription tools and an AppContainer sandbox for agent commands.</p></description>
     </release>

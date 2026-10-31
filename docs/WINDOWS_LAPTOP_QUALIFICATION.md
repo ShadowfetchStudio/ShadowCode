@@ -251,3 +251,31 @@ source rebuilding, installer recovery, and packaged CLI, terminal, desktop,
 Markdown and MCP checks. This closes the earlier Alpine packaging failure.
 PR #11 was merged after all candidate checks passed; tagged release builds
 and publication remain separate steps.
+
+
+## Published v2.3.0 follow-up
+
+The public installer from [run 41237210012](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/41237210012)
+was downloaded and verified against the published checksums. Its SHA-256 is
+`7d4673a3fc15e6bbec9b0f1110cd358f3cecf6b02b922d074a3b3ca6c2dff11a`;
+the installed executable is
+`015163355181c3576f03da3c11cf25d5ab56a5931eb6ec94f5b92bb556a8c9fd`.
+The official PowerShell installer, clean-PATH startup checks and native editor
+checks passed. The BusyBox source archive matches the previously validated
+archive exactly.
+
+The fresh Gemma task started at 20:38:51 UTC and ended after 1,029.63 seconds.
+The independent check passed all five original tests, which remained unchanged,
+but the agent exited with code 1. **This run did not pass qualification.** It
+spent steps repeatedly trying to start write subagents in a folder without a
+Git repository, then attempted external Git commands that failed to open the
+null device inside AppContainer. It eventually edited the helper file, but
+exhausted its task budget rather than completing the requested workflow.
+A one-job development compilation began during the latter part of this run;
+the elapsed time is not a model performance benchmark.
+
+This exposed incomplete guidance around an existing prerequisite: write
+subagents need a repository with an existing commit; direct edits and read-only
+subagents do not. The Windows null-device restriction is already described in
+the port notes. Passing editor checks or independent tests alone must not be
+reported as a successful end-to-end model run.

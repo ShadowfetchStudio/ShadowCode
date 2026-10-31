@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.3.1: Delegation prerequisites
+
+- Write-subagent guidance now states that an existing Git commit is required.
+  A failed prerequisite check directs the parent to its own editing tools or
+  read-only agents instead of asking it to create Git history just to delegate.
+- Check the prerequisite before preparing a worktree. Regression coverage
+  includes plain folders, repositories without commits, and committed repositories.
+  Windows AppContainer restrictions remain in force; this does not grant external
+  programs access to the null device or move shell commands outside the sandbox.
+
 ## 2.3.0: Windows
 
 - **Windows.** ShadowCode builds and runs on 64-bit Windows 10 (1809 or

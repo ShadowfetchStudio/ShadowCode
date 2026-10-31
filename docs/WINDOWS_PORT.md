@@ -1,12 +1,22 @@
 # Windows port
 
-Status: Windows 2.3.0 release candidate, qualified on GitHub Windows runners
-and a Windows 11 Home x64 laptop (Ryzen 3 5300U, 32 GB RAM). Compilation,
-engine tests, installer startup, native editor operations and a local-model
-repair task have passed. Public release publication remains pending; a CI
-artifact is not a public release. See
-[the laptop qualification record](WINDOWS_LAPTOP_QUALIFICATION.md) for exact
+Status: Windows 2.3.0 is published. Installation, clean-PATH startup and native
+editor checks passed on a Windows 11 Home x64 laptop (Ryzen 3 5300U, 32 GB RAM).
+The latest public-installer model run repaired the test fixture but exited
+unsuccessfully after failed delegation attempts; it is not a qualification pass.
+Version 2.3.1 is a follow-up candidate with clearer delegation prerequisites.
+See [the laptop qualification record](WINDOWS_LAPTOP_QUALIFICATION.md) for exact
 artifact evidence, failed attempts and remaining limitations.
+
+External programs that open the Windows null device themselves can fail in
+AppContainer; external Git commands demonstrated this in the public-installer
+run. The patched bundled shell has an inherited null handle, but this does not
+make every external program compatible. Use the app's dedicated Git operations
+for supported repository actions or run explicit Git setup in the terminal.
+Write subagents require an existing repository with a commit; ordinary file
+editing and read-only delegation do not. The follow-up does not weaken the
+sandbox or grant device access.
+
 
 ## Phases
 
