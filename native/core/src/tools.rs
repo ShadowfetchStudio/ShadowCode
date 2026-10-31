@@ -1822,6 +1822,12 @@ pub fn schemas_tiered(tier: DescriptionTier) -> Vec<Value> {
     let s = json!({"type":"string"});
     let n = json!({"type":"integer"});
     let b = json!({"type":"boolean"});
+    // Small-context routes need a genuinely short schema; parameter descriptions
+    // are not truncated by the tiering below. Keep cwd guidance in both tiers.
+    let exec_description = match tier {
+        DescriptionTier::Short => "Approved shell; cwd '.' = workspace root.",
+        DescriptionTier::Full => "Run a shell command after approval in the platform sandbox when available (empty home, writable project, network per settings). Omit cwd or use '.' for the project root; otherwise use a workspace-relative subdirectory. Changed files are checkpointed for rewind. Output and runtime are bounded.",
+    };
     let specs=vec![
         ("system_info","Inspect OS and connected displays. Read-only.",json!({}),vec![]),
         ("list_files","List direct children of a workspace directory.",json!({"path":s,"max_entries":n}),vec![]),
@@ -1846,7 +1852,7 @@ pub fn schemas_tiered(tier: DescriptionTier) -> Vec<Value> {
         ("create_directory","Create a workspace directory and parents.",json!({"path":s}),vec!["path"]),
         ("move_file","Move a regular file without overwriting its destination; checkpoint both paths.",json!({"src":s,"dest":s}),vec!["src","dest"]),
         ("delete_file","Delete one regular workspace file after approval; retain a checkpoint.",json!({"path":s,"expected_hash":s}),vec!["path"]),
-        ("exec","Run a shell command after approval, in the platform sandbox when available (empty home, writable project, network per settings). Use cwd '.' for the project root; do not guess or rewrite absolute paths. Project files it changes are checkpointed for rewind. Output and runtime are bounded.",json!({"command":s,"cwd":{"type":"string","description":"Working directory inside the workspace. Omit or use '.' for the project root; use a relative subdirectory otherwise."},"timeout_sec":n}),vec!["command"]),
+        ("exec",exec_description,json!({"command":s,"cwd":s,"timeout_sec":n}),vec!["command"]),
         ("git_status","Show repository status.",json!({}),vec![]),
         ("git_diff","Show staged or unstaged changes. External diff helpers and textconv are disabled.",json!({"staged":b}),vec![]),
         ("git_log","Show recent commits.",json!({"limit":n}),vec![]),

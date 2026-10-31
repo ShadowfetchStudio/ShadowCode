@@ -149,12 +149,17 @@ The Linux verification and release jobs now use line-table debug information
 and disable incremental state; all existing gates remain enabled. The rerun
 and optimized Windows installer qualification are still required.
 
-The first Linux ARM run reached the integration tests and found a fixture
-budget failure: the complete tool schema plus preserved context required
-4,108 tokens, exceeding its hard-coded 4,096-token window. The pressure
-fixture now uses 8,192 tokens and explicitly asserts that compaction occurs,
-reduces the history, preserves the task, and leaves a valid response budget.
-The production context-budget enforcement is unchanged.
+The first Linux ARM run reached the integration tests and found a context
+budget failure. A later x86-64 run exposed the same cause in four dedicated
+4,096-token tester-route regressions: the expanded exec description raised
+the short request to 4,113 tokens. The initially enlarged pressure fixture
+was insufficient as a fix. The exec description is now concise while keeping
+platform sandbox and relative-cwd guidance, and the pressure test is restored
+to 4,096 tokens with explicit compaction/reduction/response-budget assertions.
+Production context-budget enforcement and all tester-route limits remain
+unchanged. On Windows, all five tester-route tests and the restored 4,096-token
+pressure regression pass with the final schema, as does workspace/all-target
+Clippy with warnings denied. Independent Linux CI still needs to finish.
 
 The cold-process model-selection regression was reproduced with the prior
 installed binary and passed with the corrected development installer. A

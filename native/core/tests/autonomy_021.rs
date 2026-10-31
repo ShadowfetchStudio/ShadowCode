@@ -529,9 +529,9 @@ fn repeated_compact_under_context_pressure_keeps_the_task() {
     messages.push(json!({"role":"assistant","content":"Decision: we will use the tester route."}));
     messages.push(json!({"role":"user","content":"Continue feature X and verify it"}));
     let schemas = shadowcode_core::tools::schemas();
-    // Leave room for the complete platform tool schema and preserved task.
-    // The generated history still exceeds this window: prove compaction runs.
-    let context_limit = 8192;
+    // Keep small-context models supported as the tool schema changes.
+    // The generated history exceeds this window: prove compaction runs.
+    let context_limit = 4096;
     let before = context::estimate_tokens(&json!(messages));
     let mut compacted = false;
     for _ in 0..8 {
