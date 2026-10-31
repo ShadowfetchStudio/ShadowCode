@@ -2,6 +2,8 @@
 
 **One harness. All models.**
 
+**Download:** [shadowcode.org](https://shadowcode.org) — Linux and macOS
+
 ### An open-source project by Shadowfetch
 
 ShadowCode is a free, local-first AI coding agent for Linux.
