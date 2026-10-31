@@ -279,3 +279,25 @@ subagents need a repository with an existing commit; direct edits and read-only
 subagents do not. The Windows null-device restriction is already described in
 the port notes. Passing editor checks or independent tests alone must not be
 reported as a successful end-to-end model run.
+
+## 2.3.1 preview installer qualification
+
+On October 31, 2026, the Windows 11 Home x64 laptop (Ryzen 3 5300U, 32 GB
+RAM) tested the preview installer produced by GitHub Actions run 41241860668
+from commit `b842d5b36c13b22b48b7e2f29db27561fec1fcfc`. Its SHA-256 was
+`816cf27f2a31fe06db99c50cd44c84a933a09255bba1f34a87be20bb6c39d987`;
+the installed executable SHA-256 was
+`51614a0ece41e9dce88f711af0de50f86e27001873d044989fd7d185cbb5a121`.
+The installer and clean-PATH startup checks passed. The native interface check
+saved an editor change, exercised undo and both redo shortcuts, opened settings,
+and reported no page errors.
+
+The installed preview ran a Python repair task using Gemma 4 E4B Q4_0 on CPU.
+It executed the requested test command inside the Windows sandbox; all five
+original tests passed independently and were unchanged. The agent returned
+success in 562.51 seconds with a 16,384-token context and 100,000-token task
+budget. This is evidence for that preview and fixture, not a reliability
+benchmark or proof about a different release installer. The final published
+installer requires its own verification. An earlier development-binary run
+omitted the sandbox shell path and could not execute its test; it was not
+counted as a passing qualification.
