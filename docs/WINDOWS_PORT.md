@@ -1,12 +1,12 @@
 # Windows port
 
-Status: phase 1 (compile on Windows) done October 17, 2026; phase 2
-(engine tests) started. Linux and
-macOS ship today; Windows follows the path the macOS port took
-([MACOS_PORT_ESTIMATE.md](MACOS_PORT_ESTIMATE.md)): compile, then make the
-engine's tests pass, then the app, then packaging. Work happens on GitHub's
-Windows runners (`.github/workflows/windows.yml`); no Windows computer is
-needed for phases 1 and 2.
+Status: Windows 2.3.0 release candidate, qualified on GitHub Windows runners
+and a Windows 11 Home x64 laptop (Ryzen 3 5300U, 32 GB RAM). Compilation,
+engine tests, installer startup, native editor operations and a local-model
+repair task have passed. Public release publication remains pending; a CI
+artifact is not a public release. See
+[the laptop qualification record](WINDOWS_LAPTOP_QUALIFICATION.md) for exact
+artifact evidence, failed attempts and remaining limitations.
 
 ## Phases
 
@@ -15,7 +15,7 @@ needed for phases 1 and 2.
 2. **Engine tests.** Unit and integration tests run on the Windows runner;
    Unix-only tests are ported or gated with a reason.
 3. **App.** The window, terminals, local models and the agent's tools work on
-   Windows; checked on a Windows virtual machine.
+   Windows; checked on Windows CI and a physical Windows 11 laptop.
 4. **Packaging.** An installer (`.msi` or `.exe`) built by a release workflow
    and attached to each release like the macOS images and the Flatpak.
 
@@ -30,8 +30,8 @@ needed for phases 1 and 2.
 | Engine connection | Unix socket | Named pipe restricted to the user |
 | API keys | Secret Service, Keychain | Windows Credential Manager |
 | Settings and history | XDG folders, `~/Library` | Settings in `%APPDATA%\ShadowCode\config` (they roam with the account); history, models and caches in `%LOCALAPPDATA%\ShadowCode` |
-| Local models | Vulkan, Metal | Vulkan and CPU builds of llama.cpp |
-| Installer and updates | AppImage, deb, Flatpak, dmg | `.msi`/`.exe` from Tauri; the update notice names it |
+| Local models | Vulkan, Metal | Bundled CPU build of llama.cpp; Windows GPU acceleration is not qualified for this release |
+| Installer and updates | AppImage, deb, Flatpak, dmg | Per-user NSIS `.exe` from Tauri, with app-local Microsoft runtime DLLs; the update notice names it |
 
 ## Progress
 
@@ -101,4 +101,9 @@ needed for phases 1 and 2.
   checks that the app reports its version, and checks that it keeps its
   data in `%LOCALAPPDATA%` and `%APPDATA%`. It is a 14-day CI artifact, not
   a release.
-- Not yet tried: the app on a real Windows PC (only CI runners so far).
+- Physical-laptop qualification (October 31): installed preview startup,
+  native WebView editor save/undo/redo, model settings and a complete Gemma
+  4 E4B CPU repair task passed. The separate release-workflow installer also
+  passed startup, native editor checks and a fresh local-model repair task;
+  its exact artifact qualification is recorded separately. Real vendor-account
+  sessions and broad Windows hardware coverage remain unqualified.

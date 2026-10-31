@@ -88,9 +88,9 @@ to vendor protocol or usage accounting.
 - Workspace/all-target compilation with warnings denied: passed.
 - Clippy across the workspace and all targets with warnings denied: passed.
 - Rust formatting and secret scan: passed.
-- Installed development build and live-model results: see below. Optimized
-  GitHub installer qualification remains pending; these development-build
-  results do not certify a release artifact.
+- Installed development build and optimized GitHub preview live-model
+  results: see below. Each artifact has its own qualification record;
+  development-build results do not certify a release artifact.
 
 The integration environment needs Git's Unix command-line utilities,
 Python, Node and make, as on the Windows CI runner. CI also neutralizes
@@ -146,8 +146,9 @@ PR #11 starts independent Windows, macOS and Linux builds. The first Linux
 x86-64 desktop job failed before tests because full Rust debug information
 and incremental objects exhausted the hosted runner disk (`os error 28`).
 The Linux verification and release jobs now use line-table debug information
-and disable incremental state; all existing gates remain enabled. The rerun
-and optimized Windows installer qualification are still required.
+and disable incremental state; all existing gates remain enabled. The
+current rerun has passed workspace tests on both architectures; remaining
+packaging checks are tracked below.
 
 The first Linux ARM run reached the integration tests and found a context
 budget failure. A later x86-64 run exposed the same cause in four dedicated
@@ -159,10 +160,59 @@ to 4,096 tokens with explicit compaction/reduction/response-budget assertions.
 Production context-budget enforcement and all tester-route limits remain
 unchanged. On Windows, all five tester-route tests and the restored 4,096-token
 pressure regression pass with the final schema, as does workspace/all-target
-Clippy with warnings denied. Independent Linux CI still needs to finish.
+Clippy with warnings denied. The subsequent Linux workspace suites passed
+on both architectures; their remaining packaging checks still need to finish.
 
 The cold-process model-selection regression was reproduced with the prior
 installed binary and passed with the corrected development installer. A
 second selection after removing the configured file correctly failed, even
 with the model previously cached. The normal laptop profile now selects the
 verified Gemma model with a 16,384-token context.
+
+## Optimized GitHub installer qualification
+
+Source commit: `b5ecd8d87ad23f963bc569416dc8c589069003e1`.
+Windows build, engine unit/integration tests and installer checks passed in
+[run 41219098028](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/41219098028).
+The separate release build passed in
+[run 41219097933](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/41219097933).
+These are PR artifacts, not published release downloads.
+
+The preview installer's SHA-256 is
+`7c077227703f05941289ac24816080847224c58f67474814e73fa144d989ff44`.
+Its installed executable's SHA-256 is
+`b996ff85a5feb96b07b761b34b4d1989ac4d8a4713cade2abf66e136dc144f9f`.
+Clean-PATH startup passed. Native WebView checks passed replace-all, undo,
+Ctrl+Shift+Z and Ctrl+Y redo, disk-verified save, and local-model settings,
+with no observed page errors.
+
+A fresh Gemma run on this preview completed in 613.60 seconds, with agent
+exit 0 and independent verifier exit 0. All five original tests were
+unchanged and passed. The agent executed the test command inside
+AppContainer and returned the actual test output. It initially repeated
+reads and attempted unavailable Git-based delegation in the non-Git
+fixture, then recovered and completed the task. Those detours remain in
+the event record; this does not establish broad agent reliability.
+The earlier 1,653-property check applies to the development run only.
+
+The release-workflow installer's SHA-256 is
+`edbf891802fc7bc962665c3d845cba73cba3ec2d1b114a87f5d9a40737b93ee9`.
+Its separate installation, clean-PATH startup and native WebView editor
+checks passed. Its installed executable's SHA-256 is
+`598b56f182eb95e78d956ef238628144b9d1cdb5b11415bfc213094dad8368d3`.
+Its fresh Gemma run completed in 582.62 seconds with agent exit 0,
+independent verifier exit 0, and all five original tests preserved and
+passing. The agent's sandboxed test command also returned all five tests
+passing. This run took unnecessary search/read turns before editing; it
+qualifies this bounded fixture, not broad model reliability. A final
+published installer must match qualified bytes or undergo qualification
+again.
+
+Both Linux architectures have passed workspace tests and the 100-task
+native-window endurance check at this commit. The ARM packaging container
+then failed because Alpine replaced exact package revisions. The build pins
+have been refreshed against both architecture indexes, and retained musl
+and zlib source records now match their actual package revisions, including
+all distribution patches verified against APKBUILD SHA-512 values. Full
+packaging qualification must pass on the refreshed inputs. Both Apple
+silicon and Intel macOS builds passed in run 41219097984.

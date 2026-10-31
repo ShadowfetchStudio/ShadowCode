@@ -37,8 +37,11 @@ ShadowCode 2.3.0 runs on Windows. The 2.2.0 notes follow below.
 
 - The Windows version is new and has been tested on GitHub's Windows
   machines and one Windows 11 laptop, not yet on a wide range of PCs.
-  The laptop development build completed a small Python repair task with
-  Gemma 4 E4B on CPU; this is not broad model-quality qualification.
+  Both the optimized Windows preview and release-workflow installer
+  completed a small Python repair task with Gemma 4 E4B on CPU, with the
+  original tests preserved and independently passing. This is not broad
+  model-quality qualification; see the
+  [qualification record](WINDOWS_LAPTOP_QUALIFICATION.md).
   Subscription tools were tested
   there with stand-in programs, not yet with each vendor's own Windows CLI.
   Local models use the CPU only on Windows for now.
