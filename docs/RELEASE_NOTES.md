@@ -24,10 +24,22 @@ ShadowCode 2.3.0 runs on Windows. The 2.2.0 notes follow below.
   on Windows with "Access is denied", and busy databases no longer time out
   with "database is locked".
 
+- The Windows installer includes the Microsoft runtime DLLs needed to start
+  the app and local models on a machine without development tools.
+- Sandboxed commands now wait for the child process and return its actual
+  output and exit status instead of sometimes reporting empty success.
+- Windows redo accepts both Ctrl+Y and Ctrl+Shift+Z, and worktree setup uses
+  the platform shell.
+- Selecting a local GGUF model from a fresh CLI process works without first
+  opening the model picker.
+
 ## Known limits
 
 - The Windows version is new and has been tested on GitHub's Windows
-  machines, not yet on a wide range of PCs. Subscription tools were tested
+  machines and one Windows 11 laptop, not yet on a wide range of PCs.
+  The laptop development build completed a small Python repair task with
+  Gemma 4 E4B on CPU; this is not broad model-quality qualification.
+  Subscription tools were tested
   there with stand-in programs, not yet with each vendor's own Windows CLI.
   Local models use the CPU only on Windows for now.
 

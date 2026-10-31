@@ -6,8 +6,9 @@ and authentication receipts to the exact candidate before publication.
 
 Pushing a `v*` tag starts `.github/workflows/release.yml`. Publication follows
 build/qualification, protected signing review and verification of all seven
-public assets. The signing environment permits only the tag being released
-(`v2.3.0` for 2.3.0); every later version needs reviewed trust-policy,
+public assets. The signing environment must permit the tag being released. As verified
+on October 31, 2026, it still permits `v2.2.0`; before 2.3.0, change its
+deployment rule to `v2.3.0` after candidate review. Every later version needs reviewed trust-policy,
 deployment-rule and tooling-pin updates. The workflow uses
 `docs/RELEASE_NOTES.md` as the release text.
 
@@ -191,11 +192,14 @@ Public trust in `release/trust` currently allows the x86_64 and aarch64 targets,
 The `release-signing` environment has the signing secret and requires review by
 `Shadowfetchapps` (User ID `209457103`). Self-review is allowed and GitHub's
 default administrator override remains unchanged. For 2.3.0 its sole
-deployment rule is the tag `v2.3.0` (it was `v2.2.0` for 2.2.0, `v2.1.0` for 2.1.0, `v1.0.1` for
-1.0.1, `v1.0.0` for 1.0.0, `v0.34.2` for 0.34.2 and `v0.33.1` for 0.33.1);
-`NATIVE_RELEASE_SIGNING_ENVIRONMENT` points to that environment. For 2.3.0,
-`NATIVE_RELEASE_TOOLING_COMMIT` pins the tagged release commit itself, as it
-did for 0.33.1 (`e15c4480e65db5650af012bb2a9773dbe89acf84`).
+deployment rule must be changed to `v2.3.0`. As verified on October 31,
+2026, the actual GitHub rule still permits only `v2.2.0` and
+`NATIVE_RELEASE_TOOLING_COMMIT` still points to the 2.2.0 commit,
+`444e75f13c3512d57c226b39d6edf59fdb08a4c6`.
+`NATIVE_RELEASE_SIGNING_ENVIRONMENT` points to `release-signing`. For 2.3.0,
+set the tooling pin to the reviewed tagged release commit itself, as was
+done for 0.33.1 (`e15c4480e65db5650af012bb2a9773dbe89acf84`).
+These are release prerequisites, not configuration already applied.
 
 Before tagging, finish review and push the tooling commit, then set
 `NATIVE_RELEASE_TOOLING_COMMIT` to that exact 40-character SHA. Read back this pin from GitHub configuration before dispatching the release. Verify the environment protections and source/candidate
