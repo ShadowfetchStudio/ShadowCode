@@ -243,5 +243,11 @@ artifact bytes, not a published release or a general model benchmark.
 The accompanying BusyBox source archive is byte-identical to the previously
 validated archive, SHA-256
 `c6345e913686ff61ab46757b19fad23e9bb1b5e1e273f132bc4333770bd55a96`.
-Windows and both macOS architectures passed at this source commit; Linux
-qualification remains pending and must pass before release.
+Windows and both macOS architectures passed at this source commit. Both
+Linux architectures also passed the full qualification workflow in
+[run 41223980842](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/41223980842),
+including package inspection, offline clean installation, offline runtime
+source rebuilding, installer recovery, and packaged CLI, terminal, desktop,
+Markdown and MCP checks. This closes the earlier Alpine packaging failure.
+PR #11 was merged after all candidate checks passed; tagged release builds
+and publication remain separate steps.

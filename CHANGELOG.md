@@ -40,8 +40,9 @@
 - **Local model selection.** Selecting a configured GGUF model from a fresh
   CLI process no longer requires opening the picker first; stale catalog
   entries cannot select files removed from the profile's configuration.
-- **Native runtime pins** follow Alpine 3.21's libcurl and libexpat security
-  updates.
+- **Native runtime pins** follow Alpine 3.21's current package revisions,
+  including libcurl, libexpat, musl and zlib updates. Retained source archives
+  include the matching distribution patches and verified source checksums.
 
 ## 2.2.0: macOS, Flatpak downloads and your own model servers
 
