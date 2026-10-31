@@ -5,38 +5,38 @@ Origin: ShadowCode
 Label: ShadowCode
 Suite: stable
 Codename: stable
-Date: Sat, 17 Oct 2026 20:05:06 UTC
+Date: Sat, 31 Oct 2026 20:07:53 UTC
 Architectures: amd64 arm64
 Components: main
 Acquire-By-Hash: no
 Description: ShadowCode release packages
 MD5Sum:
- dda3924b9f6dda13ab4af007fff46ae7       2033 main/binary-amd64/Packages
- 11ffb62beff4239b2a08232d35255bb4        759 main/binary-amd64/Packages.gz
+ 4405e3d22e212aa0ff5c9f15932b0683       3050 main/binary-amd64/Packages
+ abf92dcf5c9ff4fe99136a18cfcae61f        851 main/binary-amd64/Packages.gz
  9a8d7c4458a3e3c76e1c023e2437cdd0        103 main/binary-amd64/Release
- f0adaa970a169ef5ab9c05e11c2f38b2       2033 main/binary-arm64/Packages
- af835c1b46776a0229b594e61b0f2f59        759 main/binary-arm64/Packages.gz
+ af3f55eb9d12864883d4931a91d145fd       3050 main/binary-arm64/Packages
+ 6d15281b5a19b7c890c36b22063d0cfe        850 main/binary-arm64/Packages.gz
  b0c596d105705a4f9e933858cd2b567b        103 main/binary-arm64/Release
 SHA256:
- e0ae2c49266c6f1a45036bfbad464f7001128c2292087364372997b8c3223b05       2033 main/binary-amd64/Packages
- c449e3b1e95613526944bc58dc39a4a6d43713176892f9b38d0f84644227a653        759 main/binary-amd64/Packages.gz
+ fa35c212dec3dfd6fa85c2e86816e01ea04bb7e07d7ea666d082df5ade94afee       3050 main/binary-amd64/Packages
+ 0084279e5dc2de544909716409b9ba80b49267806faf368b31ac8d70fdfeeec4        851 main/binary-amd64/Packages.gz
  4c505dd35a52497c76a01a45dbc9c9934215fd44ad4f1310e5e8991f041f1a98        103 main/binary-amd64/Release
- 1f87785eb6cfcdf25d987be070bab2c31c3db4fd3677dbc3d5f001b8468894e0       2033 main/binary-arm64/Packages
- 903eb147f9951074ba723ee0b9a592001e521b865ba71358fa6d05636d566001        759 main/binary-arm64/Packages.gz
+ 7dcecf0bcf73b09e0de978edf89dfd5f188ab810aefab25f07ba5652fd9084f9       3050 main/binary-arm64/Packages
+ 69dcc9fbb6ccb52e03c45c9a63905d23d2cbc658783e48d4feedacaa867da3a8        850 main/binary-arm64/Packages.gz
  3b53a4e0c5f33dd1d803f375fd992e951780bbbcc51e0e71621c31ac8d08271c        103 main/binary-arm64/Release
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCgAdFiEEG8B7Xs/bUUZzopb7AhyrPy96H2EFAmrT1PMACgkQAhyrPy96
-H2GJwRAA0ZH9fNgCt4Fs9+4T+bsZ2bz0ZLuqOPioV38tHMUyF6N6mhspQ9s4Qu39
-qsmXgBY3j23H2QiXQBYplpUJoV4Q5BG394Mdp/+ScXxBkqQrXcD/k1s6VzQzBZkZ
-42QP9FtNhW6wfa/DyxPTDsblfx6Z3aei9I0nl+nurnAZa2WzRiPK/Gp6jru1D8vu
-kt1rt0Es8+MvrIaxhngf5kyzhVCnBRtfU4WP9K6mWlGwH+bbb4xnitNtnGOu1KQm
-O1f3pHhik5kePvq5FvOaW04dLlPCyBjo56jSKNbYwyGywe5G9arvHaDbvb5mPy6r
-K6X8GJsp4s8eN1LtfO9KeB6kUxwLyRDz7N+wTFrmZfsa8wRi6PZwxoIbim5W5WvS
-icxU+/EgKd/Kgz/tEkGApZwG4hSxsmY0khMwiV6B+4WF8XJysrdQ+noKlb6ih4/B
-Npjie+AqvpIPZQ4eMHMpwgWghVn2g0LL83hOzZL69uERCLhtRbKfNc0GoqvWpbrH
-DUDACC1fF6UPQ9njcHyPCZEHy9GCSdFV5PXvzTK9lGRRZNmvwExQDIf8g5jA3O9Q
-Jg55bI3POgNoPNbpsjp85+TtadBMaVKkpx9f0Vz0KM4bSuRnwNqXR///W/0upDn8
-nELAo/wsdCWAvdu+d6LnwZyjcOVVyDMLtR9Kwb2V1Tf+mDgqibQ=
-=LgCM
+iQIzBAEBCgAdFiEEG8B7Xs/bUUZzopb7AhyrPy96H2EFAmrmSpoACgkQAhyrPy96
+H2Gd0A/7Br9tIOMxIiLzMPgkfDG+mzobzsI8NxI/YfeJ4/u3hL+o2ZV01az5ufC7
+weaK0Iy+3yR8yw2BZbNGwpdhVaDf2sovd1lix+X9yxaprHM1/husFdf3Xjv8h6xF
++7nF607JwBNMw28cg6CrT5Vm7tw5HXtDhQCaftH6Tdrh4/aCDVVhDzGKCIU6eskp
+20U8RniPsav+v74mE7ZVbxX6HlB1ovxKnYa2cSiSvVqp6gEXyHSggUu2WcJMVh4Z
+baJ60U5M72BsKBn0Uz4xVAa+h1dp3atZ/YXczsvZX4h/oxf2o6xTGagYwZcUv6DV
+Xldj5vjBaGqvMbL/9UrtJtDInEHaI0aEQEvZx5T7l/++OhXEU9yTvbFe5FvXYALa
+SgB0Jtz/btDF3Ww0Du3RsbcbNoJnfCMDYXyDrwsDOnohZmPXTM1gYSf4iVqwCl6O
+AHD6f4DCCMhdKhReR929STjbbrdMFDermMnTz2Kt2893V7zctMZ0cZjQCFD6w2wI
+RguO+Ecf1kzUTaHFHQEkKvHWbfuTXa7qukIBkWf3O3ppuIxc4FM2giT/dwc//UJD
+BdIHnGNgZMd400NvwP2ZvkOy4NLc0j80voMuTwzO18fx1jSaW+ux5qz2O0thHHSg
+h6eb3KAHN7MnkjwUWVMt7H6TEv+AFrwLjmTvMPbO9SNJNpx0QQE=
+=XQbS
 -----END PGP SIGNATURE-----
