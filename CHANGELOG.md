@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- About → Website now opens https://shadowcode.org (was shadowfetchlinux.org/shadowcode); the AppStream homepage URL matches.
+
 ## 2.3.1: Delegation prerequisites
 
 - Write-subagent guidance now states that an existing Git commit is required.

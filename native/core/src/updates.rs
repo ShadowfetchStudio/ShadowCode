@@ -841,7 +841,7 @@ pub fn about(paths: &AppPaths, config: &Config) -> Value {
         },
         "links": {
             "repository": REPOSITORY_URL,
-            "website": "https://www.shadowfetchlinux.org/shadowcode",
+            "website": "https://shadowcode.org",
             "publisher": "https://shadowfetch.com",
             "contributors": format!("{REPOSITORY_URL}/graphs/contributors"),
             "trademarks": format!("{REPOSITORY_URL}/blob/main/TRADEMARKS.md"),

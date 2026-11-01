@@ -15,7 +15,7 @@
     </ul>
   </description>
   <launchable type="desktop-id">com.shadowfetch.shadowcode.desktop</launchable>
-  <url type="homepage">https://www.shadowfetchlinux.org/shadowcode</url>
+  <url type="homepage">https://shadowcode.org</url>
   <url type="bugtracker">https://github.com/ShadowfetchStudio/ShadowCode/issues</url>
   <developer id="com.shadowfetch">
     <name>Shadowfetch</name>

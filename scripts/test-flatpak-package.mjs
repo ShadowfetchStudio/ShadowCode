@@ -100,7 +100,7 @@ try {
   const about = await exchange("GET", "/api/about", null, view);
   assert.equal(about.version, "2.3.0"); assert.equal(about.publisher, "Shadowfetch");
   assert.equal(about.install.kind, "flatpak");
-  assert.equal(about.links.website, "https://www.shadowfetchlinux.org/shadowcode");
+  assert.equal(about.links.website, "https://shadowcode.org");
   assert.equal(about.links.publisher, "https://shadowfetch.com");
   assert.equal(about.links.contributors, "https://github.com/ShadowfetchStudio/ShadowCode/graphs/contributors");
   assert.match(about.license.trademark_policy, /Based on ShadowCode by Shadowfetch/);

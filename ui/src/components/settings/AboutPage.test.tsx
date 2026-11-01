@@ -75,7 +75,7 @@ function about(status: UpdateStatus = updates()): AboutInfo {
       third_party: "/usr/share/doc/shadowcode/notices",
     },
     links: {
-      website: "https://www.shadowfetchlinux.org/shadowcode",
+      website: "https://shadowcode.org",
       publisher: "https://shadowfetch.com",
       contributors: `${repo}/graphs/contributors`,
       trademarks: `${repo}/blob/main/TRADEMARKS.md`,
@@ -109,10 +109,10 @@ it("shows version, commit, install type, license and links", async () => {
   expect(
     screen
       .getByRole("link", {
-        name: "https://www.shadowfetchlinux.org/shadowcode",
+        name: "https://shadowcode.org",
       })
       .getAttribute("href"),
-  ).toBe("https://www.shadowfetchlinux.org/shadowcode");
+  ).toBe("https://shadowcode.org");
   expect(
     screen
       .getByRole("link", { name: "ShadowfetchStudio/ShadowCode" })
