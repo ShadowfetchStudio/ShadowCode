@@ -2,11 +2,11 @@
 
 **One harness. All models.**
 
-**Download:** [shadowcode.org](https://shadowcode.org) — Linux and macOS
+**Download:** [shadowcode.org](https://shadowcode.org) — Windows, macOS and Linux · [Windows installer](https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.3.1/ShadowCode_2.3.1_x64-setup.exe)
 
 ### An open-source project by Shadowfetch
 
-ShadowCode is a free, local-first AI coding agent for Linux.
+ShadowCode is a free, local-first AI coding agent for Windows, macOS and Linux.
 
 Work with Codex, Claude Code, Cursor, Antigravity, Grok, OpenRouter, and supported local AI models from one desktop application.
 
@@ -22,7 +22,7 @@ Official project: https://github.com/ShadowfetchStudio/ShadowCode
 
 Publisher: https://shadowfetch.com
 
-Official website: https://www.shadowfetchlinux.org/shadowcode
+Official website: https://shadowcode.org
 
 The code is open source; the Shadowfetch and ShadowCode product identity is covered by the [trademark and branding policy](TRADEMARKS.md).
 
@@ -85,7 +85,7 @@ without Git history. See the [release notes](docs/RELEASE_NOTES.md),
 
 ## Install
 
-Releases target x86_64 Linux with glibc 2.39 or newer (Ubuntu 24.04 or later).
+Linux releases target x86_64 Linux with glibc 2.39 or newer (Ubuntu 24.04 or later).
 From 2.1.0, aarch64 (64-bit ARM) packages are built and qualified too:
 `ShadowCode_VERSION_aarch64.AppImage` and `ShadowCode_VERSION_arm64.deb`.
 Each is signed for its own target and
