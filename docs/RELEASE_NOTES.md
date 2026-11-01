@@ -1,12 +1,19 @@
-# ShadowCode 2.3.1 — candidate
+# ShadowCode 2.3.1
 
 Write-subagent guidance now names its Git-history prerequisite and directs
 plain-folder tasks to direct editing or read-only agents. A prerequisite check
 runs before worktree preparation, with regression coverage for plain folders,
 unborn repositories and committed repositories.
 
-This candidate is still being qualified. It does not change Windows
-AppContainer permissions: external Git commands that open the null device can
+The public Windows installer passed installation, clean-PATH startup, native
+editor/settings checks and a bounded Gemma 4 E4B coding task on a Windows 11
+x64 laptop. The agent ran tests inside AppContainer; all five original tests
+were preserved and passed independently. Windows local inference is CPU-only;
+Windows 10, ARM, GPU and real cloud-provider accounts remain unqualified on
+that hardware. The installer is not code-signed.
+
+Version 2.3.1 is published for Windows, Linux and macOS. It does not change
+Windows AppContainer permissions: external Git commands that open the null device can
 still fail inside the sandbox. See the [Windows port notes](WINDOWS_PORT.md)
 and [qualification record](WINDOWS_LAPTOP_QUALIFICATION.md). The published
 2.3.0 notes follow below.

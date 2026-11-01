@@ -1,5 +1,10 @@
 # Windows laptop qualification — October 31, 2026
 
+Current status: the **public Windows 2.3.1 installer passed** the bounded laptop
+qualification. See [the final public-installer record](#231-public-installer-qualification)
+for its exact hashes and results. Earlier sections retain the development and
+preview history, including failures.
+
 Test machine: Windows 11 Home x64, Ryzen 3 5300U, 32 GB RAM. Baseline:
 `9c82cae76d4c94a4416405c93f00e198080a18ac`, Windows CI preview 2.3.0.
 Tests use disposable profiles and projects; no vendor credentials are needed.
@@ -217,7 +222,7 @@ all distribution patches verified against APKBUILD SHA-512 values. Full
 packaging qualification must pass on the refreshed inputs. Both Apple
 silicon and Intel macOS builds passed in run 41219097984.
 
-## Latest merged-main candidate
+## 2.3.0 merged-main candidate
 
 Source commit: `0b255b89874b1216530b3e8b7c51470f30d7020e` (PR #11).
 The Windows release-workflow artifact from
@@ -301,3 +306,33 @@ benchmark or proof about a different release installer. The final published
 installer requires its own verification. An earlier development-binary run
 omitted the sandbox shell path and could not execute its test; it was not
 counted as a passing qualification.
+
+
+## 2.3.1 public installer qualification
+
+Release source: `e7fdef1b774affa2d288944b4384dba21a806d46`.
+The public `ShadowCode_2.3.1_x64-setup.exe` came from successful
+[Windows release run 41253795862](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/41253795862).
+Its download size, published SHA-256 checksum and GitHub asset digest matched.
+Installer SHA-256: `7a957342206b1413ecaf153f284880bc5df562971094c50b703096bbb26a3bba`.
+Installed executable SHA-256: `62c405b64b18c440eda1300d08f39056dab6d546d4b604eb8c0026095bfb55f2`.
+
+The official PowerShell installer was exercised with the verified public files
+via its local setup-directory option. Clean-PATH checks passed for the desktop,
+llama-server and llama-cli, including the isolated-profile async CLI status call.
+The native WebView test passed editor replace-all, undo, Ctrl+Shift+Z and Ctrl+Y
+redo, disk-verified save and settings visibility, with no observed page errors.
+
+The fresh Gemma 4 E4B Q4_0 task started at `2026-11-01T00:40:14.865078+00:00` and finished in
+352.77 seconds. The agent returned exit 0 and executed the exact
+`python3 -m unittest -q` command inside AppContainer, returning all five tests
+passing. The independent verifier also returned exit 0; all five original tests
+were unchanged. The run used a 16,384-token context and a 100,000-token task
+budget. It read files, edited the helper and ran its tests; the event record
+contains no subagent or external Git attempt.
+
+This qualifies these exact public bytes and this bounded fixture on this laptop.
+Windows 10, Windows ARM, GPU inference and real cloud-provider accounts were not
+qualified on this hardware. The Windows runtime is CPU-only, the installer is
+not code-signed, and the external-Git/null-device limitation remains documented
+in the port notes. No permissions were relaxed to obtain this result.
