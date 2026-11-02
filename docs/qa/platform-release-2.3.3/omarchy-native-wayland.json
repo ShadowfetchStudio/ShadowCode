@@ -1,0 +1,222 @@
+{
+  "passed": true,
+  "functionalPassed": true,
+  "scope": "Focused physical Hyprland/Wayland onboarding (known-bad baseline Grok discovery excluded), picker, accessibility, composer, approved write/exec task, summary and app shutdown. Scripted provider, no model inference. Floating sizing, resizing, full recovery/endurance and other upstream desktop cases excluded.",
+  "version": "2.3.3",
+  "health": {
+    "provider": {
+      "name": "mock",
+      "ok": false,
+      "detail": "Select a model to run coding tasks"
+    },
+    "version": "2.3.3",
+    "desktop_attached": false,
+    "model": {
+      "context_limit": 128000,
+      "provider": "mock",
+      "api_key_env": "OPENAI_API_KEY",
+      "endpoint": "",
+      "name": "mock-coder",
+      "keep_alive": "30m",
+      "default": "model:33be52fe895d84017d77b079b8500a9d6df1c6828b22a7a6667e0674105f7a92"
+    },
+    "workspace": "/tmp/shadowcode-window-SlIbn1/project",
+    "ok": true,
+    "runtime": "rust",
+    "trusted": true,
+    "onboarding": {
+      "workspace": "/tmp/shadowcode-window-SlIbn1/project",
+      "completed": true
+    },
+    "app": "ShadowCode",
+    "cli_agents": {
+      "codex_binary": "codex",
+      "antigravity_binary": "agy",
+      "claude_binary": "claude",
+      "enabled": true,
+      "max_run_time_sec": 7200,
+      "cursor_binary": "cursor-agent",
+      "approval_timeout_sec": 600,
+      "claude_enabled": true,
+      "grok_binary": "grok",
+      "stall_timeout_sec": 900
+    },
+    "desktop_pid": 699614,
+    "permissions": {
+      "approve_shell": true,
+      "mode": "ask",
+      "level": "workspace",
+      "require_approval_for_dangerous": true,
+      "allow_root": false,
+      "network": false
+    }
+  },
+  "checks": [
+    "Physical compositor controls tiling; actual window stays inside work area. Floating-size policy and scripted resizes are excluded from this focused smoke.",
+    "first run without a ready model offers download, OpenRouter and subscription; skipped here",
+    "first run: folder, trust and permission mode (Ask before actions), no model step",
+    "quiet welcome with 3 suggestions, one picker, attachment button",
+    "More keeps Compare and Worktree discoverable, closes by clicking its trigger",
+    "no model ready: the welcome offers a free model, an OpenRouter key or a subscription",
+    "open picker manually refreshes provider rows and remains open",
+    "picker: Vendor CLIs (codex Sign in, claude Sign in, cursor Sign in, grok Sign in), On this computer and API keys (no key)",
+    "local model added from Settings › Local models (runtime, hardware, GGUF entry)",
+    "selected local row \"Coder Test 1B · This computer\"",
+    "local task: write_file and exec approved, timeline [Editing files done | Running commands done], summary lists hello.txt",
+    "Native app and its children exited after desktop_quit"
+  ],
+  "axe": {
+    "onboarding": [],
+    "welcome-light": [],
+    "composer-more": [],
+    "picker-vendors": [],
+    "local-models": [],
+    "picker": [],
+    "composer-more-ready": [],
+    "task-complete": []
+  },
+  "screenshots": [
+    "/home/shadowfetch/shadowcode-qualification/public-2.3.3/physical-wayland/onboarding.png",
+    "/home/shadowfetch/shadowcode-qualification/public-2.3.3/physical-wayland/welcome-light.png",
+    "/home/shadowfetch/shadowcode-qualification/public-2.3.3/physical-wayland/composer-more.png",
+    "/home/shadowfetch/shadowcode-qualification/public-2.3.3/physical-wayland/welcome-model-ready.png",
+    "/home/shadowfetch/shadowcode-qualification/public-2.3.3/physical-wayland/picker-vendors.png",
+    "/home/shadowfetch/shadowcode-qualification/public-2.3.3/physical-wayland/local-models.png",
+    "/home/shadowfetch/shadowcode-qualification/public-2.3.3/physical-wayland/picker.png",
+    "/home/shadowfetch/shadowcode-qualification/public-2.3.3/physical-wayland/composer-more-ready.png",
+    "/home/shadowfetch/shadowcode-qualification/public-2.3.3/physical-wayland/approval-hello-txt.png",
+    "/home/shadowfetch/shadowcode-qualification/public-2.3.3/physical-wayland/approval-cat-hello-txt.png",
+    "/home/shadowfetch/shadowcode-qualification/public-2.3.3/physical-wayland/task-complete.png",
+    "/home/shadowfetch/shadowcode-qualification/public-2.3.3/physical-wayland/physical-workspace.png"
+  ],
+  "display": {
+    "backend": "wayland",
+    "geometryFailures": [],
+    "socket": "/run/user/1000/wayland-1",
+    "socketDevice": 81,
+    "socketInode": 110,
+    "desktop": "Hyprland",
+    "session": "1289",
+    "dmabufOverride": null,
+    "firstWindow": {
+      "inner": [
+        1280,
+        720
+      ],
+      "screen": {
+        "height": 720,
+        "width": 1280,
+        "availWidth": 1280,
+        "availHeight": 720
+      },
+      "position": [
+        0,
+        0
+      ]
+    },
+    "executableSha256": "6b47514c3028cc4e3e98d7bd2fa46f73a437d5883dd8551278d3b0e4da3d04f7",
+    "uiScript": "/assets/index--DHb82Hg.js"
+  },
+  "private_session_cleanup": {
+    "ok": true,
+    "services": [
+      {
+        "pid": 699642,
+        "parent": 1,
+        "start": "59422009",
+        "state": "S",
+        "uid": 1000,
+        "exe": "/usr/lib/at-spi-bus-launcher",
+        "signals": [
+          "SIGTERM"
+        ]
+      },
+      {
+        "pid": 699647,
+        "parent": 1,
+        "start": "59422009",
+        "state": "S",
+        "uid": 1000,
+        "exe": "/usr/lib/gvfsd",
+        "signals": [
+          "SIGTERM"
+        ]
+      },
+      {
+        "pid": 699653,
+        "parent": 1,
+        "start": "59422011",
+        "state": "S",
+        "uid": 1000,
+        "exe": "/usr/lib/gvfsd-fuse",
+        "signals": []
+      },
+      {
+        "pid": 699656,
+        "parent": 699642,
+        "start": "59422011",
+        "state": "S",
+        "uid": 1000,
+        "exe": "/usr/bin/dbus-daemon",
+        "signals": []
+      },
+      {
+        "pid": 699666,
+        "parent": 1,
+        "start": "59422015",
+        "state": "S",
+        "uid": 1000,
+        "exe": "/usr/lib/xdg-desktop-portal",
+        "signals": [
+          "SIGTERM"
+        ]
+      },
+      {
+        "pid": 699672,
+        "parent": 1,
+        "start": "59422016",
+        "state": "S",
+        "uid": 1000,
+        "exe": "/usr/lib/xdg-permission-store",
+        "signals": [
+          "SIGTERM"
+        ]
+      },
+      {
+        "pid": 699678,
+        "parent": 1,
+        "start": "59422017",
+        "state": "S",
+        "uid": 1000,
+        "exe": "/usr/lib/xdg-document-portal",
+        "signals": [
+          "SIGTERM"
+        ]
+      },
+      {
+        "pid": 699689,
+        "parent": 1,
+        "start": "59422018",
+        "state": "S",
+        "uid": 1000,
+        "exe": "/usr/lib/xdg-desktop-portal-gtk",
+        "signals": [
+          "SIGTERM"
+        ]
+      },
+      {
+        "pid": 699704,
+        "parent": 1,
+        "start": "59422029",
+        "state": "S",
+        "uid": 1000,
+        "exe": "/usr/lib/xdg-desktop-portal-hyprland",
+        "signals": [
+          "SIGTERM"
+        ]
+      }
+    ],
+    "failures": [],
+    "ignored": []
+  }
+}
