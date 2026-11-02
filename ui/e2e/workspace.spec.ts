@@ -86,7 +86,8 @@ test("picks a subscription row with the keyboard", async ({ page }) => {
   await search.press("Enter");
   await expect(trigger(page)).toContainText("Codex · GPT-6-Astra");
   await expect(trigger(page)).toContainText("Cloud");
-  await expect(trigger(page)).toBeFocused();
+  // Selecting a model makes the composer ready for the next keystroke.
+  await expect(prompt(page)).toBeFocused();
   await expect(send(page)).toBeEnabled();
   const log = await fakeLog(page);
   expect(
