@@ -2,7 +2,7 @@
 
 **One harness. All models.**
 
-**Download:** [shadowcode.org](https://shadowcode.org) — Windows, macOS and Linux · [Windows installer](https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.3.1/ShadowCode_2.3.1_x64-setup.exe)
+**Download:** [shadowcode.org](https://shadowcode.org) — Windows, macOS and Linux · [Windows installer](https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.3.3/ShadowCode_2.3.3_x64-setup.exe)
 
 ### An open-source project by Shadowfetch
 
@@ -72,7 +72,7 @@ The code is open source; the Shadowfetch and ShadowCode product identity is cove
   own terminal, go from commit to pull request, preview the app you're
   building, dictate with your voice, and follow along from your phone.
 
-ShadowCode **2.3.3** is published for Linux on [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.3.3). The Windows and Flatpak packages are also published; macOS packages are building. The website and the Windows installer linked above still point to 2.3.1 pending final qualification.
+ShadowCode **2.3.3** is published for Windows, macOS and Linux on [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.3.3). The website update is being prepared after platform qualification.
 
 Version 2.3.3 includes the desktop fixes and signing-policy update described in the [release notes](docs/RELEASE_NOTES.md). See also the [Windows qualification record](docs/WINDOWS_LAPTOP_QUALIFICATION.md) and [release history](CHANGELOG.md).
 
@@ -131,7 +131,7 @@ cmake.
 
 ### Windows
 
-Release 2.3.1 includes `ShadowCode_2.3.1_x64-setup.exe` for
+Release 2.3.3 includes `ShadowCode_2.3.3_x64-setup.exe` for
 64-bit Windows 10 (version 1809 or later) and 11, with its SHA-256 checksum in
 `ShadowCode_VERSION_windows.sha256`. It installs for your user only (no
 administrator rights) and includes llama.cpp for local models (CPU) and the

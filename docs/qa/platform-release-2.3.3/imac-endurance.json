@@ -1,0 +1,58 @@
+{
+  "passed": true,
+  "platform": "darwin",
+  "osRelease": "24.6.0",
+  "version": "ShadowCode 2.3.3",
+  "binarySha256": "a112fb5bafed2d00c30e596760863f6a6d86be64e8aa9ae8ee0c356c58bb9786",
+  "sequentialCompleted": 100,
+  "concurrentCompleted": 80,
+  "cancelled": 5,
+  "requests": 367,
+  "measurements": [
+    {
+      "round": "warmup",
+      "rssKiB": 17636,
+      "threads": 6,
+      "resources": 15,
+      "resourceKind": "file descriptors"
+    },
+    {
+      "round": "sequential-25",
+      "rssKiB": 21336,
+      "threads": 6,
+      "resources": 15,
+      "resourceKind": "file descriptors"
+    },
+    {
+      "round": "sequential-50",
+      "rssKiB": 21848,
+      "threads": 7,
+      "resources": 15,
+      "resourceKind": "file descriptors"
+    },
+    {
+      "round": "sequential-75",
+      "rssKiB": 22080,
+      "threads": 7,
+      "resources": 15,
+      "resourceKind": "file descriptors"
+    },
+    {
+      "round": "sequential-100",
+      "rssKiB": 22112,
+      "threads": 7,
+      "resources": 15,
+      "resourceKind": "file descriptors"
+    },
+    {
+      "round": "completed",
+      "rssKiB": 25308,
+      "threads": 11,
+      "resources": 15,
+      "resourceKind": "file descriptors"
+    }
+  ],
+  "persistenceAfterStop": true,
+  "shutdown": "SIGTERM graceful shutdown",
+  "scope": "Installed native engine with loopback scripted provider. Not desktop UI, paid providers, real model inference or inference-server memory."
+}
