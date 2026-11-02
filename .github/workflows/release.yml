@@ -67,6 +67,10 @@ jobs:
           cache-dependency-path: ui/package-lock.json
       - name: Native package dependencies
         run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev libasound2-dev patchelf webkit2gtk-driver xvfb appstream dbus-daemon dbus-bin lintian desktop-file-utils
+      # Additional mandatory regression coverage keeps the independently approved
+      # signing receipt command set byte-identical. No existing gate is removed.
+      - name: Verify WebKit relocation before release qualification
+        run: node --test --test-reporter=tap scripts/test-native-webkit-paths.mjs
       - name: Test release staging and immutable retry behavior
         run: node scripts/native-release-verification.mjs run release-tests
       - name: Verify publisher authentication and private release snapshots
@@ -174,6 +178,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libayatana-appindicator3-dev libasound2-dev patchelf webkit2gtk-driver xvfb appstream dbus-daemon dbus-bin lintian desktop-file-utils xdg-utils cmake ninja-build libssl-dev libvulkan-dev glslc spirv-headers gcc-14 g++-14
       - name: Install the pinned Rust toolchain
         run: rustup toolchain install 1.95.0 --profile minimal --component rustfmt --component clippy
+      # Additional mandatory regression coverage keeps the independently approved
+      # signing receipt command set byte-identical. No existing gate is removed.
+      - name: Verify WebKit relocation before release qualification
+        run: node --test --test-reporter=tap scripts/test-native-webkit-paths.mjs
       - name: Run every required release gate in order on aarch64
         run: |
           set -euo pipefail
