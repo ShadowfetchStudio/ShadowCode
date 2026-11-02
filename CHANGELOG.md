@@ -7,6 +7,7 @@
 - Relocate bundled WebKit helper paths so AppImages do not depend on the build host's Debian filesystem layout. Verify relocation against the shipped library bytes.
 - On compatible non-Debian desktop layouts, select a complete host WebKit/GTK stack to avoid mixing newer Mesa drivers with the bundled Debian graphics stack. Both helper executables and all native dependencies are checked; the bundled fallback remains available. No sandbox is disabled.
 - Closing the model picker no longer steals focus back from a composer the user has already focused. This fixes interrupted typing and accidental picker reopening.
+- Vendor discovery no longer selects unknown or interactive ACP authentication methods such as Grok browser login. It checks an existing session and leaves interactive sign-in to Connect. Known existing-login methods remain supported.
 - Sidebar shortcuts display Command on Apple keyboards and Control on Windows/Linux.
 - Add installed-engine endurance qualification for Windows, macOS, and Linux, with platform-specific process measurements and explicit test-scope limits.
 - Editor browser tests use the platform's document-navigation and editing shortcuts.

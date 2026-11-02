@@ -1,7 +1,7 @@
 # ShadowCode 2.3.2 — candidate
 
 This source candidate addresses an AppImage desktop-startup failure reproduced on
-Omarchy, a model-picker focus race, and misleading Mac keyboard hints. It is not
+Omarchy, a model-picker focus race, unsolicited interactive ACP login during vendor discovery, and misleading Mac keyboard hints. It is not
 yet a qualified public release. Final package hashes, physical-machine results,
 and publication receipts will be recorded after the release builds.
 

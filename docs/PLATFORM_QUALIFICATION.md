@@ -32,6 +32,29 @@ will be added after the release builds. Prior evidence remains version-specific.
   platform's Command editing and document-navigation shortcuts. Sidebar hints
   follow the viewing keyboard, including remote browsers.
 
+- Physical desktop testing also reproduced Grok's interactive `authenticate` flow
+  opening a browser during background discovery. The probe now authenticates only
+  through known existing-login methods; other advertised methods use `session/new`
+  to check an existing login and leave interactive authentication to explicit Connect.
+  A regression covers both an existing session and authentication-required responses.
+
+### Physical Wayland packaging experiment
+
+A focused native-window smoke ran on the actual Omarchy Hyprland compositor with
+its existing tiling and scale. It passed 12 checks: onboarding, picker and refresh,
+local test-model registration/selection, accessibility checks, approved file-write
+and command execution, the completed task summary, and application/child shutdown.
+The executable was the 2.3.1 baseline in an isolated AppDir with the candidate
+launcher and library relocation. A scripted test server supplied model responses;
+this is neither real inference nor final 2.3.2 package qualification.
+
+The unmodified upstream desktop suite first rejected the compositor's tiled size
+because it expected a floating window fitted to 90% of the screen. That failure
+is retained. The focused smoke explicitly excludes floating-size policy, scripted
+resizing, recovery and endurance. Grok was excluded from the successful baseline
+smoke after its unsolicited login was reproduced; candidate Grok discovery has
+separate regression coverage and still needs final physical-package verification.
+
 ### Installed-engine 2.3.1 baseline
 
 The new `scripts/test-platform-runtime.mjs` was run on each physical machine's
