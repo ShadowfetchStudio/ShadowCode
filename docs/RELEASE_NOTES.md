@@ -1,3 +1,7 @@
+# ShadowCode 2.3.3 — candidate
+
+This candidate includes the desktop fixes described below and extends the existing Linux release signing key trust interval through 2.3.3. The 2.3.2 tag was not published: its trusted key interval ended at 2.3.1. Final artifacts and physical-device qualification remain pending.
+
 # ShadowCode 2.3.2 — candidate
 
 This source candidate addresses an AppImage desktop-startup failure reproduced on

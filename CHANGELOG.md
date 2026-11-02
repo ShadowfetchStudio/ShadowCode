@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-## 2.3.2: Desktop reliability
+## 2.3.3: Desktop reliability
+
+Extends the existing Linux release signing key trust interval through 2.3.3. The tagged 2.3.2 candidate was not published because its trust interval ended at 2.3.1.
+
+## 2.3.2: Desktop reliability (unpublished candidate)
 
 - Relocate bundled WebKit helper paths so AppImages do not depend on the build host's Debian filesystem layout. Verify relocation against the shipped library bytes.
 - On compatible non-Debian desktop layouts, select a complete host WebKit/GTK stack to avoid mixing newer Mesa drivers with the bundled Debian graphics stack. Both helper executables and all native dependencies are checked; the bundled fallback remains available. No sandbox is disabled.
