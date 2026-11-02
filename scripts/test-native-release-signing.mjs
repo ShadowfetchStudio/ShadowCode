@@ -155,7 +155,7 @@ test('release workflow separates untrusted build from protected signing and writ
 });
 test('workflow configuration fails closed without real provisioning; fixture-only inputs exercise its parser', () => testFixture(async f => {
   const workflow = await readFile(new URL('../.github/workflows/release.yml', import.meta.url), 'utf8');
-  const body = /        run: \|\n([\s\S]*?)\n  build:/.exec(workflow)[1].replace(/^          /gm, '');
+  const body = /        run: \|\n([\s\S]*?)\n      - name:/.exec(workflow)[1].replace(/^          /gm, '');
   const env = { ...process.env, GITHUB_REPOSITORY: context.repo, REPOSITORY_ID: IDENTITY.repositoryId, OWNER_ID: IDENTITY.ownerId, GITHUB_EVENT_NAME: 'push', GITHUB_REF_TYPE: 'tag', GITHUB_REF_NAME: context.tag, TOOLING_COMMIT: '', SIGNING_ENVIRONMENT: '', GITHUB_OUTPUT: path.join(f.root, 'configuration-output') };
   const run = extra => spawnSync('bash', ['-euo', 'pipefail', '-c', body], { env: { ...env, ...extra }, encoding: 'utf8', timeout: 20000 });
   assert.notEqual(run({}).status, 0);

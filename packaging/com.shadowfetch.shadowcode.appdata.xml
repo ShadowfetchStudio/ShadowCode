@@ -29,7 +29,7 @@
     <binary>shadowcode</binary>
   </provides>
   <releases>
-    <release version="2.3.2" date="2026-11-01">
+    <release version="2.3.3" date="2026-11-01">
       <description><p>Improves AppImage startup on rolling Linux desktops, model-picker focus, and platform keyboard hints.</p></description>
     </release>
     <release version="2.3.1" date="2026-10-31">

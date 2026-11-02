@@ -1,5 +1,7 @@
 # Physical-machine platform qualification
 
+The 2.3.3 candidate carries the 2.3.2 candidate fixes and extends the existing Linux signing-key interval through 2.3.3. Evidence below is for the 2.3.2 candidate and does not qualify the 2.3.3 artifacts; final package and physical-device testing remains pending.
+
 ## 2.3.2 candidate — November 1, 2026
 
 This is a qualification record, not a claim that the candidate has been released.
