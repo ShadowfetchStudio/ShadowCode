@@ -29,6 +29,9 @@
     <binary>shadowcode</binary>
   </provides>
   <releases>
+    <release version="2.3.2" date="2026-11-01">
+      <description><p>Improves AppImage startup on rolling Linux desktops, model-picker focus, and platform keyboard hints.</p></description>
+    </release>
     <release version="2.3.1" date="2026-10-31">
       <description><p>Clarify Git-history requirements for write subagents and guide plain-folder tasks toward direct edits or read-only delegation.</p></description>
     </release>

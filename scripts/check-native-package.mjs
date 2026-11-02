@@ -188,6 +188,14 @@ try {
   assert.match(version, /^ShadowCode \d+\.\d+\.\d+$/);
   await run(appimagePath, ["--appimage-extract"], { ...options, cwd: scratch });
   const appdir = path.join(scratch, "squashfs-root");
+  const relocation = JSON.parse(await readFile(path.join(appdir, "usr/share/doc/shadowcode/WEBKIT-RELOCATION.json"), "utf8"));
+  assert.match(relocation.library, /^usr\/lib\/libwebkit2gtk-4\.1\.so\.0(?:\.\d+)*$/, "WebKit relocation receipt must name the bundled library");
+  assert.equal(relocation.oldPrefix, `/usr/lib/${hostArch().multiarch}/webkit2gtk-4.1`);
+  assert.equal(relocation.newPrefix, `././/lib/${hostArch().multiarch}/webkit2gtk-4.1`);
+  assert.equal(await digest(path.join(appdir, relocation.library)), relocation.afterSha256, "WebKit bytes must match the relocation receipt");
+  const webkitBytes = await readFile(path.join(appdir, relocation.library));
+  assert.ok(!webkitBytes.includes(Buffer.from(relocation.oldPrefix)), "Bundled WebKit must not search the build host's absolute helper path");
+  assert.ok(webkitBytes.includes(Buffer.from(relocation.newPrefix)), "Bundled WebKit must retain the relative helper lookup");
   const packaged = version.replace(/^ShadowCode /, "");
   await verifyMetainfo(appdir, packaged);
   assert.equal(

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import { chmod, copyFile, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { chmod, copyFile, mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -26,9 +26,29 @@ for (const backend of [undefined, "", "x11", "wayland"]) {
       if (backend !== undefined) env.GDK_BACKEND = backend;
       const args = ["ui", "a path with spaces", "$(must remain literal)"];
       const { stdout } = await run("bash", [path.join(appdir, "AppRun"), ...args], { cwd, env, timeout: 5000 });
-      assert.deepEqual(stdout.split("\0"), [backend || "x11", cwd, ...args, ""]);
+      assert.deepEqual(stdout.split("\0"), [backend || "x11", await realpath(cwd), ...args, ""]);
     } finally {
       await rm(root, { recursive: true, force: true });
     }
+  });
+}
+
+for (const mode of ["invalid-mode", "host"]) {
+  test(`AppRun refuses ${mode} without silently weakening the stack check`, async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "shadowcode-stack-refusal-"));
+    try {
+      await mkdir(path.join(root, "usr/bin"), { recursive: true });
+      await mkdir(path.join(root, "apprun-hooks"));
+      await writeFile(path.join(root, "apprun-hooks/linuxdeploy-plugin-gtk.sh"), "export GDK_BACKEND=x11\n");
+      await copyFile(new URL("../packaging/native-app-run.sh", import.meta.url), path.join(root, "AppRun"));
+      await writeFile(path.join(root, "usr/bin/shadowcode"), "#!/bin/sh\necho must-not-run\n");
+      await chmod(path.join(root, "usr/bin/shadowcode"), 0o755);
+      await assert.rejects(run("bash", [path.join(root, "AppRun"), "ui"], { env: { ...process.env, SHADOWCODE_APPIMAGE_STACK: mode }, timeout: 5000 }), error => {
+        assert.equal(error.code, 1);
+        assert.ok(!error.stdout.includes("must-not-run"));
+        assert.match(error.stderr, mode === "host" ? /complete compatible host WebKitGTK/ : /must be auto, host or bundled/);
+        return true;
+      });
+    } finally { await rm(root, { recursive: true, force: true }); }
   });
 }

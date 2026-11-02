@@ -19,6 +19,7 @@ import {
 import { api, type Job, type Project, type Session } from "../api";
 import { BADGE_LABELS, projectOf, type Badge } from "../lib/badges";
 import { readPins, writePins } from "../lib/storage";
+import { shortcutHint } from "../lib/shortcuts";
 import { ConversationMenu, type ConversationAction } from "./ConversationMenu";
 import { SearchSnippet } from "./SearchSnippet";
 
@@ -241,7 +242,7 @@ export function Sidebar({
         <button
           type="button"
           className="icon-btn"
-          title="Hide sidebar (Ctrl+B)"
+          title={`Hide sidebar (${shortcutHint("B")})`}
           aria-label="Hide sidebar"
           onClick={onHide}
         >
@@ -251,7 +252,7 @@ export function Sidebar({
       <button type="button" className="new-task" onClick={onNew}>
         <SquarePen size={17} />
         <span>New task</span>
-        <kbd>Ctrl N</kbd>
+        <kbd>{shortcutHint("N")}</kbd>
       </button>
       <label className="sidebar-search">
         <Search size={15} />
@@ -268,7 +269,7 @@ export function Sidebar({
           type="button"
           className="icon-btn"
           aria-label="Open project"
-          title="Open project (Ctrl+P)"
+          title={`Open project (${shortcutHint("P")})`}
           onClick={() => onProject()}
         >
           <Plus size={15} />
@@ -359,7 +360,7 @@ export function Sidebar({
         <button type="button" onClick={onSettings}>
           <Settings2 size={16} />
           <span>Settings</span>
-          <kbd>Ctrl ,</kbd>
+          <kbd>{shortcutHint(",")}</kbd>
         </button>
       </div>
     </aside>

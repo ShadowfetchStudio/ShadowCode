@@ -31,6 +31,7 @@ import {
 } from "./native-desktop-metadata.mjs";
 import { finishDebianPackage } from "./native-deb.mjs";
 import { hostArch, packageNames } from "./native-arch.mjs";
+import { relocateWebKit } from "./native-webkit-paths.mjs";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const packagingPath = applyPackagingPath(root);
 console.log(`Using sanitized packaging PATH: ${packagingPath}`);
@@ -177,6 +178,9 @@ try {
         "target/release/bundle/appimage/ShadowCode.AppDir",
       );
       await normalizeDesktopEntry(appdir, true);
+      // A Debian build host can hide absolute helper paths: they exist on CI,
+      // but not on Arch/Omarchy. Verify and relocate the actual shipped library.
+      await relocateWebKit(appdir, arch.multiarch);
       const runtimeInfo = await exec(appimage, ["--appimage-version"]);
       const runtimeVersion = runtimeInfo.stderr + runtimeInfo.stdout;
       if (!runtimeVersion.includes("/commit/75849dc"))

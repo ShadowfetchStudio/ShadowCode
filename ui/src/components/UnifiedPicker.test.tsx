@@ -313,6 +313,66 @@ it("filters by typing and closes with Escape", async () => {
   await waitFor(() => expect(document.activeElement).toBe(trigger()));
 });
 
+it("does not steal focus when typing moves to the composer before close animation", () => {
+  const frames: FrameRequestCallback[] = [];
+  const raf = vi
+    .spyOn(globalThis, "requestAnimationFrame")
+    .mockImplementation((callback) => {
+      frames.push(callback);
+      return frames.length;
+    });
+  try {
+    render(
+      <>
+        <Harness />
+        <textarea aria-label="Next task" />
+      </>,
+    );
+    fireEvent.click(trigger());
+    frames.splice(0).forEach((callback) => callback(performance.now()));
+    expect(document.activeElement).toBe(search());
+    key("Escape");
+    const composer = screen.getByRole("textbox", { name: "Next task" });
+    composer.focus();
+    frames.splice(0).forEach((callback) => callback(performance.now()));
+    expect(document.activeElement).toBe(composer);
+  } finally {
+    raf.mockRestore();
+  }
+});
+
+it("keeps the composer focused when choosing a model moves focus before close", () => {
+  const frames: FrameRequestCallback[] = [];
+  const raf = vi
+    .spyOn(globalThis, "requestAnimationFrame")
+    .mockImplementation((callback) => {
+      frames.push(callback);
+      return frames.length;
+    });
+  try {
+    render(
+      <>
+        <Harness
+          onSelect={() =>
+            screen.getByRole("textbox", { name: "Next task" }).focus()
+          }
+        />
+        <textarea aria-label="Next task" />
+      </>,
+    );
+    fireEvent.click(trigger());
+    frames.splice(0).forEach((callback) => callback(performance.now()));
+    fireEvent.change(search(), { target: { value: "qwen" } });
+    key("Enter");
+    frames.splice(0).forEach((callback) => callback(performance.now()));
+    expect(document.activeElement).toBe(
+      screen.getByRole("textbox", { name: "Next task" }),
+    );
+  } finally {
+    raf.mockRestore();
+  }
+});
+
 it("routes non-ready rows to their fix instead of disabling them", () => {
   const onConnect = vi.fn();
   const onSetup = vi.fn();

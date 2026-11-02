@@ -1,3 +1,18 @@
+# ShadowCode 2.3.2 — candidate
+
+This source candidate addresses an AppImage desktop-startup failure reproduced on
+Omarchy, a model-picker focus race, and misleading Mac keyboard hints. It is not
+yet a qualified public release. Final package hashes, physical-machine results,
+and publication receipts will be recorded after the release builds.
+
+The new platform endurance probe exercises the installed native engine against
+a loopback scripted provider. It measures 100 sequential tasks, 80 concurrent
+tasks, five cancellations, process resource growth, and persisted state after
+stopping/reopening. It does not certify desktop rendering, paid-provider
+accounts, real-model quality, GPU inference, or inference-server memory.
+Windows persistence is tested after forced process termination; graceful
+Windows shutdown is not claimed by that probe.
+
 # ShadowCode 2.3.1
 
 Write-subagent guidance now names its Git-history prerequisite and directs
