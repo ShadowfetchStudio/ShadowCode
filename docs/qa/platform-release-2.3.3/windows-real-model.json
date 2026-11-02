@@ -1,0 +1,20 @@
+{
+  "installer_sha256": "f6991390e42d0fd85e2456b95e6209053bf9db35ff94ed940df2bf7fd71e65c3",
+  "installed_exe_sha256": "5f80bde6432e72b96af26a891aac0ba491c33c8747720b2c8e692426a1e6d160",
+  "release_commit": "fd13dc10dbdcc6aac63cdfb292f9ec4d47838347",
+  "public_asset_url": "https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.3.3/ShadowCode_2.3.3_x64-setup.exe",
+  "version": "2.3.3",
+  "model": "local:gguf:a0d2c9893efeaae9e3f03b9f56f95c3ccaef3587ad327dcf824fbe851725e37b",
+  "started": "2026-11-02T08:19:47.018247+00:00",
+  "elapsed_seconds": 662.35,
+  "run_exit": 0,
+  "test_exit": 0,
+  "tests_preserved": true,
+  "context_tokens": 16384,
+  "task_token_budget": 100000,
+  "agent_tests_observed": true,
+  "runtime_binary_sha256": "b4dbab8ac6d9b36dcd04e7f98829706cdda545c047f8c3b42465613b05affa33",
+  "runtime_unchanged": true,
+  "project_git_repo": false,
+  "passed": true
+}
