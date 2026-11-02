@@ -1,0 +1,58 @@
+{
+  "passed": true,
+  "platform": "linux",
+  "osRelease": "7.2.8-9-omarchy",
+  "version": "ShadowCode 2.3.1",
+  "binarySha256": "86a0808c19ad48a5cac50a4df4805bba1f339c1b15b02d00a6d13e163fc64dce",
+  "sequentialCompleted": 100,
+  "concurrentCompleted": 80,
+  "cancelled": 5,
+  "requests": 367,
+  "measurements": [
+    {
+      "round": "warmup",
+      "rssKiB": 69788,
+      "threads": 6,
+      "resources": 18,
+      "resourceKind": "file descriptors"
+    },
+    {
+      "round": "sequential-25",
+      "rssKiB": 75312,
+      "threads": 6,
+      "resources": 18,
+      "resourceKind": "file descriptors"
+    },
+    {
+      "round": "sequential-50",
+      "rssKiB": 75968,
+      "threads": 6,
+      "resources": 18,
+      "resourceKind": "file descriptors"
+    },
+    {
+      "round": "sequential-75",
+      "rssKiB": 76360,
+      "threads": 7,
+      "resources": 18,
+      "resourceKind": "file descriptors"
+    },
+    {
+      "round": "sequential-100",
+      "rssKiB": 76376,
+      "threads": 7,
+      "resources": 18,
+      "resourceKind": "file descriptors"
+    },
+    {
+      "round": "completed",
+      "rssKiB": 78412,
+      "threads": 11,
+      "resources": 18,
+      "resourceKind": "file descriptors"
+    }
+  ],
+  "persistenceAfterStop": true,
+  "shutdown": "SIGTERM graceful shutdown",
+  "scope": "Installed native engine with loopback scripted provider. Not desktop UI, paid providers, real model inference or inference-server memory."
+}

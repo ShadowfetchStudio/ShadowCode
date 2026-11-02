@@ -113,7 +113,7 @@ test("renders syntax, searches and replaces, then undoes and saves through the l
   }
   await page.evaluate(() => (document.documentElement.dataset.theme = "light"));
   expect(await fileWrites(page)).toEqual([]);
-  await editor.press("Control+f");
+  await editor.press("ControlOrMeta+f");
   const search = drawer.getByRole("textbox", { name: "Find", exact: true });
   await expect(search).toBeFocused();
   await search.fill("token");
@@ -127,17 +127,17 @@ test("renders syntax, searches and replaces, then undoes and saves through the l
   await expectEditorText(editor, replaced);
   await editor.press("Escape");
   await expect(search).toHaveCount(0);
-  await editor.press("Control+z");
+  await editor.press("ControlOrMeta+z");
   await expectEditorText(editor, original);
-  await editor.press("Control+Shift+z");
+  await editor.press("ControlOrMeta+Shift+z");
   await expectEditorText(editor, replaced);
   if (process.platform === "win32") {
-    await editor.press("Control+z");
+    await editor.press("ControlOrMeta+z");
     await expectEditorText(editor, original);
     await editor.press("Control+y");
     await expectEditorText(editor, replaced);
   }
-  await editor.press("Control+s");
+  await editor.press("ControlOrMeta+s");
   await expect.poll(() => savedFile(page, "sample.ts")).toBe(replaced);
   await expect(drawer.getByText("Saved", { exact: true })).toBeVisible();
   const writes = await fileWrites(page);
@@ -149,7 +149,9 @@ test("typing a question mark edits the file without opening Help", async ({
   page,
 }) => {
   const { drawer, editor } = await openFile(page, "README.md");
-  await editor.press("Control+Home");
+  await editor.press(
+    process.platform === "darwin" ? "Meta+ArrowUp" : "Control+Home",
+  );
   await editor.press("End");
   // Generate a real key event; insertText/fill would not exercise the app's
   // global question-mark shortcut against a contenteditable editor.
@@ -172,22 +174,22 @@ test("keeps per-file undo separate and forgets history when a clean buffer close
   const { editor: second } = await openFile(page, "other.py");
   await second.fill('print("new")\n');
   await expectEditorText(second, 'print("new")\n');
-  await second.press("Control+z");
+  await second.press("ControlOrMeta+z");
   await expectEditorText(second, 'print("old")\n');
   await drawer
     .getByRole("button", { name: "Open README.md, unsaved", exact: true })
     .click();
   await expectEditorText(first, "# First file edit\n");
-  await first.press("Control+z");
+  await first.press("ControlOrMeta+z");
   await expectEditorText(first, "# Demo\n");
-  await first.press("Control+Shift+z");
+  await first.press("ControlOrMeta+Shift+z");
   await expectEditorText(first, "# First file edit\n");
-  await first.press("Control+s");
+  await first.press("ControlOrMeta+s");
   await expect(drawer.getByText("Saved", { exact: true })).toBeVisible();
   await drawer.getByRole("button", { name: "Close file", exact: true }).click();
   await expect(first).toHaveCount(0);
   await openFile(page, "README.md");
-  await first.press("Control+z");
+  await first.press("ControlOrMeta+z");
   await expectEditorText(first, "# First file edit\n");
   await drawer
     .getByRole("button", { name: "Open other.py", exact: true })
@@ -200,7 +202,7 @@ test("a clean external replacement clears undo instead of reviving older file by
 }) => {
   const { drawer, editor } = await openFile(page, "README.md");
   await editor.fill("# Saved edit\n");
-  await editor.press("Control+s");
+  await editor.press("ControlOrMeta+s");
   await expect(drawer.getByText("Saved", { exact: true })).toBeVisible();
   await page.evaluate(() => {
     (window as any).__SHADOW_FAKE__.state.files["README.md"] =
@@ -211,7 +213,7 @@ test("a clean external replacement clears undo instead of reviving older file by
   await expect(
     drawer.getByRole("group", { name: "File conflict" }),
   ).toHaveCount(0);
-  await editor.press("Control+z");
+  await editor.press("ControlOrMeta+z");
   await expectEditorText(editor, "# New disk revision\n");
   await expect(
     drawer.getByRole("button", { name: "Save", exact: true }),
@@ -232,7 +234,9 @@ test("keeps ordinary file undo while a mixed-newline file uses the plain editor"
   const { editor: plain } = await openFile(page, "mixed.txt");
   expect(await plain.evaluate((element) => element.tagName)).toBe("TEXTAREA");
   await expect(drawer.locator(".cm-content")).toHaveCount(0);
-  await plain.press("Control+Home");
+  await plain.press(
+    process.platform === "darwin" ? "Meta+ArrowUp" : "Control+Home",
+  );
   await plain.press("End");
   await page.keyboard.insertText("!");
   await expectEditorText(plain, "first!\nsecond\nthird\n");
@@ -241,16 +245,16 @@ test("keeps ordinary file undo while a mixed-newline file uses the plain editor"
     .getByRole("button", { name: "Open README.md, unsaved", exact: true })
     .click();
   await expectEditorText(ordinary, "# Ordinary draft\n");
-  await ordinary.press("Control+z");
+  await ordinary.press("ControlOrMeta+z");
   await expectEditorText(ordinary, "# Demo\n");
-  await ordinary.press("Control+Shift+z");
+  await ordinary.press("ControlOrMeta+Shift+z");
   await expectEditorText(ordinary, "# Ordinary draft\n");
 
   await drawer
     .getByRole("button", { name: "Open mixed.txt, unsaved", exact: true })
     .click();
   await expectEditorText(plain, "first!\nsecond\nthird\n");
-  await plain.press("Control+s");
+  await plain.press("ControlOrMeta+s");
   await expect
     .poll(() => savedFile(page, "mixed.txt"))
     .toBe("first!\r\nsecond\rthird\n");
@@ -272,17 +276,19 @@ for (const [name, separator] of [
     await seedFiles(page, { "newlines.txt": original });
     const { drawer, editor } = await openFile(page, "newlines.txt");
     await expectEditorText(editor, "first\nsecond\n");
-    await editor.press("Control+s");
+    await editor.press("ControlOrMeta+s");
     await expect(
       drawer.getByRole("button", { name: "Save", exact: true }),
     ).toBeDisabled();
     expect(await fileWrites(page)).toEqual([]);
     expect(await savedFile(page, "newlines.txt")).toBe(original);
-    await editor.press("Control+End");
+    await editor.press(
+      process.platform === "darwin" ? "Meta+ArrowDown" : "Control+End",
+    );
     await page.keyboard.insertText("third");
     await editor.press("Enter");
     await expectEditorText(editor, "first\nsecond\nthird\n");
-    await editor.press("Control+s");
+    await editor.press("ControlOrMeta+s");
     await expect.poll(() => savedFile(page, "newlines.txt")).toBe(expected);
     const writes = await fileWrites(page);
     expect(writes).toHaveLength(1);
@@ -301,17 +307,19 @@ test("keeps mixed separators in the plain fallback without incidental writes", a
   );
   expect(await editor.evaluate((element) => element.tagName)).toBe("TEXTAREA");
   await expectEditorText(editor, "first\nsecond\nthird\n");
-  await editor.press("Control+s");
+  await editor.press("ControlOrMeta+s");
   expect(await fileWrites(page)).toEqual([]);
   expect(await savedFile(page, "mixed.txt")).toBe(original);
   await expect(
     drawer.getByRole("button", { name: "Save", exact: true }),
   ).toBeDisabled();
-  await editor.press("Control+Home");
+  await editor.press(
+    process.platform === "darwin" ? "Meta+ArrowUp" : "Control+Home",
+  );
   await editor.press("End");
   await page.keyboard.insertText("!");
   await expectEditorText(editor, "first!\nsecond\nthird\n");
-  await editor.press("Control+s");
+  await editor.press("ControlOrMeta+s");
   await expect
     .poll(() => savedFile(page, "mixed.txt"))
     .toBe("first!\r\nsecond\rthird\n");

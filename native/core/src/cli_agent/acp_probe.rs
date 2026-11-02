@@ -1,7 +1,7 @@
 //! Read-only Agent Client Protocol probe for ACP vendors (Cursor, Grok).
 //!
-//! Runs the documented handshake — `initialize`, `authenticate` when the agent
-//! advertises an auth method, `session/new` — and records what the agent
+//! Runs the documented handshake — `initialize`, an existing-login check only
+//! for known noninteractive auth methods, `session/new` — and records what the agent
 //! reports about itself: auth methods, prompt capabilities (whether images are
 //! accepted on the wire), available modes, and the model catalog. No prompt is
 //! sent, so no plan allowance is consumed. The agent keeps its own login; the
@@ -393,26 +393,24 @@ async fn probe_inner(
                             probe.current_model = current;
                         }
                     }
-                    let next = if probe.auth_methods.is_empty() {
-                        rpc(3, "session/new", json!({"cwd": cwd, "mcpServers": []}))
-                    } else {
-                        // Prefer the vendor's own login over a cached-token
-                        // method so an expired cache is reported, not assumed.
-                        let method = probe
-                            .auth_methods
-                            .iter()
-                            .find(|m| {
-                                m.as_str() == "cursor_login"
-                                    || m.as_str() == "cached_token"
-                                    || (antigravity
-                                        && m.as_str() == super::antigravity_server::AUTH_METHOD)
-                            })
-                            .cloned()
-                            .unwrap_or_else(|| probe.auth_methods[0].clone());
+                    // Advertising a method does not make it a status check:
+                    // Grok's `grok.com` authenticate starts browser login.
+                    // Unknown/interactive methods must wait for explicit Connect.
+                    // session/new can still verify an already cached login and
+                    // report authentication required without initiating one.
+                    let existing_login = probe.auth_methods.iter().find(|m| {
+                        m.as_str() == "cursor_login"
+                            || m.as_str() == "cached_token"
+                            || (antigravity && m.as_str() == super::antigravity_server::AUTH_METHOD)
+                    });
+                    let next = if let Some(method) = existing_login.cloned() {
                         requested_auth_method = Some(method.clone());
+                        pending.insert(2);
                         rpc(2, "authenticate", json!({"methodId": method}))
+                    } else {
+                        pending.insert(3);
+                        rpc(3, "session/new", json!({"cwd": cwd, "mcpServers": []}))
                     };
-                    pending.insert(if probe.auth_methods.is_empty() { 3 } else { 2 });
                     stdin.write_all(next.as_bytes()).await?;
                     stdin.write_all(b"\n").await?;
                     stdin.flush().await?;

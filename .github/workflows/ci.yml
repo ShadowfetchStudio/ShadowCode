@@ -108,7 +108,7 @@ jobs:
       - name: Architecture names, release authentication and signed targets
         run: node --test scripts/test-native-arch.mjs scripts/test-native-release-auth.mjs
       - name: Debian package assembly, runtime repack and desktop metadata
-        run: node --test scripts/test-native-deb.mjs scripts/test-llama-runtime.mjs scripts/test-native-desktop-metadata.mjs scripts/test-native-app-run.mjs
+        run: node --test scripts/test-native-deb.mjs scripts/test-llama-runtime.mjs scripts/test-native-desktop-metadata.mjs scripts/test-native-app-run.mjs scripts/test-native-webkit-paths.mjs
       - name: Packaging PATH and pinned sources
         run: node --test scripts/test-native-packaging-env.mjs scripts/test-native-source-fetch.mjs
       - name: Installer on this architecture

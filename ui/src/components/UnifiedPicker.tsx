@@ -242,10 +242,26 @@ export function UnifiedPicker({
   }, [active, open]);
 
   function close(restoreFocus = true) {
+    const focusWhenClosing = document.activeElement;
+    const shouldRestore =
+      restoreFocus &&
+      (focusWhenClosing === document.body ||
+        root.current?.contains(focusWhenClosing));
     onOpenChange(false);
     setQuery("");
     setDetails(null);
-    if (restoreFocus) requestAnimationFrame(() => trigger.current?.focus());
+    if (shouldRestore)
+      requestAnimationFrame(() => {
+        // Closing removes the search input. Restore keyboard navigation only
+        // if the user has not already focused the composer or another control.
+        // A delayed unconditional focus can turn the next typed space into a
+        // trigger click and reopen the picker while the user is typing.
+        if (
+          document.activeElement === document.body ||
+          document.activeElement === focusWhenClosing
+        )
+          trigger.current?.focus();
+      });
   }
 
   function activate(item: Item | undefined) {

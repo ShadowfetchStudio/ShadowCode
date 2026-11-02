@@ -43,6 +43,7 @@ for raw in sys.stdin:
         result = {'sessionId':'fixture-session','models':{'currentModelId':'fixture-model',
                   'availableModels':[{'modelId':'fixture-model','name':'Fixture model'}]}}
         if cfg.get('session_error'): error = 'fixture session unavailable'
+        if cfg.get('session_auth_required'): error = 'authentication required'
     else:
         result = {}
     reply = {'jsonrpc':'2.0','id':frame['id']}
@@ -113,6 +114,28 @@ impl Fixture {
             .log("invocations.jsonl")
             .iter()
             .any(|args| args == &json!(["models"])));
+    }
+}
+
+#[tokio::test]
+async fn grok_catalog_does_not_start_interactive_login_during_discovery() {
+    for (requires_login, expected) in [(false, Availability::Ready), (true, Availability::SignIn)] {
+        let fake = Fixture::new(json!({
+            "version": 1,
+            "auth_methods": [{"id":"grok.com"}],
+            "session_auth_required": requires_login,
+        }));
+        let catalog = VendorCatalog::new();
+        let status = catalog
+            .refresh(Vendor::Grok, &fake.config(Vendor::Grok), true)
+            .await;
+        assert_eq!(status.availability, expected, "{status:?}");
+        assert_eq!(
+            fake.log("methods.jsonl"),
+            vec![json!("initialize"), json!("session/new")],
+            "Discovery may check an existing session but must never initiate browser login"
+        );
+        assert!(!fake.root.path().join("selected_auth.json").exists());
     }
 }
 
