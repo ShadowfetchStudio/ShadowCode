@@ -72,15 +72,9 @@ The code is open source; the Shadowfetch and ShadowCode product identity is cove
   own terminal, go from commit to pull request, preview the app you're
   building, dictate with your voice, and follow along from your phone.
 
-ShadowCode **2.3.1** is the current public release for Windows, Linux and macOS,
-available from [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.3.1)
-and [shadowcode.org](https://shadowcode.org/).
+ShadowCode **2.3.3** is published for Linux on [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.3.3). The Windows, macOS and Flatpak packages for 2.3.3 are being built; check the release page for availability. The website and the Windows installer linked above still point to 2.3.1 until the new packages are qualified.
 
-This release improves guidance when write delegation is requested in a folder
-without Git history. See the [release notes](docs/RELEASE_NOTES.md),
-[Windows qualification record](docs/WINDOWS_LAPTOP_QUALIFICATION.md), and
-[release history](CHANGELOG.md). Download instructions below use the published
-2.3.1 packages.
+Version 2.3.3 includes the desktop fixes and signing-policy update described in the [release notes](docs/RELEASE_NOTES.md). See also the [Windows qualification record](docs/WINDOWS_LAPTOP_QUALIFICATION.md) and [release history](CHANGELOG.md).
 
 
 ## Install
@@ -100,10 +94,10 @@ From 2.2.0 each release also carries Flatpak bundles for both architectures
 checked with `ShadowCode_VERSION_flatpak.sha256`; see [Flatpak](docs/FLATPAK.md))
 and macOS disk images (see [macOS](#macos)).
 Check [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases)
-for published versions. The 2.3.1 x86_64 packages and checksums are:
+for published versions. The 2.3.3 x86_64 Linux packages and checksums are:
 
-- `ShadowCode_2.3.1_amd64.AppImage`
-- `ShadowCode_2.3.1_amd64.deb`
+- `ShadowCode_2.3.3_amd64.AppImage`
+- `ShadowCode_2.3.3_amd64.deb`
 - `SHA256SUMS`, `RELEASE-MANIFEST.json`, `RELEASE-AUTH` and
   `RELEASE-AUTH.sig` (download these beside the package; the installer checks
   the publisher's signature before running anything)
@@ -174,7 +168,7 @@ assets are checksum-only and cannot be installed by this new entry point; use
 the instructions shipped with that released version for those existing assets.
 The 0.33.0 release attempt failed before signing and publication. Its tag stays
 unchanged. Version 0.33.1 was the first signed release; the public trust policy
-in `release/trust` now authorizes 0.33.0 through 2.3.1.
+in `release/trust` now authorizes 0.33.0 through 2.3.3. An older independently trusted installer bundle whose policy ends at 2.3.1 will reject 2.3.3. Obtain and independently authenticate a reviewed bundle with the updated policy before installing; do not replace trust files with copies from the downloaded release.
 For development, use [Build from source](#build-from-source).
 
 Obtain an independently authenticated installer bundle as described below,
@@ -188,7 +182,7 @@ bundle and bootstrap requirements.
 From that independently authenticated installer bundle, run:
 
 ```bash
-bash /path/to/trusted-bundle/scripts/install-appimage.sh /path/to/downloads/ShadowCode_2.3.1_amd64.AppImage
+bash /path/to/trusted-bundle/scripts/install-appimage.sh /path/to/downloads/ShadowCode_2.3.3_amd64.AppImage
 ```
 
 The installer takes the AppImage path (or `--recover`), resolves its own trusted
@@ -234,7 +228,7 @@ as `--trust-dir` are not installer options.
   cannot corrupt it.
 
 After obtaining and verifying the intended package, run the AppImage without installing it:
-`./ShadowCode_2.3.1_amd64.AppImage --appimage-extract-and-run`. FUSE is not
+`./ShadowCode_2.3.3_amd64.AppImage --appimage-extract-and-run`. FUSE is not
 required.
 
 ### Debian package
@@ -282,16 +276,16 @@ installed. The repository is published by the release workflow only; nothing
 in ShadowCode adds or contacts it by itself.
 
 To install one release by hand instead, verify the Debian artifact using the independently trusted verifier bundle.
-`verified-deb-2.3.1` must not already exist; install the verified snapshot:
+`verified-deb-2.3.3` must not already exist; install the verified snapshot:
 
 ```bash
 bash /path/to/trusted-bundle/scripts/verify-native-release.sh \
   --bundle-dir /path/to/downloads \
   --trust-dir /path/to/trusted-bundle/release/trust \
-  --artifact ShadowCode_2.3.1_amd64.deb \
-  --stage-dir ./verified-deb-2.3.1 \
-  --expect-version 2.3.1
-sudo apt install ./verified-deb-2.3.1/ShadowCode_2.3.1_amd64.deb
+  --artifact ShadowCode_2.3.3_amd64.deb \
+  --stage-dir ./verified-deb-2.3.3 \
+  --expect-version 2.3.3
+sudo apt install ./verified-deb-2.3.3/ShadowCode_2.3.3_amd64.deb
 ```
 
 A `.deb` installed by hand this way gets no updates and none of the APT

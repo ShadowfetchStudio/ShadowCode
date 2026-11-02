@@ -1,0 +1,12 @@
+{
+  "version": "2.3.3",
+  "release_commit": "fd13dc10dbdcc6aac63cdfb292f9ec4d47838347",
+  "appimage_sha256": "4d7b49048718bc7a25407362958ea63b7d5d69a66f23afc8a287274be3245747",
+  "installed_exe_sha256": "6b47514c3028cc4e3e98d7bd2fa46f73a437d5883dd8551278d3b0e4da3d04f7",
+  "installer_script_sha256": "b2e956e3e7efb6a66a8a58e38e35cd91b1cd0e5062b503fdf2c8253b191f9b47",
+  "public_asset_url": "https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.3.3/ShadowCode_2.3.3_amd64.AppImage",
+  "installed_at": "2026-11-02T07:51:18.887Z",
+  "installed_runtime": "passed",
+  "first_window": "required by official installer",
+  "scope": "Public publisher-authenticated AppImage, official installer runtime checks, required first native window and installed byte identity. Native interaction, inference and endurance use separate receipts."
+}

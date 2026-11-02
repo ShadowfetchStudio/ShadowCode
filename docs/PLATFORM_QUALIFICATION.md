@@ -1,6 +1,14 @@
 # Physical-machine platform qualification
 
-The 2.3.3 candidate carries the 2.3.2 candidate fixes and extends the existing Linux signing-key interval through 2.3.3. Evidence below is for the 2.3.2 candidate and does not qualify the 2.3.3 artifacts; final package and physical-device testing remains pending.
+## 2.3.3 public release — November 2, 2026
+
+Linux 2.3.3 is published. The Windows, macOS and Flatpak release builds and final physical-machine tests are in progress.
+
+On the Omarchy x64 laptop, the publisher-authenticated public AppImage was installed with the independently reviewed 2.3.3 trust bundle. The installed AppImage SHA-256 is `4d7b49048718bc7a25407362958ea63b7d5d69a66f23afc8a287274be3245747`; the extracted native binary is `6b47514c3028cc4e3e98d7bd2fa46f73a437d5883dd8551278d3b0e4da3d04f7`. The installer required and observed the first native window.
+
+A focused test on the laptop's actual Wayland compositor passed 12 interface checks, including onboarding, provider discovery (including Grok), accessibility, a scripted-provider task with approved file writing and command execution, and clean app shutdown. It excludes the floating-window sizing and resize tests, recovery and the full UI endurance suite. Separately, the extracted installed engine passed 100 sequential and 80 concurrent tasks, five cancellations and persistence after a graceful stop. That probe uses a loopback scripted provider: it does not demonstrate real-model inference or inference-server memory behavior. The [installation receipt](qa/platform-release-2.3.3/omarchy-installation.json) and [endurance results](qa/platform-release-2.3.3/omarchy-endurance.json) retain the hashes and measurements.
+
+Earlier candidate evidence below is version-specific.
 
 ## 2.3.2 candidate — November 1, 2026
 
