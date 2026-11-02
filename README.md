@@ -72,7 +72,7 @@ The code is open source; the Shadowfetch and ShadowCode product identity is cove
   own terminal, go from commit to pull request, preview the app you're
   building, dictate with your voice, and follow along from your phone.
 
-ShadowCode **2.3.3** is published for Linux on [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.3.3). The Windows, macOS and Flatpak packages for 2.3.3 are being built; check the release page for availability. The website and the Windows installer linked above still point to 2.3.1 until the new packages are qualified.
+ShadowCode **2.3.3** is published for Linux on [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.3.3). The Windows and Flatpak packages are also published; macOS packages are building. The website and the Windows installer linked above still point to 2.3.1 pending final qualification.
 
 Version 2.3.3 includes the desktop fixes and signing-policy update described in the [release notes](docs/RELEASE_NOTES.md). See also the [Windows qualification record](docs/WINDOWS_LAPTOP_QUALIFICATION.md) and [release history](CHANGELOG.md).
 
