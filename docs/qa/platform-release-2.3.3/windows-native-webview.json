@@ -1,0 +1,12 @@
+{
+  "installer_sha256": "f6991390e42d0fd85e2456b95e6209053bf9db35ff94ed940df2bf7fd71e65c3",
+  "installed_exe_sha256": "5f80bde6432e72b96af26a891aac0ba491c33c8747720b2c8e692426a1e6d160",
+  "editor_saved": true,
+  "redo_shortcuts": [
+    "Control+Shift+z",
+    "Control+y"
+  ],
+  "settings_visible": true,
+  "errors": [],
+  "checked_at": "2026-11-02T08:18:18.038Z"
+}

@@ -1,13 +1,12 @@
-# ShadowCode 2.3.3 — candidate
+# ShadowCode 2.3.3
 
-This candidate includes the desktop fixes described below and extends the existing Linux release signing key trust interval through 2.3.3. The 2.3.2 tag was not published: its trusted key interval ended at 2.3.1. Final artifacts and physical-device qualification remain pending.
+Linux x64 and ARM64 packages are published and authenticated with the existing release signing key. Windows, macOS and Flatpak packages are also published. Version 2.3.2 was not published because its signing policy did not authorize that version; its tag remains unchanged. Version 2.3.3 extends the existing key's trust interval and adds a release preflight for policy mismatches.
 
-# ShadowCode 2.3.2 — candidate
+This release fixes an Omarchy AppImage desktop-startup failure, a model-picker focus race, unsolicited interactive Grok login during provider discovery, and Mac keyboard hints. On the Omarchy laptop, the authenticated public 2.3.3 AppImage passed installation, first-window and 12 focused Wayland interface checks. Its installed engine separately passed 100 sequential and 80 concurrent scripted-provider tasks, five cancellations and persistence after restart. These checks do not establish real-model inference, GPU endurance or cloud-provider compatibility. See the [physical-machine qualification](https://github.com/ShadowfetchStudio/ShadowCode/blob/main/docs/PLATFORM_QUALIFICATION.md) for details and limitations. On the Windows 11 laptop, the public 2.3.3 installer passed installation, native editor and settings checks, and scripted-provider engine endurance; a real Gemma 4 E4B CPU coding task also passed with the original five tests preserved and independently rechecked. This is one task, not broad model-quality qualification. On the Intel iMac, the public package passed installation, native-window startup and scripted-provider engine endurance. Screen capture was unavailable, so physical iMac visual editing and keyboard interaction were not verified; real-model inference was not tested there.
 
-This source candidate addresses an AppImage desktop-startup failure reproduced on
-Omarchy, a model-picker focus race, unsolicited interactive ACP login during vendor discovery, and misleading Mac keyboard hints. It is not
-yet a qualified public release. Final package hashes, physical-machine results,
-and publication receipts will be recorded after the release builds.
+# ShadowCode 2.3.2 — unpublished candidate
+
+The 2.3.2 candidate supplied the fixes above; its evidence remains historical and does not qualify the 2.3.3 packages.
 
 The new platform endurance probe exercises the installed native engine against
 a loopback scripted provider. It measures 100 sequential tasks, 80 concurrent

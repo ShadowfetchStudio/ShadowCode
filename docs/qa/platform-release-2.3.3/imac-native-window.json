@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "pid": 33544,
+  "version_marker": "ShadowCode 2.3.3",
+  "native_binary_sha256": "a112fb5bafed2d00c30e596760863f6a6d86be64e8aa9ae8ee0c356c58bb9786",
+  "visible_window": true,
+  "screen_capture_authorized": false,
+  "scope": "Native window and ready marker on physical Intel iMac; no visual content or keyboard interaction asserted."
+}

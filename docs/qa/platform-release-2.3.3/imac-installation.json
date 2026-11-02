@@ -1,0 +1,11 @@
+{
+  "version": "2.3.3",
+  "release_commit": "fd13dc10dbdcc6aac63cdfb292f9ec4d47838347",
+  "image_sha256": "f6c886915951d77c1d9d6e50add2d4d0647347bb66563fc6c946fef81da3e39e",
+  "installed_exe_sha256": "a112fb5bafed2d00c30e596760863f6a6d86be64e8aa9ae8ee0c356c58bb9786",
+  "installer_script_sha256": "6476e48141a2141cdb3b8d7ec7d10cfbaef27c959da7b2d48004b6c965679689",
+  "public_asset_url": "https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.3.3/ShadowCode_2.3.3_x64.dmg",
+  "installed_at": "2026-11-02T08:42:28.829Z",
+  "installed_runtime": "passed",
+  "scope": "Public Intel DMG, official checksum-verifying installer, native version, isolated CLI status and bundled llama-server startup. UI, inference and endurance use separate receipts."
+}
