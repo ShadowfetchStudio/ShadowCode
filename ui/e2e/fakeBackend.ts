@@ -5142,7 +5142,7 @@ export function installFakeBackend(options: FakeOptions = {}) {
           third_party: "/usr/share/doc/shadowcode/notices",
         },
         links: {
-          website: "https://shadowcode.org",
+          website: "https://www.shadowfetch.com/downloads",
           publisher: "https://shadowfetch.com",
           contributors: `${repo}/graphs/contributors`,
           trademarks: `${repo}/blob/main/TRADEMARKS.md`,

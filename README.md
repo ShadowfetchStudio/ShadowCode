@@ -2,7 +2,7 @@
 
 **One harness. All models.**
 
-**Download:** [shadowcode.org](https://shadowcode.org) — Windows, macOS and Linux · [Windows installer](https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.3.3/ShadowCode_2.3.3_x64-setup.exe)
+**Download:** [shadowfetch.com/downloads](https://www.shadowfetch.com/downloads) — Windows, macOS and Linux · [Windows installer](https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.3.3/ShadowCode_2.3.3_x64-setup.exe)
 
 ### An open-source project by Shadowfetch
 
@@ -22,7 +22,7 @@ Official project: https://github.com/ShadowfetchStudio/ShadowCode
 
 Publisher: https://shadowfetch.com
 
-Official website: https://shadowcode.org
+Official website: https://www.shadowfetch.com/downloads
 
 The code is open source; the Shadowfetch and ShadowCode product identity is covered by the [trademark and branding policy](TRADEMARKS.md).
 
@@ -72,7 +72,7 @@ The code is open source; the Shadowfetch and ShadowCode product identity is cove
   own terminal, go from commit to pull request, preview the app you're
   building, dictate with your voice, and follow along from your phone.
 
-ShadowCode **2.3.3** is published for Windows, macOS and Linux on [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.3.3). Downloads and the current interface screenshots are also available at [shadowcode.org](https://shadowcode.org/).
+ShadowCode **2.3.3** is published for Windows, macOS and Linux on [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.3.3). Downloads are also listed at [shadowfetch.com/downloads](https://www.shadowfetch.com/downloads).
 
 Version 2.3.3 includes the desktop fixes and signing-policy update described in the [release notes](docs/RELEASE_NOTES.md). See also the [Windows qualification record](docs/WINDOWS_LAPTOP_QUALIFICATION.md) and [release history](CHANGELOG.md).
 

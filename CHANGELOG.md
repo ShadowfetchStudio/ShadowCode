@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- About → Website and the AppStream homepage now point to https://www.shadowfetch.com/downloads. shadowcode.org redirects there; its `/download/*` installer links keep working.
+
 ## 2.3.3: Desktop reliability
 
 Extends the existing Linux release signing key trust interval through 2.3.3. The tagged 2.3.2 candidate was not published because its trust interval ended at 2.3.1.
