@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Job, Session } from "../api";
 import {
   BADGE_LABELS,
+  BADGE_SHORT,
   markRead,
   nextUnread,
   pruneUnread,
@@ -60,6 +61,9 @@ describe("conversation badges", () => {
     expect(sessionBadge("a", jobs, waiting, {}, spending)).toBe("approval");
     expect(sessionBadge("b", jobs, waiting, {}, spending)).toBe("spending");
     expect(BADGE_LABELS.spending).toBe("Waiting at a spending limit");
+    expect(BADGE_SHORT.approval).toBe("Needs approval");
+    expect(BADGE_SHORT.running).toBe("Working");
+    expect(BADGE_SHORT.unread).toBe("Done");
   });
 
   it("marks conversations unread when their task finishes out of view", () => {

@@ -104,17 +104,43 @@ fn high_entropy_tokens(text: &str) -> Vec<(usize, usize)> {
     for found in re.find_iter(text) {
         let run = found.as_str();
         if let Some(segments) = path_segments(run) {
-            spans.extend(segments.filter(|(_, segment)| looks_random(segment)).map(
-                |(offset, segment)| {
-                    let start = found.start() + offset;
-                    (start, start + segment.len())
-                },
-            ));
+            let listed: Vec<(usize, &str)> = segments.collect();
+            let skip = darwin_temp_folder_offsets(&listed);
+            spans.extend(listed.into_iter().filter_map(|(offset, segment)| {
+                if skip.contains(&offset) || !looks_random(segment) {
+                    return None;
+                }
+                let start = found.start() + offset;
+                Some((start, start + segment.len()))
+            }));
         } else if looks_random(run) {
             spans.push((found.start(), found.end()));
         }
     }
     spans
+}
+
+/// Offsets of Darwin per-user temp folder names (`/var/folders/<xx>/<yyyy>/T`).
+/// Those names are high-entropy by design (mixed letters, digits, `_`, often
+/// 32+ characters) and are not secrets; masking them hid every macOS command
+/// that ran from `$TMPDIR`.
+fn darwin_temp_folder_offsets(segments: &[(usize, &str)]) -> Vec<usize> {
+    let names: Vec<&str> = segments.iter().map(|(_, name)| *name).collect();
+    for i in 0..names.len() {
+        if names[i] != "var" || names.get(i + 1) != Some(&"folders") {
+            continue;
+        }
+        if names.get(i + 4) != Some(&"T") {
+            continue;
+        }
+        return segments
+            .get(i + 2)
+            .into_iter()
+            .chain(segments.get(i + 3))
+            .map(|(offset, _)| *offset)
+            .collect();
+    }
+    Vec::new()
 }
 
 /// The segments (with their offsets) of an absolute path under a well-known
@@ -647,6 +673,8 @@ mod tests {
         for path in [
             "/Volumes/NVME1TB/shadowcode-macos/task-demo",
             "/private/var/folders/qq/twswrb793xqgdr954yy4t1dc0000gn/T/.tmpAb3dEf/project",
+            // Real Darwin TMPDIR names are often 32+ mixed alnum/`_` chars.
+            "/var/folders/zz/zyxvpxvq6csfxvn_n0000000000000gn/T/.tmpAb3dEf/project",
             "/Users/Robert/Projects/ShadowCode2026/native/core/src/redaction.rs",
             "/home/dev/work/Project-2026_v2/src/main.rs",
             "file:///private/var/folders/qq/twswrb793xqgdr954yy4t1dc0000gn/T/.tmpX1/team.git",
@@ -654,6 +682,13 @@ mod tests {
             let result = redact_text(&format!("cwd: {path}"));
             assert!(!result.redacted, "{path} -> {}", result.text);
         }
+        let noisy = "/var/folders/8q/k1q2r3s4t5u6v7w8x9y0z1a2b3c4d5__/T/shadowcode-cmd.log";
+        let result = redact_text(&format!("ran: cat {noisy}"));
+        assert!(
+            !result.redacted && result.text.contains("k1q2r3s4t5u6v7w8x9y0z1a2b3c4d5__"),
+            "{}",
+            result.text
+        );
         // A secret that is a whole path segment is still hidden, the rest kept.
         let secret = "Zx9Kq2Lm7Pw4Rt6Yv8Nb3Hc5Jd1Fg0Se7Ua2Qi";
         let result = redact_text(&format!("/Users/dev/{secret}/notes.txt"));

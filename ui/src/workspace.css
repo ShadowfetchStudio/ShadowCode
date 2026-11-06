@@ -207,7 +207,7 @@ kbd {
 .task-link svg {
   opacity: 0.6;
 }
-.task-link span:last-child {
+.task-link .task-title {
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;

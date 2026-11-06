@@ -13,12 +13,12 @@ import {
   recommendedModel,
 } from "../lib/downloads";
 import { DownloadRow } from "./ModelDownloads";
+import { ProviderConnect } from "./ProviderConnect";
 
 export type SetupChoice = "download" | "openrouter" | "subscription";
 
-/** "No model yet": download a free model for this computer (recommended and
- * preselected when one fits), use an OpenRouter key, or sign in to a
- * subscription. Nothing downloads until the button is pressed. */
+/** "No model yet": sign in to a subscription, paste an API key, or download
+ * a free local model. Nothing downloads until the button is pressed. */
 export function ModelSetup({
   downloads,
   onStarted,
@@ -26,6 +26,7 @@ export function ModelSetup({
   onSubscription,
   onBrowse,
   onSkip,
+  onConnected,
   skipLabel = "Skip for now",
 }: {
   downloads: ModelDownloads;
@@ -35,6 +36,8 @@ export function ModelSetup({
   /** Settings › Local models: every free model, with sizes. */
   onBrowse: () => void;
   onSkip?: () => void;
+  /** A subscription or API key became ready: reload the picker. */
+  onConnected?: () => void;
   skipLabel?: string;
 }) {
   const uid = useId();
@@ -72,8 +75,12 @@ export function ModelSetup({
 
   return (
     <div className="model-setup">
+      <ProviderConnect
+        onReady={onConnected}
+        onOpenSettings={onSubscription}
+      />
       <fieldset className="mode-options">
-        <legend className="sr-only">How should ShadowCode think?</legend>
+        <legend>Or run a free model on this computer</legend>
         <label
           className={`mode-option ${!chosen || catalog?.offline ? "is-disabled" : ""}`}
         >
@@ -121,36 +128,6 @@ export function ModelSetup({
             </button>
           </p>
         )}
-        <label className="mode-option">
-          <input
-            type="radio"
-            name={`${uid}-choice`}
-            checked={choice === "openrouter"}
-            onChange={() => setChoice("openrouter")}
-          />
-          <span>
-            <strong>Use an OpenRouter key</strong>
-            <small>
-              Hundreds of cloud models, paid per use. Paste a key from
-              openrouter.ai.
-            </small>
-          </span>
-        </label>
-        <label className="mode-option">
-          <input
-            type="radio"
-            name={`${uid}-choice`}
-            checked={choice === "subscription"}
-            onChange={() => setChoice("subscription")}
-          />
-          <span>
-            <strong>Sign in to a subscription</strong>
-            <small>
-              Use Codex, Claude Code, Cursor, Antigravity or Grok if you already
-              pay for one.
-            </small>
-          </span>
-        </label>
       </fieldset>
       <div className="row end">
         {onSkip && (
@@ -162,9 +139,10 @@ export function ModelSetup({
           type="button"
           className="primary"
           disabled={
-            !choice ||
+            choice !== "download" ||
             starting ||
-            (choice === "download" && (!canDownload || !chosen))
+            !canDownload ||
+            !chosen
           }
           onClick={() => void go()}
         >
@@ -176,11 +154,7 @@ export function ModelSetup({
                 : chosen.state === "paused" || chosen.state === "failed"
                   ? `Resume ${chosen.name}`
                   : `Download ${chosen.name}`
-            : choice === "openrouter"
-              ? "Add an OpenRouter key"
-              : choice === "subscription"
-                ? "Choose a subscription"
-                : "Continue"}
+            : "Continue"}
         </button>
       </div>
     </div>
@@ -188,7 +162,7 @@ export function ModelSetup({
 }
 
 /** The empty conversation when no model is selected: a download in
- * progress, or (with nothing ready at all) the three ways to get a model,
+ * progress, or (with nothing ready at all) sign-in plus a free local model,
  * or the usual "Choose a model" when something is ready. */
 export function ModelSetupPanel({
   downloads,
@@ -197,6 +171,7 @@ export function ModelSetupPanel({
   onOpenRouter,
   onSubscription,
   onBrowse,
+  onConnected,
 }: {
   downloads: ModelDownloads;
   hasReadyModel: boolean;
@@ -204,6 +179,7 @@ export function ModelSetupPanel({
   onOpenRouter: () => void;
   onSubscription: () => void;
   onBrowse: () => void;
+  onConnected?: () => void;
 }) {
   const catalog = downloads.catalog;
   const active = catalog?.models.find(inProgress);
@@ -248,13 +224,14 @@ export function ModelSetupPanel({
     );
   return (
     <div className="model-setup-panel">
-      <p>ShadowCode needs a model to work. Pick one of these to start.</p>
+      <p>Open a project, pick an agent, send a message.</p>
       <ModelSetup
         downloads={downloads}
         onStarted={() => undefined}
         onOpenRouter={onOpenRouter}
         onSubscription={onSubscription}
         onBrowse={onBrowse}
+        onConnected={onConnected}
       />
     </div>
   );

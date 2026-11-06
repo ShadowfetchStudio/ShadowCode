@@ -81,6 +81,62 @@ button.link {
   margin: -2px 0 2px 32px;
   font-size: 12px;
 }
+
+/* First-run / empty chat: one-click vendor sign-in and API keys -------- */
+.provider-connect {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.provider-connect-lead {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 13px;
+}
+.provider-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.provider-tile {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.provider-tile strong {
+  display: block;
+}
+.provider-tile small {
+  display: block;
+  color: var(--text-2);
+  font-size: 12px;
+}
+.provider-tile .login-panel {
+  grid-column: 1 / -1;
+}
+.openrouter-quick,
+.api-key-quick {
+  display: grid;
+  gap: 6px;
+}
+.api-key-quick .field-row {
+  display: grid;
+  grid-template-columns: minmax(7rem, 10rem) 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+@media (max-width: 640px) {
+  .api-key-quick .field-row {
+    grid-template-columns: 1fr;
+  }
+}
 .cap-badge.download-recommended {
   border-color: var(--accent);
   color: var(--accent);

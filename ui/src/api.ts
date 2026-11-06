@@ -1882,7 +1882,10 @@ export const api = {
     const api_key = key.trim();
     // An empty body removes the key; never let a blank field do that.
     if (!api_key) throw new Error("Paste an OpenRouter API key first.");
-    return send<OpenRouterStatus>("/api/openrouter/key", "POST", { api_key });
+    return send<OpenRouterStatus>("/api/openrouter/key", "POST", {
+      api_key,
+      prefer_keyring: true,
+    });
   },
   removeOpenrouterKey: () =>
     send<OpenRouterStatus>("/api/openrouter/key", "POST", { api_key: "" }),
@@ -1898,7 +1901,7 @@ export const api = {
     send<{ ok: boolean; models: { default: string; name: string }[] }>(
       "/api/models/endpoints",
       "POST",
-      request,
+      { ...request, prefer_keyring: true },
     ),
   /** Removes a model added for an endpoint; its saved key stays. */
   removeEndpointModel: (id: string) =>

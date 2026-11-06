@@ -263,6 +263,7 @@ export function Stage({
       onOpenRouter={() => openSettings("accounts", { vendor: "openrouter" })}
       onSubscription={() => openSettings("accounts")}
       onBrowse={() => openSettings("local")}
+      onConnected={() => void onRefreshModels()}
     />
   ) : undefined;
   return (

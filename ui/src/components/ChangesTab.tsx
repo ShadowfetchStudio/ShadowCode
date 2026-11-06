@@ -31,6 +31,7 @@ export function ChangesTab({
   onAskAgent,
   memory,
   onMemory,
+  onOpenPr,
 }: {
   path: string;
   busy: boolean;
@@ -38,6 +39,8 @@ export function ChangesTab({
   onAskAgent?: (prompt: string) => void;
   memory: DrawerMemory;
   onMemory: DrawerMemoryUpdate;
+  /** Switch to the Git tab (commit, push, open a pull request). */
+  onOpenPr?: () => void;
 }) {
   const [git, setGit] = useState<{
     status: string;
@@ -306,6 +309,11 @@ export function ChangesTab({
         >
           Commit
         </button>
+        {onOpenPr && (
+          <button type="button" className="mini" onClick={onOpenPr}>
+            Open pull request…
+          </button>
+        )}
       </div>
       <pre className="plan log">{git.log}</pre>
       {guard.dialog}

@@ -43,6 +43,16 @@ export const BADGE_LABELS: Record<Badge, string> = {
   unread: "Finished; not opened yet",
 };
 
+/** Short sidebar chip: working / done / needs approval. */
+export const BADGE_SHORT: Record<Badge, string> = {
+  approval: "Needs approval",
+  spending: "Spending limit",
+  running: "Working",
+  queued: "Queued",
+  failed: "Failed",
+  unread: "Done",
+};
+
 /** Conversations whose task finished since `previous` while they were not
  * the one on screen become unread. Cancelled tasks were stopped by the
  * user and stay read. Returns `unread` itself when nothing changed. */

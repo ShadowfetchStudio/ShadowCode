@@ -443,6 +443,16 @@ impl Service {
         let key = body["api_key"].as_str().unwrap_or("").trim();
         if !key.is_empty() {
             config::set_secret(paths, &key_env, key)?;
+            // The Mac UI asks for Keychain (or the Linux desktop keyring)
+            // so a pasted endpoint key is not left in secrets.env.
+            if body["prefer_keyring"].as_bool() == Some(true)
+                && crate::keyring::availability().is_ok()
+                && !crate::keyring::listed(paths).contains(&key_env)
+            {
+                if let Err(error) = crate::keyring::move_in(paths, &key_env) {
+                    tracing::warn!("keyring.prefer_endpoint error={error:#}");
+                }
+            }
         }
         // With a key the server needs one: the row asks for it if it is
         // removed later. Without one (Ollama, a server on the LAN) it never does.

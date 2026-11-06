@@ -497,10 +497,11 @@ export function AccountsPage({
         <div>
           <h3>Accounts</h3>
           <p className="hint">
-            Subscriptions run through each vendor's official command-line tool
-            or agent server. Signing in opens the vendor's own page; ShadowCode
-            never asks for a password and never reads vendor tokens. API keys
-            are billed per token by the provider and stay on this computer.
+            Connect Codex, Claude Code, Cursor, Antigravity or Grok with one
+            click: ShadowCode opens the vendor&apos;s own page and never asks
+            for a password. API keys (OpenRouter and your own endpoints) stay
+            on this computer; on a Mac they go in the Keychain when it is
+            available.
           </p>
         </div>
         <button

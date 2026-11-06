@@ -35,6 +35,34 @@
   background: var(--accent);
   flex-shrink: 0;
 }
+.task-state {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  color: var(--text-2);
+}
+.task-state-running,
+.task-state-queued {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.task-state-approval,
+.task-state-spending {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+.task-state-failed {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.task-state-unread {
+  border-color: var(--accent);
+  color: var(--accent);
+}
 .task-rename {
   flex: 1;
   margin: 3px 6px;

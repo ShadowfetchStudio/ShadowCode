@@ -16,6 +16,15 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 [[ "$(uname -s)" == Darwin ]] || { echo "Build the macOS app on macOS." >&2; exit 1; }
+HOST_ARCH="$(uname -m)"
+# A shell under Rosetta reports x86_64 on Apple silicon; still build arm64.
+if [[ "$HOST_ARCH" == x86_64 && "$(sysctl -n hw.optional.arm64 2>/dev/null || true)" == 1 ]]; then
+  echo "This shell is running under Rosetta. Building the native Apple silicon (arm64) app." >&2
+  HOST_ARCH=arm64
+  export CARGO_BUILD_TARGET="${CARGO_BUILD_TARGET:-aarch64-apple-darwin}"
+fi
+printf 'Building ShadowCode.app for %s (%s)\n' \
+  "$([[ "$HOST_ARCH" == arm64 ]] && echo 'Apple silicon' || echo Intel)" "$HOST_ARCH"
 RUNTIME="$ROOT/packaging/llama.cpp/bin"
 field() { [[ -f "$1" ]] && awk -F= -v key="$2" '$1 == key { print substr($0, length(key) + 2); exit }' "$1"; }
 PINNED="$(field "$ROOT/tools/llama.cpp.pin" commit)"

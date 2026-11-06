@@ -77,7 +77,7 @@ export function TopBar({
           type="button"
           className={`top-action ${changesOpen ? "on" : ""}`}
           aria-label="Review changes"
-          title="Changes (Ctrl+Shift+B)"
+          title="Review diffs, commit, and open a pull request (Ctrl+Shift+B)"
           onClick={onChanges}
         >
           <GitPullRequest size={15} aria-hidden="true" />

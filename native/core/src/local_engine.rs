@@ -531,6 +531,14 @@ pub fn runtime_env(binary: &Path) -> Vec<(String, std::ffi::OsString)> {
     #[cfg(unix)]
     if let Some(dir) = binary.parent() {
         env.push(("LD_LIBRARY_PATH".into(), dir.as_os_str().to_owned()));
+        // llama.cpp loads default.metallib from this directory (compiled at
+        // build time). Without it, first Metal use compiles shaders at run
+        // time or fails outside a GUI session.
+        #[cfg(target_os = "macos")]
+        env.push((
+            "GGML_METAL_PATH_RESOURCES".into(),
+            dir.as_os_str().to_owned(),
+        ));
     }
     #[cfg(not(unix))]
     let _ = binary;
@@ -2239,6 +2247,12 @@ mod tests {
         );
         assert_eq!(metal[0].name, "AMD Radeon Pro 555X");
         assert_eq!(backend_of(&metal), "metal");
+        // Apple silicon (M-series reports as MTL0: Apple M…).
+        let apple = parse_devices(
+            "Available devices:\n  MTL0: Apple M4 (21845 MiB, 19660 MiB free)\n",
+        );
+        assert_eq!(apple[0].name, "Apple M4");
+        assert_eq!(backend_of(&apple), "metal");
         let (v, c) =
             parse_version("x\nversion: 0.4.1-dev (build 1, commit 18f9f7bef)\nbuilt with GNU")
                 .unwrap();
@@ -2297,5 +2311,24 @@ mod tests {
         let readded = add(&next, &m).unwrap();
         assert!(readded.excluded.is_empty());
         assert!(remove(&config, "/nowhere/x.gguf").is_err());
+    }
+
+    #[test]
+    fn runtime_env_points_metal_shaders_at_the_binary_on_macos() {
+        let dir = tempfile::tempdir().unwrap();
+        let binary = dir.path().join("llama-server");
+        fs::write(&binary, b"x").unwrap();
+        let env = runtime_env(&binary);
+        #[cfg(target_os = "macos")]
+        {
+            let metal = env
+                .iter()
+                .find(|(name, _)| name == "GGML_METAL_PATH_RESOURCES")
+                .map(|(_, value)| value.clone());
+            assert_eq!(metal.as_deref(), Some(dir.path().as_os_str()));
+        }
+        #[cfg(not(target_os = "macos"))]
+        assert!(!env.iter().any(|(name, _)| name == "GGML_METAL_PATH_RESOURCES"));
+        let _ = binary;
     }
 }

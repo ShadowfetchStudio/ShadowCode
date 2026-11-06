@@ -16,6 +16,103 @@ fn owner_only(m: &std::fs::Metadata) -> bool {
     }
 }
 
+/// Whether this process is an Intel binary translated on Apple silicon.
+#[cfg(target_os = "macos")]
+fn proc_translated() -> bool {
+    let mut value: i32 = 0;
+    let mut size = std::mem::size_of_val(&value);
+    let rc = unsafe {
+        libc::sysctlbyname(
+            b"sysctl.proc_translated\0".as_ptr().cast(),
+            std::ptr::from_mut(&mut value).cast(),
+            &mut size,
+            std::ptr::null_mut(),
+            0,
+        )
+    };
+    rc == 0 && value == 1
+}
+
+fn host_platform_checks() -> Vec<Value> {
+    let arch = std::env::consts::ARCH;
+    #[cfg(target_os = "macos")]
+    {
+        let translated = proc_translated();
+        let detail = if arch == "aarch64" && !translated {
+            format!("Apple silicon ({arch}); native arm64, not Rosetta")
+        } else if translated {
+            format!(
+                "Running under Rosetta as {arch}; use the Apple silicon (aarch64) build for Metal"
+            )
+        } else {
+            format!("Intel Mac ({arch})")
+        };
+        let mut checks = vec![check(
+            "host-arch",
+            if translated { "warn" } else { "pass" },
+            "Processor",
+            detail,
+            "Install ShadowCode_VERSION_aarch64.dmg on Apple silicon.",
+        )];
+        checks.extend(macos_metal_checks());
+        checks
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        vec![check(
+            "host-arch",
+            "info",
+            "Processor",
+            format!("{}/{arch}", std::env::consts::OS),
+            "",
+        )]
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn macos_metal_checks() -> Vec<Value> {
+    let runtime = crate::local_engine::runtime("");
+    let metal_lib = runtime
+        .path
+        .as_ref()
+        .and_then(|path| path.parent())
+        .map(|dir| dir.join("default.metallib"));
+    let has_lib = metal_lib.as_ref().is_some_and(|path| path.is_file());
+    let backend = runtime.backend();
+    vec![
+        check(
+            "local-runtime",
+            match runtime.state {
+                "ready" => "pass",
+                "setup_required" => "info",
+                _ => "warn",
+            },
+            "Local llama.cpp runtime",
+            runtime.detail.clone(),
+            "Install or rebuild the macOS app so the Metal llama.cpp runtime is bundled.",
+        ),
+        check(
+            "metal",
+            if runtime.state != "ready" {
+                "info"
+            } else if backend == "metal" || has_lib {
+                "pass"
+            } else {
+                "warn"
+            },
+            "Metal GPU",
+            if has_lib {
+                format!("default.metallib present; backend {backend}")
+            } else if runtime.state == "ready" {
+                format!("No default.metallib next to llama-server; backend {backend}")
+            } else {
+                "Runtime not installed yet; Metal shaders ship as default.metallib beside llama-server.".into()
+            },
+            "Rebuild with scripts/build-llama.cpp.sh so Metal shaders are compiled at build time.",
+        ),
+    ]
+}
+
 fn check(id: &str, status: &str, label: &str, detail: impl Into<String>, fix: &str) -> Value {
     json!({"id":id,"status":status,"ok":status=="pass","label":label,"detail":detail.into(),"fix":if status=="pass"{""}else{fix}})
 }
@@ -355,6 +452,7 @@ impl Service {
                     .unwrap_or("not an OS sandbox"),
                 "",
             ));
+            checks.extend(host_platform_checks());
             checks.extend(crate::sandbox::doctor_checks());
             checks.push(self.rules_check());
             for mut check in crate::cli_agent::doctor::checks(&cfg.cli_agents).await {

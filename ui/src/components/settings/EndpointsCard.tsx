@@ -181,6 +181,8 @@ export function EndpointsCard({
         `Added ${count} model${count === 1 ? "" : "s"} to the model picker.`,
         "ok",
       );
+      const { preferKeyring } = await import("../../lib/keyring");
+      await preferKeyring(keyName.trim() || found?.api_key_env);
       setKey("");
       setFound(null);
       setChosen([]);
@@ -237,7 +239,8 @@ export function EndpointsCard({
       <p>
         Use Ollama, LM Studio, a llama.cpp or vLLM server, xAI, OpenAI or any
         OpenAI-compatible API. The models you add appear in the model picker and
-        run with ShadowCode's own agent.
+        run with ShadowCode&apos;s own agent. A typed key is stored on this
+        computer (macOS Keychain when available).
       </p>
       {loadError && <p className="health-bad">{loadError}</p>}
       {rows && rows.length > 0 && (
