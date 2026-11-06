@@ -107,13 +107,19 @@ Still open:
 - **Publisher signatures for the macOS images.** They are checked against
   the release's SHA-256 file over HTTPS, not signed with the release key:
   that needs macOS targets in `release/trust/policy` and the signing tools.
-- **Apple silicon** builds (`aarch64-apple-darwin`) are untested: there is
-  no arm64 Mac here. The runtime build already has the M1–M4 CPU variants.
-- **Real model runs** on the Mac: the runtime loads and sees the GPU, but no
-  GGUF was available to generate with.
-- Redaction's high-entropy rule masks macOS's per-user temporary folder
-  (`/var/folders/<random>/T/…`) as a secret. Safe but noisy; a path-aware
-  rule must not let base64 secrets with slashes through.
+- **Notarization.** Disk images stay ad-hoc signed (GitHub is the channel).
+- **Real model runs** on Apple silicon: doctor and the Metal runtime path
+  are wired; generating with a GGUF on this Mac still needs a model file.
+
+Closed in 2.4.0 (this Apple silicon Mac Mini):
+
+- Native arm64 packaging even when the shell is under Rosetta
+  (`hw.optional.arm64`); Intel builds remain for Intel Macs.
+- Metal: `GGML_METAL_PATH_RESOURCES` points at `default.metallib` next to
+  llama-server; doctor reports processor and shader presence.
+- Redaction skips Darwin `/var/folders/<xx>/<yyyy>/T` names so TMPDIR
+  paths are not masked as secrets.
+- API keys prefer the login Keychain when the UI sends `prefer_keyring`.
 
 ## Work items
 

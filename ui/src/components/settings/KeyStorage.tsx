@@ -39,8 +39,8 @@ export function KeyStorage() {
       <h4>Where your keys are kept</h4>
       <p className="hint">
         {keychain
-          ? "Keys are saved in a private file on this computer. You can keep them in your macOS Keychain instead."
-          : "Keys are saved in a private file on this computer. On a desktop with a keyring (GNOME Keyring, KWallet, KeePassXC), you can keep them there instead."}
+          ? "New API keys are saved in the macOS Keychain when it is available. You can move a key back to the private file on this computer."
+          : "Keys are saved in a private file on this computer. On a desktop with a keyring (GNOME Keyring, KWallet, KeePassXC), new keys move there when it is available."}
         {!storage.keyring.available && storage.keyring.detail
           ? ` ${storage.keyring.detail}`
           : ""}

@@ -268,6 +268,7 @@ export function Drawer({
               onAskAgent={onAskAgent}
               memory={memory}
               onMemory={onMemory}
+              onOpenPr={() => onTab("git")}
             />
           </Suspense>
         )}

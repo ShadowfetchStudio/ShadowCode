@@ -1,3 +1,15 @@
+# ShadowCode 2.4.0 (candidate)
+
+Not yet tagged. This candidate is the first Apple silicon verification and fine-tune pass, plus T3-style first-run and one-click provider sign-in. Do not overwrite published 2.3.3 assets. Suggested tag: `v2.4.0` after CI and a real-model Metal smoke if a GGUF is available.
+
+**Apple silicon.** Native arm64 packaging when `hw.optional.arm64=1` even if `uname -m` is `x86_64` under Rosetta. Metal llama.cpp sets `GGML_METAL_PATH_RESOURCES` to the directory that holds `default.metallib`. Doctor reports processor and Metal shader presence. Darwin temp-folder names are no longer redacted as secrets.
+
+**T3-style first run.** Open project lands in chat with the composer ready. Connect, paste an API key, or download a free local model on that same screen. Sidebar states are Working / Done / Needs approval. Git: commit from Changes, then Open pull request….
+
+**Easy sign-in.** Codex, Claude, Cursor, Antigravity and Grok each have Connect (Antigravity can Install & connect). API keys: OpenRouter, xAI (Grok) and OpenAI on the same picker; stored in Keychain on Mac when available.
+
+**Still blocked.** Vendor CLIs that are not installed still show Not installed (except Antigravity, which can download the agent). Cursor/Claude/Codex have no password form — they use each vendor's own browser sign-in. macOS images remain ad-hoc signed, not notarized. Real GGUF generation on this Mac is not part of this candidate unless a model is present.
+
 # ShadowCode 2.3.3
 
 Linux x64 and ARM64 packages are published and authenticated with the existing release signing key. Windows, macOS and Flatpak packages are also published. Version 2.3.2 was not published because its signing policy did not authorize that version; its tag remains unchanged. Version 2.3.3 extends the existing key's trust interval and adds a release preflight for policy mismatches.

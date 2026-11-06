@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## 2.4.0: Apple silicon, T3-style first run, easy sign-in
+
+- **Apple silicon.** Packaging prefers native arm64 even when the shell is under Rosetta. llama.cpp Metal builds require `default.metallib` and set `GGML_METAL_PATH_RESOURCES` at runtime. `shadowcode doctor` reports Apple silicon vs Intel vs Rosetta and whether the Metal shaders are present.
+- **TMPDIR redaction.** Darwin `/var/folders/<xx>/<yyyy>/T` names are no longer treated as high-entropy secrets, so macOS command cards stay readable.
+- **First useful action is one screen.** Welcome is Open project (ask-first approvals by default). Sign-in, API keys and a free local download live on the empty conversation, not a second blocking wizard.
+- **Easy sign-in.** Connect Codex, Claude Code, Cursor, Antigravity (Install & connect) and Grok from that same picker. Paste an OpenRouter, xAI or OpenAI key inline; new keys move to the macOS Keychain (or Linux desktop keyring) when one is available. Settings › Accounts remains the place to switch, disconnect and add other endpoints.
+- **Chat-first chrome.** Sidebar threads show Working / Done / Needs approval. Permission mode short label is Allow edits. Changes includes Open pull request… into the Git tab.
+
 ## 2.3.3: Desktop reliability
 
 Extends the existing Linux release signing key trust interval through 2.3.3. The tagged 2.3.2 candidate was not published because its trust interval ended at 2.3.1.

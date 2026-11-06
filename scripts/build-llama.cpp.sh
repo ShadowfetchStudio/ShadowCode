@@ -222,6 +222,14 @@ if [[ "$DARWIN" == "1" ]]; then
   VULKAN_FLAGS=(-DGGML_VULKAN=OFF -DGGML_METAL=ON -DGGML_METAL_EMBED_LIBRARY=OFF -DGGML_BLAS=OFF)
   BACKEND="metal+cpu"
   RPATH='@loader_path'
+  EXTRA_FLAGS+=(-DCMAKE_OSX_DEPLOYMENT_TARGET=12.0)
+  HOST_ARCH="$(uname -m)"
+  if [[ "$HOST_ARCH" == x86_64 && "$(sysctl -n hw.optional.arm64 2>/dev/null || true)" == 1 ]]; then
+    echo "This shell is running under Rosetta. Building the native Apple silicon (arm64) Metal runtime." >&2
+    EXTRA_FLAGS+=(-DCMAKE_OSX_ARCHITECTURES=arm64)
+    HOST_ARCH=arm64
+  fi
+  printf 'llama.cpp Metal runtime for %s\n' "$([[ "$HOST_ARCH" == arm64 ]] && echo 'Apple silicon' || echo Intel)"
 fi
 if [[ "$WINDOWS" == "1" ]]; then
   # The Vulkan SDK brings the headers, loader library and glslc together.
@@ -355,10 +363,17 @@ install_runtime() {
   rm -rf "$dest.old"
 }
 install_runtime "$OUT_REPO/bin"
+if [[ "$DARWIN" == "1" && ! -f "$OUT_REPO/bin/default.metallib" ]]; then
+  echo "Metal shader library missing after the runtime build: $OUT_REPO/bin/default.metallib" >&2
+  exit 1
+fi
 if [[ "$USER_INSTALL" == "1" ]]; then
   install_runtime "$OUT_USER"
 fi
 "$OUT_REPO/bin/llama-server$EXE" --version
+if [[ "$DARWIN" == "1" ]]; then
+  "$OUT_REPO/bin/llama-server$EXE" --list-devices || true
+fi
 printf 'Built managed llama.cpp %s (%s) -> %s\n' "$COMMIT" "$BACKEND" "$OUT_REPO/bin"
 if [[ "$USER_INSTALL" == "1" ]]; then
   printf 'Installed managed llama.cpp -> %s\n' "$OUT_USER"

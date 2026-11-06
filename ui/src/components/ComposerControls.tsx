@@ -18,8 +18,8 @@ const MODES: {
   {
     id: "allow_edits",
     label: "Allow project edits",
-    short: "Edits allowed",
-    hint: "File edits inside this project run without asking. Shell commands still ask.",
+    short: "Allow edits",
+    hint: "File edits inside this project run without asking (the fast path). Shell commands still ask.",
   },
 ];
 

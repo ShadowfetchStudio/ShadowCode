@@ -1098,6 +1098,14 @@ export function installFakeBackend(options: FakeOptions = {}) {
       key: "sk-example-good",
       models: ["example-coder", "example-mini"],
     },
+    "https://api.x.ai/v1": {
+      key: "xai-example-good",
+      models: ["grok-4"],
+    },
+    "https://api.openai.com/v1": {
+      key: "sk-example-good",
+      models: ["gpt-4.1"],
+    },
   };
   const endpointLabels: Record<string, string> = {
     ollama: "Ollama",
@@ -3274,6 +3282,13 @@ export function installFakeBackend(options: FakeOptions = {}) {
         is_free_tier: false,
       };
       state.openrouter.fetched_at = now();
+      if (!state.keyNames.includes("OPENROUTER_API_KEY"))
+        state.keyNames.push("OPENROUTER_API_KEY");
+      if (body?.prefer_keyring === true) {
+        state.keysInKeyring = [
+          ...new Set([...state.keysInKeyring, "OPENROUTER_API_KEY"]),
+        ];
+      }
       return openrouterStatus();
     }
     if (path === "/api/providers/models" && method === "POST") {
@@ -3330,7 +3345,13 @@ export function installFakeBackend(options: FakeOptions = {}) {
       if (!names.length)
         throw new Error(JSON.stringify({ error: "Choose at least one model" }));
       const typed = String(body?.api_key || "").trim();
-      if (typed) state.endpointKeys[keyName] = typed;
+      if (typed) {
+        state.endpointKeys[keyName] = typed;
+        if (!state.keyNames.includes(keyName)) state.keyNames.push(keyName);
+        if (body?.prefer_keyring === true) {
+          state.keysInKeyring = [...new Set([...state.keysInKeyring, keyName])];
+        }
+      }
       const added = names.map((name) => {
         const id = `model:${provider}:${endpoint}:${name}`;
         const model = {

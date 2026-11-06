@@ -1,10 +1,11 @@
 //! API keys in the desktop keyring, with `secrets.env` as the fallback.
 //!
 //! The keyring is the freedesktop Secret Service (GNOME Keyring, KWallet,
-//! KeePassXC …) on the session D-Bus, or the login Keychain on macOS. A key moves there only when the user
-//! asks (Settings › Accounts), and moves back the same way; the move writes
-//! and reads back the new place before removing the old one, so a key is
-//! never lost. `config/keyring.json` (mode 600) lists which keys live in the
+//! KeePassXC …) on the session D-Bus, or the login Keychain on macOS. A key
+//! moves there when the user asks (Settings › Accounts) or when the Mac UI
+//! saves an API key with `prefer_keyring`; it moves back the same way. The
+//! move writes and reads back the new place before removing the old one, so
+//! a key is never lost. `config/keyring.json` (mode 600) lists which keys live in the
 //! keyring; everything else stays in `secrets.env`, which is what headless
 //! machines, SSH sessions and `shadowcode serve` use. Saving or removing a
 //! key that lives in the keyring from a session that cannot reach one puts

@@ -26,6 +26,19 @@ impl Service {
                 if !key.trim().is_empty() {
                     // The first save also fetches the model list.
                     let _ = crate::openrouter::refresh(self.engine.paths(), false).await;
+                    // The Mac UI asks for Keychain (or the Linux desktop
+                    // keyring) so a pasted key is not left in secrets.env.
+                    if call.body["prefer_keyring"].as_bool() == Some(true) {
+                        let paths = self.engine.paths();
+                        let name = crate::openrouter::KEY_ENV;
+                        if crate::keyring::availability().is_ok()
+                            && !crate::keyring::listed(paths).contains(name)
+                        {
+                            if let Err(error) = crate::keyring::move_in(paths, name) {
+                                tracing::warn!("keyring.prefer_openrouter error={error:#}");
+                            }
+                        }
+                    }
                 }
                 return Ok(
                     crate::openrouter::status(self.engine.paths(), cfg.offline(), true).await,

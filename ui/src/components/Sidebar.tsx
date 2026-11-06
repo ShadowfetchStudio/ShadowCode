@@ -17,7 +17,12 @@ import {
   SquarePen,
 } from "lucide-react";
 import { api, type Job, type Project, type Session } from "../api";
-import { BADGE_LABELS, projectOf, type Badge } from "../lib/badges";
+import {
+  BADGE_LABELS,
+  BADGE_SHORT,
+  projectOf,
+  type Badge,
+} from "../lib/badges";
 import { readPins, writePins } from "../lib/storage";
 import { shortcutHint } from "../lib/shortcuts";
 import { ConversationMenu, type ConversationAction } from "./ConversationMenu";
@@ -214,12 +219,14 @@ export function Sidebar({
           ) : (
             <span className="task-title">{title}</span>
           )}
-          {badge === "unread" && (
+          {badge && (
             <span
-              className="unread-dot"
-              role="img"
-              aria-label={BADGE_LABELS.unread}
-            />
+              className={`task-state task-state-${badge}`}
+              aria-hidden={badge !== "unread" ? true : undefined}
+              aria-label={badge === "unread" ? BADGE_LABELS.unread : undefined}
+            >
+              {BADGE_SHORT[badge]}
+            </span>
           )}
         </button>
         <button

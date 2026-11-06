@@ -1,10 +1,10 @@
 import { test, expect, type Page } from "@playwright/test";
 import { installFakeBackend, type FakeOptions } from "./fakeBackend";
 
-// A new user with no subscription, no API key and no local model: the first
-// run offers a free model for this computer, an OpenRouter key or a
-// subscription; the download runs in the window and the model is selected
-// when it is ready. Downloads and progress come from the fake engine.
+// A new user with no subscription, no API key and no local model: Open
+// project lands in chat. The empty conversation offers Connect for each
+// vendor, an API key field, and a free local download. The download runs
+// in the window and the model is selected when it is ready.
 async function start(page: Page, options: FakeOptions = {}) {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
@@ -35,43 +35,42 @@ const downloadPosts = (page: Page) =>
     ),
   );
 
-async function trustAndOpen(page: Page) {
+async function openProject(page: Page) {
   const welcome = page.getByRole("dialog", { name: "Welcome to ShadowCode" });
   await expect(welcome.getByLabel("Project folder")).toHaveValue("/work/demo");
-  await welcome.getByRole("button", { name: "Trust and open" }).click();
-  const step = page.getByRole("dialog", { name: "Choose a model" });
+  await welcome.getByRole("button", { name: "Open project" }).click();
+  await expect(welcome).toBeHidden();
   await expect(
-    step.getByRole("heading", { name: "Choose how ShadowCode thinks" }),
+    page.getByRole("textbox", { name: "Message ShadowCode" }),
   ).toBeVisible();
-  return step;
 }
 
 test("no accounts: download the recommended free model and start with it", async ({
   page,
 }) => {
   await start(page, { downloadSteps: 3 });
-  const step = await trustAndOpen(page);
-  const download = step.getByRole("radio", {
+  await openProject(page);
+  const download = page.getByRole("radio", {
     name: /Download a free model to run on this computer/,
   });
   await expect(download).toBeChecked();
-  await expect(step).toContainText(
+  await expect(page).toContainText(
     "Gemma 4 E4B by Google: 4.8 GB, about 14 minutes on a 50 Mbit/s connection. Runs on your graphics card.",
   );
-  await expect(step).toContainText(
+  await expect(page).toContainText(
     "Picked for this computer: Intel Arc A750 (8.0 GB) · 16 GB memory.",
   );
   await expect(
-    step.getByRole("radio", { name: /Use an OpenRouter key/ }),
+    page.getByRole("button", { name: "Connect Codex" }),
   ).toBeVisible();
   await expect(
-    step.getByRole("radio", { name: /Sign in to a subscription/ }),
+    page.getByRole("button", { name: "Connect Claude Code" }),
   ).toBeVisible();
+  await expect(page.getByLabelText("OpenRouter API key")).toBeVisible();
   await page.screenshot({ path: "test-results/first-run-model-step.png" });
   expect(await downloadPosts(page)).toEqual([]);
 
-  await step.getByRole("button", { name: "Download Gemma 4 E4B" }).click();
-  await expect(step).toBeHidden();
+  await page.getByRole("button", { name: "Download Gemma 4 E4B" }).click();
   // The empty conversation follows the download…
   await expect(
     page.getByText(
@@ -103,31 +102,29 @@ test("no accounts: download the recommended free model and start with it", async
   ).toBeVisible();
 });
 
-test("no accounts: OpenRouter and subscriptions go to Accounts; the welcome keeps the choices", async ({
+test("no accounts: sign-in and API keys stay on the empty conversation", async ({
   page,
 }) => {
   await start(page);
-  const step = await trustAndOpen(page);
-  await step.getByRole("radio", { name: /Use an OpenRouter key/ }).click();
-  await step.getByRole("button", { name: "Add an OpenRouter key" }).click();
-  const settings = page.getByRole("dialog", { name: "Settings" });
-  await expect(settings.getByLabel("OpenRouter API key")).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(settings).toBeHidden();
-  // Still no model: the empty conversation offers the same three choices.
+  await openProject(page);
   await expect(
-    page.getByText(
-      "ShadowCode needs a model to work. Pick one of these to start.",
-    ),
+    page.getByText("Open a project, pick an agent, send a message."),
   ).toBeVisible();
-  await page.getByRole("radio", { name: /Sign in to a subscription/ }).click();
-  await page.getByRole("button", { name: "Choose a subscription" }).click();
+  await expect(
+    page.getByRole("button", { name: "Connect Codex" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Settings › Accounts" }).click();
+  const settings = page.getByRole("dialog", { name: "Settings" });
   await expect(settings.getByRole("article", { name: "Codex" })).toBeVisible();
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "See other free models" }).click();
   await expect(
     settings.getByRole("heading", { name: "Download a free model" }),
   ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.getByLabelText("OpenRouter API key").fill("sk-or-valid");
+  await page.getByRole("button", { name: "Save key" }).click();
+  await expect(page.getByText(/OpenRouter API key saved/)).toBeVisible();
   expect(await downloadPosts(page)).toEqual([]);
 });
 

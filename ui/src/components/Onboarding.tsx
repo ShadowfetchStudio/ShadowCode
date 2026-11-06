@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, type PickerResponse } from "../api";
 import { Dialog } from "./Dialog";
-import { ModelSetup } from "./ModelSetup";
-import { useModelDownloads } from "../hooks/useModelDownloads";
 import { isReady } from "../lib/picker";
 import { canPickFiles, pickDirectory } from "../lib/transport";
 
@@ -37,25 +35,18 @@ export async function anyModelReady(timeoutMs = READY_CHECK_MS) {
   ]);
 }
 
-/** First run: choose the project folder, trust it and pick how the agent may
- * act. If no model is ready yet (no account, no key, no local model), a
- * second step offers a free model for this computer, an OpenRouter key or a
- * subscription. The composer's picker stays the place to switch models. */
+/** First run: choose the project folder and start. Permission mode defaults
+ * to ask-first (change it in the composer). If no model is ready yet, the
+ * empty conversation offers sign-in, an API key, or a free local model. */
 export function Onboarding({
   onDone,
 }: {
   onDone: (next?: OnboardingNext) => void;
 }) {
   const [workspace, setWorkspace] = useState("");
-  const [mode, setMode] = useState<"ask" | "allow_edits">("ask");
-  const [step, setStep] = useState<"project" | "checking" | "model">("project");
   const [state, setState] = useState<{ busy: boolean; error: string }>({
     busy: false,
     error: "",
-  });
-  const downloads = useModelDownloads({
-    enabled: step === "model",
-    onError: (error) => setState({ busy: false, error }),
   });
 
   useEffect(() => {
@@ -68,53 +59,20 @@ export function Onboarding({
   async function start() {
     setState({ busy: true, error: "" });
     try {
-      // No provider or model: the backend keeps its model configuration and
-      // the picker becomes the first selection point.
       await api.completeOnboarding({
         workspace: workspace.trim(),
         permission_level: "workspace",
-        permission_mode: mode,
+        permission_mode: "ask",
         theme: "system",
       });
-      await api.saveConfig({ permissions: { mode } }).catch(() => undefined);
-      setStep("checking");
-      if (await anyModelReady().catch(() => false)) return onDone();
-      setState({ busy: false, error: "" });
-      setStep("model");
+      await api
+        .saveConfig({ permissions: { mode: "ask" } })
+        .catch(() => undefined);
+      onDone();
     } catch (err) {
-      setStep("project");
       setState({ busy: false, error: String(err) });
     }
   }
-
-  if (step === "model")
-    return (
-      <Dialog
-        label="Choose a model"
-        className="wizard"
-        onClose={() => undefined}
-      >
-        <img src="/icon-192.png" alt="" className="welcome-mark" />
-        <h2 id="onboarding-title">Choose how ShadowCode thinks</h2>
-        <p className="hint">
-          ShadowCode needs an AI model to read and change code. No account is
-          needed for the first choice.
-        </p>
-        <ModelSetup
-          downloads={downloads}
-          onStarted={() => onDone()}
-          onOpenRouter={() => onDone("openrouter")}
-          onSubscription={() => onDone("subscription")}
-          onBrowse={() => onDone("local")}
-          onSkip={() => onDone()}
-        />
-        {state.error && (
-          <p className="health-bad" role="alert">
-            {state.error}
-          </p>
-        )}
-      </Dialog>
-    );
 
   return (
     <Dialog
@@ -126,8 +84,8 @@ export function Onboarding({
       <h2 id="onboarding-title">Welcome to ShadowCode</h2>
       <p className="hint">An open-source project by Shadowfetch</p>
       <p className="hint">
-        Open a project to start. You choose a model for each conversation in the
-        composer.
+        Open a project, pick an agent, send a message. Ask-first approvals are
+        on; switch to allow-edits in the composer when you want fewer prompts.
       </p>
       <div className="field">
         <label htmlFor="onboarding-folder">Project folder</label>
@@ -158,38 +116,9 @@ export function Onboarding({
           )}
         </div>
       </div>
-      <fieldset className="mode-options">
-        <legend>When the agent wants to change something</legend>
-        <label className="mode-option">
-          <input
-            type="radio"
-            name="onboarding-mode"
-            checked={mode === "ask"}
-            onChange={() => setMode("ask")}
-          />
-          <span>
-            <strong>Ask before actions</strong>
-            <small>File edits and commands wait for your approval.</small>
-          </span>
-        </label>
-        <label className="mode-option">
-          <input
-            type="radio"
-            name="onboarding-mode"
-            checked={mode === "allow_edits"}
-            onChange={() => setMode("allow_edits")}
-          />
-          <span>
-            <strong>Allow project edits</strong>
-            <small>
-              Edits inside this folder run without asking; commands still ask.
-            </small>
-          </span>
-        </label>
-      </fieldset>
       <p className="hint">
-        Starting trusts this folder: the agent may read it and, with the choice
-        above, change files inside it.
+        Opening trusts this folder: the agent may read it. File edits and
+        commands still wait for your approval until you change that.
       </p>
       {state.error && (
         <p className="health-bad" role="alert">
@@ -203,11 +132,7 @@ export function Onboarding({
           disabled={state.busy || !workspace.trim()}
           onClick={() => void start()}
         >
-          {step === "checking"
-            ? "Checking for models…"
-            : state.busy
-              ? "Opening…"
-              : "Trust and open"}
+          {state.busy ? "Opening…" : "Open project"}
         </button>
       </div>
     </Dialog>

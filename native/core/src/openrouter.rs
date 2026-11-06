@@ -5,9 +5,10 @@
 //!
 //! - The model list comes from the public `GET /api/v1/models` and is cached
 //!   in the state directory; offline mode never fetches it.
-//! - The key lives in the profile secrets file (`OPENROUTER_API_KEY`), is
-//!   checked with `GET /api/v1/key` before it is saved, and is never returned
-//!   to the window.
+//! - The key lives in the profile secrets file (`OPENROUTER_API_KEY`) or,
+//!   when the UI sends `prefer_keyring`, in the macOS Keychain / desktop
+//!   keyring. It is checked with `GET /api/v1/key` before it is saved, and is
+//!   never returned to the window.
 //! - Turns run on ShadowCode's own agent loop against the OpenAI-compatible
 //!   `POST /api/v1/chat/completions`, so ShadowCode's permissions, approvals,
 //!   checkpoints and review all apply.

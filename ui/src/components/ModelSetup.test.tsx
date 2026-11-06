@@ -75,36 +75,33 @@ it("preselects the recommended free model with its size, time and fit", async ()
   expect(posts("/api/local-models/downloads/start")[0].body).toEqual({
     id: "gemma-4-e4b",
   });
-  // No select control: the picker stays the one place a model is chosen.
-  expect(document.querySelector("select")).toBeNull();
+  // The only select is the API key provider; models stay in the picker.
+  expect(screen.getByRole("combobox", { name: "API key provider" })).toBeTruthy();
+  expect(screen.queryAllByRole("combobox")).toHaveLength(1);
 });
 
-it("routes OpenRouter, subscriptions and other models to their pages", async () => {
+it("offers Connect for each vendor, an API key field, and a local download", async () => {
   start();
-  const onOpenRouter = vi.fn();
-  const onSubscription = vi.fn();
   const onBrowse = vi.fn();
-  render(
-    <Setup
-      onOpenRouter={onOpenRouter}
-      onSubscription={onSubscription}
-      onBrowse={onBrowse}
-    />,
-  );
+  const onSubscription = vi.fn();
+  render(<Setup onBrowse={onBrowse} onSubscription={onSubscription} />);
+  expect(
+    await screen.findByRole("button", { name: "Connect Codex" }),
+  ).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Connect Claude Code" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Connect Cursor" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Connect Grok" })).toBeTruthy();
+  expect(
+    screen.getByRole("button", { name: "Install Antigravity and connect" }),
+  ).toBeTruthy();
+  expect(screen.getByLabelText("OpenRouter API key")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Save key" })).toBeTruthy();
   fireEvent.click(
     await screen.findByRole("button", { name: "See other free models" }),
   );
   expect(onBrowse).toHaveBeenCalled();
-  fireEvent.click(screen.getByRole("radio", { name: /Use an OpenRouter key/ }));
   fireEvent.click(
-    screen.getByRole("button", { name: "Add an OpenRouter key" }),
-  );
-  expect(onOpenRouter).toHaveBeenCalled();
-  fireEvent.click(
-    screen.getByRole("radio", { name: /Sign in to a subscription/ }),
-  );
-  fireEvent.click(
-    screen.getByRole("button", { name: "Choose a subscription" }),
+    screen.getByRole("button", { name: "Settings › Accounts" }),
   );
   expect(onSubscription).toHaveBeenCalled();
   expect(posts("/api/local-models/downloads/start")).toHaveLength(0);
@@ -181,7 +178,7 @@ it("a refused start (disk space) is shown and nothing is marked started", async 
   vi.restoreAllMocks();
 });
 
-it("onboarding: with no ready model, a second step offers the three choices", async () => {
+it("onboarding: Open project starts the workspace without a second wizard", async () => {
   start();
   const onDone = vi.fn();
   render(<Onboarding onDone={onDone} />);
@@ -190,42 +187,13 @@ it("onboarding: with no ready model, a second step offers the three choices", as
       (screen.getByLabelText("Project folder") as HTMLInputElement).value,
     ).toBe("/work/demo"),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Trust and open" }));
-  const dialog = await screen.findByRole("dialog", { name: "Choose a model" });
-  expect(
-    within(dialog).getByRole("heading", {
-      name: "Choose how ShadowCode thinks",
-    }),
-  ).toBeTruthy();
-  expect(onDone).not.toHaveBeenCalled();
-  expect(fake.state.onboarded).toBe(true);
-  fireEvent.click(
-    within(dialog).getByRole("radio", { name: /Sign in to a subscription/ }),
-  );
-  fireEvent.click(
-    within(dialog).getByRole("button", { name: "Choose a subscription" }),
-  );
-  expect(onDone).toHaveBeenCalledWith("subscription");
-});
-
-it("onboarding: Download starts the recommended model and closes", async () => {
-  start();
-  const onDone = vi.fn();
-  render(<Onboarding onDone={onDone} />);
-  await waitFor(() =>
-    expect(
-      (screen.getByLabelText("Project folder") as HTMLInputElement).value,
-    ).toBe("/work/demo"),
-  );
-  fireEvent.click(screen.getByRole("button", { name: "Trust and open" }));
-  fireEvent.click(
-    await screen.findByRole("button", { name: "Download Gemma 4 E4B" }),
-  );
+  fireEvent.click(screen.getByRole("button", { name: "Open project" }));
   await waitFor(() => expect(onDone).toHaveBeenCalledWith());
-  expect(fake.state.downloads.models[1].state).toBe("downloading");
+  expect(fake.state.onboarded).toBe(true);
+  expect(screen.queryByRole("dialog", { name: "Choose a model" })).toBeNull();
 });
 
-it("onboarding: a ready model skips the model step", async () => {
+it("onboarding: a ready model still only asks for the project folder", async () => {
   start({ firstRun: false, onboarding: true });
   const onDone = vi.fn();
   render(<Onboarding onDone={onDone} />);
@@ -234,7 +202,7 @@ it("onboarding: a ready model skips the model step", async () => {
       (screen.getByLabelText("Project folder") as HTMLInputElement).value,
     ).toBe("/work/demo"),
   );
-  fireEvent.click(screen.getByRole("button", { name: "Trust and open" }));
+  fireEvent.click(screen.getByRole("button", { name: "Open project" }));
   await waitFor(() => expect(onDone).toHaveBeenCalledWith());
   expect(screen.queryByRole("dialog", { name: "Choose a model" })).toBeNull();
   expect(fake.log.some((r) => r.path === "/api/local-models/downloads")).toBe(
