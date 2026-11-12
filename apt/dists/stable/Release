@@ -2,22 +2,22 @@ Origin: ShadowCode
 Label: ShadowCode
 Suite: stable
 Codename: stable
-Date: Mon, 02 Nov 2026 07:51:14 UTC
+Date: Thu, 12 Nov 2026 04:38:13 UTC
 Architectures: amd64 arm64
 Components: main
 Acquire-By-Hash: no
 Description: ShadowCode release packages
 MD5Sum:
- 9c013e64804bc96bb165c22a5f3cc558       5084 main/binary-amd64/Packages
- bfe36cf54001544a5e1305e080faa17d       1021 main/binary-amd64/Packages.gz
+ d312c0a4c32571d52ddac723f29535c3       6101 main/binary-amd64/Packages
+ 8f31d54835e831cbb57436ed58793c63       1108 main/binary-amd64/Packages.gz
  9a8d7c4458a3e3c76e1c023e2437cdd0        103 main/binary-amd64/Release
- 61c2c5c4c912011fa105afc70d36fc66       5084 main/binary-arm64/Packages
- 3ae4a4ee31c1f10b95ba587b2b2abf22       1021 main/binary-arm64/Packages.gz
+ 39fb6e77436bf3cde73f7eb770f90f1b       6101 main/binary-arm64/Packages
+ 6df8daa3c34d05a4da035c96490c1f4c       1108 main/binary-arm64/Packages.gz
  b0c596d105705a4f9e933858cd2b567b        103 main/binary-arm64/Release
 SHA256:
- b12a2ac554b0482a8fc07a4cbde397c50b18ea9b1ed50f6a12c4619e6af0592a       5084 main/binary-amd64/Packages
- 092bbde6ef8134b75325f1aba38b69707084a82bc0717c008f335cff465c2d15       1021 main/binary-amd64/Packages.gz
+ df7e46153b6865990b381778ac198d8d36e2d9106707dc79a350e33fdec220ae       6101 main/binary-amd64/Packages
+ 5d25611fa2b0afff5a0b9a0a3b4bd5b61b52dde78b8ff7bb810aa75876e5eee1       1108 main/binary-amd64/Packages.gz
  4c505dd35a52497c76a01a45dbc9c9934215fd44ad4f1310e5e8991f041f1a98        103 main/binary-amd64/Release
- a4f57498edc2534af8a0b055c07312f652e643f23f93c650cd77eb97d1b0cee5       5084 main/binary-arm64/Packages
- 73b9cacae9f91010679b8ad96a38761b5aea66ad213987b88c1de5ddcd579fbc       1021 main/binary-arm64/Packages.gz
+ 96f9f4c23c3741af5e8d5c1ebe059eb96b23b991aa2a3626e612762d1d754d54       6101 main/binary-arm64/Packages
+ 7b238c780168906b849c41393b4387b789706e0f8992fbe2d8d7e9507e62ac7c       1108 main/binary-arm64/Packages.gz
  3b53a4e0c5f33dd1d803f375fd992e951780bbbcc51e0e71621c31ac8d08271c        103 main/binary-arm64/Release
