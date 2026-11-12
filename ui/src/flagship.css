@@ -437,6 +437,8 @@
   white-space: nowrap;
 }
 .terminal-dock > header button {
+  flex-shrink: 0;
+  white-space: nowrap;
   min-height: 28px;
   padding: 4px 8px;
   border-radius: 6px;
@@ -452,18 +454,30 @@
   flex: 1;
   min-height: 0;
 }
-.terminal-dock .terminal-screen {
+.terminal-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.terminal-dock .terminal-controls {
+  flex: 0 1 auto;
   min-height: 0;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  overscroll-behavior: contain;
+}
+.terminal-dock .terminal-controls > * {
+  flex-shrink: 0;
+}
+.terminal-dock .terminal-screen {
+  /* TerminalView measures two rendered rows plus this box's padding/borders.
+     Variable tabs, notices and exit/error messages scroll in the space left. */
+  min-height: var(--terminal-min-height, 54px);
   height: 0;
-  flex: 1 1 0;
+  flex: 1 0 var(--terminal-min-height, 54px);
 }
 .terminal-dock .terminal-tabs {
-  flex-shrink: 0;
-  max-height: 64px;
-  overflow-y: auto;
-}
-.terminal-dock .terminal-hint {
-  flex-shrink: 0;
+  min-width: 0;
 }
 .app.workspace-overlay.terminal-docked .drawer {
   bottom: var(--terminal-dock-height);

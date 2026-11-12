@@ -1,0 +1,5 @@
+{
+  "verified_files": 87,
+  "mismatches": [],
+  "scope": "Exact remote/local SHA256 and size for installation receipt and every direct file in all UI attempt directories; profiles also copied but not included in this hash manifest."
+}

@@ -104,6 +104,28 @@ export function TerminalView({
       if (element.clientWidth > 0 && element.clientHeight > 0) {
         try {
           fit.fit();
+          // Reserve two complete rows in a dock, including the outer box's
+          // padding and borders. Measure rendered cells so platform fonts,
+          // fractional native zoom and our inverse CSS zoom are respected.
+          const screen = element.querySelector(".xterm-screen");
+          const box = element.parentElement;
+          if (screen && box && term.rows > 0) {
+            const rowHeight =
+              screen.getBoundingClientRect().height / term.rows / cssZoom();
+            if (rowHeight > 0) {
+              const style = getComputedStyle(box);
+              const inset = [
+                style.paddingTop,
+                style.paddingBottom,
+                style.borderTopWidth,
+                style.borderBottomWidth,
+              ].reduce((sum, value) => sum + parseFloat(value), 0);
+              box.style.setProperty(
+                "--terminal-min-height",
+                `${Math.ceil(2 * rowHeight + inset)}px`,
+              );
+            }
+          }
         } catch {
           // Not laid out yet; the next resize fits it.
         }

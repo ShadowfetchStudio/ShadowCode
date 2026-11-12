@@ -108,6 +108,9 @@ function LocalTerminals({
 
   const list = terminals || [];
   const shown = list.find((t) => t.id === active) || list[list.length - 1];
+  // Display only; retain the original workspace for identity and operations.
+  const projectName =
+    workspace.split(/[\\/]/).filter(Boolean).pop() || workspace;
 
   async function close(id: string) {
     try {
@@ -122,80 +125,104 @@ function LocalTerminals({
 
   return (
     <section className="terminal-panel" aria-label="Terminals">
-      <div className="terminal-tabs">
-        {list.map((t) => (
-          <div
-            key={t.id}
-            className={`terminal-tab ${shown?.id === t.id ? "on" : ""}`}
-          >
-            <button
-              type="button"
-              aria-pressed={shown?.id === t.id}
-              onClick={(event) => {
-                onRequestFocus?.();
-                if (shown?.id === t.id) {
-                  const input = event.currentTarget
-                    .closest(".terminal-panel")
-                    ?.querySelector<HTMLElement>(".xterm-helper-textarea");
-                  if (input) onReady?.(input);
-                }
-                setActive(t.id);
-              }}
-              title={t.shell}
+      <div
+        className="terminal-controls"
+        role="region"
+        aria-label="Terminal controls and notices"
+        tabIndex={0}
+      >
+        <div className="terminal-tabs">
+          {list.map((t) => (
+            <div
+              key={t.id}
+              className={`terminal-tab ${shown?.id === t.id ? "on" : ""}`}
             >
-              {t.title}
-              {t.exited && <span className="dim"> · exited</span>}
-            </button>
-            <button
-              type="button"
-              className="terminal-tab-close"
-              aria-label={`Close ${t.title}`}
-              onClick={() => void close(t.id)}
-            >
-              <X size={12} aria-hidden="true" />
-            </button>
-          </div>
-        ))}
-        <button
-          type="button"
-          className="icon-btn terminal-new"
-          aria-label="New terminal"
-          title="New terminal"
-          disabled={opening}
-          onClick={() => {
-            onRequestFocus?.();
-            void open();
-          }}
-        >
-          <Plus size={14} aria-hidden="true" />
-        </button>
-      </div>
-      <p className="hint terminal-hint">
-        Your own shell in {workspace.split("/").pop() || workspace}. It runs
-        outside the agent's sandbox, keeps running while the agent works, and
-        the agent never sees it.
-      </p>
-      {error && (
-        <p className="hint error" role="alert">
-          {error}
-        </p>
-      )}
-      {terminals === null && <p role="status">Starting a terminal…</p>}
-      {terminals !== null && !list.length && !opening && (
-        <div className="terminal-empty">
-          <p className="hint">No terminal is open in this project.</p>
+              <button
+                type="button"
+                aria-pressed={shown?.id === t.id}
+                onClick={(event) => {
+                  onRequestFocus?.();
+                  if (shown?.id === t.id) {
+                    const input = event.currentTarget
+                      .closest(".terminal-panel")
+                      ?.querySelector<HTMLElement>(".xterm-helper-textarea");
+                    if (input) onReady?.(input);
+                  }
+                  setActive(t.id);
+                }}
+                title={t.shell}
+              >
+                {t.title}
+                {t.exited && <span className="dim"> · exited</span>}
+              </button>
+              <button
+                type="button"
+                className="terminal-tab-close"
+                aria-label={`Close ${t.title}`}
+                onClick={() => void close(t.id)}
+              >
+                <X size={12} aria-hidden="true" />
+              </button>
+            </div>
+          ))}
           <button
             type="button"
-            className="mini"
+            className="icon-btn terminal-new"
+            aria-label="New terminal"
+            title="New terminal"
+            disabled={opening}
             onClick={() => {
               onRequestFocus?.();
               void open();
             }}
           >
-            Open a terminal
+            <Plus size={14} aria-hidden="true" />
           </button>
         </div>
-      )}
+        <p className="hint terminal-hint">
+          Your own shell in {projectName}. It runs outside the agent's sandbox,
+          keeps running while the agent works, and the agent never sees it.
+        </p>
+        {error && (
+          <p className="hint error" role="alert">
+            {error}
+          </p>
+        )}
+        {terminals === null && <p role="status">Starting a terminal…</p>}
+        {terminals !== null && !list.length && !opening && (
+          <div className="terminal-empty">
+            <p className="hint">No terminal is open in this project.</p>
+            <button
+              type="button"
+              className="mini"
+              onClick={() => {
+                onRequestFocus?.();
+                void open();
+              }}
+            >
+              Open a terminal
+            </button>
+          </div>
+        )}
+        {shown?.exited && (
+          <div className="terminal-exited" role="status">
+            <span>
+              The shell exited
+              {shown.exit_code !== null ? ` with code ${shown.exit_code}` : ""}.
+            </span>
+            <button
+              type="button"
+              className="mini"
+              onClick={() => {
+                onRequestFocus?.();
+                void close(shown.id).then(open);
+              }}
+            >
+              Restart
+            </button>
+          </div>
+        )}
+      </div>
       {shown && (
         <Suspense fallback={<p role="status">Starting a terminal…</p>}>
           <TerminalView
@@ -219,27 +246,6 @@ function LocalTerminals({
                 );
             }}
           />
-          {shown.exited && (
-            <div className="terminal-exited" role="status">
-              <span>
-                The shell exited
-                {shown.exit_code !== null
-                  ? ` with code ${shown.exit_code}`
-                  : ""}
-                .
-              </span>
-              <button
-                type="button"
-                className="mini"
-                onClick={() => {
-                  onRequestFocus?.();
-                  void close(shown.id).then(open);
-                }}
-              >
-                Restart
-              </button>
-            </div>
-          )}
         </Suspense>
       )}
     </section>

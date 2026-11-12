@@ -1,0 +1,418 @@
+[
+  {
+    "report": "chromium-regressions.json",
+    "test": "terminal dock reserves complete rows: native effective 627x545, Windows path",
+    "geometry": {
+      "pane": {
+        "x": 0,
+        "y": 375,
+        "width": 627,
+        "height": 170,
+        "top": 375,
+        "right": 627,
+        "bottom": 545,
+        "left": 0
+      },
+      "host": {
+        "x": 0,
+        "y": 501,
+        "width": 627,
+        "height": 44,
+        "top": 501,
+        "right": 627,
+        "bottom": 545,
+        "left": 0
+      },
+      "screen": {
+        "x": 9,
+        "y": 508,
+        "width": 595,
+        "height": 30,
+        "top": 508,
+        "right": 604,
+        "bottom": 538,
+        "left": 9
+      },
+      "row": {
+        "x": 9,
+        "y": 523,
+        "width": 595,
+        "height": 15,
+        "top": 523,
+        "right": 604,
+        "bottom": 538,
+        "left": 9
+      },
+      "rows": 2,
+      "innerTop": 508,
+      "innerBottom": 538,
+      "zoom": 1,
+      "completeRows": true,
+      "contained": true
+    }
+  },
+  {
+    "report": "chromium-regressions.json",
+    "test": "terminal dock reserves complete rows: native effective 627x545, long basename errors tabs and exit",
+    "geometry": {
+      "pane": {
+        "x": 0,
+        "y": 375,
+        "width": 627,
+        "height": 170,
+        "top": 375,
+        "right": 627,
+        "bottom": 545,
+        "left": 0
+      },
+      "host": {
+        "x": 0,
+        "y": 501,
+        "width": 627,
+        "height": 44,
+        "top": 501,
+        "right": 627,
+        "bottom": 545,
+        "left": 0
+      },
+      "screen": {
+        "x": 9,
+        "y": 508,
+        "width": 595,
+        "height": 30,
+        "top": 508,
+        "right": 604,
+        "bottom": 538,
+        "left": 9
+      },
+      "row": {
+        "x": 9,
+        "y": 523,
+        "width": 595,
+        "height": 15,
+        "top": 523,
+        "right": 604,
+        "bottom": 538,
+        "left": 9
+      },
+      "rows": 2,
+      "innerTop": 508,
+      "innerBottom": 538,
+      "zoom": 1,
+      "completeRows": true,
+      "contained": true
+    }
+  },
+  {
+    "report": "chromium-regressions.json",
+    "test": "terminal dock reserves complete rows: CSS zoom 125 percent measured client, Windows path",
+    "geometry": {
+      "pane": {
+        "x": 0,
+        "y": 468.5,
+        "width": 784,
+        "height": 212.5,
+        "top": 468.5,
+        "right": 784,
+        "bottom": 681,
+        "left": 0
+      },
+      "host": {
+        "x": 0,
+        "y": 627.25,
+        "width": 784,
+        "height": 53.75,
+        "top": 627.25,
+        "right": 784,
+        "bottom": 681,
+        "left": 0
+      },
+      "screen": {
+        "x": 11,
+        "y": 635.75,
+        "width": 752,
+        "height": 36,
+        "top": 635.75,
+        "right": 763,
+        "bottom": 671.75,
+        "left": 11
+      },
+      "row": {
+        "x": 11,
+        "y": 653.75,
+        "width": 752,
+        "height": 18,
+        "top": 653.75,
+        "right": 763,
+        "bottom": 671.75,
+        "left": 11
+      },
+      "rows": 2,
+      "innerTop": 635.75,
+      "innerBottom": 672.5,
+      "zoom": 1.25,
+      "completeRows": true,
+      "contained": true
+    }
+  },
+  {
+    "report": "chromium-regressions.json",
+    "test": "terminal dock reserves complete rows: CSS zoom 125 percent measured client, long basename errors tabs and exit",
+    "geometry": {
+      "pane": {
+        "x": 0,
+        "y": 468.5,
+        "width": 784,
+        "height": 212.5,
+        "top": 468.5,
+        "right": 784,
+        "bottom": 681,
+        "left": 0
+      },
+      "host": {
+        "x": 0,
+        "y": 627.25,
+        "width": 784,
+        "height": 53.75,
+        "top": 627.25,
+        "right": 784,
+        "bottom": 681,
+        "left": 0
+      },
+      "screen": {
+        "x": 11,
+        "y": 635.75,
+        "width": 752,
+        "height": 36,
+        "top": 635.75,
+        "right": 763,
+        "bottom": 671.75,
+        "left": 11
+      },
+      "row": {
+        "x": 11,
+        "y": 653.75,
+        "width": 752,
+        "height": 18,
+        "top": 653.75,
+        "right": 763,
+        "bottom": 671.75,
+        "left": 11
+      },
+      "rows": 2,
+      "innerTop": 635.75,
+      "innerBottom": 672.5,
+      "zoom": 1.25,
+      "completeRows": true,
+      "contained": true
+    }
+  },
+  {
+    "report": "webkit-focused-option-tab.json",
+    "test": "terminal dock reserves complete rows: native effective 627x545, Windows path",
+    "geometry": {
+      "pane": {
+        "x": 0,
+        "y": 375,
+        "width": 627,
+        "height": 170,
+        "top": 375,
+        "right": 627,
+        "bottom": 545,
+        "left": 0
+      },
+      "host": {
+        "x": 0,
+        "y": 501,
+        "width": 627,
+        "height": 44,
+        "top": 501,
+        "right": 627,
+        "bottom": 545,
+        "left": 0
+      },
+      "screen": {
+        "x": 9,
+        "y": 508,
+        "width": 595,
+        "height": 30,
+        "top": 508,
+        "right": 604,
+        "bottom": 538,
+        "left": 9
+      },
+      "row": {
+        "x": 9,
+        "y": 523,
+        "width": 595,
+        "height": 15,
+        "top": 523,
+        "right": 604,
+        "bottom": 538,
+        "left": 9
+      },
+      "rows": 2,
+      "innerTop": 508,
+      "innerBottom": 538,
+      "zoom": 1,
+      "completeRows": true,
+      "contained": true
+    }
+  },
+  {
+    "report": "webkit-focused-option-tab.json",
+    "test": "terminal dock reserves complete rows: native effective 627x545, long basename errors tabs and exit",
+    "geometry": {
+      "pane": {
+        "x": 0,
+        "y": 375,
+        "width": 627,
+        "height": 170,
+        "top": 375,
+        "right": 627,
+        "bottom": 545,
+        "left": 0
+      },
+      "host": {
+        "x": 0,
+        "y": 501,
+        "width": 627,
+        "height": 44,
+        "top": 501,
+        "right": 627,
+        "bottom": 545,
+        "left": 0
+      },
+      "screen": {
+        "x": 9,
+        "y": 508,
+        "width": 595,
+        "height": 30,
+        "top": 508,
+        "right": 604,
+        "bottom": 538,
+        "left": 9
+      },
+      "row": {
+        "x": 9,
+        "y": 523,
+        "width": 595,
+        "height": 15,
+        "top": 523,
+        "right": 604,
+        "bottom": 538,
+        "left": 9
+      },
+      "rows": 2,
+      "innerTop": 508,
+      "innerBottom": 538,
+      "zoom": 1,
+      "completeRows": true,
+      "contained": true
+    }
+  },
+  {
+    "report": "webkit-focused-option-tab.json",
+    "test": "terminal dock reserves complete rows: CSS zoom 125 percent measured client, Windows path",
+    "geometry": {
+      "pane": {
+        "x": 0,
+        "y": 468.5,
+        "width": 784,
+        "height": 212.5,
+        "top": 468.5,
+        "right": 784,
+        "bottom": 681,
+        "left": 0
+      },
+      "host": {
+        "x": 0,
+        "y": 627.25,
+        "width": 784,
+        "height": 53.75,
+        "top": 627.25,
+        "right": 784,
+        "bottom": 681,
+        "left": 0
+      },
+      "screen": {
+        "x": 11,
+        "y": 635.75,
+        "width": 744,
+        "height": 36,
+        "top": 635.75,
+        "right": 755,
+        "bottom": 671.75,
+        "left": 11
+      },
+      "row": {
+        "x": 11,
+        "y": 653.75,
+        "width": 744,
+        "height": 18,
+        "top": 653.75,
+        "right": 755,
+        "bottom": 671.75,
+        "left": 11
+      },
+      "rows": 2,
+      "innerTop": 636,
+      "innerBottom": 672.25,
+      "zoom": 1.25,
+      "completeRows": true,
+      "contained": true
+    }
+  },
+  {
+    "report": "webkit-focused-option-tab.json",
+    "test": "terminal dock reserves complete rows: CSS zoom 125 percent measured client, long basename errors tabs and exit",
+    "geometry": {
+      "pane": {
+        "x": 0,
+        "y": 468.5,
+        "width": 784,
+        "height": 212.5,
+        "top": 468.5,
+        "right": 784,
+        "bottom": 681,
+        "left": 0
+      },
+      "host": {
+        "x": 0,
+        "y": 627.25,
+        "width": 784,
+        "height": 53.75,
+        "top": 627.25,
+        "right": 784,
+        "bottom": 681,
+        "left": 0
+      },
+      "screen": {
+        "x": 11,
+        "y": 635.75,
+        "width": 744,
+        "height": 36,
+        "top": 635.75,
+        "right": 755,
+        "bottom": 671.75,
+        "left": 11
+      },
+      "row": {
+        "x": 11,
+        "y": 653.75,
+        "width": 744,
+        "height": 18,
+        "top": 653.75,
+        "right": 755,
+        "bottom": 671.75,
+        "left": 11
+      },
+      "rows": 2,
+      "innerTop": 636,
+      "innerBottom": 672.25,
+      "zoom": 1.25,
+      "completeRows": true,
+      "contained": true
+    }
+  }
+]

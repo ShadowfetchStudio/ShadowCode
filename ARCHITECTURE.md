@@ -1,8 +1,8 @@
-# ShadowCode architecture (2.4.0 development)
+# ShadowCode architecture (2.4 series)
 
 ```text
 React window (ui/)                 shadowcode CLI / TUI / MCP clients
-      │ Tauri IPC  invoke("api")              │ private Unix socket
+      │ Tauri IPC  invoke("api")              │ private local transport
       └──────────────┬────────────────────────┘
                      ▼
           Service (native/core/src/service.rs)   request router: /api/…
@@ -30,7 +30,8 @@ runs in-process with the window. There is no HTTP server between them.
 ## Layers
 
 - **Desktop** (`src-tauri/src/main.rs`): hosts the React build (`ui/dist`,
-  embedded) in the system WebKit webview and exposes one IPC command, `api`,
+  embedded) in the platform webview (WebKit on macOS/Linux, WebView2 on Windows)
+  and exposes one IPC command, `api`,
   which forwards `{method, path, body}` to the `Service`. The UI contract is
   [docs/API_CONTRACT.md](docs/API_CONTRACT.md). A window can also
   attach to an engine already running in a headless `serve` or TUI process.
@@ -46,9 +47,11 @@ runs in-process with the window. There is no HTTP server between them.
   whose `Text`/`Flag`/`Loose` fields read absent or mistyped values the way
   the untyped API did. Synchronous handlers run on tokio's blocking pool.
   The CLI reaches the same service through
-  `control.rs`, a Unix socket in `/run/user/<uid>/shadowcode/` with
-  peer-credential checks. It opens no TCP listener. At startup it removes
-  sockets left behind by dead engines.
+  `control.rs`, using a private Unix socket on macOS/Linux or a profile-specific
+  named pipe on Windows. Filesystem permissions and peer credentials, or named
+  pipe access rules and ownership, restrict access to the current OS user.
+  This local transport opens no TCP listener. At startup it removes Unix sockets
+  left behind by dead engines; Windows pipes disappear with their last handle.
 - **Engine** (`engine.rs`): owns jobs. Each workspace runs one active job plus
   queued follow-ups. Second opinions (`second_opinion.rs`: reviews of staged
   or task changes, another model's view of an answer) are ordinary

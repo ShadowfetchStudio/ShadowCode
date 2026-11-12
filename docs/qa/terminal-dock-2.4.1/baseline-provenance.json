@@ -1,0 +1,9 @@
+{
+  "commit": "3984b7f5dfe39976c1eb3c1aec2a71de5b2c9666",
+  "sha256": {
+    "ui/src/components/TerminalPanel.tsx": "c2bb36e573111c5724eac92443a986212cf151a88caa04a0196d148ca375ecdf",
+    "ui/src/components/TerminalView.tsx": "ca0877329712cb06a4c99a2a30ecea7a2e690aba2e36724c44354e9f41abbfb7",
+    "ui/src/flagship.css": "c70cb56d2650874787a47e8ba23607584ac0797d23a9d8d809c174f7951664ef",
+    "ui/e2e/terminalDockLayout.spec.ts": "8a37c73d6620b36821092f8fdebde4b24bda99acd6d0b878232ed4635cbfeecb"
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "base_commit": "3984b7f5dfe39976c1eb3c1aec2a71de5b2c9666",
+  "status": "complete: full unit/type/build and all Chromium passed; focused WebKit passed",
+  "source_hashes": {
+    "ui/src/components/TerminalPanel.tsx": "b4cf69e0b28758808a19cf7d1bc3f2101eb862abe53e7ca5f10c3542986c8227",
+    "ui/src/components/TerminalView.tsx": "0b67b419cc9456f746c5ddeaef851d92e38574237c4cdb11c5e6ee22fc92e255",
+    "ui/src/flagship.css": "bb40b64bd21af36f273fc09215034d5daac47f0f6f230f36f6f82341f15ca63c",
+    "ui/src/components/TerminalPanel.test.tsx": "883bcf1036fbdb0a300540b5f57db82c2961c1b9446b22751daf306e064de759",
+    "ui/e2e/flagship.spec.ts": "18fe8cda4efd240fb01b00db36e6ea294393f78b00734f969f9cacd2691f8ec9",
+    "ui/e2e/terminalDockLayout.spec.ts": "7ef79c6de572d29a0d196cf816cf642d3627f20d86580bc5c37c8f51904fcf6b"
+  },
+  "checks": {
+    "baseline-final-both.json": {
+      "startTime": "2026-11-12T07:27:39.632Z",
+      "duration": 53329.642,
+      "expected": 0,
+      "skipped": 0,
+      "unexpected": 8,
+      "flaky": 0
+    },
+    "chromium-regressions.json": {
+      "startTime": "2026-11-12T07:21:40.551Z",
+      "duration": 74594.504,
+      "expected": 36,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "webkit-regressions.json": {
+      "startTime": "2026-11-12T07:23:10.641Z",
+      "duration": 68616.233,
+      "expected": 34,
+      "skipped": 0,
+      "unexpected": 2,
+      "flaky": 0
+    },
+    "webkit-focused-option-tab.json": {
+      "startTime": "2026-11-12T07:26:43.613Z",
+      "duration": 14276.755,
+      "expected": 4,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "full_unit": {
+      "numTotalTests": 913,
+      "numPassedTests": 913,
+      "numFailedTests": 0,
+      "numPendingTests": 0,
+      "success": true
+    },
+    "build": [
+      {
+        "check": "production-build",
+        "command": [
+          "npm",
+          "run",
+          "build"
+        ],
+        "exit_code": 0
+      },
+      {
+        "check": "production-bundle-check",
+        "command": [
+          "npm",
+          "run",
+          "check:bundle"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "full-chromium.json": {
+      "startTime": "2026-11-12T07:27:28.020Z",
+      "duration": 214332.998,
+      "expected": 170,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    }
+  },
+  "webkit_note": "32 unchanged existing tests passed in webkit-regressions.json; four new tests passed with corrected macOS Option+Tab traversal in webkit-focused-option-tab.json. Original 34/36 report retained as diagnostic history.",
+  "baseline_note": "8 failures are intentional negative controls against preserved baseline-dist, all at the row/containment assertion. Final test SHA matches current source_hashes.",
+  "scope": "Browser native-equivalent geometry and CSS zoom with fake backend, not a Windows native executable requalification.",
+  "product_files_unchanged_since_independent_review": true,
+  "shortDock_sha256": "d8b0ca26d9afa0a89164ee59ae41fccda57cf1952f9ac1fc69c84c88c3c6cb7a",
+  "baseline_final_test_sha256": "7ef79c6de572d29a0d196cf816cf642d3627f20d86580bc5c37c8f51904fcf6b",
+  "owned_test_processes_finished": true
+}

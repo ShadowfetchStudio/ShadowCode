@@ -83,6 +83,37 @@ Description: Desktop coding agent for local models and your subscriptions
  ShadowCode runs coding tasks on GGUF models on this computer through a bundled llama.cpp runtime, or through the official Codex, Claude Code, Cursor and Grok command-line tools and the Antigravity agent you are signed in to, or hundreds of OpenRouter models with your own API key, with explicit approvals, durable conversations and Git review.
 `;
 
+test("the newest AppStream release matches Cargo, UI and Tauri package versions", async () => {
+  const [cargo, ui, tauri] = await Promise.all([
+    readFile(path.join(root, "Cargo.toml"), "utf8"),
+    readFile(path.join(root, "ui/package.json"), "utf8"),
+    readFile(path.join(root, "src-tauri/tauri.conf.json"), "utf8"),
+  ]);
+  const workspacePackage = cargo
+    .split(/^\[workspace\.package\]\s*$/m)[1]
+    ?.split(/^\[/m)[0];
+  const cargoVersion = /^version\s*=\s*"([^"]+)"\s*(?:#.*)?$/m.exec(
+    workspacePackage || "",
+  )?.[1];
+  const packageVersions = {
+    "Cargo.toml [workspace.package]": cargoVersion,
+    "ui/package.json": JSON.parse(ui).version,
+    "src-tauri/tauri.conf.json": JSON.parse(tauri).version,
+  };
+  for (const [source, packageVersion] of Object.entries(packageVersions)) {
+    assert.match(
+      packageVersion || "",
+      /^\d+\.\d+\.\d+$/,
+      `${source}: missing stable version`,
+    );
+    assert.equal(
+      releases[0]?.version,
+      packageVersion,
+      `The newest AppStream release must match ${source}`,
+    );
+  }
+});
+
 test("control files keep their fields and get wrapped descriptions", () => {
   const fields = parseControl(TAURI_CONTROL);
   assert.equal(formatControl(fields), TAURI_CONTROL);

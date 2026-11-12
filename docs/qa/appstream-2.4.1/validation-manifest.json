@@ -1,0 +1,20 @@
+{
+  "recordedAtUTC": "2026-11-12T07:23:02.322928+00:00",
+  "baseline": "3984b7f5dfe39976c1eb3c1aec2a71de5b2c9666",
+  "sourceFiles": {
+    "packaging/com.shadowfetch.shadowcode.appdata.xml": "391e7093ead1213a5eb6de117b3506adbe34a2c9fe8a56385814f5ad2b8edede",
+    "scripts/test-native-deb.mjs": "b7a5c4a1d04bdaeb8f26370ba6189a166939c14a2e5acc11c1e5b8cb0882c357"
+  },
+  "evidence": {
+    "review.patch": "42c45766adb5cd3de8759bc9d411ced463e2b94c2a11f934bb0194b17ee539b7",
+    "negative-src-tauri-tauri.conf.json.log": "cdf3ced3485e64d1957966e04e1b4e046f08755956c3573aace574ea14092703",
+    "linux-appstream-validation.log": "6c0565d7c39e8bb933da619c3865c9259c4c92c9d6642b313aadd664515fa24b",
+    "focused-fixture.tar.gz": "113da75073ecf53a75a5d517dfdfcd9031edf07e4a202fbd04c22dc35d3bb8b0",
+    "negative-ui-package.json.log": "bb9ec300eddc197adb8b6b25ccd7a1e09fc0b71fdeeb27c26cbb942c6f6dffc2",
+    "README.md": "c4a082b4c1350051997395ff1f6936396d4e3cc5886a2a48c172b18983b85fdf",
+    "negative-3984-metadata.log": "4bee75c6f9c1c95c50b8e4d061606dd952b839a3d83f6ac2f9bea275221d2814",
+    "positive-version-check.log": "45513f5b837b85f3cb93a8af436f946ecd4d74518728a9515beb58beda332122",
+    "linux-packaging-tests.log": "5ec280055c12325f8e139612bb6ba2b443568611ec3d68cdcb18bc882ea3183e",
+    "candidate-fixture.tar": "1707a7a418473d5150b1d1d4995961efc1fdaca9f30cf439925cda9eed8d7aaa"
+  }
+}

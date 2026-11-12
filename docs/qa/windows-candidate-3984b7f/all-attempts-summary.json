@@ -1,0 +1,74 @@
+[
+  {
+    "run": "ui-2.4.1-3854c55aa2cf4547ba144be7f8f26b3c",
+    "ui_passed": false,
+    "runner_passed": false,
+    "completed_geometry_cases": 0,
+    "hide_cases": 0,
+    "probe_sha256": "8a60c07b682e4e26ee97456b557780661589c4bdaeaa7bf404dc14278ef759bd",
+    "owned_task_removed": true
+  },
+  {
+    "run": "ui-2.4.1-5e3aaa1f92e34f7e997775b8437852fb",
+    "ui_passed": false,
+    "runner_passed": false,
+    "completed_geometry_cases": 7,
+    "hide_cases": 8,
+    "probe_sha256": "0ca1f37109ce09dc122854c19be2a357cf88f510a46b65db8fb5758b8a8214c9",
+    "owned_task_removed": true
+  },
+  {
+    "run": "ui-2.4.1-8f85639c107c440396e962cb2b1ffe14",
+    "ui_passed": false,
+    "runner_passed": false,
+    "completed_geometry_cases": 0,
+    "hide_cases": 0,
+    "probe_sha256": "b86dfae2e8174f6a6ff63b58b1dbd84b4e87d8f6aa790cfb86b4e4fb7c9d601a",
+    "owned_task_removed": true
+  },
+  {
+    "run": "ui-2.4.1-930b1cd9131249158dbe016b6c0aed4a",
+    "ui_passed": false,
+    "runner_passed": false,
+    "completed_geometry_cases": 2,
+    "hide_cases": 2,
+    "probe_sha256": "7fcbb820375af3d9f2ea20845aa76cb6b49e625131f916f4b2ff5f9c54c64cc6",
+    "owned_task_removed": true
+  },
+  {
+    "run": "ui-2.4.1-96ca374ba4d244e183d0088c74678920",
+    "ui_passed": false,
+    "runner_passed": false,
+    "completed_geometry_cases": 2,
+    "hide_cases": 2,
+    "probe_sha256": "0cc5841a223602cff0ef6b2944ece31d567216a5fbfbb7c27d53cb0f9f9f34ed",
+    "owned_task_removed": true
+  },
+  {
+    "run": "ui-2.4.1-be99e3c766ca499d90fb894e41423740",
+    "ui_passed": false,
+    "runner_passed": false,
+    "completed_geometry_cases": 0,
+    "hide_cases": 0,
+    "probe_sha256": "f608ab1ea398dd69977ac22da57e44128b8bd5bf0a8192226ec279f0ad26aa85",
+    "owned_task_removed": true
+  },
+  {
+    "run": "ui-2.4.1-d91bbb74c4a146e4b92ce5ccb8907993",
+    "ui_passed": false,
+    "runner_passed": false,
+    "completed_geometry_cases": 0,
+    "hide_cases": 0,
+    "probe_sha256": "332bbdc8b7a1fb7bdd8b284200c8b79932ce6414345759b4ec3f553c2b1cb176",
+    "owned_task_removed": true
+  },
+  {
+    "run": "ui-2.4.1-f526d8d54c0f4fb08cc410c50204a30a",
+    "ui_passed": false,
+    "runner_passed": false,
+    "completed_geometry_cases": 7,
+    "hide_cases": 8,
+    "probe_sha256": "8087e4b11b7b92e43a9bf4de426aebfd4bf60c7bd10318423847f4ab50a3fbfa",
+    "owned_task_removed": true
+  }
+]

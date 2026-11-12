@@ -91,5 +91,7 @@
       "root_cause": "Commit click overlapped the queued fix entering busy state; production guard correctly prevented commit. Test now records disabled transition before queuing and waits for the second completed task summary.",
       "review": "Independent source review found no remaining issue; no product guard or existing assertions weakened."
     }
-  }
+  },
+  "source_commit": "3984b7f5dfe39976c1eb3c1aec2a71de5b2c9666",
+  "phase": "Initial composer/dock correction; browser checks passed, physical Windows candidate later failed a separate terminal-row containment check."
 }

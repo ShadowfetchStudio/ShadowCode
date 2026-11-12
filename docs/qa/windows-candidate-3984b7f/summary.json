@@ -1,0 +1,19 @@
+{
+  "candidate_commit": "3984b7f5dfe39976c1eb3c1aec2a71de5b2c9666",
+  "version": "2.4.1",
+  "result": "FAILED_NATIVE_UI",
+  "installer_sha256": "0069257d0b2eaa8ee223a537feb1fd20ae6307cebf926907fb129c35dd6b306b",
+  "installation": "passed",
+  "fully_completed_geometry_cases": 7,
+  "required_geometry_cases": 9,
+  "hide_hit_points_passed": 40,
+  "required_hide_hit_points": 45,
+  "blocking_case": "800px outerwidth,125percent nativezoom",
+  "finding": "Terminal row extends1.6CSSpixels belowdock; existing1pixel containmenttolerance unchanged. Windowsdisplaybasename and variable terminalinformation consume rowspace.",
+  "fixture_corrections": [
+    "Normal typedshortprompt inisolatedPowerShellsession; sameexactoutputmarker.",
+    "offsetWidth measuresexisting380pixelstageallocation; unchangedthreshold and nohorizontaloverflowcheck."
+  ],
+  "scope": "Candidate only; not published or qualified; no endurance/model run. Earlierfailedattempts/diagnostics preserved. Allownedtasks/processes cleaned.",
+  "external_report_sha256": "3185410628d02482f57e36d98aeab9d0fb4eff001d50aa031d8ff54878b2a2e1"
+}

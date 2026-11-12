@@ -64,8 +64,10 @@ only those three 2.3.x tags were allowed and the reviewed tooling pin was
 
 ## 1. Version files
 
-All four must carry the same version, and the tag must be `v<version>`.
-`release.yml` checks each of them:
+These application and packaging fields must carry the same version, and the
+tag must be `v<version>`. The release tag gate checks the four application fields;
+the Debian metadata suite independently compares the newest AppStream entry
+with Cargo, UI and Tauri versions before packaging:
 
 | File | Field |
 | --- | --- |
@@ -73,9 +75,10 @@ All four must carry the same version, and the tag must be `v<version>`.
 | `src-tauri/tauri.conf.json` | `version` |
 | `ui/package.json` | `version` |
 | `packaging/shadow-agent.desktop` | `X-ShadowCode-Version=` |
+| `packaging/com.shadowfetch.shadowcode.appdata.xml` | Newest `<release version=...>` and its date; preserve earlier entries |
 
 Update the workspace package entries in `Cargo.lock` and the root package
-versions in `ui/package-lock.json` alongside those four files; keep locked
+versions in `ui/package-lock.json` alongside those files; keep locked
 builds reproducible. Update `CHANGELOG.md` and `docs/RELEASE_NOTES.md`. The notes file becomes the
 GitHub release text as it is, so it should start with this release. Notes of
 earlier releases may follow below it, as they do now.

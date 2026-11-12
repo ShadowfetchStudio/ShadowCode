@@ -1,5 +1,30 @@
 # Physical-machine platform qualification
 
+## 2.4.1 initial candidate — failed, not published
+
+Candidate `3984b7f5dfe39976c1eb3c1aec2a71de5b2c9666` installed successfully on
+the Windows laptop from Actions run `43166081351`, attempt 1, artifact
+`13921472078`. Installer SHA-256:
+`0069257d0b2eaa8ee223a537feb1fd20ae6307cebf926907fb129c35dd6b306b`.
+Native UI acceptance failed after seven of nine complete geometry cases and
+40 of 45 required Hide-control hit checks. At 800×720 outer size and 125%
+native zoom, a wrapped notice left less than one complete terminal row. The
+rendered screen extended 1.6 CSS pixels below the dock. The existing containment
+tolerance was retained; this candidate was not tagged or published.
+
+Four full attempts and four diagnostics were preserved. Two earlier test
+assumptions were corrected separately: an isolated short PowerShell prompt
+keeps executed output visible, and `offsetWidth` measures the existing 380-pixel
+stage allocation including its scrollbar. Exact output checks, width thresholds,
+control hits, dirty drafts and shell continuity remain required. The later
+terminal clipping is a product defect, not another tolerance adjustment.
+See the [candidate summary](qa/windows-candidate-3984b7f/summary.json),
+[attempts](qa/windows-candidate-3984b7f/all-attempts-summary.json),
+[containment measurements](qa/windows-candidate-3984b7f/terminal-containment-diagnostic-status.json)
+and [cleanup](qa/windows-candidate-3984b7f/final-owned-cleanup-status.json).
+The corrected candidate requires fresh installer provenance and a new complete
+native run. No 2.4.1 public-release, endurance or real-model pass is implied.
+
 ## 2.4.0 public release — November 12, 2026 UTC
 
 All nine platform installers are published from immutable commit

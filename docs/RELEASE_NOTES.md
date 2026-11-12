@@ -14,10 +14,14 @@ past the conversation area and cover the terminal dock’s Hide control.
 - Provide a scrolling fallback for engines without size container queries.
 - Preserve the open editor draft and existing terminal session when hiding,
   restoring or moving the terminal.
+- Display the folder name correctly for Windows paths and reserve two complete
+  terminal rows, including their padding and borders. Long notices, errors,
+  tabs and restart controls remain accessible in a separate scrollable area.
 
-The correction is limited to layout and regression coverage. It does not change
+The correction covers layout, terminal path labels and regression coverage. It does not change
 model backends, command permissions, signing keys or sandbox policy. The source
 release trust ceiling is extended to 2.4.1 using the existing Linux signing key.
+AppStream metadata is checked against application versions before packaging.
 
 The 2.4.0 release remains immutable. Its failed Windows interface qualification,
 successful installer/endurance checks and incomplete real-model attempt remain
@@ -28,13 +32,21 @@ and limitations.
 
 ## Validation
 
-The patch passed 906 interface unit tests, all 166 Chromium browser tests,
-12 focused WebKit tests and 115 Linux release-authentication tests. The 12
-short-window regressions also failed against the previous release’s stylesheet,
-confirming that they exercise the defect. Type checking and the production
-interface build passed. A separate review-before-commit test timing race was
-corrected without changing the application’s commit guard. These browser tests
-use a simulated backend; native installer qualification is recorded separately.
+The corrected patch passed 913 interface unit tests and all 170 Chromium browser
+tests. Focused WebKit coverage passed 32 existing workspace checks and the four
+new terminal-layout checks; the latter use the browser's supported Option-Tab
+navigation. Type checking, the production build and bundle checks passed.
+
+The terminal regressions fail against the earlier candidate in both Chromium
+and WebKit. They cover long Windows paths, long folder names, errors, multiple
+tabs, exit/restart controls, complete visible rows and accessible notices. The
+original 12 composer regressions also failed against the 2.4.0 stylesheet.
+Linux release-authentication tests passed 115 checks, and the updated Debian
+packaging/metadata suites passed 19, including an early AppStream version check.
+
+A separate review-before-commit test timing race was corrected without changing
+the application's commit guard. Browser checks use a simulated backend; exact
+native installer qualification is recorded separately in the platform record.
 
 ---
 

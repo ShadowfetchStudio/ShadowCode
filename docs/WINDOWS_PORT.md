@@ -4,7 +4,9 @@ Status: Windows **2.4.0** is published. Its exact public installer passed CI
 installation, clean-PATH probes and installation on the Windows 11 laptop.
 Physical qualification found composer overlap with the terminal Hide control at
 175% zoom in a short window, so **native UI acceptance failed**. A 2.4.1 source
-candidate addresses that defect; its installer is not yet qualified or published.
+candidate addresses that defect; its initial installer exposed a separate
+terminal-row clipping issue in a narrow window. A corrected candidate remains
+pending complete qualification and publication.
 The 2.4.0 engine endurance test passed 100 sequential and 80 concurrent tasks,
 five cancellations and persistence after forced termination. Its real-model
 check was interrupted and is incomplete. See [the current qualification record](PLATFORM_QUALIFICATION.md#240-public-release--november-12-2026-utc)

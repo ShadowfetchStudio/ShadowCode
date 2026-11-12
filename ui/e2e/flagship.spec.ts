@@ -781,7 +781,11 @@ test("CSS zoom uses effective split breakpoints and keeps actual dock geometry r
         if ((await drawer.count()) === 0) await files.click();
         await expectEditorText(editor, "# Demo\n");
         await expect
-          .poll(() => page.locator(".stage").evaluate((el) => el.clientWidth))
+          .poll(() =>
+            page
+              .locator(".stage")
+              .evaluate((el) => (el as HTMLElement).offsetWidth),
+          )
           .toBeGreaterThanOrEqual(380);
         if (effective > 760) {
           await expect(
@@ -840,7 +844,15 @@ test("CSS zoom uses effective split breakpoints and keeps actual dock geometry r
           sidebar,
           stageLayoutWidth: await page
             .locator(".stage")
-            .evaluate((el) => el.clientWidth),
+            .evaluate((el) => (el as HTMLElement).offsetWidth),
+          stageInterior: await page.locator(".stage").evaluate((el) => ({
+            clientWidth: el.clientWidth,
+            scrollWidth: el.scrollWidth,
+            clientHeight: el.clientHeight,
+            scrollHeight: el.scrollHeight,
+            overflowX: getComputedStyle(el).overflowX,
+            overflowY: getComputedStyle(el).overflowY,
+          })),
           overlay: effective <= 760,
           stage: await page.locator(".stage").boundingBox(),
           drawer: await drawer.boundingBox(),

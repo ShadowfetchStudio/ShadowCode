@@ -47,11 +47,11 @@ const info = (n: number, over: Partial<TerminalInfo> = {}): TerminalInfo => ({
   ...over,
 });
 
-function Harness() {
-  const memory = useDrawerMemory("/work/demo");
+function Harness({ workspace = "/work/demo" }: { workspace?: string }) {
+  const memory = useDrawerMemory(workspace);
   return (
     <TerminalPanel
-      workspace="/work/demo"
+      workspace={workspace}
       toast={vi.fn()}
       memory={memory.memory}
       onMemory={memory.update}
@@ -68,6 +68,32 @@ afterEach(() => {
   cleanup();
   vi.resetAllMocks();
 });
+
+it.each([
+  ["C:\\Users\\Robert\\projects\\demo\\", "demo"],
+  ["\\\\server\\share\\project\\", "project"],
+  ["/work/demo/", "demo"],
+  ["C:\\work/mixed\\project/", "project"],
+  ["/", "/"],
+  ["\\", "\\"],
+  ["C:\\", "C:"],
+])(
+  "displays the basename of %s without truncating the sandbox notice",
+  async (workspace, name) => {
+    vi.mocked(terminalApi.list).mockResolvedValue({
+      workspace,
+      terminals: [info(1, { workspace })],
+    });
+    render(<Harness workspace={workspace} />);
+    await screen.findByRole("group", { name: "Terminal 1" });
+    expect(
+      screen.getByText(
+        `Your own shell in ${name}. It runs outside the agent's sandbox, keeps running while the agent works, and the agent never sees it.`,
+      ),
+    ).toBeTruthy();
+    expect(terminalApi.open).not.toHaveBeenCalled();
+  },
+);
 
 it("opens a shell when the project has none, and more with +", async () => {
   vi.mocked(terminalApi.list).mockResolvedValue({

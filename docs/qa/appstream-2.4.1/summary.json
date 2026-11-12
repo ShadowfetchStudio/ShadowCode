@@ -1,0 +1,15 @@
+{
+  "linux_packaging_and_metadata_tests": {
+    "passed": 19,
+    "failed": 0,
+    "skipped": 0
+  },
+  "appstreamcli_validate_no_net": "passed",
+  "xmllint": "passed",
+  "negative_controls": [
+    "3984AppStreammetadata rejected",
+    "independentUIversiondrift rejected",
+    "independentTauriversiondrift rejected"
+  ],
+  "scope": "Metadata and packaging unit validation; full architecture package qualification remains required."
+}
