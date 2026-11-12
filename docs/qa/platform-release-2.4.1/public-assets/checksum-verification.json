@@ -1,0 +1,80 @@
+[
+  {
+    "file": "SHA256SUMS",
+    "entries": [
+      {
+        "sha256": "03a4f06ddceb8464da077ae24bd36e91738a52c0f9b19fa7e838f791cfcb656a",
+        "name": "ShadowCode_2.4.1_amd64.AppImage"
+      },
+      {
+        "sha256": "e614066d8d15b0051a53a600aa2029b10e53daf4298517b2f39f04efba992320",
+        "name": "ShadowCode_2.4.1_amd64.deb"
+      },
+      {
+        "sha256": "1170c3a5be7c8222101898639f12a83a790d15911dcd42ae2733e8744b460f32",
+        "name": "ShadowCode_2.4.1_appimage-runtime-sources.tar.gz"
+      }
+    ],
+    "passed": true
+  },
+  {
+    "file": "SHA256SUMS-aarch64",
+    "entries": [
+      {
+        "sha256": "72fb3c00f19a1db89ed561aa8fade1bfe6c62e170104efe4e7b5bb8e57fecb4f",
+        "name": "ShadowCode_2.4.1_aarch64.AppImage"
+      },
+      {
+        "sha256": "e9e2075518de4fd42cbe46fa8340d83d7ebf97eef070f7d545d5093223023c60",
+        "name": "ShadowCode_2.4.1_arm64.deb"
+      },
+      {
+        "sha256": "4e4a26491589fe0543ebd8c9f7c6390faaa39bc93ab0b7426fcca9bf20459c0e",
+        "name": "ShadowCode_2.4.1_aarch64_appimage-runtime-sources.tar.gz"
+      }
+    ],
+    "passed": true
+  },
+  {
+    "file": "ShadowCode_2.4.1_macos.sha256",
+    "entries": [
+      {
+        "sha256": "6ee8d374cb907f5c9df33de739ae51220f96d5744a45ae0348be80e9e0a0247b",
+        "name": "ShadowCode_2.4.1_aarch64.dmg"
+      },
+      {
+        "sha256": "5ee07d1bfb89d074ac9bef0913bdc208ec6b8463a5e820e34b79a8965ca7b22e",
+        "name": "ShadowCode_2.4.1_x64.dmg"
+      }
+    ],
+    "passed": true
+  },
+  {
+    "file": "ShadowCode_2.4.1_flatpak.sha256",
+    "entries": [
+      {
+        "sha256": "1d108f476d4b589ea4ba271baca4bf56d9bcf5f1f585f4e9f597818b5d4c45d6",
+        "name": "ShadowCode_2.4.1_x86_64.flatpak"
+      },
+      {
+        "sha256": "4f144dcda32ed41e58aea07b74119ad6923b83d5f8c7d4d6f1fdf290f50a7903",
+        "name": "ShadowCode_2.4.1_aarch64.flatpak"
+      }
+    ],
+    "passed": true
+  },
+  {
+    "file": "ShadowCode_2.4.1_windows.sha256",
+    "entries": [
+      {
+        "sha256": "d979725fe94ddb405d6180a73c8c48a268bff4ceeb51265d432fa09d5e4b8f99",
+        "name": "ShadowCode_2.4.1_x64-setup.exe"
+      },
+      {
+        "sha256": "c6345e913686ff61ab46757b19fad23e9bb1b5e1e273f132bc4333770bd55a96",
+        "name": "ShadowCode_2.4.1_busybox-w32-source.tar.gz"
+      }
+    ],
+    "passed": true
+  }
+]

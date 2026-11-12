@@ -4,7 +4,20 @@ The helpers in `scripts/native-release-auth.mjs` and `scripts/verify-native-rele
 
 The Bash verifier loads `scripts/native-release-auth-lib.sh` from its own script directory. Keep both reviewed code files together in the trusted tooling bundle; do not obtain the library from the candidate download or source metadata as shell code. The installer uses the same reviewed routines for current candidates and signed historical receipts; it never sources release metadata as code.
 
-## Published Linux release: 2.4.0
+## Published Linux release: 2.4.1
+
+[Release 2.4.1](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.4.1), ID `442808765`, was published at **2026-11-12 10:46:44 UTC** from immutable source `a3b09eca6333c2befda3504850f357f09cc25542`. Linux release run `43192014736`, attempt 1, completed successfully. The [full-platform audit](qa/platform-release-2.4.1/public-assets/verification-summary.json) verified all 23 public assets and all four successful release workflows.
+
+Both [x86_64](qa/platform-release-2.4.1/x86_64-handoff.json) and [aarch64](qa/platform-release-2.4.1/aarch64-handoff.json) passed all 15 required gates. The [protected-source activation](qa/platform-release-2.4.1/protected-activation.json) recorded the exact a3b09ec tooling pin and v2.4.1 tag allowance at 09:30:08 UTC. [Fresh environment](qa/platform-release-2.4.1/protected-environment.json), [tag-rule](qa/platform-release-2.4.1/protected-tag-rules.json) and [tooling](qa/platform-release-2.4.1/protected-tooling.json) readbacks preceded [signing approval](qa/platform-release-2.4.1/signing-approval.json) at **10:44:07 UTC**. Earlier activation receipts retain their then-pending signing status.
+
+[Public Linux verification](qa/platform-release-2.4.1/linux-public-verification.json) authenticated all six payloads and matched their hashes to the approved handoffs. The [full audit](qa/platform-release-2.4.1/public-assets/linux-signature-verification.json) independently verified those six payloads with the reviewed source trust. [APT verification](qa/platform-release-2.4.1/apt-public-verification.json) passed with signed indices and byte-identical public DEBs. Public Windows installation, UI, endurance and model outcomes are recorded separately in [platform qualification](PLATFORM_QUALIFICATION.md#241-public-release).
+
+The published 2.4.1 policy retains key identity, epoch 1, targets and floor 0.33.0, extending the existing inclusive ceiling to 2.4.1. Ed25519 authentication covers six Linux payloads; checksums for Windows, macOS and Flatpak do not establish publisher signatures, Authenticode, notarization or native acceptance.
+
+## Historical published Linux release: 2.4.0
+
+The following checkpoint retains its original results and then-current pending statements.
+
 
 [Version 2.4.0](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.4.0)
 was published for x86_64 and aarch64 on **November 12, 2026 at 04:35:24 UTC**
@@ -157,7 +170,7 @@ Each key has an inclusive version range and exactly one epoch. Unknown keys, dif
 
 For a reviewed rotation, distribute a new authenticated trust bundle with the new public key and higher minimum epoch/version. Retain the old public key with its historical version range only when needed to verify an existing accepted-state receipt. The internal history check may ignore current minimum floors, but it still verifies the old signature, identity, key epoch and historical key range. This exception is not exposed as an install-verification API. Deleting an old key outright can make old state unverifiable; the installer must then fail pending explicit migration, not erase the state or assume a fresh install.
 
-The tracked `release/trust` bundle contains the public Ed25519 key with ID `f0c60ff8228314616985712f8918c9798c0ecf72b7271e19343a041c25663b7f`. Its epoch is 1, minimum version is 0.33.0, and its source-candidate inclusive key range is 0.33.0–2.4.1 (the published 2.4.0 tag ends at 2.4.0). Historical provisioning checkpoints covered 0.33.0–2.1.0 on October 11, 2026 and 0.33.0–2.2.0 on October 17, 2026; those are dated records, not current ceilings. It authorizes no version after 2.4.1 without a reviewed policy update; the candidate extension alone does not authorize signing or publication. The private key is not distributed in the repository or installer bundle. Fixture keys remain temporary and separate. Public fingerprint distribution, custody and future rotation/revocation remain owner responsibilities.
+The tracked `release/trust` bundle contains the public Ed25519 key with ID `f0c60ff8228314616985712f8918c9798c0ecf72b7271e19343a041c25663b7f`. Its epoch is 1, minimum version is 0.33.0, and its published 2.4.1 inclusive key range is 0.33.0–2.4.1 (the published 2.4.0 tag ends at 2.4.0). Historical provisioning checkpoints covered 0.33.0–2.1.0 on October 11, 2026 and 0.33.0–2.2.0 on October 17, 2026; those are dated records, not current ceilings. It authorizes no version after 2.4.1 without a reviewed policy update; the policy extension alone does not authorize signing or publication. The private key is not distributed in the repository or installer bundle. Fixture keys remain temporary and separate. Public fingerprint distribution, custody and future rotation/revocation remain owner responsibilities.
 
 ## Downgrade, replay and accepted state
 
@@ -183,9 +196,9 @@ The end-user path is Bash plus OpenSSL 3 and ordinary GNU coreutils/diffutils; i
 bash verify-native-release.sh \
   --bundle-dir DOWNLOADED_FILES \
   --trust-dir INDEPENDENTLY_TRUSTED_KEYS \
-  --artifact ShadowCode_2.4.0_amd64.AppImage \
+  --artifact ShadowCode_2.4.1_amd64.AppImage \
   --stage-dir NEW_PRIVATE_STAGE \
-  --expect-version 2.4.0 \
+  --expect-version 2.4.1 \
   --expect-commit EXPECTED_COMMIT
 ```
 
@@ -204,8 +217,8 @@ A separate publisher runner receives the signing job's immutable artifact ID and
 The workflow deliberately refuses missing owner configuration. The following records the November 12, 2026 UTC provisioning observation with historical checkpoints identified explicitly; recheck live settings before dispatching any later release:
 
 - The tracked `release/trust` public policy and key bundle must be included in the reviewed tooling commit and distributed through an authenticated channel. It contains public material only; no default fixture key is trusted.
-- Repository variable `NATIVE_RELEASE_TOOLING_COMMIT` must pin the exact 40-character reviewed and pushed commit containing the current gate definitions, signing/publisher code, public trust and release-appropriate notes. The reviewed and live-read-back pin for 2.4.0 is `25c8345f99f246b37ea45bf9306eb551da9c0819`. Historical pins included `e15c4480e65db5650af012bb2a9773dbe89acf84` for 0.33.1 on September 28, 2026 and the tagged `v2.2.0` release commit on October 17, 2026 (`v2.1.0` for 2.1.0, `v1.0.1` for 1.0.1, `v1.0.0` for 1.0.0, `v0.34.2` for 0.34.2). Never infer this pin from an unreviewed tag.
-- Repository variable `NATIVE_RELEASE_SIGNING_ENVIRONMENT` is set to `release-signing`. Its verified configuration requires the `ShadowfetchStudio` User reviewer (ID `209457103`, unchanged after the account rename), allows self-review and retains GitHub's default administrator override. Its current custom deployment rules permit exactly `v2.3.1`, `v2.3.2`, `v2.3.3` and `v2.4.0`; the 2.4.0 allowance was added without weakening review protections. Historical release-specific rules included `v2.2.0` on October 17, 2026 and `v2.1.0`, `v1.0.1`, `v1.0.0`, `v0.34.2` and `v0.33.1` for their earlier releases. This is an owner-reviewed gate, not a two-person approval guarantee; a later release needs an explicit rule/policy update.
+- Repository variable `NATIVE_RELEASE_TOOLING_COMMIT` must pin the exact 40-character reviewed and pushed commit containing the current gate definitions, signing/publisher code, public trust and release-appropriate notes. The 2.4.1 live-read-back pin is `a3b09eca6333c2befda3504850f357f09cc25542`, with evidence [protected-activation](qa/platform-release-2.4.1/protected-activation.json); [protected-environment](qa/platform-release-2.4.1/protected-environment.json); [protected-tag-rules](qa/platform-release-2.4.1/protected-tag-rules.json); [signing-approval](qa/platform-release-2.4.1/signing-approval.json). The historical reviewed and live-read-back pin for 2.4.0 was `25c8345f99f246b37ea45bf9306eb551da9c0819`. Historical pins included `e15c4480e65db5650af012bb2a9773dbe89acf84` for 0.33.1 on September 28, 2026 and the tagged `v2.2.0` release commit on October 17, 2026 (`v2.1.0` for 2.1.0, `v1.0.1` for 1.0.1, `v1.0.0` for 1.0.0, `v0.34.2` for 0.34.2). Never infer this pin from an unreviewed tag.
+- Repository variable `NATIVE_RELEASE_SIGNING_ENVIRONMENT` is set to `release-signing`. Its verified configuration requires the `ShadowfetchStudio` User reviewer (ID `209457103`, unchanged after the account rename), allows self-review and retains GitHub's default administrator override. The 2.4.1 rule/protection readback is [protected-activation](qa/platform-release-2.4.1/protected-activation.json); [protected-environment](qa/platform-release-2.4.1/protected-environment.json); [protected-tag-rules](qa/platform-release-2.4.1/protected-tag-rules.json); [signing-approval](qa/platform-release-2.4.1/signing-approval.json). At the 2.4.0 checkpoint, its custom deployment rules permitted exactly `v2.3.1`, `v2.3.2`, `v2.3.3` and `v2.4.0`; the 2.4.0 allowance was added without weakening review protections. Historical release-specific rules included `v2.2.0` on October 17, 2026 and `v2.1.0`, `v1.0.1`, `v1.0.0`, `v0.34.2` and `v0.33.1` for their earlier releases. This is an owner-reviewed gate, not a two-person approval guarantee; a later release needs an explicit rule/policy update.
 - Environment secret `NATIVE_RELEASE_SIGNING_KEY_PEM` has been uploaded to `release-signing`. It is scoped to the signing environment, not repository-wide secrets or the build job. Its presence does not prove that a candidate has been signed.
 
 Owner review of the release workflow/source and repository protections remains necessary: another authorized workflow could request the same environment secret. Local gate receipts are validated assertions, not independent attestations that an adversarial producer executed the commands. Workflow dependencies and exact artifact IDs bind the proposed job flow; local fixtures do not prove GitHub control-plane behavior. Remote checks are observations, not atomic compare-and-swap against independently authorized concurrent changes.

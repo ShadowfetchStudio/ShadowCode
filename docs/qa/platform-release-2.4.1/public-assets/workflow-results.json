@@ -1,0 +1,38 @@
+[
+  {
+    "platform": "linux",
+    "id": 43192014736,
+    "attempt": 1,
+    "headSha": "a3b09eca6333c2befda3504850f357f09cc25542",
+    "path": ".github/workflows/release.yml",
+    "url": "https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43192014736",
+    "conclusion": "success"
+  },
+  {
+    "platform": "macos",
+    "id": 43203354756,
+    "attempt": 1,
+    "headSha": "a3b09eca6333c2befda3504850f357f09cc25542",
+    "path": ".github/workflows/release-macos.yml",
+    "url": "https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43203354756",
+    "conclusion": "success"
+  },
+  {
+    "platform": "flatpak",
+    "id": 43203358489,
+    "attempt": 1,
+    "headSha": "a3b09eca6333c2befda3504850f357f09cc25542",
+    "path": ".github/workflows/release-flatpak.yml",
+    "url": "https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43203358489",
+    "conclusion": "success"
+  },
+  {
+    "platform": "windows",
+    "id": 43203362035,
+    "attempt": 1,
+    "headSha": "a3b09eca6333c2befda3504850f357f09cc25542",
+    "path": ".github/workflows/release-windows.yml",
+    "url": "https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43203362035",
+    "conclusion": "success"
+  }
+]

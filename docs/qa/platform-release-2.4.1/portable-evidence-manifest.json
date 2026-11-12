@@ -1,0 +1,486 @@
+{
+  "status": "CURATED_ALL_PUBLIC_RELEASE_AND_WINDOWS_GATES_VERIFIED",
+  "sourceCommit": "a3b09eca6333c2befda3504850f357f09cc25542",
+  "files": {
+    "docs/qa/platform-release-2.4.1/x86_64-handoff.json": {
+      "source": "publication-2.4.1/signing-approval/x86_64-main-reviewed.json",
+      "sha256": "667c80dbce1991730e6c4ca80a6beb714e428a534d16f72b645e54dd66751f57",
+      "bytes": 7721,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/aarch64-handoff.json": {
+      "source": "publication-2.4.1/signing-approval/aarch64-main-reviewed.json",
+      "sha256": "d479560f55d12b94e53607d2ccb1405fe1877c37b8708b120353965570eecd76",
+      "bytes": 7732,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/independent-handoff-summary.json": {
+      "source": "publication-2.4.1/release-handoffs/verification-summary.json",
+      "sha256": "10784a9a8445eb4364e70c7b5e6637db074458fba93e9e8b0c5f19fbcffd177f",
+      "bytes": 2237,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/signing-approval.json": {
+      "source": "publication-2.4.1/signing-approval/result.json",
+      "sha256": "8381484feeaa20d6d940f52be2f88e078e338ac5c3b24ee493b60a6ef7afccc9",
+      "bytes": 296,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/protected-environment.json": {
+      "source": "publication-2.4.1/signing-approval/environment.json",
+      "sha256": "f143901229e955d92f6e95ceeaeeb2b5e2e420ccd5e713c0cdc3644410c1594d",
+      "bytes": 2224,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/protected-tag-rules.json": {
+      "source": "publication-2.4.1/signing-approval/tag-rules.json",
+      "sha256": "62b8e5e3ae52c150203f3d22f7d026076aeea1da2fd6dd96ab4192987da721cf",
+      "bytes": 750,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/protected-tooling.json": {
+      "source": "publication-2.4.1/signing-approval/tooling.json",
+      "sha256": "5cc091fd1b9c7c63313607fc922a4121eb16a33b6d4a34cc722be10eb44c9531",
+      "bytes": 181,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/protected-activation.json": {
+      "source": "publication-2.4.1/signing-activation-a3b09ec/result.json",
+      "sha256": "8284a31b757c9652495eea43287db7e77d4c513c9c64286b7ee78e50c0ec6540",
+      "bytes": 347,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/linux-public-verification.json": {
+      "source": "publication-2.4.1/public-linux/public-verification.json",
+      "sha256": "3bc7a5137bcd4efdd4410b17630f4ec14afc5a08d12995aa1a811686f7f9ff9e",
+      "bytes": 7679,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/linux-release-metadata.json": {
+      "source": "publication-2.4.1/public-linux/release-metadata.json",
+      "sha256": "44673033141aaa22a94e5041e0fe93c30ded68fa16ce88b3fc82d4f5da0137a4",
+      "bytes": 82064,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/linux-release-completed.json": {
+      "source": "publication-2.4.1/platform-release-runs/linux-completed-doc-preparation.json",
+      "sha256": "074637b1a14b24eb6541106058d212bd12bfe9feaa0008025da203c145a2b236",
+      "bytes": 14948,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/apt-public-verification.json": {
+      "source": "publication-2.4.1/apt-public-verification/proof.json",
+      "sha256": "d14c0295ce7f9d3fc5a8ceec079033b6dfdc81e1ba323473e4ba16d80e213b66",
+      "bytes": 2759,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/platform-run-identities.json": {
+      "source": "publication-2.4.1/platform-release-runs/audit-config-actual-runs.json",
+      "sha256": "7006940442e20d65358011d5672996b48f0789e72226f30ffa4123ba68f1447d",
+      "bytes": 981,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/source-ci-2.4.1/verification.json": {
+      "source": "publication-2.4.1/source-ci-a3b09ec/verification.json",
+      "sha256": "bb56cd560b65d92c84d4a1b2e6f4eebdc6cbec5614a7be36c1b6377ec160fa81",
+      "bytes": 12942,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/source-ci-2.4.1/native-endurance-summary.json": {
+      "source": "publication-2.4.1/source-ci-a3b09ec/endurance-verification.json",
+      "sha256": "996fccf042eb8bfe33a916b6f048157e30a9de69af6e9b5c2fa421373769d597",
+      "bytes": 2895,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/source-ci-2.4.1/x86_64-native-100-tasks.json": {
+      "source": "publication-2.4.1/source-ci-a3b09ec/native-window-diagnostics/native-endurance/native-endurance.json",
+      "sha256": "aaf30295fe5a25c7816627e0bbef3d2c46340e1f7cbc9f1109ee33661ba23daf",
+      "bytes": 201145,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/source-ci-2.4.1/aarch64-native-100-tasks.json": {
+      "source": "publication-2.4.1/source-ci-a3b09ec/native-window-diagnostics-aarch64/native-endurance/native-endurance.json",
+      "sha256": "2613dafa130c910b6721b2a034db3031ed8baeb44f53f9568445cdf99678ed4e",
+      "bytes": 151374,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/source-ci-2.4.1/windows-source-run.json": {
+      "source": "publication-2.4.1/signing-approval/source-43184020556.json",
+      "sha256": "b8254e7c1f6fbead984e405bbb9bc453a235341db8b6fe4a62c03033714d5e7c",
+      "bytes": 14955,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/windows-candidate-a3b09ec/installation.json": {
+      "source": "publication-2.4.1/candidate-a3b09ec-qualification/installation.json",
+      "sha256": "267a354f667c48210b5627b5ece5d8c3820c61fb1d76f23e53be84d7cd895150",
+      "bytes": 3629,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/windows-candidate-a3b09ec/summary.json": {
+      "source": "publication-2.4.1/candidate-a3b09ec-qualification/ui-attempt2-checkpoint.json",
+      "sha256": "a38bd6cf9f03071c67e750f074b7fee9306bc3ddb3a286169d6d2f1da8ef898f",
+      "bytes": 1351,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/windows-candidate-a3b09ec/initial-failure-status.json": {
+      "source": "publication-2.4.1/candidate-a3b09ec-qualification/ui-status-attempt1-01.json",
+      "sha256": "640c6f8adf27d85181b82f3c639c321db07bb2c00e5b49b352ac4bf75807125d",
+      "bytes": 2462,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/windows-candidate-a3b09ec/initial-session-evidence.json": {
+      "source": "publication-2.4.1/candidate-a3b09ec-qualification/retained-session-evidence.json",
+      "sha256": "fc951c5265a426f5aa8faea522c2e53fa7a6e2cb4ea7e5b9cc92f10c7ba97baa",
+      "bytes": 991,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/windows-candidate-a3b09ec/diagnostic.json": {
+      "source": "publication-2.4.1/candidate-a3b09ec-qualification/diagnostic-status.json",
+      "sha256": "4ff0dfbb72a86cdf69dcfbf75820a00b046252286cc175c9742fc1f1da2b7636",
+      "bytes": 21484,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/windows-candidate-a3b09ec/diagnostic-report.md": {
+      "source": "publication-2.4.1/candidate-a3b09ec-qualification/DIAGNOSTIC-RESULT.md",
+      "sha256": "f81eeef0d7d5871770e5930751108ad80ccb212871935bee9ed217c4dfaf2f5d",
+      "bytes": 4429,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/windows-candidate-a3b09ec/cleanup.json": {
+      "source": "publication-2.4.1/candidate-a3b09ec-qualification/ui-attempt2-final-owned-state.json",
+      "sha256": "8242d5f3e29dbfbcd1ccb831f6b4bab9d648bb27cddfa3de667d27c01d3d9efb",
+      "bytes": 3262,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/windows-candidate-a3b09ec/probe-readiness.diff": {
+      "source": "publication-2.4.1/windows-preparation/review-navigation-readiness/probe.diff",
+      "sha256": "b6290c58a11c7700b5bae176e2a9be6305e79cc2e3afad8e009d7a15e3280076",
+      "bytes": 3228,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/windows-candidate-a3b09ec/probe-review-manifest.json": {
+      "source": "publication-2.4.1/windows-preparation/review-navigation-readiness/review-manifest.json",
+      "sha256": "adabf23778db417327e6d2fcfe875929fd8b12dfb9d488da93d7dc2e5514d933",
+      "bytes": 598,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/windows-candidate-a3b09ec/native-ui.json": {
+      "source": "publication-2.4.1/candidate-a3b09ec-qualification/install-7ca4a6ce12f04ce09024eb75796135e8/ui-2.4.1-6dea29270f95488399357863051ba32a/native-webview-result.json",
+      "sha256": "f40df2f48441e5912dfaef51333822289f7a41a14de20fbd63decf2b5a8538d6",
+      "bytes": 78547,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/windows-candidate-a3b09ec/runner.json": {
+      "source": "publication-2.4.1/candidate-a3b09ec-qualification/install-7ca4a6ce12f04ce09024eb75796135e8/ui-2.4.1-6dea29270f95488399357863051ba32a/runner-result.json",
+      "sha256": "f73316ddf91ed6052ceab56190ff624262dbdf3d5099342edfb78c394a6bb6c9",
+      "bytes": 738,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/README.md": {
+      "source": "generated explanatory index",
+      "sha256": "a054431fdf0f3fad16085b419c4518076dbe127cbe50d5e9018b455ca1e29e71",
+      "bytes": 3997,
+      "originalBytesPreserved": false
+    },
+    "docs/qa/source-ci-2.4.1/README.md": {
+      "source": "generated explanatory index",
+      "sha256": "c60d753ea0c4fa6748eef3dc824e2d6ad03f50572cdccd4b69b424fe29a5bfe3",
+      "bytes": 886,
+      "originalBytesPreserved": false
+    },
+    "docs/qa/windows-candidate-a3b09ec/README.md": {
+      "source": "generated explanatory index",
+      "sha256": "edaa4a569f24968560b987961cd2fe385a1630d712e879d51b9a6c8912a006c6",
+      "bytes": 1778,
+      "originalBytesPreserved": false
+    },
+    "docs/qa/platform-release-2.4.1/windows-public-integrity.json": {
+      "source": "publication-2.4.1/public-windows-preverification/public-verification.json",
+      "sha256": "88c1c9014fc85b08cedebdadb66323f131717aa524a4af8423e798d2adc5e184",
+      "bytes": 4904,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/windows-installation.json": {
+      "source": "publication-2.4.1/windows-public-qualification/installation.json",
+      "sha256": "c887fdfe9ec15321503255b2c339cd52a64f20ad54fa51399a10b670eed22147",
+      "bytes": 2751,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/windows-installed-runtime.txt": {
+      "source": "publication-2.4.1/windows-public-qualification/install-d6771de471904758906f15dabf41568a/installed-runtime.log",
+      "sha256": "3598fd6f92323dc990dbee1ee1060bc2e8ffc8abfd3acf37392f47c765f1d732",
+      "bytes": 778,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/windows-installation-checkpoint.json": {
+      "source": "publication-2.4.1/windows-public-qualification/installation-checkpoint.json",
+      "sha256": "3a24c035f4e0fd052d9a6b38fc8971959ab3ea858e9f93aea939b202f5cdac12",
+      "bytes": 807,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/windows-native-ui.json": {
+      "source": "publication-2.4.1/windows-public-qualification/install-d6771de471904758906f15dabf41568a/ui-2.4.1-8a3e0e1923e04a0680a0e26f00d57a36/native-webview-result.json",
+      "sha256": "67d25f6516fb73cbc7445d72915c0c8cbb202db7ea61f1420586ac46c83f8bb2",
+      "bytes": 77934,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/windows-ui-runner.json": {
+      "source": "publication-2.4.1/windows-public-qualification/install-d6771de471904758906f15dabf41568a/ui-2.4.1-8a3e0e1923e04a0680a0e26f00d57a36/runner-result.json",
+      "sha256": "c6f05ac47eea920ecd68e3b4ff77727c53defc99159881a663e9049313512e07",
+      "bytes": 735,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/windows-ui-checkpoint.json": {
+      "source": "publication-2.4.1/windows-public-qualification/ui-checkpoint.json",
+      "sha256": "26bc9c408228db6ab940beefde8e12c264df8aa562295fe86d474e1712c49a17",
+      "bytes": 1576,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/windows-endurance-result.json": {
+      "source": "publication-2.4.1/windows-public-qualification/install-d6771de471904758906f15dabf41568a/endurance-2.4.1-9c58025c6f5844c3a7e196c8abaf4249/result.json",
+      "sha256": "adcdc8efc2f20769a083f39657711fff9a1f7ead2e580d66b5d473a79a00301c",
+      "bytes": 1421,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/windows-endurance-public-artifact.json": {
+      "source": "publication-2.4.1/windows-public-qualification/install-d6771de471904758906f15dabf41568a/endurance-2.4.1-9c58025c6f5844c3a7e196c8abaf4249/public-artifact.json",
+      "sha256": "104a4d73e5f7eae7b12d368185b9a48497504d92bfcdf1f2c4a8c56624ca15bf",
+      "bytes": 673,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/windows-endurance-checkpoint.json": {
+      "source": "publication-2.4.1/windows-public-qualification/endurance-checkpoint.json",
+      "sha256": "bb6770bf74ed49f4ee02ba682c069af0d842f18c8f88a483f8edda80eb96fb2d",
+      "bytes": 1009,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/audit-result.json": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/audit-result.json",
+      "sha256": "29f87746965688961d8e83778c9765791f2750a966889570760c348954a821ac",
+      "bytes": 10559,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/verification-summary.json": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/verification-summary.json",
+      "sha256": "24f5a87077a3e4d7803786029d59249f44d019e7b7fceb310d18dda0d72bfda4",
+      "bytes": 2546,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/asset-inventory-before.json": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/asset-inventory-before.json",
+      "sha256": "f9f07bab331bd25cac34d5f457cbf5d3ff29833ea610d4bff5094c925d836218",
+      "bytes": 44310,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/asset-inventory-after.json": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/asset-inventory-after.json",
+      "sha256": "f9f07bab331bd25cac34d5f457cbf5d3ff29833ea610d4bff5094c925d836218",
+      "bytes": 44310,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/downloaded-assets.json": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/downloaded-assets.json",
+      "sha256": "9dc3fafefb266d30b60b2df9597d67445c0cd5b597d16a181aaa78d62233ead3",
+      "bytes": 6665,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/checksum-verification.json": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/checksum-verification.json",
+      "sha256": "640100373bd30ab4b5188991de58d63aa5478f8f4919747302aaa530f61038d9",
+      "bytes": 2328,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/linux-signature-verification.json": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/linux-signature-verification.json",
+      "sha256": "bfeb2f1175a0651dffe1e91f3803ca5911a9eac25034f0eb67f439520657ad24",
+      "bytes": 1744,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/workflow-results.json": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/workflow-results.json",
+      "sha256": "7cc2886a47668aedbdc5553ef7296b2fcad25b3c100e66e8256bfcd50e9b3cc8",
+      "bytes": 1205,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/inputs.json": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/inputs.json",
+      "sha256": "468fdd2b77b7cf35d5ee6f7f4e9206e6daaf001745571342871ccffc2df23cf6",
+      "bytes": 3906,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/preflight.json": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/preflight.json",
+      "sha256": "d35f23f33ce72202dcfe4c24dd3ee60368000860d5e4686fcd90c5cb1b59fa0d",
+      "bytes": 1339,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/release-before.json": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/release-before.json",
+      "sha256": "5768d388b0582ba6eeec13e8dc8e62d21c4fb19892ae014bdfb04fb36981a315",
+      "bytes": 100111,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/release-after.json": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/release-after.json",
+      "sha256": "5768d388b0582ba6eeec13e8dc8e62d21c4fb19892ae014bdfb04fb36981a315",
+      "bytes": 100111,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/workflow-linux.json": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/workflow-linux.json",
+      "sha256": "074637b1a14b24eb6541106058d212bd12bfe9feaa0008025da203c145a2b236",
+      "bytes": 14948,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/workflow-macos.json": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/workflow-macos.json",
+      "sha256": "cc36bfe1290b4238a3d847ab429a24eaf0f38ab387c3186efada31ee237b221d",
+      "bytes": 15044,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/workflow-flatpak.json": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/workflow-flatpak.json",
+      "sha256": "e3484671b7bb8268828579a2970028a40073a7bbe6f86d5d3fddd87c15dee921",
+      "bytes": 15049,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/workflow-windows.json": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/workflow-windows.json",
+      "sha256": "3f0ac7685958833234aa61fa1ebd85c264eb460f0d99c6c6a029249e46f87c9e",
+      "bytes": 15050,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/assets/SHA256SUMS": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/assets/SHA256SUMS",
+      "sha256": "da4d951e5eca972ab4fa234acb693af0436c553ab5938e54a22f6bc2f23d517d",
+      "bytes": 306,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/assets/SHA256SUMS-aarch64": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/assets/SHA256SUMS-aarch64",
+      "sha256": "5528167d8f766a628ce10d25fd36a97ba3303b11828fa596401a70f55769e6ab",
+      "bytes": 316,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/assets/ShadowCode_2.4.1_macos.sha256": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/assets/ShadowCode_2.4.1_macos.sha256",
+      "sha256": "ac952ad8e3cba44b443f230a1b4da76de4df2ba66fec60bacb1f45cbe1c159e0",
+      "bytes": 186,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/assets/ShadowCode_2.4.1_flatpak.sha256": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/assets/ShadowCode_2.4.1_flatpak.sha256",
+      "sha256": "f4cb3b5829e96b9cb57a57dfef8cd1090995700f3da358726fbe0fc5aaad74fc",
+      "bytes": 197,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/assets/ShadowCode_2.4.1_windows.sha256": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/assets/ShadowCode_2.4.1_windows.sha256",
+      "sha256": "7a5915faeb2634b0785aa8a486ae433982efbad275e51dbb4068401bd7509426",
+      "bytes": 206,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/assets/RELEASE-AUTH": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/assets/RELEASE-AUTH",
+      "sha256": "27317ee0be43bf7e08c329cc2ee63cde5d37e5515570c814e7170969319c2a0b",
+      "bytes": 857,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/assets/RELEASE-AUTH.sig": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/assets/RELEASE-AUTH.sig",
+      "sha256": "c33e8b8f633aaebb9560e810b1701218401525a52e269783e4006f7caf7710d5",
+      "bytes": 64,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/assets/RELEASE-MANIFEST.json": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/assets/RELEASE-MANIFEST.json",
+      "sha256": "04ca7812821bb3907f505b312e3134b762a0763396f78029eaae9304e0c41afb",
+      "bytes": 7965,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/assets/RELEASE-AUTH-aarch64": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/assets/RELEASE-AUTH-aarch64",
+      "sha256": "c64abce6ecce40e2d8ac4e246ccd8f96b697e40d9c2ce8ca7bea4d8ac9bc931f",
+      "bytes": 868,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/assets/RELEASE-AUTH-aarch64.sig": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/assets/RELEASE-AUTH-aarch64.sig",
+      "sha256": "090d3921269b22a6a150ebd208d3d354b57470d8d9158f8a418e87e2fe22f64d",
+      "bytes": 64,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/public-assets/assets/RELEASE-MANIFEST-aarch64.json": {
+      "source": "publication-2.4.1/platform-assets-audit-43192014736/assets/RELEASE-MANIFEST-aarch64.json",
+      "sha256": "0394affb47c3ade22bc10011836a7b755a99b857a0f8a24097a766e984b91b24",
+      "bytes": 7976,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/windows-model-result.json": {
+      "source": "publication-2.4.1/windows-public-qualification/install-d6771de471904758906f15dabf41568a/model-check-a7f8d1362e034ce39072af7493923e06/result.json",
+      "sha256": "bb9de41791f1ad52600a53df6c73718c1c2b0053fd101905c0546abdd3dc5794",
+      "bytes": 1032,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/windows-model-checkpoint.json": {
+      "source": "publication-2.4.1/windows-public-qualification/model-checkpoint.json",
+      "sha256": "54af13502f10081da4bc57979761369a4628da8f424acd59cc42698d2b64d37f",
+      "bytes": 1723,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/windows-model-independent-tests.txt": {
+      "source": "publication-2.4.1/windows-public-qualification/install-d6771de471904758906f15dabf41568a/model-check-a7f8d1362e034ce39072af7493923e06/independent-tests.txt",
+      "sha256": "ddb7bdc5f86bb15b8f91fc3e59283520ffaeef2843661b27dbba9ec90eab148d",
+      "bytes": 101,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/windows-model-appcontainer-proof.json": {
+      "source": "publication-2.4.1/windows-public-qualification/model-appcontainer-proof.json",
+      "sha256": "c583c88b26e517b4bffb369001e8152db17d66caea332202f94d569b1800634c",
+      "bytes": 1975,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/windows-model-runtime-proof.json": {
+      "source": "publication-2.4.1/windows-public-qualification/model-runtime-proof.json",
+      "sha256": "1340ae1f3acd7416e13e0ae456df1d29c5a8b90acefab2f206a985698917c271",
+      "bytes": 3576,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/windows-model-delegation-context.json": {
+      "source": "publication-2.4.1/windows-public-qualification/model-delegation-context.json",
+      "sha256": "aca349ecedfd4d6dc6d09102880b195adbe7e41e2ec5a213e78de311ad413b81",
+      "bytes": 7014,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/windows-model-fixture/helpers.py": {
+      "source": "publication-2.4.1/windows-public-qualification/install-d6771de471904758906f15dabf41568a/model-check-a7f8d1362e034ce39072af7493923e06/project/helpers.py",
+      "sha256": "2b455267c332431a0ec900823e2dd42712bd227012f33f3b68aa23081ce1ab8f",
+      "bytes": 472,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/windows-model-fixture/test_helpers.py": {
+      "source": "publication-2.4.1/windows-public-qualification/install-d6771de471904758906f15dabf41568a/model-check-a7f8d1362e034ce39072af7493923e06/project/test_helpers.py",
+      "sha256": "a252c5a92abaa1609e557749e44632911e0fb9a462681d5089f30867ef6cc72d",
+      "bytes": 1127,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/windows-model-fixture/task.txt": {
+      "source": "publication-2.4.1/windows-public-qualification/install-d6771de471904758906f15dabf41568a/model-check-a7f8d1362e034ce39072af7493923e06/project/task.txt",
+      "sha256": "989202127ed81f72396609ec9665426f72838c7cd174fca955b24dd1a196d15b",
+      "bytes": 689,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/windows-model-fixture/baseline.txt": {
+      "source": "publication-2.4.1/windows-public-qualification/install-d6771de471904758906f15dabf41568a/model-check-a7f8d1362e034ce39072af7493923e06/baseline.txt",
+      "sha256": "433077540f78f6046a2eca3865b44f171807722d795770e8a9d5e6ec74d45b18",
+      "bytes": 3706,
+      "originalBytesPreserved": true
+    },
+    "docs/qa/platform-release-2.4.1/known-issue-resolution.json": {
+      "source": "publication-2.4.1/final-publication/known-issue-resolution.json",
+      "sha256": "bde2acc2264aa95b0674005c57ab973ba55aa5bc4c6ba7722088f084dfe73c06",
+      "bytes": 170,
+      "originalBytesPreserved": true
+    }
+  }
+}

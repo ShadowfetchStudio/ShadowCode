@@ -1,0 +1,15 @@
+{
+  "status": "PASS_PUBLIC_INSTALL_AND_RUNTIME_ONLY",
+  "commit": "a3b09eca6333c2befda3504850f357f09cc25542",
+  "release_id": 442808765,
+  "asset_id": 739178661,
+  "installer_bytes": 23870723,
+  "installer_sha256": "d979725fe94ddb405d6180a73c8c48a268bff4ceeb51265d432fa09d5e4b8f99",
+  "installed_exe_and_payload_sha256": "abf7a230373dccd37e3bdb537eba32b830cb8fd7223e3ef64b40ded4c67ba058",
+  "installation_receipt_sha256": "c887fdfe9ec15321503255b2c339cd52a64f20ad54fa51399a10b670eed22147",
+  "runtime_log_sha256": "3598fd6f92323dc990dbee1ee1060bc2e8ffc8abfd3acf37392f47c765f1d732",
+  "remote_receipt": "C:\\Users\\Robert\\shadowcode-qualification\\public-2.4.1\\install-d6771de471904758906f15dabf41568a\\installation.json",
+  "ui": "NOT_AUTHORIZED_NOT_RUN",
+  "endurance": "NOT_RUN",
+  "model": "NOT_RUN"
+}

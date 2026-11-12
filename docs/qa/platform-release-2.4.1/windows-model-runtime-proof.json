@@ -1,0 +1,125 @@
+{
+  "backend": "cpu",
+  "context_tokens": 16384,
+  "cpu_fallback": false,
+  "fallback_out_of_memory": false,
+  "fallback_reason": null,
+  "id": "local:gguf:a0d2c9893efeaae9e3f03b9f56f95c3ccaef3587ad327dcf824fbe851725e37b",
+  "in_use": 1,
+  "name": "Hf \u00b7 Q4_0",
+  "port": 57646,
+  "provenance": {
+    "context": {
+      "reported_tokens": 16384,
+      "requested_tokens": 16384
+    },
+    "files": {
+      "model": {
+        "bytes": 5154941280,
+        "changed_nanoseconds": 348587900,
+        "changed_seconds": 13437934401,
+        "device": "45706529",
+        "inode": "4503599627662869",
+        "modified_ns": "1793460792547827800",
+        "path": "C:\\Users\\Robert\\DEV\\models\\gemma-4-E4B_q4_0-it.gguf"
+      },
+      "projector": null,
+      "runtime": {
+        "bytes": 10240,
+        "changed_nanoseconds": 426624100,
+        "changed_seconds": 13438955726,
+        "device": "45706529",
+        "inode": "4503599627375038",
+        "modified_ns": "1794480928000000000",
+        "path": "C:\\Users\\Robert\\AppData\\Local\\ShadowCode\\llama.cpp\\llama-server.exe"
+      }
+    },
+    "gpu": {
+      "launch_mode": "off",
+      "reported_backend": "cpu",
+      "requested_mode": "off"
+    },
+    "identity_kind": "filesystem_metadata",
+    "memory_policy": {
+      "apple_shared_memory": false,
+      "estimated_active_bytes": 6503410016,
+      "host_prompt_cache_limit_mib": null
+    },
+    "model": {
+      "architecture": "gemma4",
+      "chat_template": {
+        "bytes": 18569,
+        "sha256": "0a2c8073c878ab1da004bee933a998606537bbb62016310352c7285c3f01c5b5"
+      },
+      "gguf_version": 3,
+      "header_bytes": 15822852,
+      "header_sha256": "77371b279c8856d873f0d02f63932058fd7b8ac3783517be2373732b39b48670",
+      "quantization": {
+        "file_type": 2,
+        "tensor_type_counts": {
+          "0": 321,
+          "1": 1,
+          "14": 2,
+          "2": 342
+        },
+        "version": 2
+      }
+    },
+    "runtime": {
+      "reported_chat_template": {
+        "bytes": 18568,
+        "sha256": "603a42db292c25278e9b23d94c7abbe77453f13e26a053c43c5c2f900b4136f7"
+      },
+      "reported_chat_template_tool_use": null,
+      "reported_commit": "18f9f7bef",
+      "reported_generation_defaults": {
+        "dry_allowed_length": 2,
+        "dry_base": 1.75,
+        "dry_multiplier": 0.0,
+        "dry_penalty_last_n": 64,
+        "dynatemp_exponent": 1.0,
+        "dynatemp_range": 0.0,
+        "frequency_penalty": 0.0,
+        "min_p": 0.05000000074505806,
+        "mirostat": 0,
+        "mirostat_eta": 0.10000000149011612,
+        "mirostat_tau": 5.0,
+        "n_predict": -1,
+        "presence_penalty": 0.0,
+        "repeat_last_n": 64,
+        "repeat_penalty": 1.0,
+        "samplers": [
+          "penalties",
+          "dry",
+          "top_n_sigma",
+          "top_k",
+          "typ_p",
+          "top_p",
+          "min_p",
+          "xtc",
+          "temperature"
+        ],
+        "seed": 4294967295,
+        "temperature": 1.0,
+        "top_k": 64,
+        "top_p": 0.949999988079071,
+        "typical_p": 1.0,
+        "xtc_probability": 0.0,
+        "xtc_threshold": 0.10000000149011612
+      },
+      "reported_tool_capabilities": {
+        "field_status": "reported",
+        "invalid_fields": [],
+        "supports_object_arguments": true,
+        "supports_parallel_tool_calls": true,
+        "supports_tool_calls": true,
+        "supports_tools": true
+      },
+      "reported_version": "0.4.1-dev"
+    },
+    "schema": 1,
+    "template_override": null
+  },
+  "since": 1794482628.4156704,
+  "vision": false
+}

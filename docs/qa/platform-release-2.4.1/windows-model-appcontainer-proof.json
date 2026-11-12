@@ -1,0 +1,58 @@
+[
+  {
+    "event_id": 1008,
+    "command": "python3 -m unittest -q",
+    "output": {
+      "cancelled": false,
+      "checkpoint": {
+        "ignored_saved": [],
+        "method": "copy",
+        "paths": [],
+        "ref": null,
+        "skipped": [],
+        "unavailable": null
+      },
+      "duration_ms": 795,
+      "exit_code": 0,
+      "ok": true,
+      "pid": 636,
+      "sandbox": {
+        "home": "empty temporary folder",
+        "home_read_only": [
+          "C:\\Users\\Robert\\.cargo",
+          "C:\\Users\\Robert\\.rustup",
+          "C:\\Users\\Robert\\.gitconfig"
+        ],
+        "home_skipped": [],
+        "mode": "appcontainer",
+        "network": "off",
+        "network_enforcement": "no_network",
+        "network_requested": "off",
+        "note": "Windows sandbox (AppContainer), commands run in busybox sh: Windows and Program Files read-only, the home folder hidden except read-only toolchains and PATH folders, writable project, ephemeral scratch at SHADOWCODE_SCRATCH (also HOME, TEMP and TMP); network off unless on, and never to this computer's own services. Not a complete OS sandbox.",
+        "read_grants_skipped": [],
+        "scratch": "C:\\Users\\Robert\\AppData\\Local\\Temp\\shadowcode-scratch-user\\shadowcode-scratch-fs7Mcf",
+        "shell": "busybox sh",
+        "workspace_cow": false
+      },
+      "stderr": "----------------------------------------------------------------------\r\nRan 5 tests in 0.000s\r\n\r\nOK\r\n",
+      "stdout": "",
+      "timed_out": false,
+      "truncated": false
+    },
+    "start": {
+      "id": 1005,
+      "payload": {
+        "arguments": {
+          "command": "python3 -m unittest -q",
+          "cwd": "."
+        },
+        "call_id": "6ec340f6641a442cb850654fd547df2b",
+        "tool": "exec"
+      },
+      "session_id": "5207ea0c2e5f4a40862d4a934f601529",
+      "task_id": "cd527f4c1dd54efb81dcb922eeb95e18",
+      "ts": 1794483334.6467466,
+      "type": "tool.started"
+    }
+  }
+]

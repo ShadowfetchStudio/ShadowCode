@@ -1,0 +1,298 @@
+{
+    "diagnostic_only":  true,
+    "phase_completed":  false,
+    "failure":  "Error: expect(received).not.toBe(expected) // Object.is equality\n\nExpected: not \"3ead8c2c1c6b44bda286e4e768752ae6\"\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate\n    at captureRawStack (C:\\Users\\Robert\\DEV\\ShadowCode-followup\\ui\\node_modules\\playwright-core\\lib\\coreBundle.js:8588:17)\n    at callMatcherAsStep (C:\\Users\\Robert\\DEV\\ShadowCode-followup\\ui\\node_modules\\playwright\\lib\\matchers\\expect.js:13310:57)\n    at Object.toBe (C:\\Users\\Robert\\DEV\\ShadowCode-followup\\ui\\node_modules\\playwright\\lib\\matchers\\expect.js:13302:23)\n    at C:\\Users\\Robert\\shadowcode-qualification\\windows-preparation-2.4.1\\diagnose-candidate-navigation-dom-2.4.1.cjs:180:121\n    at async checked (C:\\Users\\Robert\\shadowcode-qualification\\windows-preparation-2.4.1\\diagnose-candidate-navigation-dom-2.4.1.cjs:73:38)\n    at async main (C:\\Users\\Robert\\shadowcode-qualification\\windows-preparation-2.4.1\\diagnose-candidate-navigation-dom-2.4.1.cjs:167:5)",
+    "timeline":  {
+                     "events":  [
+                                    {
+                                        "sequence":  1,
+                                        "performanceMs":  2068.5,
+                                        "kind":  "instrumentation-attached",
+                                        "target":  null,
+                                        "selectedSessionIds":  [
+
+                                                               ],
+                                        "workspace":  null,
+                                        "composerWorking":  null,
+                                        "attachButtonDisabled":  null,
+                                        "textareaDisabled":  null,
+                                        "onboardingPresent":  true,
+                                        "sessionIds":  [
+
+                                                       ]
+                                    },
+                                    {
+                                        "sequence":  2,
+                                        "performanceMs":  2169.7000000029802,
+                                        "kind":  "pointerdown-capture-before-handler",
+                                        "target":  {
+                                                       "tag":  "BUTTON",
+                                                       "classes":  "primary",
+                                                       "label":  null,
+                                                       "text":  "Open project",
+                                                       "disabled":  false,
+                                                       "isTrusted":  true
+                                                   },
+                                        "selectedSessionIds":  [
+
+                                                               ],
+                                        "workspace":  null,
+                                        "composerWorking":  null,
+                                        "attachButtonDisabled":  null,
+                                        "textareaDisabled":  null,
+                                        "onboardingPresent":  true,
+                                        "sessionIds":  [
+
+                                                       ]
+                                    },
+                                    {
+                                        "sequence":  3,
+                                        "performanceMs":  2171.5,
+                                        "kind":  "click-capture-before-handler",
+                                        "target":  {
+                                                       "tag":  "BUTTON",
+                                                       "classes":  "primary",
+                                                       "label":  null,
+                                                       "text":  "Open project",
+                                                       "disabled":  false,
+                                                       "isTrusted":  true
+                                                   },
+                                        "selectedSessionIds":  [
+
+                                                               ],
+                                        "workspace":  null,
+                                        "composerWorking":  null,
+                                        "attachButtonDisabled":  null,
+                                        "textareaDisabled":  null,
+                                        "onboardingPresent":  true,
+                                        "sessionIds":  [
+
+                                                       ]
+                                    },
+                                    {
+                                        "sequence":  4,
+                                        "performanceMs":  2248.9000000059605,
+                                        "kind":  "mutation",
+                                        "target":  null,
+                                        "selectedSessionIds":  [
+
+                                                               ],
+                                        "workspace":  "C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-7ca4a6ce12f04ce09024eb75796135e8\\ui-2.4.1-910968d861bd4cca8ad56a4d49b1a1ae\\project",
+                                        "composerWorking":  false,
+                                        "attachButtonDisabled":  false,
+                                        "textareaDisabled":  false,
+                                        "onboardingPresent":  false,
+                                        "sessionIds":  [
+
+                                                       ]
+                                    },
+                                    {
+                                        "sequence":  5,
+                                        "performanceMs":  2415.7000000029802,
+                                        "kind":  "mutation",
+                                        "target":  null,
+                                        "selectedSessionIds":  [
+
+                                                               ],
+                                        "workspace":  "C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-7ca4a6ce12f04ce09024eb75796135e8\\ui-2.4.1-910968d861bd4cca8ad56a4d49b1a1ae\\project",
+                                        "composerWorking":  false,
+                                        "attachButtonDisabled":  false,
+                                        "textareaDisabled":  false,
+                                        "onboardingPresent":  false,
+                                        "sessionIds":  [
+                                                           "2212a320b1d24f1cba0c7c32ad6311b9"
+                                                       ]
+                                    },
+                                    {
+                                        "sequence":  6,
+                                        "performanceMs":  2550.7999999970198,
+                                        "kind":  "pointerdown-capture-before-handler",
+                                        "target":  {
+                                                       "tag":  "BUTTON",
+                                                       "classes":  "new-task",
+                                                       "label":  null,
+                                                       "text":  "New taskCtrl+N",
+                                                       "disabled":  false,
+                                                       "isTrusted":  true
+                                                   },
+                                        "selectedSessionIds":  [
+
+                                                               ],
+                                        "workspace":  "C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-7ca4a6ce12f04ce09024eb75796135e8\\ui-2.4.1-910968d861bd4cca8ad56a4d49b1a1ae\\project",
+                                        "composerWorking":  false,
+                                        "attachButtonDisabled":  false,
+                                        "textareaDisabled":  false,
+                                        "onboardingPresent":  false,
+                                        "sessionIds":  [
+                                                           "2212a320b1d24f1cba0c7c32ad6311b9"
+                                                       ]
+                                    },
+                                    {
+                                        "sequence":  7,
+                                        "performanceMs":  2552.2000000029802,
+                                        "kind":  "click-capture-before-handler",
+                                        "target":  {
+                                                       "tag":  "BUTTON",
+                                                       "classes":  "new-task",
+                                                       "label":  null,
+                                                       "text":  "New taskCtrl+N",
+                                                       "disabled":  false,
+                                                       "isTrusted":  true
+                                                   },
+                                        "selectedSessionIds":  [
+
+                                                               ],
+                                        "workspace":  "C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-7ca4a6ce12f04ce09024eb75796135e8\\ui-2.4.1-910968d861bd4cca8ad56a4d49b1a1ae\\project",
+                                        "composerWorking":  false,
+                                        "attachButtonDisabled":  false,
+                                        "textareaDisabled":  false,
+                                        "onboardingPresent":  false,
+                                        "sessionIds":  [
+                                                           "2212a320b1d24f1cba0c7c32ad6311b9"
+                                                       ]
+                                    },
+                                    {
+                                        "sequence":  8,
+                                        "performanceMs":  2556.1000000089407,
+                                        "kind":  "mutation",
+                                        "target":  null,
+                                        "selectedSessionIds":  [
+
+                                                               ],
+                                        "workspace":  "C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-7ca4a6ce12f04ce09024eb75796135e8\\ui-2.4.1-910968d861bd4cca8ad56a4d49b1a1ae\\project",
+                                        "composerWorking":  true,
+                                        "attachButtonDisabled":  true,
+                                        "textareaDisabled":  false,
+                                        "onboardingPresent":  false,
+                                        "sessionIds":  [
+                                                           "2212a320b1d24f1cba0c7c32ad6311b9"
+                                                       ]
+                                    },
+                                    {
+                                        "sequence":  9,
+                                        "performanceMs":  2637.1000000089407,
+                                        "kind":  "mutation",
+                                        "target":  null,
+                                        "selectedSessionIds":  [
+                                                                   "3ead8c2c1c6b44bda286e4e768752ae6"
+                                                               ],
+                                        "workspace":  "C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-7ca4a6ce12f04ce09024eb75796135e8\\ui-2.4.1-910968d861bd4cca8ad56a4d49b1a1ae\\project",
+                                        "composerWorking":  true,
+                                        "attachButtonDisabled":  true,
+                                        "textareaDisabled":  false,
+                                        "onboardingPresent":  false,
+                                        "sessionIds":  [
+                                                           "3ead8c2c1c6b44bda286e4e768752ae6",
+                                                           "2212a320b1d24f1cba0c7c32ad6311b9"
+                                                       ]
+                                    },
+                                    {
+                                        "sequence":  10,
+                                        "performanceMs":  2754.2999999970198,
+                                        "kind":  "pointerdown-capture-before-handler",
+                                        "target":  {
+                                                       "tag":  "BUTTON",
+                                                       "classes":  "project-new icon-btn",
+                                                       "label":  "New task in C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-7ca4a6ce12f04ce09024eb75796135e8\\ui-2.4.1-910968d861bd4cca8ad56a4d49b1a1ae\\project",
+                                                       "text":  "",
+                                                       "disabled":  false,
+                                                       "isTrusted":  true
+                                                   },
+                                        "selectedSessionIds":  [
+                                                                   "3ead8c2c1c6b44bda286e4e768752ae6"
+                                                               ],
+                                        "workspace":  "C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-7ca4a6ce12f04ce09024eb75796135e8\\ui-2.4.1-910968d861bd4cca8ad56a4d49b1a1ae\\project",
+                                        "composerWorking":  true,
+                                        "attachButtonDisabled":  true,
+                                        "textareaDisabled":  false,
+                                        "onboardingPresent":  false,
+                                        "sessionIds":  [
+                                                           "3ead8c2c1c6b44bda286e4e768752ae6",
+                                                           "2212a320b1d24f1cba0c7c32ad6311b9"
+                                                       ]
+                                    },
+                                    {
+                                        "sequence":  11,
+                                        "performanceMs":  2756.4000000059605,
+                                        "kind":  "click-capture-before-handler",
+                                        "target":  {
+                                                       "tag":  "BUTTON",
+                                                       "classes":  "project-new icon-btn",
+                                                       "label":  "New task in C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-7ca4a6ce12f04ce09024eb75796135e8\\ui-2.4.1-910968d861bd4cca8ad56a4d49b1a1ae\\project",
+                                                       "text":  "",
+                                                       "disabled":  false,
+                                                       "isTrusted":  true
+                                                   },
+                                        "selectedSessionIds":  [
+                                                                   "3ead8c2c1c6b44bda286e4e768752ae6"
+                                                               ],
+                                        "workspace":  "C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-7ca4a6ce12f04ce09024eb75796135e8\\ui-2.4.1-910968d861bd4cca8ad56a4d49b1a1ae\\project",
+                                        "composerWorking":  true,
+                                        "attachButtonDisabled":  true,
+                                        "textareaDisabled":  false,
+                                        "onboardingPresent":  false,
+                                        "sessionIds":  [
+                                                           "3ead8c2c1c6b44bda286e4e768752ae6",
+                                                           "2212a320b1d24f1cba0c7c32ad6311b9"
+                                                       ]
+                                    },
+                                    {
+                                        "sequence":  12,
+                                        "performanceMs":  2902.5,
+                                        "kind":  "mutation",
+                                        "target":  null,
+                                        "selectedSessionIds":  [
+                                                                   "3ead8c2c1c6b44bda286e4e768752ae6"
+                                                               ],
+                                        "workspace":  "C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-7ca4a6ce12f04ce09024eb75796135e8\\ui-2.4.1-910968d861bd4cca8ad56a4d49b1a1ae\\project",
+                                        "composerWorking":  false,
+                                        "attachButtonDisabled":  false,
+                                        "textareaDisabled":  false,
+                                        "onboardingPresent":  false,
+                                        "sessionIds":  [
+                                                           "3ead8c2c1c6b44bda286e4e768752ae6",
+                                                           "2212a320b1d24f1cba0c7c32ad6311b9"
+                                                       ]
+                                    },
+                                    {
+                                        "sequence":  13,
+                                        "performanceMs":  7808.79999999702,
+                                        "kind":  "diagnostic-end",
+                                        "target":  null,
+                                        "selectedSessionIds":  [
+                                                                   "3ead8c2c1c6b44bda286e4e768752ae6"
+                                                               ],
+                                        "workspace":  "C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-7ca4a6ce12f04ce09024eb75796135e8\\ui-2.4.1-910968d861bd4cca8ad56a4d49b1a1ae\\project",
+                                        "composerWorking":  false,
+                                        "attachButtonDisabled":  false,
+                                        "textareaDisabled":  false,
+                                        "onboardingPresent":  false,
+                                        "sessionIds":  [
+                                                           "3ead8c2c1c6b44bda286e4e768752ae6",
+                                                           "2212a320b1d24f1cba0c7c32ad6311b9"
+                                                       ]
+                                    }
+                                ],
+                     "dropped":  0,
+                     "scope":  "Read-only DOM snapshots and capture-phase click/pointerdown observations. No API or React state interception; busy flag is observable composerLocked, not direct creating.current."
+                 },
+    "runner":  {
+                   "version":  "2.4.1",
+                   "finished_at":  "2026-11-12T01:14:33.7561176-08:00",
+                   "passed":  false,
+                   "node_exited":  true,
+                   "failure":  "System.Management.Automation.RuntimeException: Native UI probe failed with exit 1; inspect its retained logs",
+                   "ui_passed":  false,
+                   "installer_sha256":  "3cbf1f1d1439d53ee505c40050e9a03dc476cfb0a4377f9e8433fb32d0f8b97e",
+                   "forced_node_termination":  false,
+                   "app_exited":  true,
+                   "provenance_kind":  "candidate",
+                   "forced_app_termination":  false,
+                   "cleanup_errors":  [
+
+                                      ],
+                   "source_commit":  "a3b09eca6333c2befda3504850f357f09cc25542",
+                   "receipt_sha256":  "267a354f667c48210b5627b5ece5d8c3820c61fb1d76f23e53be84d7cd895150",
+                   "installed_exe_sha256":  "2b9b751420f08045f0f1e803119ccc38abf3b724db40139eabc8b151e0be4676"
+               }
+}

@@ -10,3 +10,10 @@ reports/*.log whitespace=-blank-at-eol,-blank-at-eof
 # Preserve original Windows qualification receipt bytes and their recorded hashes.
 docs/qa/windows-candidate-bf62e84/*.json -text whitespace=cr-at-eol
 docs/qa/onboarding-navigation-2.4.1/*.txt whitespace=-blank-at-eof
+
+# Original v2.4.1 qualification evidence: preserve receipt bytes and hashes.
+docs/qa/windows-candidate-a3b09ec/** -text whitespace=cr-at-eol,-blank-at-eof
+docs/qa/platform-release-2.4.1/** -text whitespace=cr-at-eol,-blank-at-eof
+docs/qa/source-ci-2.4.1/** -text whitespace=cr-at-eol,-blank-at-eof
+# Model-generated fixture is evidence; retain its original whitespace and hash.
+docs/qa/platform-release-2.4.1/windows-model-fixture/helpers.py whitespace=-blank-at-eol

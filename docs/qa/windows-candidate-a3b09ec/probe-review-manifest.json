@@ -1,0 +1,13 @@
+{
+  "status": "PROPOSED_NOT_STAGED_OR_EXECUTED",
+  "original_sha256": "1cf560ea7651e8db3b128131b72d132f7bf75f321ab0c7efc6145ea9bd2d4ac7",
+  "proposed_sha256": "3524c0c8535c85506d9c7f5dad1613d7ca766186ff43f63defdf2dbe81853adc",
+  "diff_sha256": "b6290c58a11c7700b5bae176e2a9be6305e79cc2e3afad8e009d7a15e3280076",
+  "syntax": {
+    "command": "node --check review-navigation-readiness/qualify-windows-ui-2.4.1.cjs",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "scope_validation": "Only project-scoped conversation creation checked-block differs; approved staging file untouched."
+}

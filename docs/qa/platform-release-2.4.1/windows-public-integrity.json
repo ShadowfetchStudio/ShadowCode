@@ -1,0 +1,109 @@
+{
+  "schema": 1,
+  "verified_at": "2026-11-12T11:14:10.633437+00:00",
+  "passed": true,
+  "tag": "v2.4.1",
+  "tag_object_sha": "8de8cc76208e85cd1f0bf786d3e0b1258b10ed72",
+  "source_commit": "a3b09eca6333c2befda3504850f357f09cc25542",
+  "release_id": 442808765,
+  "release_url": "https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.4.1",
+  "published_at": "2026-11-12T10:46:44Z",
+  "draft": false,
+  "prerelease": false,
+  "repository_public": true,
+  "windows_release_run": {
+    "id": 43203362035,
+    "head_sha": "a3b09eca6333c2befda3504850f357f09cc25542",
+    "head_branch": "v2.4.1",
+    "path": ".github/workflows/release-windows.yml",
+    "run_attempt": 1,
+    "event": "workflow_dispatch",
+    "status": "completed",
+    "conclusion": "success",
+    "html_url": "https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43203362035"
+  },
+  "all_four_workflow_identities": [
+    {
+      "id": 43192014736,
+      "head_sha": "a3b09eca6333c2befda3504850f357f09cc25542",
+      "head_branch": "v2.4.1",
+      "path": ".github/workflows/release.yml",
+      "run_attempt": 1,
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 43203362035,
+      "head_sha": "a3b09eca6333c2befda3504850f357f09cc25542",
+      "head_branch": "v2.4.1",
+      "path": ".github/workflows/release-windows.yml",
+      "run_attempt": 1,
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 43203354756,
+      "head_sha": "a3b09eca6333c2befda3504850f357f09cc25542",
+      "head_branch": "v2.4.1",
+      "path": ".github/workflows/release-macos.yml",
+      "run_attempt": 1,
+      "event": "workflow_dispatch",
+      "status": "in_progress",
+      "conclusion": null
+    },
+    {
+      "id": 43203358489,
+      "head_sha": "a3b09eca6333c2befda3504850f357f09cc25542",
+      "head_branch": "v2.4.1",
+      "path": ".github/workflows/release-flatpak.yml",
+      "run_attempt": 1,
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "assets": [
+    {
+      "name": "ShadowCode_2.4.1_x64-setup.exe",
+      "asset_id": 739178661,
+      "size": 23870723,
+      "sha256": "d979725fe94ddb405d6180a73c8c48a268bff4ceeb51265d432fa09d5e4b8f99",
+      "api_digest": "sha256:d979725fe94ddb405d6180a73c8c48a268bff4ceeb51265d432fa09d5e4b8f99",
+      "canonical_url": "https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.4.1/ShadowCode_2.4.1_x64-setup.exe",
+      "immutable_api_url": "https://api.github.com/repos/ShadowfetchStudio/ShadowCode/releases/assets/739178661",
+      "local_path": "/Volumes/NVME1TB/Development/ShadowCode-build/publication-2.4.1/public-windows-preverification/ShadowCode_2.4.1_x64-setup.exe"
+    },
+    {
+      "name": "ShadowCode_2.4.1_busybox-w32-source.tar.gz",
+      "asset_id": 739178749,
+      "size": 3672106,
+      "sha256": "c6345e913686ff61ab46757b19fad23e9bb1b5e1e273f132bc4333770bd55a96",
+      "api_digest": "sha256:c6345e913686ff61ab46757b19fad23e9bb1b5e1e273f132bc4333770bd55a96",
+      "canonical_url": "https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.4.1/ShadowCode_2.4.1_busybox-w32-source.tar.gz",
+      "immutable_api_url": "https://api.github.com/repos/ShadowfetchStudio/ShadowCode/releases/assets/739178749",
+      "local_path": "/Volumes/NVME1TB/Development/ShadowCode-build/publication-2.4.1/public-windows-preverification/ShadowCode_2.4.1_busybox-w32-source.tar.gz"
+    },
+    {
+      "name": "ShadowCode_2.4.1_windows.sha256",
+      "asset_id": 739178818,
+      "size": 206,
+      "sha256": "7a5915faeb2634b0785aa8a486ae433982efbad275e51dbb4068401bd7509426",
+      "api_digest": "sha256:7a5915faeb2634b0785aa8a486ae433982efbad275e51dbb4068401bd7509426",
+      "canonical_url": "https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.4.1/ShadowCode_2.4.1_windows.sha256",
+      "immutable_api_url": "https://api.github.com/repos/ShadowfetchStudio/ShadowCode/releases/assets/739178818",
+      "local_path": "/Volumes/NVME1TB/Development/ShadowCode-build/publication-2.4.1/public-windows-preverification/ShadowCode_2.4.1_windows.sha256"
+    }
+  ],
+  "checksum_rows": {
+    "ShadowCode_2.4.1_x64-setup.exe": "d979725fe94ddb405d6180a73c8c48a268bff4ceeb51265d432fa09d5e4b8f99",
+    "ShadowCode_2.4.1_busybox-w32-source.tar.gz": "c6345e913686ff61ab46757b19fad23e9bb1b5e1e273f132bc4333770bd55a96"
+  },
+  "download_method": "Authenticated gh api GET releases/assets/<immutable-id> with application/octet-stream; no candidate artifacts used.",
+  "limits": [
+    "Installer downloaded and hashed only; not installed or executed.",
+    "API digests and published checksum rows verified; no claim of Authenticode verification or physical Windows qualification.",
+    "Other downstream workflows may still be running; full 23-asset audit remains pending."
+  ]
+}

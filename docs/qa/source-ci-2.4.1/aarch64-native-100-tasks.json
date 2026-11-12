@@ -1,0 +1,5544 @@
+{
+  "schema": 1,
+  "passed": true,
+  "required": 100,
+  "warmupTasks": 25,
+  "warmupTaskIds": [
+    {
+      "job_id": "322fe6ef9f7d4f0baa87095ac670905b",
+      "task_id": "fd8287170b104969a4a9fa5483d652c6",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-1 passed\\n'"
+    },
+    {
+      "job_id": "a5dd23846d284b7f80367dc14c620b2c",
+      "task_id": "2bbd1131e8874d2b9281aa962c8da60b",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-2 passed\\n'"
+    },
+    {
+      "job_id": "6fec43b963b444d68d5f0933d6a5e73d",
+      "task_id": "338303ca3e07417981ddbf680ca20b1c",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-3 passed\\n'"
+    },
+    {
+      "job_id": "390153e9132c40558436721b92c09ae1",
+      "task_id": "5780061184734218ba03631afadf9ef7",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-4 passed\\n'"
+    },
+    {
+      "job_id": "9a20b7803ca441b79da5b7c2a786b48c",
+      "task_id": "236b8e66f51c4bfeb22469c8030632ad",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-5 passed\\n'"
+    },
+    {
+      "job_id": "696c555825dc48b38d2fa545339c5c13",
+      "task_id": "1269481848164e8c9e250a7fff9d726b",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-6 passed\\n'"
+    },
+    {
+      "job_id": "2f46479acb0441e29d1e2f9809123f12",
+      "task_id": "1f9fface22164dd1a06a6dc852b05c07",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-7 passed\\n'"
+    },
+    {
+      "job_id": "447039894dd7480a91b2aba15417eaa7",
+      "task_id": "52d9593db45441ea853d9330f4b1e70f",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-8 passed\\n'"
+    },
+    {
+      "job_id": "bbe2b869bc1640ee9166a4d58662d46f",
+      "task_id": "12e4df6bab2c44eeb683d5a32fec4c80",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-9 passed\\n'"
+    },
+    {
+      "job_id": "2aae8cd410e248b58aeab13390c9e0cb",
+      "task_id": "a3896e8a30fc4528a874e7b766cda2d7",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-10 passed\\n'"
+    },
+    {
+      "job_id": "b587347bb6a24870bc45a01d2fdead97",
+      "task_id": "1005730cec3340a585b5f48330332d56",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-11 passed\\n'"
+    },
+    {
+      "job_id": "00723e437931464b9ee365a57dbbb769",
+      "task_id": "06709a03ea9641ad8dc0bc0f0aebe596",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-12 passed\\n'"
+    },
+    {
+      "job_id": "a7ba5413816148a08662331051a8bdf8",
+      "task_id": "c70cba98bcee4d9a92a5416d9cca2980",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-13 passed\\n'"
+    },
+    {
+      "job_id": "d615600de3fa49f7b0fe4469ff5ff72c",
+      "task_id": "5cd1e4197aab4532a9cb0c07d6b60ac9",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-14 passed\\n'"
+    },
+    {
+      "job_id": "799721488b7b49ffa83ad05e839c14b1",
+      "task_id": "499e42dca8e94ec38db79a2752a339a8",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-15 passed\\n'"
+    },
+    {
+      "job_id": "594adf44c6e04ca5a36f20218f47e102",
+      "task_id": "4ce02f73fc2d48e1be7c6513f3d56be4",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-16 passed\\n'"
+    },
+    {
+      "job_id": "fcfc96a624ab45c8ae0125a5c0a4e886",
+      "task_id": "799d21233c104e2ab4a6beb8a5c20c84",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-17 passed\\n'"
+    },
+    {
+      "job_id": "d830489e591342f9a95346d18ae1de10",
+      "task_id": "774e6956932c47009f9ec284a3f4afce",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-18 passed\\n'"
+    },
+    {
+      "job_id": "54f1e82e885d4a8ab3ae8d917138621f",
+      "task_id": "65c727e9ac354f18a4d62c6c81b27744",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-19 passed\\n'"
+    },
+    {
+      "job_id": "45b6f056a7d34afdb5b4aa110222af4e",
+      "task_id": "4f73dc93b93e4cd5a31102e9d24c7558",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-20 passed\\n'"
+    },
+    {
+      "job_id": "403c4e1deebe4169b3332fc96bfc84be",
+      "task_id": "bddfab54e522426f9cc4b97e54686eb6",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-21 passed\\n'"
+    },
+    {
+      "job_id": "900fab4b69304729a8f2992452ae4f15",
+      "task_id": "98bd8769d77b41b6abaabc29471d78c6",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-22 passed\\n'"
+    },
+    {
+      "job_id": "3fb88a989bc740b195543d0c83b1014a",
+      "task_id": "5eb0e8a6e8f74a609c43624afe2089a6",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-23 passed\\n'"
+    },
+    {
+      "job_id": "5aa9061df42d4a53a4ad1432ca54a0b9",
+      "task_id": "9a90a57d178447b5bc47747560231d5e",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-24 passed\\n'"
+    },
+    {
+      "job_id": "4ce851452e284fa082a09f2444ecc833",
+      "task_id": "787e64a1630a460d8488ae44322dfbee",
+      "command": "test -f hello.txt && printf 'UI-03 warmup-25 passed\\n'"
+    }
+  ],
+  "warmupObservations": [
+    {
+      "index": 0,
+      "processes": [
+        {
+          "pid": 60045,
+          "start": "179464",
+          "executable": "/home/runner/work/ShadowCode/ShadowCode/target/debug/shadowcode",
+          "rssKiB": 235728,
+          "pssKiB": 167683,
+          "threads": 26,
+          "reportedThreads": 26,
+          "threadIdentities": [
+            {
+              "tid": 60045,
+              "name": "shadowcode",
+              "start": "179464",
+              "state": "S"
+            },
+            {
+              "tid": 60057,
+              "name": "pool-spawner",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60058,
+              "name": "gmain",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60059,
+              "name": "gdbus",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60099,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60100,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60101,
+              "name": "blocking-1",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60102,
+              "name": "async-io",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60103,
+              "name": "zbus::Connectio",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60104,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60105,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60106,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60107,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60108,
+              "name": "tokio-rt-worker",
+              "start": "179480",
+              "state": "S"
+            },
+            {
+              "tid": 60109,
+              "name": "shadowcode",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60110,
+              "name": "ebsiteDataStore",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60113,
+              "name": "PressureMonitor",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60114,
+              "name": "dconf worker",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60116,
+              "name": "shadowcode",
+              "start": "179484",
+              "state": "S"
+            },
+            {
+              "tid": 60128,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60129,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60141,
+              "name": "VBlankMonitor",
+              "start": "179544",
+              "state": "S"
+            },
+            {
+              "tid": 60148,
+              "name": "tokio-rt-worker",
+              "start": "179561",
+              "state": "S"
+            },
+            {
+              "tid": 60155,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60156,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60158,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            }
+          ],
+          "fds": 62
+        },
+        {
+          "pid": 60112,
+          "start": "179482",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess",
+          "rssKiB": 48684,
+          "pssKiB": 19755,
+          "threads": 11,
+          "reportedThreads": 11,
+          "threadIdentities": [
+            {
+              "tid": 60112,
+              "name": "WebKitNetworkPr",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60118,
+              "name": "WebKitNetworkPr",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60119,
+              "name": "pool-spawner",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60120,
+              "name": "gmain",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60121,
+              "name": "gdbus",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60122,
+              "name": "ReceiveQueue",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60130,
+              "name": "persistent",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60131,
+              "name": "Storage",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60132,
+              "name": "background",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60133,
+              "name": "erialBackground",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60135,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            }
+          ],
+          "fds": 26
+        },
+        {
+          "pid": 60117,
+          "start": "179485",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess",
+          "rssKiB": 456884,
+          "pssKiB": 393661,
+          "threads": 16,
+          "reportedThreads": 16,
+          "threadIdentities": [
+            {
+              "tid": 60117,
+              "name": "WebKitWebProces",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60123,
+              "name": "WebKitWebProces",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60124,
+              "name": "EventDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60125,
+              "name": "rruptDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60126,
+              "name": "uggerDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60127,
+              "name": "ReceiveQueue",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60136,
+              "name": "ReceiveQueue",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60137,
+              "name": "pool-spawner",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60138,
+              "name": "gmain",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60140,
+              "name": "gdbus",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60142,
+              "name": "dconf worker",
+              "start": "179546",
+              "state": "S"
+            },
+            {
+              "tid": 60143,
+              "name": "CryptoQueue",
+              "start": "179547",
+              "state": "S"
+            },
+            {
+              "tid": 60144,
+              "name": "JITWorker",
+              "start": "179553",
+              "state": "S"
+            },
+            {
+              "tid": 60145,
+              "name": "JITWorker",
+              "start": "179554",
+              "state": "S"
+            },
+            {
+              "tid": 60146,
+              "name": "JITWorker",
+              "start": "179554",
+              "state": "S"
+            },
+            {
+              "tid": 60325,
+              "name": "CryptoQueue",
+              "start": "181611",
+              "state": "S"
+            }
+          ],
+          "fds": 30
+        },
+        {
+          "pid": 60215,
+          "start": "180778",
+          "executable": "/usr/bin/python3.12",
+          "rssKiB": 19152,
+          "pssKiB": 11459,
+          "threads": 1,
+          "reportedThreads": 1,
+          "threadIdentities": [
+            {
+              "tid": 60215,
+              "name": "python3",
+              "start": "180778",
+              "state": "S"
+            }
+          ],
+          "fds": 12
+        }
+      ],
+      "processCount": 4,
+      "appPssKiB": 167683,
+      "totals": {
+        "rssKiB": 760448,
+        "pssKiB": 592558,
+        "fds": 130,
+        "threads": 54
+      },
+      "renderer": {
+        "pageMark": "0bc1dfc9-fa15-4cde-aca5-d0c309cb4d33",
+        "retainedListenerRecords": 3,
+        "elements": 711,
+        "callbacks": 3,
+        "activeListeners": 3,
+        "summaries": 2,
+        "documentTimeOrigin": 1794474197236,
+        "events": {
+          "shadowcode:events": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:open-session": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:shutdown": {
+            "retained": 1,
+            "active": 1
+          }
+        }
+      },
+      "keyboardRoundtripMs": 472.6381900000051
+    },
+    {
+      "index": 5,
+      "processes": [
+        {
+          "pid": 60045,
+          "start": "179464",
+          "executable": "/home/runner/work/ShadowCode/ShadowCode/target/debug/shadowcode",
+          "rssKiB": 236928,
+          "pssKiB": 168883,
+          "threads": 28,
+          "reportedThreads": 28,
+          "threadIdentities": [
+            {
+              "tid": 60045,
+              "name": "shadowcode",
+              "start": "179464",
+              "state": "S"
+            },
+            {
+              "tid": 60057,
+              "name": "pool-spawner",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60058,
+              "name": "gmain",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60059,
+              "name": "gdbus",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60099,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60100,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60101,
+              "name": "blocking-1",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60102,
+              "name": "async-io",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60103,
+              "name": "zbus::Connectio",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60104,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60105,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60106,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60107,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60108,
+              "name": "tokio-rt-worker",
+              "start": "179480",
+              "state": "S"
+            },
+            {
+              "tid": 60109,
+              "name": "shadowcode",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60110,
+              "name": "ebsiteDataStore",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60113,
+              "name": "PressureMonitor",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60114,
+              "name": "dconf worker",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60116,
+              "name": "shadowcode",
+              "start": "179484",
+              "state": "S"
+            },
+            {
+              "tid": 60128,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60129,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60141,
+              "name": "VBlankMonitor",
+              "start": "179544",
+              "state": "S"
+            },
+            {
+              "tid": 60148,
+              "name": "tokio-rt-worker",
+              "start": "179561",
+              "state": "S"
+            },
+            {
+              "tid": 60155,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60156,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60158,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60548,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            },
+            {
+              "tid": 60549,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            }
+          ],
+          "fds": 63
+        },
+        {
+          "pid": 60112,
+          "start": "179482",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess",
+          "rssKiB": 48688,
+          "pssKiB": 19759,
+          "threads": 11,
+          "reportedThreads": 11,
+          "threadIdentities": [
+            {
+              "tid": 60112,
+              "name": "WebKitNetworkPr",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60118,
+              "name": "WebKitNetworkPr",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60119,
+              "name": "pool-spawner",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60120,
+              "name": "gmain",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60121,
+              "name": "gdbus",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60122,
+              "name": "ReceiveQueue",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60130,
+              "name": "persistent",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60131,
+              "name": "Storage",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60132,
+              "name": "background",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60133,
+              "name": "erialBackground",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60135,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            }
+          ],
+          "fds": 26
+        },
+        {
+          "pid": 60117,
+          "start": "179485",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess",
+          "rssKiB": 454504,
+          "pssKiB": 391281,
+          "threads": 20,
+          "reportedThreads": 20,
+          "threadIdentities": [
+            {
+              "tid": 60117,
+              "name": "WebKitWebProces",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60123,
+              "name": "WebKitWebProces",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60124,
+              "name": "EventDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60125,
+              "name": "rruptDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60126,
+              "name": "uggerDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60127,
+              "name": "ReceiveQueue",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60136,
+              "name": "ReceiveQueue",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60137,
+              "name": "pool-spawner",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60138,
+              "name": "gmain",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60140,
+              "name": "gdbus",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60142,
+              "name": "dconf worker",
+              "start": "179546",
+              "state": "S"
+            },
+            {
+              "tid": 60143,
+              "name": "CryptoQueue",
+              "start": "179547",
+              "state": "S"
+            },
+            {
+              "tid": 60144,
+              "name": "JITWorker",
+              "start": "179553",
+              "state": "S"
+            },
+            {
+              "tid": 60145,
+              "name": "JITWorker",
+              "start": "179554",
+              "state": "S"
+            },
+            {
+              "tid": 60146,
+              "name": "JITWorker",
+              "start": "179554",
+              "state": "S"
+            },
+            {
+              "tid": 60325,
+              "name": "CryptoQueue",
+              "start": "181611",
+              "state": "S"
+            },
+            {
+              "tid": 60374,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60375,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60376,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60407,
+              "name": "ollector Thread",
+              "start": "183708",
+              "state": "S"
+            }
+          ],
+          "fds": 30
+        },
+        {
+          "pid": 60215,
+          "start": "180778",
+          "executable": "/usr/bin/python3.12",
+          "rssKiB": 19152,
+          "pssKiB": 11459,
+          "threads": 1,
+          "reportedThreads": 1,
+          "threadIdentities": [
+            {
+              "tid": 60215,
+              "name": "python3",
+              "start": "180778",
+              "state": "S"
+            }
+          ],
+          "fds": 12
+        }
+      ],
+      "processCount": 4,
+      "appPssKiB": 168883,
+      "totals": {
+        "rssKiB": 759272,
+        "pssKiB": 591382,
+        "fds": 131,
+        "threads": 60
+      },
+      "renderer": {
+        "pageMark": "0bc1dfc9-fa15-4cde-aca5-d0c309cb4d33",
+        "retainedListenerRecords": 3,
+        "elements": 1299,
+        "callbacks": 3,
+        "activeListeners": 3,
+        "summaries": 7,
+        "documentTimeOrigin": 1794474197236,
+        "events": {
+          "shadowcode:events": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:open-session": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:shutdown": {
+            "retained": 1,
+            "active": 1
+          }
+        }
+      },
+      "keyboardRoundtripMs": 614.1610520000031
+    },
+    {
+      "index": 10,
+      "processes": [
+        {
+          "pid": 60045,
+          "start": "179464",
+          "executable": "/home/runner/work/ShadowCode/ShadowCode/target/debug/shadowcode",
+          "rssKiB": 237504,
+          "pssKiB": 169459,
+          "threads": 28,
+          "reportedThreads": 28,
+          "threadIdentities": [
+            {
+              "tid": 60045,
+              "name": "shadowcode",
+              "start": "179464",
+              "state": "S"
+            },
+            {
+              "tid": 60057,
+              "name": "pool-spawner",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60058,
+              "name": "gmain",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60059,
+              "name": "gdbus",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60099,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60100,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60101,
+              "name": "blocking-1",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60102,
+              "name": "async-io",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60103,
+              "name": "zbus::Connectio",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60104,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60105,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60106,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60107,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60108,
+              "name": "tokio-rt-worker",
+              "start": "179480",
+              "state": "S"
+            },
+            {
+              "tid": 60109,
+              "name": "shadowcode",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60110,
+              "name": "ebsiteDataStore",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60113,
+              "name": "PressureMonitor",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60114,
+              "name": "dconf worker",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60116,
+              "name": "shadowcode",
+              "start": "179484",
+              "state": "S"
+            },
+            {
+              "tid": 60128,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60129,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60141,
+              "name": "VBlankMonitor",
+              "start": "179544",
+              "state": "S"
+            },
+            {
+              "tid": 60148,
+              "name": "tokio-rt-worker",
+              "start": "179561",
+              "state": "S"
+            },
+            {
+              "tid": 60155,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60156,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60158,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60548,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            },
+            {
+              "tid": 60549,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            }
+          ],
+          "fds": 63
+        },
+        {
+          "pid": 60112,
+          "start": "179482",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess",
+          "rssKiB": 48732,
+          "pssKiB": 19803,
+          "threads": 11,
+          "reportedThreads": 11,
+          "threadIdentities": [
+            {
+              "tid": 60112,
+              "name": "WebKitNetworkPr",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60118,
+              "name": "WebKitNetworkPr",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60119,
+              "name": "pool-spawner",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60120,
+              "name": "gmain",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60121,
+              "name": "gdbus",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60122,
+              "name": "ReceiveQueue",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60130,
+              "name": "persistent",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60131,
+              "name": "Storage",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60132,
+              "name": "background",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60133,
+              "name": "erialBackground",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60135,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            }
+          ],
+          "fds": 26
+        },
+        {
+          "pid": 60117,
+          "start": "179485",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess",
+          "rssKiB": 456480,
+          "pssKiB": 393257,
+          "threads": 20,
+          "reportedThreads": 20,
+          "threadIdentities": [
+            {
+              "tid": 60117,
+              "name": "WebKitWebProces",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60123,
+              "name": "WebKitWebProces",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60124,
+              "name": "EventDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60125,
+              "name": "rruptDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60126,
+              "name": "uggerDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60127,
+              "name": "ReceiveQueue",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60136,
+              "name": "ReceiveQueue",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60137,
+              "name": "pool-spawner",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60138,
+              "name": "gmain",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60140,
+              "name": "gdbus",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60142,
+              "name": "dconf worker",
+              "start": "179546",
+              "state": "S"
+            },
+            {
+              "tid": 60143,
+              "name": "CryptoQueue",
+              "start": "179547",
+              "state": "S"
+            },
+            {
+              "tid": 60144,
+              "name": "JITWorker",
+              "start": "179553",
+              "state": "S"
+            },
+            {
+              "tid": 60145,
+              "name": "JITWorker",
+              "start": "179554",
+              "state": "S"
+            },
+            {
+              "tid": 60146,
+              "name": "JITWorker",
+              "start": "179554",
+              "state": "S"
+            },
+            {
+              "tid": 60325,
+              "name": "CryptoQueue",
+              "start": "181611",
+              "state": "S"
+            },
+            {
+              "tid": 60374,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60375,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60376,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60407,
+              "name": "ollector Thread",
+              "start": "183708",
+              "state": "S"
+            }
+          ],
+          "fds": 30
+        },
+        {
+          "pid": 60215,
+          "start": "180778",
+          "executable": "/usr/bin/python3.12",
+          "rssKiB": 19152,
+          "pssKiB": 11459,
+          "threads": 1,
+          "reportedThreads": 1,
+          "threadIdentities": [
+            {
+              "tid": 60215,
+              "name": "python3",
+              "start": "180778",
+              "state": "S"
+            }
+          ],
+          "fds": 12
+        }
+      ],
+      "processCount": 4,
+      "appPssKiB": 169459,
+      "totals": {
+        "rssKiB": 761868,
+        "pssKiB": 593978,
+        "fds": 131,
+        "threads": 60
+      },
+      "renderer": {
+        "pageMark": "0bc1dfc9-fa15-4cde-aca5-d0c309cb4d33",
+        "retainedListenerRecords": 3,
+        "elements": 1884,
+        "callbacks": 3,
+        "activeListeners": 3,
+        "summaries": 12,
+        "documentTimeOrigin": 1794474197236,
+        "events": {
+          "shadowcode:events": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:open-session": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:shutdown": {
+            "retained": 1,
+            "active": 1
+          }
+        }
+      },
+      "keyboardRoundtripMs": 597.1026080000083
+    },
+    {
+      "index": 15,
+      "processes": [
+        {
+          "pid": 60045,
+          "start": "179464",
+          "executable": "/home/runner/work/ShadowCode/ShadowCode/target/debug/shadowcode",
+          "rssKiB": 238208,
+          "pssKiB": 170163,
+          "threads": 28,
+          "reportedThreads": 28,
+          "threadIdentities": [
+            {
+              "tid": 60045,
+              "name": "shadowcode",
+              "start": "179464",
+              "state": "S"
+            },
+            {
+              "tid": 60057,
+              "name": "pool-spawner",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60058,
+              "name": "gmain",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60059,
+              "name": "gdbus",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60099,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60100,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60101,
+              "name": "blocking-1",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60102,
+              "name": "async-io",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60103,
+              "name": "zbus::Connectio",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60104,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60105,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60106,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60107,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60108,
+              "name": "tokio-rt-worker",
+              "start": "179480",
+              "state": "S"
+            },
+            {
+              "tid": 60109,
+              "name": "shadowcode",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60110,
+              "name": "ebsiteDataStore",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60113,
+              "name": "PressureMonitor",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60114,
+              "name": "dconf worker",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60116,
+              "name": "shadowcode",
+              "start": "179484",
+              "state": "S"
+            },
+            {
+              "tid": 60128,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60129,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60141,
+              "name": "VBlankMonitor",
+              "start": "179544",
+              "state": "S"
+            },
+            {
+              "tid": 60148,
+              "name": "tokio-rt-worker",
+              "start": "179561",
+              "state": "S"
+            },
+            {
+              "tid": 60155,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60156,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60158,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60548,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            },
+            {
+              "tid": 60549,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            }
+          ],
+          "fds": 63
+        },
+        {
+          "pid": 60112,
+          "start": "179482",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess",
+          "rssKiB": 48732,
+          "pssKiB": 19803,
+          "threads": 11,
+          "reportedThreads": 11,
+          "threadIdentities": [
+            {
+              "tid": 60112,
+              "name": "WebKitNetworkPr",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60118,
+              "name": "WebKitNetworkPr",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60119,
+              "name": "pool-spawner",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60120,
+              "name": "gmain",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60121,
+              "name": "gdbus",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60122,
+              "name": "ReceiveQueue",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60130,
+              "name": "persistent",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60131,
+              "name": "Storage",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60132,
+              "name": "background",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60133,
+              "name": "erialBackground",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60135,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            }
+          ],
+          "fds": 26
+        },
+        {
+          "pid": 60117,
+          "start": "179485",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess",
+          "rssKiB": 459576,
+          "pssKiB": 396353,
+          "threads": 20,
+          "reportedThreads": 20,
+          "threadIdentities": [
+            {
+              "tid": 60117,
+              "name": "WebKitWebProces",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60123,
+              "name": "WebKitWebProces",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60124,
+              "name": "EventDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60125,
+              "name": "rruptDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60126,
+              "name": "uggerDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60127,
+              "name": "ReceiveQueue",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60136,
+              "name": "ReceiveQueue",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60137,
+              "name": "pool-spawner",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60138,
+              "name": "gmain",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60140,
+              "name": "gdbus",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60142,
+              "name": "dconf worker",
+              "start": "179546",
+              "state": "S"
+            },
+            {
+              "tid": 60143,
+              "name": "CryptoQueue",
+              "start": "179547",
+              "state": "S"
+            },
+            {
+              "tid": 60144,
+              "name": "JITWorker",
+              "start": "179553",
+              "state": "S"
+            },
+            {
+              "tid": 60145,
+              "name": "JITWorker",
+              "start": "179554",
+              "state": "S"
+            },
+            {
+              "tid": 60146,
+              "name": "JITWorker",
+              "start": "179554",
+              "state": "S"
+            },
+            {
+              "tid": 60325,
+              "name": "CryptoQueue",
+              "start": "181611",
+              "state": "S"
+            },
+            {
+              "tid": 60374,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60375,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60376,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60407,
+              "name": "ollector Thread",
+              "start": "183708",
+              "state": "S"
+            }
+          ],
+          "fds": 30
+        },
+        {
+          "pid": 60215,
+          "start": "180778",
+          "executable": "/usr/bin/python3.12",
+          "rssKiB": 19152,
+          "pssKiB": 11459,
+          "threads": 1,
+          "reportedThreads": 1,
+          "threadIdentities": [
+            {
+              "tid": 60215,
+              "name": "python3",
+              "start": "180778",
+              "state": "S"
+            }
+          ],
+          "fds": 12
+        }
+      ],
+      "processCount": 4,
+      "appPssKiB": 170163,
+      "totals": {
+        "rssKiB": 765668,
+        "pssKiB": 597778,
+        "fds": 131,
+        "threads": 60
+      },
+      "renderer": {
+        "pageMark": "0bc1dfc9-fa15-4cde-aca5-d0c309cb4d33",
+        "retainedListenerRecords": 3,
+        "elements": 2469,
+        "callbacks": 3,
+        "activeListeners": 3,
+        "summaries": 17,
+        "documentTimeOrigin": 1794474197236,
+        "events": {
+          "shadowcode:events": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:open-session": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:shutdown": {
+            "retained": 1,
+            "active": 1
+          }
+        }
+      },
+      "keyboardRoundtripMs": 594.0187249999872
+    },
+    {
+      "index": 20,
+      "processes": [
+        {
+          "pid": 60045,
+          "start": "179464",
+          "executable": "/home/runner/work/ShadowCode/ShadowCode/target/debug/shadowcode",
+          "rssKiB": 239252,
+          "pssKiB": 171207,
+          "threads": 28,
+          "reportedThreads": 28,
+          "threadIdentities": [
+            {
+              "tid": 60045,
+              "name": "shadowcode",
+              "start": "179464",
+              "state": "S"
+            },
+            {
+              "tid": 60057,
+              "name": "pool-spawner",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60058,
+              "name": "gmain",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60059,
+              "name": "gdbus",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60099,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60100,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60101,
+              "name": "blocking-1",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60102,
+              "name": "async-io",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60103,
+              "name": "zbus::Connectio",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60104,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60105,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60106,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60107,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60108,
+              "name": "tokio-rt-worker",
+              "start": "179480",
+              "state": "S"
+            },
+            {
+              "tid": 60109,
+              "name": "shadowcode",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60110,
+              "name": "ebsiteDataStore",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60113,
+              "name": "PressureMonitor",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60114,
+              "name": "dconf worker",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60116,
+              "name": "shadowcode",
+              "start": "179484",
+              "state": "S"
+            },
+            {
+              "tid": 60128,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60129,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60141,
+              "name": "VBlankMonitor",
+              "start": "179544",
+              "state": "S"
+            },
+            {
+              "tid": 60148,
+              "name": "tokio-rt-worker",
+              "start": "179561",
+              "state": "S"
+            },
+            {
+              "tid": 60155,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60156,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60158,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60548,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            },
+            {
+              "tid": 60549,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            }
+          ],
+          "fds": 63
+        },
+        {
+          "pid": 60112,
+          "start": "179482",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess",
+          "rssKiB": 48732,
+          "pssKiB": 19771,
+          "threads": 11,
+          "reportedThreads": 11,
+          "threadIdentities": [
+            {
+              "tid": 60112,
+              "name": "WebKitNetworkPr",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60118,
+              "name": "WebKitNetworkPr",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60119,
+              "name": "pool-spawner",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60120,
+              "name": "gmain",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60121,
+              "name": "gdbus",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60122,
+              "name": "ReceiveQueue",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60130,
+              "name": "persistent",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60131,
+              "name": "Storage",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60132,
+              "name": "background",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60133,
+              "name": "erialBackground",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60135,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            }
+          ],
+          "fds": 26
+        },
+        {
+          "pid": 60117,
+          "start": "179485",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess",
+          "rssKiB": 461384,
+          "pssKiB": 398129,
+          "threads": 20,
+          "reportedThreads": 20,
+          "threadIdentities": [
+            {
+              "tid": 60117,
+              "name": "WebKitWebProces",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60123,
+              "name": "WebKitWebProces",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60124,
+              "name": "EventDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60125,
+              "name": "rruptDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60126,
+              "name": "uggerDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60127,
+              "name": "ReceiveQueue",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60136,
+              "name": "ReceiveQueue",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60137,
+              "name": "pool-spawner",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60138,
+              "name": "gmain",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60140,
+              "name": "gdbus",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60142,
+              "name": "dconf worker",
+              "start": "179546",
+              "state": "S"
+            },
+            {
+              "tid": 60143,
+              "name": "CryptoQueue",
+              "start": "179547",
+              "state": "S"
+            },
+            {
+              "tid": 60144,
+              "name": "JITWorker",
+              "start": "179553",
+              "state": "S"
+            },
+            {
+              "tid": 60145,
+              "name": "JITWorker",
+              "start": "179554",
+              "state": "S"
+            },
+            {
+              "tid": 60146,
+              "name": "JITWorker",
+              "start": "179554",
+              "state": "S"
+            },
+            {
+              "tid": 60325,
+              "name": "CryptoQueue",
+              "start": "181611",
+              "state": "S"
+            },
+            {
+              "tid": 60374,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60375,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60376,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60407,
+              "name": "ollector Thread",
+              "start": "183708",
+              "state": "S"
+            }
+          ],
+          "fds": 30
+        },
+        {
+          "pid": 60215,
+          "start": "180778",
+          "executable": "/usr/bin/python3.12",
+          "rssKiB": 19152,
+          "pssKiB": 11459,
+          "threads": 1,
+          "reportedThreads": 1,
+          "threadIdentities": [
+            {
+              "tid": 60215,
+              "name": "python3",
+              "start": "180778",
+              "state": "S"
+            }
+          ],
+          "fds": 12
+        }
+      ],
+      "processCount": 4,
+      "appPssKiB": 171207,
+      "totals": {
+        "rssKiB": 768520,
+        "pssKiB": 600566,
+        "fds": 131,
+        "threads": 60
+      },
+      "renderer": {
+        "pageMark": "0bc1dfc9-fa15-4cde-aca5-d0c309cb4d33",
+        "retainedListenerRecords": 3,
+        "elements": 3054,
+        "callbacks": 3,
+        "activeListeners": 3,
+        "summaries": 22,
+        "documentTimeOrigin": 1794474197236,
+        "events": {
+          "shadowcode:events": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:open-session": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:shutdown": {
+            "retained": 1,
+            "active": 1
+          }
+        }
+      },
+      "keyboardRoundtripMs": 626.9777910000121
+    },
+    {
+      "index": 25,
+      "processes": [
+        {
+          "pid": 60045,
+          "start": "179464",
+          "executable": "/home/runner/work/ShadowCode/ShadowCode/target/debug/shadowcode",
+          "rssKiB": 240356,
+          "pssKiB": 172311,
+          "threads": 28,
+          "reportedThreads": 28,
+          "threadIdentities": [
+            {
+              "tid": 60045,
+              "name": "shadowcode",
+              "start": "179464",
+              "state": "S"
+            },
+            {
+              "tid": 60057,
+              "name": "pool-spawner",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60058,
+              "name": "gmain",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60059,
+              "name": "gdbus",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60099,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60100,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60101,
+              "name": "blocking-1",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60102,
+              "name": "async-io",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60103,
+              "name": "zbus::Connectio",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60104,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60105,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60106,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60107,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60108,
+              "name": "tokio-rt-worker",
+              "start": "179480",
+              "state": "S"
+            },
+            {
+              "tid": 60109,
+              "name": "shadowcode",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60110,
+              "name": "ebsiteDataStore",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60113,
+              "name": "PressureMonitor",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60114,
+              "name": "dconf worker",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60116,
+              "name": "shadowcode",
+              "start": "179484",
+              "state": "S"
+            },
+            {
+              "tid": 60128,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60129,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60141,
+              "name": "VBlankMonitor",
+              "start": "179544",
+              "state": "S"
+            },
+            {
+              "tid": 60148,
+              "name": "tokio-rt-worker",
+              "start": "179561",
+              "state": "S"
+            },
+            {
+              "tid": 60155,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60156,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60158,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60548,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            },
+            {
+              "tid": 60549,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            }
+          ],
+          "fds": 63
+        },
+        {
+          "pid": 60112,
+          "start": "179482",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess",
+          "rssKiB": 48732,
+          "pssKiB": 19771,
+          "threads": 11,
+          "reportedThreads": 11,
+          "threadIdentities": [
+            {
+              "tid": 60112,
+              "name": "WebKitNetworkPr",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60118,
+              "name": "WebKitNetworkPr",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60119,
+              "name": "pool-spawner",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60120,
+              "name": "gmain",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60121,
+              "name": "gdbus",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60122,
+              "name": "ReceiveQueue",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60130,
+              "name": "persistent",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60131,
+              "name": "Storage",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60132,
+              "name": "background",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60133,
+              "name": "erialBackground",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60135,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            }
+          ],
+          "fds": 26
+        },
+        {
+          "pid": 60117,
+          "start": "179485",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess",
+          "rssKiB": 466396,
+          "pssKiB": 403141,
+          "threads": 20,
+          "reportedThreads": 20,
+          "threadIdentities": [
+            {
+              "tid": 60117,
+              "name": "WebKitWebProces",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60123,
+              "name": "WebKitWebProces",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60124,
+              "name": "EventDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60125,
+              "name": "rruptDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60126,
+              "name": "uggerDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60127,
+              "name": "ReceiveQueue",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60136,
+              "name": "ReceiveQueue",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60137,
+              "name": "pool-spawner",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60138,
+              "name": "gmain",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60140,
+              "name": "gdbus",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60142,
+              "name": "dconf worker",
+              "start": "179546",
+              "state": "S"
+            },
+            {
+              "tid": 60143,
+              "name": "CryptoQueue",
+              "start": "179547",
+              "state": "S"
+            },
+            {
+              "tid": 60144,
+              "name": "JITWorker",
+              "start": "179553",
+              "state": "S"
+            },
+            {
+              "tid": 60145,
+              "name": "JITWorker",
+              "start": "179554",
+              "state": "S"
+            },
+            {
+              "tid": 60146,
+              "name": "JITWorker",
+              "start": "179554",
+              "state": "S"
+            },
+            {
+              "tid": 60325,
+              "name": "CryptoQueue",
+              "start": "181611",
+              "state": "S"
+            },
+            {
+              "tid": 60374,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60375,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60376,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60407,
+              "name": "ollector Thread",
+              "start": "183708",
+              "state": "S"
+            }
+          ],
+          "fds": 30
+        },
+        {
+          "pid": 60215,
+          "start": "180778",
+          "executable": "/usr/bin/python3.12",
+          "rssKiB": 19152,
+          "pssKiB": 11459,
+          "threads": 1,
+          "reportedThreads": 1,
+          "threadIdentities": [
+            {
+              "tid": 60215,
+              "name": "python3",
+              "start": "180778",
+              "state": "S"
+            }
+          ],
+          "fds": 12
+        }
+      ],
+      "processCount": 4,
+      "appPssKiB": 172311,
+      "totals": {
+        "rssKiB": 774636,
+        "pssKiB": 606682,
+        "fds": 131,
+        "threads": 60
+      },
+      "renderer": {
+        "pageMark": "0bc1dfc9-fa15-4cde-aca5-d0c309cb4d33",
+        "retainedListenerRecords": 3,
+        "elements": 3639,
+        "callbacks": 3,
+        "activeListeners": 3,
+        "summaries": 27,
+        "documentTimeOrigin": 1794474197236,
+        "events": {
+          "shadowcode:events": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:open-session": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:shutdown": {
+            "retained": 1,
+            "active": 1
+          }
+        }
+      },
+      "keyboardRoundtripMs": 620.7494739999966
+    }
+  ],
+  "warmupPolicy": {
+    "minimum": 25,
+    "maximum": 50,
+    "batch": 5,
+    "stableSamples": 3,
+    "rule": "Same process identities and three consecutive named-thread-pool samples with range at most one and no net growth; otherwise fail after 50 warm-up tasks."
+  },
+  "completed": 100,
+  "tasks": [
+    {
+      "job_id": "929c8bcb47e740f6a0b7909e09c0d0ad",
+      "task_id": "1a881f1d81ca4346a77e4559b96fbd91",
+      "command": "test -f hello.txt && printf 'UI-03 001 passed\\n'"
+    },
+    {
+      "job_id": "52c5e8f2597841519e6232cdb75fb66e",
+      "task_id": "1f4d3690441848ae93a834e7141e5576",
+      "command": "test -f hello.txt && printf 'UI-03 002 passed\\n'"
+    },
+    {
+      "job_id": "d317c7cffcaa4cb1b1b841d0e2896d7e",
+      "task_id": "e2c426be280f4e32b2c1296f8a59481e",
+      "command": "test -f hello.txt && printf 'UI-03 003 passed\\n'"
+    },
+    {
+      "job_id": "5c2b0d69b79048969bb198646f281777",
+      "task_id": "5d9f0f02691347b395ff624b7e3357f5",
+      "command": "test -f hello.txt && printf 'UI-03 004 passed\\n'"
+    },
+    {
+      "job_id": "eeb4c759aceb48739a490d7100326ecf",
+      "task_id": "8b0eb5f27cb548baba62100b1dda0360",
+      "command": "test -f hello.txt && printf 'UI-03 005 passed\\n'"
+    },
+    {
+      "job_id": "c0bc83bba8de47e1902abdcef03548ee",
+      "task_id": "8d7596efcf4740b697a5fc7e83a05e4f",
+      "command": "test -f hello.txt && printf 'UI-03 006 passed\\n'"
+    },
+    {
+      "job_id": "5aebd204d676497d8eb96b56737a4628",
+      "task_id": "a89e00089c1042a0a3b4347ecb3a3f88",
+      "command": "test -f hello.txt && printf 'UI-03 007 passed\\n'"
+    },
+    {
+      "job_id": "32839ea78b144a099e609891a9145a54",
+      "task_id": "c426c28ea98c4dde906e8d0f74731406",
+      "command": "test -f hello.txt && printf 'UI-03 008 passed\\n'"
+    },
+    {
+      "job_id": "0bb21826d7b3473aaa5abd67125104ca",
+      "task_id": "bfc325a2a2b54fc6a3839c4b812ce946",
+      "command": "test -f hello.txt && printf 'UI-03 009 passed\\n'"
+    },
+    {
+      "job_id": "fc9bb37ca03440889384ce84ad19d952",
+      "task_id": "b8e955ca5bea4086aed3d7cf8d0b85d5",
+      "command": "test -f hello.txt && printf 'UI-03 010 passed\\n'"
+    },
+    {
+      "job_id": "19480369157040f8acc71267534d4b03",
+      "task_id": "5b5159745e09432aaa25b27640f3499f",
+      "command": "test -f hello.txt && printf 'UI-03 011 passed\\n'"
+    },
+    {
+      "job_id": "ab823de7613b457b9b23176d9e60dbbd",
+      "task_id": "2a7bedb5d6fd43c69e940fa70dd0c133",
+      "command": "test -f hello.txt && printf 'UI-03 012 passed\\n'"
+    },
+    {
+      "job_id": "deb5634b7e0c445ebc43dacaf6ae3ccf",
+      "task_id": "525bde83b8c549a598701728c0ecf901",
+      "command": "test -f hello.txt && printf 'UI-03 013 passed\\n'"
+    },
+    {
+      "job_id": "3ed05db49e8b48b1b145521f6d42b84d",
+      "task_id": "672c2874ff5f4febae708cd835945d50",
+      "command": "test -f hello.txt && printf 'UI-03 014 passed\\n'"
+    },
+    {
+      "job_id": "0ad02f723c8142808f44e72fcd3b7542",
+      "task_id": "8981fea9bd9745ef924534d6ed9f1f3c",
+      "command": "test -f hello.txt && printf 'UI-03 015 passed\\n'"
+    },
+    {
+      "job_id": "2b918477177f4982b1a245727f00ace6",
+      "task_id": "a3b7d49d8c8e446fb1d83588bf1e833a",
+      "command": "test -f hello.txt && printf 'UI-03 016 passed\\n'"
+    },
+    {
+      "job_id": "60fe2012a7714e4da4153869153765df",
+      "task_id": "3f64538edcfb445eb899c5eade0fedb6",
+      "command": "test -f hello.txt && printf 'UI-03 017 passed\\n'"
+    },
+    {
+      "job_id": "128dda8a9f924397a93bef2a91b42a3d",
+      "task_id": "4787c3b5dfef45458cf24634d590cf5b",
+      "command": "test -f hello.txt && printf 'UI-03 018 passed\\n'"
+    },
+    {
+      "job_id": "6a7ae5f68f5d424f807c8fbd9f1e71aa",
+      "task_id": "68162106e56a49e485404b84a4e44a51",
+      "command": "test -f hello.txt && printf 'UI-03 019 passed\\n'"
+    },
+    {
+      "job_id": "bd04c4a4ac3945bfbef6d0d16d25d142",
+      "task_id": "270adac4565c4a56bd57a2f9e4440e79",
+      "command": "test -f hello.txt && printf 'UI-03 020 passed\\n'"
+    },
+    {
+      "job_id": "26437066a27744f49df94798ca52c05e",
+      "task_id": "8196c18847f34906818aa3632e097097",
+      "command": "test -f hello.txt && printf 'UI-03 021 passed\\n'"
+    },
+    {
+      "job_id": "a8c725c0c6d74b71b4011f37f6bfdfd0",
+      "task_id": "e2e0eb98fdd54afba0f40dac11e68d68",
+      "command": "test -f hello.txt && printf 'UI-03 022 passed\\n'"
+    },
+    {
+      "job_id": "fe2decdb9d864a9194d944e8a8729814",
+      "task_id": "a2fd230346a74f24b01e1ff6b09e1c48",
+      "command": "test -f hello.txt && printf 'UI-03 023 passed\\n'"
+    },
+    {
+      "job_id": "c58392ada99b4d5495aa4ecd1538ca32",
+      "task_id": "55982f2194b049078e5f0a92be26ac02",
+      "command": "test -f hello.txt && printf 'UI-03 024 passed\\n'"
+    },
+    {
+      "job_id": "384fc1eb78214d37b60a38d3641ad3d1",
+      "task_id": "fa89d5377b56491283c0695c1fd8517f",
+      "command": "test -f hello.txt && printf 'UI-03 025 passed\\n'"
+    },
+    {
+      "job_id": "f1b0c3b49f9c40d3913528558ee47b18",
+      "task_id": "3023ddb19c7440979f8a30719830cdff",
+      "command": "test -f hello.txt && printf 'UI-03 026 passed\\n'"
+    },
+    {
+      "job_id": "a91e5e6ce30f4c619c7f41203361edfa",
+      "task_id": "efab7effb0174183b8b7f5e92e0e0217",
+      "command": "test -f hello.txt && printf 'UI-03 027 passed\\n'"
+    },
+    {
+      "job_id": "bb28c6085fde4e5084a198edba8bf3b9",
+      "task_id": "1f38d87ae2954895a8079ff7651a2d9d",
+      "command": "test -f hello.txt && printf 'UI-03 028 passed\\n'"
+    },
+    {
+      "job_id": "1dbdda54f56c43988fa7adc6c0053a49",
+      "task_id": "f013c573ea6e4e33b4df0043061f2e00",
+      "command": "test -f hello.txt && printf 'UI-03 029 passed\\n'"
+    },
+    {
+      "job_id": "8101effad03d4872b1d430a715264db7",
+      "task_id": "41ec85d475c84ae283b2cddfdbb19ece",
+      "command": "test -f hello.txt && printf 'UI-03 030 passed\\n'"
+    },
+    {
+      "job_id": "bea67f629b404546b0c54da6517e02d6",
+      "task_id": "1e84df1e0a514cb19ed89a59f9955e47",
+      "command": "test -f hello.txt && printf 'UI-03 031 passed\\n'"
+    },
+    {
+      "job_id": "3b0a1136bf404b6d93bb29805b6621ab",
+      "task_id": "a044101be8984a2581492ba6bf9b1a5d",
+      "command": "test -f hello.txt && printf 'UI-03 032 passed\\n'"
+    },
+    {
+      "job_id": "80b55e5b897049ecb208be13e2953ef6",
+      "task_id": "7df6ca4ce4c34e81bf587cddf4f63733",
+      "command": "test -f hello.txt && printf 'UI-03 033 passed\\n'"
+    },
+    {
+      "job_id": "ebccb8d136194d8b8842bda09cb4a9a3",
+      "task_id": "4b394813653b4b759e5d25e66b796758",
+      "command": "test -f hello.txt && printf 'UI-03 034 passed\\n'"
+    },
+    {
+      "job_id": "cea2f26de3544172a074667382e9ab04",
+      "task_id": "c9d320f0b3cc4c47bc9a452565078cc8",
+      "command": "test -f hello.txt && printf 'UI-03 035 passed\\n'"
+    },
+    {
+      "job_id": "69a1d42a987248c49532964e7c513af2",
+      "task_id": "d7f57b9df5fb449dbe9bd11d1aa818a6",
+      "command": "test -f hello.txt && printf 'UI-03 036 passed\\n'"
+    },
+    {
+      "job_id": "6d3fae9cdd574e8c8278c29b1c397319",
+      "task_id": "8764c6e1f6964045b59b77fae1197349",
+      "command": "test -f hello.txt && printf 'UI-03 037 passed\\n'"
+    },
+    {
+      "job_id": "cdc00c6e511a4a29a374fe7e793df4d2",
+      "task_id": "aa979e18bb87497b96f102af80f6aef8",
+      "command": "test -f hello.txt && printf 'UI-03 038 passed\\n'"
+    },
+    {
+      "job_id": "a734ab552aff47ab8134db23848028fb",
+      "task_id": "42dfdc0e84f046d587aac4b305f26ba8",
+      "command": "test -f hello.txt && printf 'UI-03 039 passed\\n'"
+    },
+    {
+      "job_id": "1a34f1972f7843b9acc06c6f02f2f962",
+      "task_id": "21c93abffa594e4d9a40a875e605b4c4",
+      "command": "test -f hello.txt && printf 'UI-03 040 passed\\n'"
+    },
+    {
+      "job_id": "c7fdfd0979cd469ab378f1d80355fd6b",
+      "task_id": "ec0ed4663a0d4aecaf31219147aab409",
+      "command": "test -f hello.txt && printf 'UI-03 041 passed\\n'"
+    },
+    {
+      "job_id": "ef9d60aa6d1e430ea4b2f3d8e8511c18",
+      "task_id": "e74cb0ad4d184f06a2bc5c50f2589396",
+      "command": "test -f hello.txt && printf 'UI-03 042 passed\\n'"
+    },
+    {
+      "job_id": "8909a71da67c4391aab535616c1954d2",
+      "task_id": "1cb779e6e2b14dd68334bbe163fa5dd9",
+      "command": "test -f hello.txt && printf 'UI-03 043 passed\\n'"
+    },
+    {
+      "job_id": "d71d78bf78934520a51494e0a1b903c5",
+      "task_id": "8d3f5493148d4f5c80e387a5e0727e79",
+      "command": "test -f hello.txt && printf 'UI-03 044 passed\\n'"
+    },
+    {
+      "job_id": "dd02f83cb2d5491b9c33cdf72963a758",
+      "task_id": "cc190776f0484ed9b68cd37a678556f8",
+      "command": "test -f hello.txt && printf 'UI-03 045 passed\\n'"
+    },
+    {
+      "job_id": "ebef012bfc88400e8e4d6ad228f6b436",
+      "task_id": "b9d76d70470c4d64bea5c5110479ad4c",
+      "command": "test -f hello.txt && printf 'UI-03 046 passed\\n'"
+    },
+    {
+      "job_id": "8bf8ce7ba5be4bb290ba65a45326ab29",
+      "task_id": "6c481464a3d64e0ebc037fc67245af67",
+      "command": "test -f hello.txt && printf 'UI-03 047 passed\\n'"
+    },
+    {
+      "job_id": "5d5d3761833f4ce39170fa2584e628d2",
+      "task_id": "0d960a05c29d4350b2c4746284b9520e",
+      "command": "test -f hello.txt && printf 'UI-03 048 passed\\n'"
+    },
+    {
+      "job_id": "add183a717564588a32f3d1ca3ef9226",
+      "task_id": "f3220cb019204c159f3d52796f2e727f",
+      "command": "test -f hello.txt && printf 'UI-03 049 passed\\n'"
+    },
+    {
+      "job_id": "abf7093bd6f342bc89d8e9e38b4a209d",
+      "task_id": "81c839e6df0b4965a676dc06fae1c267",
+      "command": "test -f hello.txt && printf 'UI-03 050 passed\\n'"
+    },
+    {
+      "job_id": "3b27550a441c4fc4b816d9625c38141c",
+      "task_id": "4ae1889371394824929d09002d015cd9",
+      "command": "test -f hello.txt && printf 'UI-03 051 passed\\n'"
+    },
+    {
+      "job_id": "a2729e902d9c4f4aa283a595f19d28cd",
+      "task_id": "4f5862bb268442da8f2b0c008dda5167",
+      "command": "test -f hello.txt && printf 'UI-03 052 passed\\n'"
+    },
+    {
+      "job_id": "6021fd14759c45a8a3c6b806c46617d7",
+      "task_id": "e014014e0dd845c9b59ec5b9d74c065c",
+      "command": "test -f hello.txt && printf 'UI-03 053 passed\\n'"
+    },
+    {
+      "job_id": "001875ad503e4822bd4aa607b352e2da",
+      "task_id": "3238ec41be9542d88b2e324cbdf5fb34",
+      "command": "test -f hello.txt && printf 'UI-03 054 passed\\n'"
+    },
+    {
+      "job_id": "fa5e2a3e81874bdf951e7e6723b6dfaf",
+      "task_id": "04060a5801b843e3bc8caa6713ee99ae",
+      "command": "test -f hello.txt && printf 'UI-03 055 passed\\n'"
+    },
+    {
+      "job_id": "f25827468bac4063814cdc53bbe2ba8e",
+      "task_id": "cacf2869247441deb0986c5c87f04fd1",
+      "command": "test -f hello.txt && printf 'UI-03 056 passed\\n'"
+    },
+    {
+      "job_id": "d1575ac8514543e785e70c359b8f36eb",
+      "task_id": "cb70dc52662248ac81ffd596c9b76645",
+      "command": "test -f hello.txt && printf 'UI-03 057 passed\\n'"
+    },
+    {
+      "job_id": "76f0020c7fde4bf3873bbe7ab021acfb",
+      "task_id": "de783c5b01b8480f8e2e996e9b00452e",
+      "command": "test -f hello.txt && printf 'UI-03 058 passed\\n'"
+    },
+    {
+      "job_id": "5fe23521b1d44a81b7683ac08bf9a99e",
+      "task_id": "c9dc8685ab2842d99d136b29db2e522a",
+      "command": "test -f hello.txt && printf 'UI-03 059 passed\\n'"
+    },
+    {
+      "job_id": "7dc4ea201fd24f3d80c856aa16468052",
+      "task_id": "369e942fc183493aa0c2de481fe2d9bd",
+      "command": "test -f hello.txt && printf 'UI-03 060 passed\\n'"
+    },
+    {
+      "job_id": "8ba0e704e89d4f47bb8aa962493107b2",
+      "task_id": "5a00a7af38b9497b89d238a2c692d81c",
+      "command": "test -f hello.txt && printf 'UI-03 061 passed\\n'"
+    },
+    {
+      "job_id": "6467fa86991c41a1825952505015678c",
+      "task_id": "209ae50250574dd0ab79f6fe883489b4",
+      "command": "test -f hello.txt && printf 'UI-03 062 passed\\n'"
+    },
+    {
+      "job_id": "fb5df01931fd4acea6206a122cf97a9b",
+      "task_id": "ce6746c174a7440ea5de2cd7bcabcb54",
+      "command": "test -f hello.txt && printf 'UI-03 063 passed\\n'"
+    },
+    {
+      "job_id": "16bd424c621b4c9bbc00047019d14192",
+      "task_id": "594ebb91a6314975a9adf683bd8feb8a",
+      "command": "test -f hello.txt && printf 'UI-03 064 passed\\n'"
+    },
+    {
+      "job_id": "45930bdb2ddd47f390083906d45b0567",
+      "task_id": "9df10e757f9c444abc219a7dd7453fd3",
+      "command": "test -f hello.txt && printf 'UI-03 065 passed\\n'"
+    },
+    {
+      "job_id": "29a5c1de92584acdb01f73a4998c0a8d",
+      "task_id": "96835ed0f00149f8adb624c2cdb1e864",
+      "command": "test -f hello.txt && printf 'UI-03 066 passed\\n'"
+    },
+    {
+      "job_id": "7e8997f6ee3442598891ac7118f75649",
+      "task_id": "ff32074962294b17b010decf45e31726",
+      "command": "test -f hello.txt && printf 'UI-03 067 passed\\n'"
+    },
+    {
+      "job_id": "f697cd3f0393425bb3cda41c1015f0b2",
+      "task_id": "497e774106504d529821f94e8973b9f5",
+      "command": "test -f hello.txt && printf 'UI-03 068 passed\\n'"
+    },
+    {
+      "job_id": "4ded689711f24a01ae88f2b272a68e70",
+      "task_id": "0e7ea8d06c924aeea10d9afcb8ecfd54",
+      "command": "test -f hello.txt && printf 'UI-03 069 passed\\n'"
+    },
+    {
+      "job_id": "de8b6ca818d44651b5a55967594ff7cf",
+      "task_id": "a6d4d1b1104141c5aa213facb8fa37d3",
+      "command": "test -f hello.txt && printf 'UI-03 070 passed\\n'"
+    },
+    {
+      "job_id": "95108d166c304eb984219dcfb768c31d",
+      "task_id": "61a81720be384607ac98b461316d657a",
+      "command": "test -f hello.txt && printf 'UI-03 071 passed\\n'"
+    },
+    {
+      "job_id": "f2364f68ecc9456ca3899f54a215d0e3",
+      "task_id": "83ea9349f4ad42899a4a849488d2772d",
+      "command": "test -f hello.txt && printf 'UI-03 072 passed\\n'"
+    },
+    {
+      "job_id": "355b96ccedb142cd961178270d2163e7",
+      "task_id": "3fa801bbcc6d402bb05c6d5c115eeed4",
+      "command": "test -f hello.txt && printf 'UI-03 073 passed\\n'"
+    },
+    {
+      "job_id": "c920288a8a964e33bedc484d122626c1",
+      "task_id": "58a3512607584c54b1fe7e240e4509dc",
+      "command": "test -f hello.txt && printf 'UI-03 074 passed\\n'"
+    },
+    {
+      "job_id": "d1fc022fa9164286a0b5e62bdfaeca63",
+      "task_id": "2eb5f69e9dc743b88bc22ad1d48ff703",
+      "command": "test -f hello.txt && printf 'UI-03 075 passed\\n'"
+    },
+    {
+      "job_id": "0ead3ccb1951485b867c634191327c5c",
+      "task_id": "a99105719a1a4ebbb3ce737df1b0b596",
+      "command": "test -f hello.txt && printf 'UI-03 076 passed\\n'"
+    },
+    {
+      "job_id": "81045942ffdf42c993f4ec3d76211dda",
+      "task_id": "51a3b5f1ef2f4ed797ed942b613cbe82",
+      "command": "test -f hello.txt && printf 'UI-03 077 passed\\n'"
+    },
+    {
+      "job_id": "7a8b18b8852a45dda1d761e6f06525d4",
+      "task_id": "c5dc73f690fa4742b05e6918f96b6bbf",
+      "command": "test -f hello.txt && printf 'UI-03 078 passed\\n'"
+    },
+    {
+      "job_id": "9bda0396314e4159b9175001b8644029",
+      "task_id": "a45d099b9f8f451b8bed1c2f3de9588b",
+      "command": "test -f hello.txt && printf 'UI-03 079 passed\\n'"
+    },
+    {
+      "job_id": "c18b810802964a35ac11dd6b18a6db7e",
+      "task_id": "f9871a04ecbc4f5ba05bc3770f2be73c",
+      "command": "test -f hello.txt && printf 'UI-03 080 passed\\n'"
+    },
+    {
+      "job_id": "7ab8d6c2a3924e788c1ab912050b3f41",
+      "task_id": "7277cb761f3e4c18bd98c38baa8099c1",
+      "command": "test -f hello.txt && printf 'UI-03 081 passed\\n'"
+    },
+    {
+      "job_id": "524676fcd1d7470b8083b6575271c96a",
+      "task_id": "191ab2df701244c6994c3e73d57c66bc",
+      "command": "test -f hello.txt && printf 'UI-03 082 passed\\n'"
+    },
+    {
+      "job_id": "68b52ac7ddb14d96aafb8cff05f3bdc8",
+      "task_id": "5f27f22b38da4045acab3858b69c6686",
+      "command": "test -f hello.txt && printf 'UI-03 083 passed\\n'"
+    },
+    {
+      "job_id": "8e15e74c12134fe3b6f8350e3d364762",
+      "task_id": "2712664ea82443cd8678e90b444122c8",
+      "command": "test -f hello.txt && printf 'UI-03 084 passed\\n'"
+    },
+    {
+      "job_id": "8f6af791e0ae4975abaaa9db4c9058e9",
+      "task_id": "e86ea2a5053d4193a8df10ea08d99fb0",
+      "command": "test -f hello.txt && printf 'UI-03 085 passed\\n'"
+    },
+    {
+      "job_id": "83d8a00baef94acf96a6b2e818c3e0bc",
+      "task_id": "52d7eb4863624f6b80739f79e7a4cc92",
+      "command": "test -f hello.txt && printf 'UI-03 086 passed\\n'"
+    },
+    {
+      "job_id": "c54021a4ff28476f8f83f97423bceef3",
+      "task_id": "c4480cd0fb6e4d01b610007e84d45925",
+      "command": "test -f hello.txt && printf 'UI-03 087 passed\\n'"
+    },
+    {
+      "job_id": "02d4e9d161eb4f5d85d44d8cd949c331",
+      "task_id": "b05e970986b44c6c8bac2c7e55c0767a",
+      "command": "test -f hello.txt && printf 'UI-03 088 passed\\n'"
+    },
+    {
+      "job_id": "31b964c8ccf14d0fbabe970284c1db54",
+      "task_id": "afe64ee64e8e4dcf8c9114d50fc274d2",
+      "command": "test -f hello.txt && printf 'UI-03 089 passed\\n'"
+    },
+    {
+      "job_id": "20904ef6aa4b4e4797f8536834d78413",
+      "task_id": "7f1f8de610164b5f9c1823aea2be4ed8",
+      "command": "test -f hello.txt && printf 'UI-03 090 passed\\n'"
+    },
+    {
+      "job_id": "336b634acdb948ccb3716f97a0538c7b",
+      "task_id": "91fda893c6864d3a9d746104b824290d",
+      "command": "test -f hello.txt && printf 'UI-03 091 passed\\n'"
+    },
+    {
+      "job_id": "da5788176bf147b9a0abcf72d49cdbd3",
+      "task_id": "1166f32e4ef749d5b7b558a8c5b83ccc",
+      "command": "test -f hello.txt && printf 'UI-03 092 passed\\n'"
+    },
+    {
+      "job_id": "c1a91b9a949f47b99bb6a77552287076",
+      "task_id": "ee7e547f7974411ea4bd673ce6bf8086",
+      "command": "test -f hello.txt && printf 'UI-03 093 passed\\n'"
+    },
+    {
+      "job_id": "96908d5e75f346698f9bc27c1da0cbb5",
+      "task_id": "2dc8499eda1141e689995d91c35e7ebc",
+      "command": "test -f hello.txt && printf 'UI-03 094 passed\\n'"
+    },
+    {
+      "job_id": "2be1aaaa07e2472daff3a1c7a5dac420",
+      "task_id": "99dfef8055eb4baea90bebc35ce0bf24",
+      "command": "test -f hello.txt && printf 'UI-03 095 passed\\n'"
+    },
+    {
+      "job_id": "44865f426fdb43fca2bba43c1606959e",
+      "task_id": "82d40c9bca1e43c7819dca4f6c62fd18",
+      "command": "test -f hello.txt && printf 'UI-03 096 passed\\n'"
+    },
+    {
+      "job_id": "0efdd0a7394f4308be7983abbdbec855",
+      "task_id": "c496a3c9233543aea7d236563afe449c",
+      "command": "test -f hello.txt && printf 'UI-03 097 passed\\n'"
+    },
+    {
+      "job_id": "cf76c8ec8c0b400eb184cb83b9e4d003",
+      "task_id": "f28784ceb57243e78c098caf0712696a",
+      "command": "test -f hello.txt && printf 'UI-03 098 passed\\n'"
+    },
+    {
+      "job_id": "3633e94f5a7e4a0087efae067808150b",
+      "task_id": "6eaa477ede404b8889c9b3311bfc4337",
+      "command": "test -f hello.txt && printf 'UI-03 099 passed\\n'"
+    },
+    {
+      "job_id": "f9d38e964be4487cbaaa4d48112f23de",
+      "task_id": "446f4f79a67442909e364506b4b8bab2",
+      "command": "test -f hello.txt && printf 'UI-03 100 passed\\n'"
+    }
+  ],
+  "samples": [
+    {
+      "index": 0,
+      "processes": [
+        {
+          "pid": 60045,
+          "start": "179464",
+          "executable": "/home/runner/work/ShadowCode/ShadowCode/target/debug/shadowcode",
+          "rssKiB": 240328,
+          "pssKiB": 172283,
+          "threads": 28,
+          "reportedThreads": 28,
+          "threadIdentities": [
+            {
+              "tid": 60045,
+              "name": "shadowcode",
+              "start": "179464",
+              "state": "S"
+            },
+            {
+              "tid": 60057,
+              "name": "pool-spawner",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60058,
+              "name": "gmain",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60059,
+              "name": "gdbus",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60099,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60100,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60101,
+              "name": "blocking-1",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60102,
+              "name": "async-io",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60103,
+              "name": "zbus::Connectio",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60104,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60105,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60106,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60107,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60108,
+              "name": "tokio-rt-worker",
+              "start": "179480",
+              "state": "S"
+            },
+            {
+              "tid": 60109,
+              "name": "shadowcode",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60110,
+              "name": "ebsiteDataStore",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60113,
+              "name": "PressureMonitor",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60114,
+              "name": "dconf worker",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60116,
+              "name": "shadowcode",
+              "start": "179484",
+              "state": "S"
+            },
+            {
+              "tid": 60128,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60129,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60141,
+              "name": "VBlankMonitor",
+              "start": "179544",
+              "state": "S"
+            },
+            {
+              "tid": 60148,
+              "name": "tokio-rt-worker",
+              "start": "179561",
+              "state": "S"
+            },
+            {
+              "tid": 60155,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60156,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60158,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60548,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            },
+            {
+              "tid": 60549,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            }
+          ],
+          "fds": 63
+        },
+        {
+          "pid": 60112,
+          "start": "179482",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess",
+          "rssKiB": 48732,
+          "pssKiB": 19771,
+          "threads": 11,
+          "reportedThreads": 11,
+          "threadIdentities": [
+            {
+              "tid": 60112,
+              "name": "WebKitNetworkPr",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60118,
+              "name": "WebKitNetworkPr",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60119,
+              "name": "pool-spawner",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60120,
+              "name": "gmain",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60121,
+              "name": "gdbus",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60122,
+              "name": "ReceiveQueue",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60130,
+              "name": "persistent",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60131,
+              "name": "Storage",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60132,
+              "name": "background",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60133,
+              "name": "erialBackground",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60135,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            }
+          ],
+          "fds": 26
+        },
+        {
+          "pid": 60117,
+          "start": "179485",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess",
+          "rssKiB": 410532,
+          "pssKiB": 347277,
+          "threads": 20,
+          "reportedThreads": 20,
+          "threadIdentities": [
+            {
+              "tid": 60117,
+              "name": "WebKitWebProces",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60123,
+              "name": "WebKitWebProces",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60124,
+              "name": "EventDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60125,
+              "name": "rruptDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60126,
+              "name": "uggerDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60127,
+              "name": "ReceiveQueue",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60136,
+              "name": "ReceiveQueue",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60137,
+              "name": "pool-spawner",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60138,
+              "name": "gmain",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60140,
+              "name": "gdbus",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60142,
+              "name": "dconf worker",
+              "start": "179546",
+              "state": "S"
+            },
+            {
+              "tid": 60143,
+              "name": "CryptoQueue",
+              "start": "179547",
+              "state": "S"
+            },
+            {
+              "tid": 60144,
+              "name": "JITWorker",
+              "start": "179553",
+              "state": "S"
+            },
+            {
+              "tid": 60145,
+              "name": "JITWorker",
+              "start": "179554",
+              "state": "S"
+            },
+            {
+              "tid": 60146,
+              "name": "JITWorker",
+              "start": "179554",
+              "state": "S"
+            },
+            {
+              "tid": 60325,
+              "name": "CryptoQueue",
+              "start": "181611",
+              "state": "S"
+            },
+            {
+              "tid": 60374,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60375,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60376,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60407,
+              "name": "ollector Thread",
+              "start": "183708",
+              "state": "S"
+            }
+          ],
+          "fds": 30
+        },
+        {
+          "pid": 60215,
+          "start": "180778",
+          "executable": "/usr/bin/python3.12",
+          "rssKiB": 19152,
+          "pssKiB": 11459,
+          "threads": 1,
+          "reportedThreads": 1,
+          "threadIdentities": [
+            {
+              "tid": 60215,
+              "name": "python3",
+              "start": "180778",
+              "state": "S"
+            }
+          ],
+          "fds": 12
+        }
+      ],
+      "processCount": 4,
+      "appPssKiB": 172283,
+      "totals": {
+        "rssKiB": 718744,
+        "pssKiB": 550790,
+        "fds": 131,
+        "threads": 60
+      },
+      "renderer": {
+        "pageMark": "0bc1dfc9-fa15-4cde-aca5-d0c309cb4d33",
+        "retainedListenerRecords": 3,
+        "elements": 3639,
+        "callbacks": 3,
+        "activeListeners": 3,
+        "summaries": 27,
+        "documentTimeOrigin": 1794474197236,
+        "events": {
+          "shadowcode:events": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:open-session": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:shutdown": {
+            "retained": 1,
+            "active": 1
+          }
+        }
+      },
+      "keyboardRoundtripMs": 534.122636
+    },
+    {
+      "index": 25,
+      "processes": [
+        {
+          "pid": 60045,
+          "start": "179464",
+          "executable": "/home/runner/work/ShadowCode/ShadowCode/target/debug/shadowcode",
+          "rssKiB": 246000,
+          "pssKiB": 177955,
+          "threads": 28,
+          "reportedThreads": 28,
+          "threadIdentities": [
+            {
+              "tid": 60045,
+              "name": "shadowcode",
+              "start": "179464",
+              "state": "S"
+            },
+            {
+              "tid": 60057,
+              "name": "pool-spawner",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60058,
+              "name": "gmain",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60059,
+              "name": "gdbus",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60099,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60100,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60101,
+              "name": "blocking-1",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60102,
+              "name": "async-io",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60103,
+              "name": "zbus::Connectio",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60104,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60105,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60106,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60107,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60108,
+              "name": "tokio-rt-worker",
+              "start": "179480",
+              "state": "S"
+            },
+            {
+              "tid": 60109,
+              "name": "shadowcode",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60110,
+              "name": "ebsiteDataStore",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60113,
+              "name": "PressureMonitor",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60114,
+              "name": "dconf worker",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60116,
+              "name": "shadowcode",
+              "start": "179484",
+              "state": "S"
+            },
+            {
+              "tid": 60128,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60129,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60141,
+              "name": "VBlankMonitor",
+              "start": "179544",
+              "state": "S"
+            },
+            {
+              "tid": 60148,
+              "name": "tokio-rt-worker",
+              "start": "179561",
+              "state": "S"
+            },
+            {
+              "tid": 60155,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60156,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60158,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60548,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            },
+            {
+              "tid": 60549,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            }
+          ],
+          "fds": 63
+        },
+        {
+          "pid": 60112,
+          "start": "179482",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess",
+          "rssKiB": 48732,
+          "pssKiB": 19771,
+          "threads": 11,
+          "reportedThreads": 11,
+          "threadIdentities": [
+            {
+              "tid": 60112,
+              "name": "WebKitNetworkPr",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60119,
+              "name": "pool-spawner",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60120,
+              "name": "gmain",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60121,
+              "name": "gdbus",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60122,
+              "name": "ReceiveQueue",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60130,
+              "name": "persistent",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60131,
+              "name": "Storage",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60132,
+              "name": "background",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60133,
+              "name": "erialBackground",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60135,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 62035,
+              "name": "WebKitNetworkPr",
+              "start": "195204",
+              "state": "S"
+            }
+          ],
+          "fds": 26
+        },
+        {
+          "pid": 60117,
+          "start": "179485",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess",
+          "rssKiB": 423924,
+          "pssKiB": 360669,
+          "threads": 19,
+          "reportedThreads": 19,
+          "threadIdentities": [
+            {
+              "tid": 60117,
+              "name": "WebKitWebProces",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60123,
+              "name": "WebKitWebProces",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60124,
+              "name": "EventDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60125,
+              "name": "rruptDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60126,
+              "name": "uggerDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60127,
+              "name": "ReceiveQueue",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60136,
+              "name": "ReceiveQueue",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60137,
+              "name": "pool-spawner",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60138,
+              "name": "gmain",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60140,
+              "name": "gdbus",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60142,
+              "name": "dconf worker",
+              "start": "179546",
+              "state": "S"
+            },
+            {
+              "tid": 60143,
+              "name": "CryptoQueue",
+              "start": "179547",
+              "state": "S"
+            },
+            {
+              "tid": 60144,
+              "name": "JITWorker",
+              "start": "179553",
+              "state": "S"
+            },
+            {
+              "tid": 60145,
+              "name": "JITWorker",
+              "start": "179554",
+              "state": "S"
+            },
+            {
+              "tid": 60325,
+              "name": "CryptoQueue",
+              "start": "181611",
+              "state": "S"
+            },
+            {
+              "tid": 60374,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60375,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60376,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60407,
+              "name": "ollector Thread",
+              "start": "183708",
+              "state": "S"
+            }
+          ],
+          "fds": 30
+        },
+        {
+          "pid": 60215,
+          "start": "180778",
+          "executable": "/usr/bin/python3.12",
+          "rssKiB": 19152,
+          "pssKiB": 11459,
+          "threads": 1,
+          "reportedThreads": 1,
+          "threadIdentities": [
+            {
+              "tid": 60215,
+              "name": "python3",
+              "start": "180778",
+              "state": "S"
+            }
+          ],
+          "fds": 12
+        }
+      ],
+      "processCount": 4,
+      "appPssKiB": 177955,
+      "totals": {
+        "rssKiB": 737808,
+        "pssKiB": 569854,
+        "fds": 131,
+        "threads": 59
+      },
+      "renderer": {
+        "pageMark": "0bc1dfc9-fa15-4cde-aca5-d0c309cb4d33",
+        "retainedListenerRecords": 3,
+        "elements": 6152,
+        "callbacks": 3,
+        "activeListeners": 3,
+        "summaries": 50,
+        "documentTimeOrigin": 1794474197236,
+        "events": {
+          "shadowcode:events": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:open-session": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:shutdown": {
+            "retained": 1,
+            "active": 1
+          }
+        }
+      },
+      "keyboardRoundtripMs": 656.7286840000015
+    },
+    {
+      "index": 50,
+      "processes": [
+        {
+          "pid": 60045,
+          "start": "179464",
+          "executable": "/home/runner/work/ShadowCode/ShadowCode/target/debug/shadowcode",
+          "rssKiB": 253648,
+          "pssKiB": 185603,
+          "threads": 29,
+          "reportedThreads": 29,
+          "threadIdentities": [
+            {
+              "tid": 60045,
+              "name": "shadowcode",
+              "start": "179464",
+              "state": "S"
+            },
+            {
+              "tid": 60057,
+              "name": "pool-spawner",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60058,
+              "name": "gmain",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60059,
+              "name": "gdbus",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60099,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60100,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60101,
+              "name": "blocking-1",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60102,
+              "name": "async-io",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60103,
+              "name": "zbus::Connectio",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60104,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60105,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60106,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60107,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60108,
+              "name": "tokio-rt-worker",
+              "start": "179480",
+              "state": "S"
+            },
+            {
+              "tid": 60109,
+              "name": "shadowcode",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60110,
+              "name": "ebsiteDataStore",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60113,
+              "name": "PressureMonitor",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60114,
+              "name": "dconf worker",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60116,
+              "name": "shadowcode",
+              "start": "179484",
+              "state": "S"
+            },
+            {
+              "tid": 60128,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60129,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60141,
+              "name": "VBlankMonitor",
+              "start": "179544",
+              "state": "S"
+            },
+            {
+              "tid": 60148,
+              "name": "tokio-rt-worker",
+              "start": "179561",
+              "state": "S"
+            },
+            {
+              "tid": 60155,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60156,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60158,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60548,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            },
+            {
+              "tid": 60549,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            },
+            {
+              "tid": 62577,
+              "name": "tokio-rt-worker",
+              "start": "199605",
+              "state": "S"
+            }
+          ],
+          "fds": 63
+        },
+        {
+          "pid": 60112,
+          "start": "179482",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess",
+          "rssKiB": 48736,
+          "pssKiB": 19775,
+          "threads": 11,
+          "reportedThreads": 11,
+          "threadIdentities": [
+            {
+              "tid": 60112,
+              "name": "WebKitNetworkPr",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60119,
+              "name": "pool-spawner",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60120,
+              "name": "gmain",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60121,
+              "name": "gdbus",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60122,
+              "name": "ReceiveQueue",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60130,
+              "name": "persistent",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60131,
+              "name": "Storage",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60132,
+              "name": "background",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60133,
+              "name": "erialBackground",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60135,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 62817,
+              "name": "WebKitNetworkPr",
+              "start": "201641",
+              "state": "S"
+            }
+          ],
+          "fds": 26
+        },
+        {
+          "pid": 60117,
+          "start": "179485",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess",
+          "rssKiB": 432964,
+          "pssKiB": 369709,
+          "threads": 20,
+          "reportedThreads": 20,
+          "threadIdentities": [
+            {
+              "tid": 60117,
+              "name": "WebKitWebProces",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60123,
+              "name": "WebKitWebProces",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60124,
+              "name": "EventDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60125,
+              "name": "rruptDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60126,
+              "name": "uggerDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60127,
+              "name": "ReceiveQueue",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60136,
+              "name": "ReceiveQueue",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60137,
+              "name": "pool-spawner",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60138,
+              "name": "gmain",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60140,
+              "name": "gdbus",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60142,
+              "name": "dconf worker",
+              "start": "179546",
+              "state": "S"
+            },
+            {
+              "tid": 60143,
+              "name": "CryptoQueue",
+              "start": "179547",
+              "state": "S"
+            },
+            {
+              "tid": 60144,
+              "name": "JITWorker",
+              "start": "179553",
+              "state": "S"
+            },
+            {
+              "tid": 60145,
+              "name": "JITWorker",
+              "start": "179554",
+              "state": "S"
+            },
+            {
+              "tid": 60325,
+              "name": "CryptoQueue",
+              "start": "181611",
+              "state": "S"
+            },
+            {
+              "tid": 60374,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60375,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60376,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60407,
+              "name": "ollector Thread",
+              "start": "183708",
+              "state": "S"
+            },
+            {
+              "tid": 62813,
+              "name": "JITWorker",
+              "start": "201461",
+              "state": "S"
+            }
+          ],
+          "fds": 30
+        },
+        {
+          "pid": 60215,
+          "start": "180778",
+          "executable": "/usr/bin/python3.12",
+          "rssKiB": 19152,
+          "pssKiB": 11459,
+          "threads": 1,
+          "reportedThreads": 1,
+          "threadIdentities": [
+            {
+              "tid": 60215,
+              "name": "python3",
+              "start": "180778",
+              "state": "S"
+            }
+          ],
+          "fds": 12
+        }
+      ],
+      "processCount": 4,
+      "appPssKiB": 185603,
+      "totals": {
+        "rssKiB": 754500,
+        "pssKiB": 586546,
+        "fds": 131,
+        "threads": 61
+      },
+      "renderer": {
+        "pageMark": "0bc1dfc9-fa15-4cde-aca5-d0c309cb4d33",
+        "retainedListenerRecords": 3,
+        "elements": 6152,
+        "callbacks": 3,
+        "activeListeners": 3,
+        "summaries": 50,
+        "documentTimeOrigin": 1794474197236,
+        "events": {
+          "shadowcode:events": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:open-session": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:shutdown": {
+            "retained": 1,
+            "active": 1
+          }
+        }
+      },
+      "keyboardRoundtripMs": 656.8116240000236
+    },
+    {
+      "index": 75,
+      "processes": [
+        {
+          "pid": 60045,
+          "start": "179464",
+          "executable": "/home/runner/work/ShadowCode/ShadowCode/target/debug/shadowcode",
+          "rssKiB": 264288,
+          "pssKiB": 196243,
+          "threads": 29,
+          "reportedThreads": 29,
+          "threadIdentities": [
+            {
+              "tid": 60045,
+              "name": "shadowcode",
+              "start": "179464",
+              "state": "S"
+            },
+            {
+              "tid": 60057,
+              "name": "pool-spawner",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60058,
+              "name": "gmain",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60059,
+              "name": "gdbus",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60099,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60100,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60101,
+              "name": "blocking-1",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60102,
+              "name": "async-io",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60103,
+              "name": "zbus::Connectio",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60104,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60105,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60106,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60107,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60108,
+              "name": "tokio-rt-worker",
+              "start": "179480",
+              "state": "S"
+            },
+            {
+              "tid": 60109,
+              "name": "shadowcode",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60110,
+              "name": "ebsiteDataStore",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60113,
+              "name": "PressureMonitor",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60114,
+              "name": "dconf worker",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60116,
+              "name": "shadowcode",
+              "start": "179484",
+              "state": "S"
+            },
+            {
+              "tid": 60128,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60129,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60141,
+              "name": "VBlankMonitor",
+              "start": "179544",
+              "state": "S"
+            },
+            {
+              "tid": 60148,
+              "name": "tokio-rt-worker",
+              "start": "179561",
+              "state": "S"
+            },
+            {
+              "tid": 60155,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60156,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60158,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60548,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            },
+            {
+              "tid": 60549,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            },
+            {
+              "tid": 62577,
+              "name": "tokio-rt-worker",
+              "start": "199605",
+              "state": "S"
+            }
+          ],
+          "fds": 63
+        },
+        {
+          "pid": 60112,
+          "start": "179482",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess",
+          "rssKiB": 48736,
+          "pssKiB": 19775,
+          "threads": 11,
+          "reportedThreads": 11,
+          "threadIdentities": [
+            {
+              "tid": 60112,
+              "name": "WebKitNetworkPr",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60119,
+              "name": "pool-spawner",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60120,
+              "name": "gmain",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60121,
+              "name": "gdbus",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60122,
+              "name": "ReceiveQueue",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60130,
+              "name": "persistent",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60131,
+              "name": "Storage",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60132,
+              "name": "background",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60133,
+              "name": "erialBackground",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60135,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 63433,
+              "name": "WebKitNetworkPr",
+              "start": "206756",
+              "state": "S"
+            }
+          ],
+          "fds": 26
+        },
+        {
+          "pid": 60117,
+          "start": "179485",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess",
+          "rssKiB": 424064,
+          "pssKiB": 360809,
+          "threads": 20,
+          "reportedThreads": 20,
+          "threadIdentities": [
+            {
+              "tid": 60117,
+              "name": "WebKitWebProces",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60123,
+              "name": "WebKitWebProces",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60124,
+              "name": "EventDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60125,
+              "name": "rruptDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60126,
+              "name": "uggerDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60127,
+              "name": "ReceiveQueue",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60136,
+              "name": "ReceiveQueue",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60137,
+              "name": "pool-spawner",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60138,
+              "name": "gmain",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60140,
+              "name": "gdbus",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60142,
+              "name": "dconf worker",
+              "start": "179546",
+              "state": "S"
+            },
+            {
+              "tid": 60143,
+              "name": "CryptoQueue",
+              "start": "179547",
+              "state": "S"
+            },
+            {
+              "tid": 60144,
+              "name": "JITWorker",
+              "start": "179553",
+              "state": "S"
+            },
+            {
+              "tid": 60145,
+              "name": "JITWorker",
+              "start": "179554",
+              "state": "S"
+            },
+            {
+              "tid": 60325,
+              "name": "CryptoQueue",
+              "start": "181611",
+              "state": "S"
+            },
+            {
+              "tid": 60374,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60375,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60376,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60407,
+              "name": "ollector Thread",
+              "start": "183708",
+              "state": "S"
+            },
+            {
+              "tid": 62962,
+              "name": "JITWorker",
+              "start": "202840",
+              "state": "S"
+            }
+          ],
+          "fds": 30
+        },
+        {
+          "pid": 60215,
+          "start": "180778",
+          "executable": "/usr/bin/python3.12",
+          "rssKiB": 19152,
+          "pssKiB": 11459,
+          "threads": 1,
+          "reportedThreads": 1,
+          "threadIdentities": [
+            {
+              "tid": 60215,
+              "name": "python3",
+              "start": "180778",
+              "state": "S"
+            }
+          ],
+          "fds": 12
+        }
+      ],
+      "processCount": 4,
+      "appPssKiB": 196243,
+      "totals": {
+        "rssKiB": 756240,
+        "pssKiB": 588286,
+        "fds": 131,
+        "threads": 61
+      },
+      "renderer": {
+        "pageMark": "0bc1dfc9-fa15-4cde-aca5-d0c309cb4d33",
+        "retainedListenerRecords": 3,
+        "elements": 6152,
+        "callbacks": 3,
+        "activeListeners": 3,
+        "summaries": 50,
+        "documentTimeOrigin": 1794474197236,
+        "events": {
+          "shadowcode:events": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:open-session": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:shutdown": {
+            "retained": 1,
+            "active": 1
+          }
+        }
+      },
+      "keyboardRoundtripMs": 662.5333330000285
+    },
+    {
+      "index": 100,
+      "processes": [
+        {
+          "pid": 60045,
+          "start": "179464",
+          "executable": "/home/runner/work/ShadowCode/ShadowCode/target/debug/shadowcode",
+          "rssKiB": 272084,
+          "pssKiB": 204039,
+          "threads": 29,
+          "reportedThreads": 29,
+          "threadIdentities": [
+            {
+              "tid": 60045,
+              "name": "shadowcode",
+              "start": "179464",
+              "state": "S"
+            },
+            {
+              "tid": 60057,
+              "name": "pool-spawner",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60058,
+              "name": "gmain",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60059,
+              "name": "gdbus",
+              "start": "179469",
+              "state": "S"
+            },
+            {
+              "tid": 60099,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60100,
+              "name": "shadowcode",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60101,
+              "name": "blocking-1",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60102,
+              "name": "async-io",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60103,
+              "name": "zbus::Connectio",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60104,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60105,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60106,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60107,
+              "name": "tokio-rt-worker",
+              "start": "179477",
+              "state": "S"
+            },
+            {
+              "tid": 60108,
+              "name": "tokio-rt-worker",
+              "start": "179480",
+              "state": "S"
+            },
+            {
+              "tid": 60109,
+              "name": "shadowcode",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60110,
+              "name": "ebsiteDataStore",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60113,
+              "name": "PressureMonitor",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60114,
+              "name": "dconf worker",
+              "start": "179483",
+              "state": "S"
+            },
+            {
+              "tid": 60116,
+              "name": "shadowcode",
+              "start": "179484",
+              "state": "S"
+            },
+            {
+              "tid": 60128,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60129,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60141,
+              "name": "VBlankMonitor",
+              "start": "179544",
+              "state": "S"
+            },
+            {
+              "tid": 60148,
+              "name": "tokio-rt-worker",
+              "start": "179561",
+              "state": "S"
+            },
+            {
+              "tid": 60155,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60156,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60158,
+              "name": "tokio-rt-worker",
+              "start": "179563",
+              "state": "S"
+            },
+            {
+              "tid": 60548,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            },
+            {
+              "tid": 60549,
+              "name": "tokio-rt-worker",
+              "start": "184608",
+              "state": "S"
+            },
+            {
+              "tid": 62577,
+              "name": "tokio-rt-worker",
+              "start": "199605",
+              "state": "S"
+            }
+          ],
+          "fds": 63
+        },
+        {
+          "pid": 60112,
+          "start": "179482",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess",
+          "rssKiB": 48736,
+          "pssKiB": 19775,
+          "threads": 11,
+          "reportedThreads": 11,
+          "threadIdentities": [
+            {
+              "tid": 60112,
+              "name": "WebKitNetworkPr",
+              "start": "179482",
+              "state": "S"
+            },
+            {
+              "tid": 60119,
+              "name": "pool-spawner",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60120,
+              "name": "gmain",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60121,
+              "name": "gdbus",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60122,
+              "name": "ReceiveQueue",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60130,
+              "name": "persistent",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60131,
+              "name": "Storage",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60132,
+              "name": "background",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60133,
+              "name": "erialBackground",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 60135,
+              "name": "ReceiveQueue",
+              "start": "179489",
+              "state": "S"
+            },
+            {
+              "tid": 64028,
+              "name": "WebKitNetworkPr",
+              "start": "211822",
+              "state": "S"
+            }
+          ],
+          "fds": 26
+        },
+        {
+          "pid": 60117,
+          "start": "179485",
+          "executable": "/usr/lib/aarch64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess",
+          "rssKiB": 424872,
+          "pssKiB": 361617,
+          "threads": 20,
+          "reportedThreads": 20,
+          "threadIdentities": [
+            {
+              "tid": 60117,
+              "name": "WebKitWebProces",
+              "start": "179485",
+              "state": "S"
+            },
+            {
+              "tid": 60123,
+              "name": "WebKitWebProces",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60124,
+              "name": "EventDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60125,
+              "name": "rruptDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60126,
+              "name": "uggerDispatcher",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60127,
+              "name": "ReceiveQueue",
+              "start": "179487",
+              "state": "S"
+            },
+            {
+              "tid": 60136,
+              "name": "ReceiveQueue",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60137,
+              "name": "pool-spawner",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60138,
+              "name": "gmain",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60140,
+              "name": "gdbus",
+              "start": "179540",
+              "state": "S"
+            },
+            {
+              "tid": 60142,
+              "name": "dconf worker",
+              "start": "179546",
+              "state": "S"
+            },
+            {
+              "tid": 60143,
+              "name": "CryptoQueue",
+              "start": "179547",
+              "state": "S"
+            },
+            {
+              "tid": 60144,
+              "name": "JITWorker",
+              "start": "179553",
+              "state": "S"
+            },
+            {
+              "tid": 60145,
+              "name": "JITWorker",
+              "start": "179554",
+              "state": "S"
+            },
+            {
+              "tid": 60325,
+              "name": "CryptoQueue",
+              "start": "181611",
+              "state": "S"
+            },
+            {
+              "tid": 60374,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60375,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60376,
+              "name": "HeapHelper",
+              "start": "183420",
+              "state": "S"
+            },
+            {
+              "tid": 60407,
+              "name": "ollector Thread",
+              "start": "183708",
+              "state": "S"
+            },
+            {
+              "tid": 63819,
+              "name": "JITWorker",
+              "start": "210124",
+              "state": "S"
+            }
+          ],
+          "fds": 30
+        },
+        {
+          "pid": 60215,
+          "start": "180778",
+          "executable": "/usr/bin/python3.12",
+          "rssKiB": 19152,
+          "pssKiB": 11459,
+          "threads": 1,
+          "reportedThreads": 1,
+          "threadIdentities": [
+            {
+              "tid": 60215,
+              "name": "python3",
+              "start": "180778",
+              "state": "S"
+            }
+          ],
+          "fds": 12
+        }
+      ],
+      "processCount": 4,
+      "appPssKiB": 204039,
+      "totals": {
+        "rssKiB": 764844,
+        "pssKiB": 596890,
+        "fds": 131,
+        "threads": 61
+      },
+      "renderer": {
+        "pageMark": "0bc1dfc9-fa15-4cde-aca5-d0c309cb4d33",
+        "retainedListenerRecords": 3,
+        "elements": 6152,
+        "callbacks": 3,
+        "activeListeners": 3,
+        "summaries": 50,
+        "documentTimeOrigin": 1794474197236,
+        "events": {
+          "shadowcode:events": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:open-session": {
+            "retained": 1,
+            "active": 1
+          },
+          "shadowcode:shutdown": {
+            "retained": 1,
+            "active": 1
+          }
+        }
+      },
+      "keyboardRoundtripMs": 671.1482480000122
+    }
+  ],
+  "limits": {
+    "appPssGrowthKiB": 65536,
+    "treePssGrowthKiB": 196608,
+    "lateTreePssGrowthKiB": 65536,
+    "treeRssCeilingKiB": 2097152,
+    "fdGrowth": 8,
+    "threadGrowth": 8,
+    "callbackGrowth": 6,
+    "activeListenerGrowth": 1,
+    "retainedListenerRecordGrowth": 2,
+    "mountedElementGrowth": 15000,
+    "lateMountedElementGrowth": 1000,
+    "keyboardRoundtripMs": 2000
+  },
+  "scope": "Real X11/WebKit native window; 100 UI command tasks, each explicitly approved and awaited. App plus owned subprocess PSS/RSS/fds/threads; actual Tauri callback/listener registries and mounted DOM. No reload or forced GC. Does not cover all DOM listener registrations, GPU/model inference growth, Wayland, or UI-01 long-stream input p95.",
+  "limitRationale": "A bounded measured warm-up separates lazy native/WebKit thread-pool initialization from sustained accumulation. Its observations and task identities remain in this receipt; no convergence means failure. Memory/fd/listener bounds also apply during warm-up. The unchanged post-baseline thread allowance is eight. Retained transcript evidence may grow while the rendered row window stabilizes: allow 64 MiB app and 192 MiB whole-tree PSS, at most 64 MiB in the last 50 tasks. Fixed descriptor/callback allowances cover transient polling; surviving process count may not grow. Native listener metadata must remain bounded independently of transcript history.",
+  "binarySha256": "ecccd6c90d5a8cafa0d9cd37dfdde0011820ec2703858c23cb8e7c92ea524959",
+  "platform": {
+    "node": "v22.23.4",
+    "arch": "arm64",
+    "kernel": "7.0.0-1017-azure",
+    "cpu": "unknown",
+    "memoryKiB": 16324144
+  },
+  "warmupConverged": true,
+  "databaseIntegrity": "ok"
+}

@@ -1,0 +1,20 @@
+{
+  "status": "PASS_PUBLIC_SCRIPTED_ENDURANCE",
+  "source_commit": "a3b09eca6333c2befda3504850f357f09cc25542",
+  "installer_sha256": "d979725fe94ddb405d6180a73c8c48a268bff4ceeb51265d432fa09d5e4b8f99",
+  "installation_receipt_sha256": "c887fdfe9ec15321503255b2c339cd52a64f20ad54fa51399a10b670eed22147",
+  "result_sha256": "adcdc8efc2f20769a083f39657711fff9a1f7ead2e580d66b5d473a79a00301c",
+  "public_artifact_sha256": "104a4d73e5f7eae7b12d368185b9a48497504d92bfcdf1f2c4a8c56624ca15bf",
+  "sequential_completed": 100,
+  "concurrent_completed": 80,
+  "cancellations": 5,
+  "persistence_after_stop": true,
+  "peak_sampled_rss_mib": 31.95703125,
+  "rss_growth_mib": 8.50390625,
+  "handle_growth": 12,
+  "thread_growth": 2,
+  "owned_cleanup_verified": true,
+  "shutdown_scope": "forced termination; graceful shutdown not tested",
+  "scope": "Installed native engine with loopback scripted provider. Not desktop UI, paid providers, real model inference or inference-server memory.",
+  "real_model": "HELD_NOT_RUN"
+}

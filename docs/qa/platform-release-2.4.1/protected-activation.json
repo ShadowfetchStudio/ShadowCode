@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "commit": "a3b09eca6333c2befda3504850f357f09cc25542",
+  "tag": "v2.4.1",
+  "approved_tooling": "a3b09eca6333c2befda3504850f357f09cc25542",
+  "exact_tag_rule_added": true,
+  "protections_unchanged": true,
+  "candidate_ui_passed": true,
+  "signing_not_yet_approved": true,
+  "verified_at": "2026-11-12T09:30:08.291015+00:00"
+}

@@ -1,6 +1,6 @@
 # ShadowCode user guide
 
-This guide describes the 2.4.0 development workflow: open a
+This guide describes the 2.4.1 development workflow: open a
 project, pick a model, describe the task, watch the agent work, then review
 what changed. Installation and a feature overview are in the
 [README](../README.md).
@@ -18,7 +18,7 @@ controls. Drag the boundary of a side panel to resize it. With the boundary
 focused, use the arrow keys to adjust, Shift-arrow for larger steps, Home/End
 for the allowed limits, or Enter to reset. Your preferred width is remembered
 and temporarily reduced when the window needs more room for the conversation.
-On compact windows, **Show sidebar** reveals navigation even while a panel is open.
+On compact windows, **Show sidebar** reveals navigation even while a panel is open. In a short window with the terminal dock open, scroll the workspace above the dock to reach conversation and composer controls; the dock remains separate.
 
 The project context bar shows the working folder and branch. **Run project
 check…** uses the same approval and verification flow as checks offered after

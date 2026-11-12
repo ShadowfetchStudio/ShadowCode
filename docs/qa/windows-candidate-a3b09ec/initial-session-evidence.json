@@ -1,0 +1,26 @@
+{
+  "sessions": [
+    {
+      "id": "10442ac7e3e2444ebc59ef1f7fd077f0",
+      "workspace": "C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-7ca4a6ce12f04ce09024eb75796135e8\\ui-2.4.1-f1e191bf03e446a4aa4e56caa29d8223\\project",
+      "created_at": 1794474587.1450553,
+      "updated_at": 1794474587.1450553,
+      "status": "active",
+      "title": "",
+      "created_utc": "2026-11-12T09:09:47.145055+00:00"
+    },
+    {
+      "id": "9e726902a64e4f7d97f74231ab0d269c",
+      "workspace": "C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-7ca4a6ce12f04ce09024eb75796135e8\\ui-2.4.1-f1e191bf03e446a4aa4e56caa29d8223\\project",
+      "created_at": 1794474587.5188427,
+      "updated_at": 1794474587.5188427,
+      "status": "active",
+      "title": "",
+      "created_utc": "2026-11-12T09:09:47.518843+00:00"
+    }
+  ],
+  "session_count": 2,
+  "events_count": 0,
+  "tasks_count": 0,
+  "failure_before_session_id": "9e726902a64e4f7d97f74231ab0d269c"
+}

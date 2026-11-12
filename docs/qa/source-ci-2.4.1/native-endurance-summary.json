@@ -1,0 +1,62 @@
+{
+  "head_sha": "a3b09eca6333c2befda3504850f357f09cc25542",
+  "run_id": 43184020664,
+  "attempt": 1,
+  "verified_at": "2026-11-12T09:10:55.158869+00:00",
+  "receipts": [
+    {
+      "artifact": "native-window-diagnostics",
+      "artifact_id": 13929623218,
+      "archive_sha256": "c673f1897881099f0acb3fae8984545d9105e50b266c96e73a484be77a6473b7",
+      "receipt_sha256": {
+        "native-endurance/native-endurance.json": "aaf30295fe5a25c7816627e0bbef3d2c46340e1f7cbc9f1109ee33661ba23daf",
+        "native-endurance/result.json": "5872f95c6283d534a9cff4987296aae4a1381a15c42f79aa884c378877b4c30c"
+      },
+      "passed": true,
+      "completed": 100,
+      "warmupTasks": 45,
+      "warmupConverged": true,
+      "databaseIntegrity": "ok",
+      "binarySha256": "a26b0b06e69e3544246bbb3420515f6f1f75c0574888545345f339fc50622bec",
+      "platform": {
+        "node": "v22.23.4",
+        "arch": "x64",
+        "kernel": "7.0.0-1017-azure",
+        "cpu": "AMD EPYC 7763 64-Core Processor",
+        "memoryKiB": 16367524
+      },
+      "scope": "Real X11/WebKit native window; 100 UI command tasks, each explicitly approved and awaited. App plus owned subprocess PSS/RSS/fds/threads; actual Tauri callback/listener registries and mounted DOM. No reload or forced GC. Does not cover all DOM listener registrations, GPU/model inference growth, Wayland, or UI-01 long-stream input p95.",
+      "private_session_cleanup_ok": true,
+      "skipped_checks": [
+        "no Ready cloud row on this machine: consent step skipped"
+      ]
+    },
+    {
+      "artifact": "native-window-diagnostics-aarch64",
+      "artifact_id": 13928769525,
+      "archive_sha256": "2408ca80480aee222907e091c70387fb415d40f126923066d87bc96c95551b72",
+      "receipt_sha256": {
+        "native-endurance/native-endurance.json": "2613dafa130c910b6721b2a034db3031ed8baeb44f53f9568445cdf99678ed4e",
+        "native-endurance/result.json": "e4da8a36bdaf3737dd1abb5c479ccdd81ebfa64a79170d7f399f2f9727f8a3e9"
+      },
+      "passed": true,
+      "completed": 100,
+      "warmupTasks": 25,
+      "warmupConverged": true,
+      "databaseIntegrity": "ok",
+      "binarySha256": "ecccd6c90d5a8cafa0d9cd37dfdde0011820ec2703858c23cb8e7c92ea524959",
+      "platform": {
+        "node": "v22.23.4",
+        "arch": "arm64",
+        "kernel": "7.0.0-1017-azure",
+        "cpu": "unknown",
+        "memoryKiB": 16324144
+      },
+      "scope": "Real X11/WebKit native window; 100 UI command tasks, each explicitly approved and awaited. App plus owned subprocess PSS/RSS/fds/threads; actual Tauri callback/listener registries and mounted DOM. No reload or forced GC. Does not cover all DOM listener registrations, GPU/model inference growth, Wayland, or UI-01 long-stream input p95.",
+      "private_session_cleanup_ok": true,
+      "skipped_checks": [
+        "no Ready cloud row on this machine: consent step skipped"
+      ]
+    }
+  ]
+}

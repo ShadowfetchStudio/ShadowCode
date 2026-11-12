@@ -1,0 +1,48 @@
+{
+    "timestamp":  "2026-11-12T01:27:56.7428515-08:00",
+    "hostname":  "DESKTOP-6VG0GUB",
+    "user":  "robert",
+    "owned_tasks":  [
+
+                    ],
+    "app_probe_processes":  [
+
+                            ],
+    "cdp_listener_count":  0,
+    "cleanup_files":  [
+                          {
+                              "path":  "C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-7ca4a6ce12f04ce09024eb75796135e8\\ui-2.4.1-f1e191bf03e446a4aa4e56caa29d8223\\task-cleanup.json",
+                              "sha256":  "b4ad0569e4793d95fda6087449a0525e24d24af76b586b9c08092000669cbd01",
+                              "receipt":  {
+                                              "no_processes_terminated":  true,
+                                              "timestamp":  "2026-11-12T01:10:39.9437948-08:00",
+                                              "task":  "ShadowCode-candidate-2.4.1-UI-QA-f1e191bf03e446a4aa4e56caa29d8223",
+                                              "removed":  true,
+                                              "receipt_sha256":  "267a354f667c48210b5627b5ece5d8c3820c61fb1d76f23e53be84d7cd895150"
+                                          }
+                          },
+                          {
+                              "path":  "C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-7ca4a6ce12f04ce09024eb75796135e8\\ui-2.4.1-910968d861bd4cca8ad56a4d49b1a1ae\\task-cleanup.json",
+                              "sha256":  "55e645356ba4138d32fbf4eea04a19b8a1d2021c0afba907b398cd381c385292",
+                              "receipt":  {
+                                              "no_processes_terminated":  true,
+                                              "timestamp":  "2026-11-12T01:18:24.7486871-08:00",
+                                              "task":  "ShadowCode-candidate-2.4.1-UI-QA-910968d861bd4cca8ad56a4d49b1a1ae",
+                                              "removed":  true,
+                                              "receipt_sha256":  "267a354f667c48210b5627b5ece5d8c3820c61fb1d76f23e53be84d7cd895150"
+                                          }
+                          },
+                          {
+                              "path":  "C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-7ca4a6ce12f04ce09024eb75796135e8\\ui-2.4.1-6dea29270f95488399357863051ba32a\\task-cleanup.json",
+                              "sha256":  "5c57b995cfd67b70c745a52cfb97decf7ae765f28f4ee1bf044d7a915d129b8f",
+                              "receipt":  {
+                                              "no_processes_terminated":  true,
+                                              "timestamp":  "2026-11-12T01:27:55.4011442-08:00",
+                                              "task":  "ShadowCode-candidate-2.4.1-UI-QA-6dea29270f95488399357863051ba32a",
+                                              "removed":  true,
+                                              "receipt_sha256":  "267a354f667c48210b5627b5ece5d8c3820c61fb1d76f23e53be84d7cd895150"
+                                          }
+                          }
+                      ],
+    "remote_roots_preserved":  true
+}

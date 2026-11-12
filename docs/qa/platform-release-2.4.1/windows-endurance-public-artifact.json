@@ -1,0 +1,9 @@
+﻿{
+    "release_commit":  "a3b09eca6333c2befda3504850f357f09cc25542",
+    "result_path":  "C:\\Users\\Robert\\shadowcode-qualification\\public-2.4.1\\install-d6771de471904758906f15dabf41568a\\endurance-2.4.1-9c58025c6f5844c3a7e196c8abaf4249\\result.json",
+    "source_sha256":  "3031a8d1d840ef9d022c8b7540db4f87fe080ca04c0a9429a9faf20a31f04c1a",
+    "receipt_sha256":  "c887fdfe9ec15321503255b2c339cd52a64f20ad54fa51399a10b670eed22147",
+    "installer_sha256":  "d979725fe94ddb405d6180a73c8c48a268bff4ceeb51265d432fa09d5e4b8f99",
+    "provenance_kind":  "public",
+    "installed_exe_sha256":  "abf7a230373dccd37e3bdb537eba32b830cb8fd7223e3ef64b40ded4c67ba058"
+}

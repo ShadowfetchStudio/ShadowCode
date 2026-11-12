@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "checked_at": "2026-11-12T11:28:11.716561+00:00",
+  "source": "a3b09eca6333c2befda3504850f357f09cc25542",
+  "script_sha256": "2dd7f5719b854ec750a22af2b65e2c2faf38ad7518292f5e11dc31c60f6959e2",
+  "config_sha256": "7006940442e20d65358011d5672996b48f0789e72226f30ffa4123ba68f1447d",
+  "source_files_matched": 15,
+  "runs": [
+    {
+      "id": 43192014736,
+      "path": ".github/workflows/release.yml",
+      "head_sha": "a3b09eca6333c2befda3504850f357f09cc25542",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 43203354756,
+      "path": ".github/workflows/release-macos.yml",
+      "head_sha": "a3b09eca6333c2befda3504850f357f09cc25542",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 43203358489,
+      "path": ".github/workflows/release-flatpak.yml",
+      "head_sha": "a3b09eca6333c2befda3504850f357f09cc25542",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "id": 43203362035,
+      "path": ".github/workflows/release-windows.yml",
+      "head_sha": "a3b09eca6333c2befda3504850f357f09cc25542",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "release_id": 442808765,
+  "asset_count": 23
+}

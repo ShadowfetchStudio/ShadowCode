@@ -1,0 +1,32 @@
+{
+  "repository": "ShadowfetchStudio/ShadowCode",
+  "version": "2.4.1",
+  "sourceCommit": "a3b09eca6333c2befda3504850f357f09cc25542",
+  "approvedTrustToolingCommit": "a3b09eca6333c2befda3504850f357f09cc25542",
+  "runs": {
+    "linux": {
+      "id": 43192014736,
+      "attempt": 1,
+      "headSha": "a3b09eca6333c2befda3504850f357f09cc25542",
+      "workflowPath": ".github/workflows/release.yml"
+    },
+    "macos": {
+      "id": 43203354756,
+      "attempt": 1,
+      "headSha": "a3b09eca6333c2befda3504850f357f09cc25542",
+      "workflowPath": ".github/workflows/release-macos.yml"
+    },
+    "flatpak": {
+      "id": 43203358489,
+      "attempt": 1,
+      "headSha": "a3b09eca6333c2befda3504850f357f09cc25542",
+      "workflowPath": ".github/workflows/release-flatpak.yml"
+    },
+    "windows": {
+      "id": 43203362035,
+      "attempt": 1,
+      "headSha": "a3b09eca6333c2befda3504850f357f09cc25542",
+      "workflowPath": ".github/workflows/release-windows.yml"
+    }
+  }
+}

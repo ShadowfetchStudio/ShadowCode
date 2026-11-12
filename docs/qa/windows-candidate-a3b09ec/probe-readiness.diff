@@ -1,0 +1,46 @@
+--- approved-1cf560ea/qualify-windows-ui-2.4.1.cjs
++++ proposed/qualify-windows-ui-2.4.1.cjs
+@@ -147,17 +147,35 @@
+     await checked('project-scoped conversation creation',async()=>{
+       const show=page.getByRole('button',{name:'Show sidebar',exact:true});
+       if(await show.isVisible()) await show.click();
+-      await expect(composer).toBeEnabled();
+-      // Create the first explicit conversation, ensuring the project appears in navigation.
++      const selected=page.locator('[data-session-id][aria-current="page"]');
++      const sessions=page.locator('.sidebar [data-session-id]');
++      const attach=page.locator('.composer .attach-btn');
++      const composerPanel=page.locator('.composer');
++      async function navigationReady() {
++        await expect(selected).toHaveCount(1);
++        await expect(selected).toBeVisible();
++        await expect(attach).toBeEnabled();
++        await expect(composerPanel).not.toHaveClass(/\bis-working\b/);
++      }
++      // The textarea remains enabled while navigation is busy; use actual composer lock signals.
++      await navigationReady();
++      const initial=await selected.getAttribute('data-session-id');
++      assert.ok(initial, 'Initial selected conversation ID required');
++      const initialCount=await sessions.count();
+       await page.locator('.sidebar .new-task').click();
+-      await expect(page.locator('[data-session-id][aria-current="page"]')).toHaveCount(1);
+-      // Selection renders before navigation finishes refreshing native project state.
+-      // Wait for switching to finish so newSession does not discard the next click.
+-      await expect(composer).toBeEnabled();
+-      const before=await page.locator('[data-session-id][aria-current="page"]').getAttribute('data-session-id');
++      await expect(selected).not.toHaveAttribute('data-session-id',initial);
++      await navigationReady();
++      const first=await selected.getAttribute('data-session-id');
++      assert.ok(first && first!==initial, 'New task must select a distinct conversation');
++      await expect(sessions).toHaveCount(initialCount+1);
+       const pathInUI=await page.locator('.workspace-location').innerText();
+       await page.getByRole('button',{name:`New task in ${pathInUI}`,exact:true}).click();
+-      await expect.poll(()=>page.locator('[data-session-id][aria-current="page"]').getAttribute('data-session-id')).not.toBe(before);
++      await expect(selected).not.toHaveAttribute('data-session-id',first);
++      await navigationReady();
++      const second=await selected.getAttribute('data-session-id');
++      assert.ok(second && second!==first && second!==initial, 'Project plus must select another distinct conversation');
++      await expect(sessions).toHaveCount(initialCount+2);
++      report.conversation_creation={initial,first,second,initial_count:initialCount,final_count:await sessions.count()};
+       await expect.poll(async()=>normalPath(await page.locator('.workspace-location').innerText())).toBe(normalPath(project));
+       await expect(context.getByRole('button',{name:'Run project check…',exact:true})).toBeVisible();
+       await expect(context.getByRole('button',{name:'Show running processes',exact:true})).toBeVisible();

@@ -1,0 +1,64 @@
+{
+  "status": "PASS_PUBLIC_ARTIFACT_INTEGRITY_AND_LINUX_AUTHENTICATION",
+  "source_commit": "a3b09eca6333c2befda3504850f357f09cc25542",
+  "approved_trust_tooling_commit": "a3b09eca6333c2befda3504850f357f09cc25542",
+  "release_id": 442808765,
+  "tag": "v2.4.1",
+  "started_at": "2026-11-12T11:28:11.870Z",
+  "finished_at": "2026-11-12T11:28:33.786Z",
+  "command_exit_code": 0,
+  "script_sha256": "2dd7f5719b854ec750a22af2b65e2c2faf38ad7518292f5e11dc31c60f6959e2",
+  "config_sha256": "7006940442e20d65358011d5672996b48f0789e72226f30ffa4123ba68f1447d",
+  "asset_count": 23,
+  "asset_bytes": 717415098,
+  "checksum_sets": 5,
+  "checksum_payload_rows": 12,
+  "linux_authenticated_payloads": 6,
+  "workflows": [
+    {
+      "platform": "linux",
+      "id": 43192014736,
+      "attempt": 1,
+      "headSha": "a3b09eca6333c2befda3504850f357f09cc25542",
+      "path": ".github/workflows/release.yml",
+      "url": "https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43192014736",
+      "conclusion": "success"
+    },
+    {
+      "platform": "macos",
+      "id": 43203354756,
+      "attempt": 1,
+      "headSha": "a3b09eca6333c2befda3504850f357f09cc25542",
+      "path": ".github/workflows/release-macos.yml",
+      "url": "https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43203354756",
+      "conclusion": "success"
+    },
+    {
+      "platform": "flatpak",
+      "id": 43203358489,
+      "attempt": 1,
+      "headSha": "a3b09eca6333c2befda3504850f357f09cc25542",
+      "path": ".github/workflows/release-flatpak.yml",
+      "url": "https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43203358489",
+      "conclusion": "success"
+    },
+    {
+      "platform": "windows",
+      "id": 43203362035,
+      "attempt": 1,
+      "headSha": "a3b09eca6333c2befda3504850f357f09cc25542",
+      "path": ".github/workflows/release-windows.yml",
+      "url": "https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43203362035",
+      "conclusion": "success"
+    }
+  ],
+  "windows_installer": {
+    "id": 739178661,
+    "name": "ShadowCode_2.4.1_x64-setup.exe",
+    "apiSize": 23870723,
+    "apiDigest": "sha256:d979725fe94ddb405d6180a73c8c48a268bff4ceeb51265d432fa09d5e4b8f99",
+    "size": 23870723,
+    "sha256": "d979725fe94ddb405d6180a73c8c48a268bff4ceeb51265d432fa09d5e4b8f99"
+  },
+  "scope": "Public API identity/size/digest, downloaded SHA-256, five checksum sets, and six Linux Ed25519-authenticated payloads. Does not qualify native UI, installation, Windows acceptance, APT, Developer ID, notarization or Authenticode."
+}

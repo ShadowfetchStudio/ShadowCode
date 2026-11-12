@@ -1,0 +1,35 @@
+{
+  "total_count": 5,
+  "branch_policies": [
+    {
+      "id": 63404749,
+      "node_id": "MDE2OkdhdGVCcmFuY2hQb2xpY3k2MzQwNDc0OQ==",
+      "name": "v2.3.1",
+      "type": "tag"
+    },
+    {
+      "id": 65176671,
+      "node_id": "MDE2OkdhdGVCcmFuY2hQb2xpY3k2NTE3NjY3MQ==",
+      "name": "v2.3.2",
+      "type": "tag"
+    },
+    {
+      "id": 65187229,
+      "node_id": "MDE2OkdhdGVCcmFuY2hQb2xpY3k2NTE4NzIyOQ==",
+      "name": "v2.3.3",
+      "type": "tag"
+    },
+    {
+      "id": 66399847,
+      "node_id": "MDE2OkdhdGVCcmFuY2hQb2xpY3k2NjM5OTg0Nw==",
+      "name": "v2.4.0",
+      "type": "tag"
+    },
+    {
+      "id": 66431442,
+      "node_id": "MDE2OkdhdGVCcmFuY2hQb2xpY3k2NjQzMTQ0Mg==",
+      "name": "v2.4.1",
+      "type": "tag"
+    }
+  ]
+}

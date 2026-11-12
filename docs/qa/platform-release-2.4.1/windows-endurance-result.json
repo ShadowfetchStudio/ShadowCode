@@ -1,0 +1,58 @@
+{
+  "passed": true,
+  "platform": "win32",
+  "osRelease": "10.0.26200",
+  "version": "ShadowCode 2.4.1",
+  "binarySha256": "abf7a230373dccd37e3bdb537eba32b830cb8fd7223e3ef64b40ded4c67ba058",
+  "sequentialCompleted": 100,
+  "concurrentCompleted": 80,
+  "cancelled": 5,
+  "requests": 367,
+  "measurements": [
+    {
+      "round": "warmup",
+      "rssKiB": 24016,
+      "threads": 14,
+      "resources": 205,
+      "resourceKind": "handles"
+    },
+    {
+      "round": "sequential-25",
+      "rssKiB": 27532,
+      "threads": 14,
+      "resources": 207,
+      "resourceKind": "handles"
+    },
+    {
+      "round": "sequential-50",
+      "rssKiB": 28124,
+      "threads": 14,
+      "resources": 207,
+      "resourceKind": "handles"
+    },
+    {
+      "round": "sequential-75",
+      "rssKiB": 28308,
+      "threads": 14,
+      "resources": 207,
+      "resourceKind": "handles"
+    },
+    {
+      "round": "sequential-100",
+      "rssKiB": 28416,
+      "threads": 14,
+      "resources": 207,
+      "resourceKind": "handles"
+    },
+    {
+      "round": "completed",
+      "rssKiB": 32724,
+      "threads": 16,
+      "resources": 217,
+      "resourceKind": "handles"
+    }
+  ],
+  "persistenceAfterStop": true,
+  "shutdown": "forced termination; graceful shutdown not tested",
+  "scope": "Installed native engine with loopback scripted provider. Not desktop UI, paid providers, real model inference or inference-server memory."
+}

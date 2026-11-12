@@ -1,5 +1,51 @@
 # Physical-machine platform qualification
 
+## 2.4.1 public release
+
+[ShadowCode 2.4.1](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.4.1), release `442808765`, was published on **November 12, 2026 at 10:46:44 UTC**. Immutable tag `v2.4.1` resolves to release source `a3b09eca6333c2befda3504850f357f09cc25542`.
+
+All four release workflows completed successfully on that source, attempt 1:
+
+| Platform | Release run | Result |
+| --- | --- | --- |
+| Linux | `43192014736` | success |
+| macOS | `43203354756` | success |
+| Flatpak | `43203358489` | success |
+| Windows | `43203362035` | success |
+
+The [public artifact audit](qa/platform-release-2.4.1/public-assets/verification-summary.json) passed at **11:28:33 UTC**. All **23 assets, totaling 717,415,098 bytes**, matched their immutable API IDs, sizes, digests and downloaded SHA-256 values. The contract includes nine installers, three source archives and five checksum sets with 12 payload rows. The tag and asset inventory remained unchanged across verification. [Workflow results](qa/platform-release-2.4.1/public-assets/workflow-results.json), [full inventory and hashes](qa/platform-release-2.4.1/public-assets/audit-result.json), [checksum verification](qa/platform-release-2.4.1/public-assets/checksum-verification.json), and [Linux signature verification](qa/platform-release-2.4.1/public-assets/linux-signature-verification.json) retain the exact evidence.
+
+Six Linux payloads authenticated against the reviewed Ed25519 trust bundle and matched the main-reviewed handoffs. This authentication covers the two AppImages, two DEBs and two runtime-source archives. It does not cover DMGs, Flatpaks or Windows assets; checksum verification establishes no Developer ID, notarization or Authenticode claim.
+
+### Public Windows installation and qualification
+
+The public installer `ShadowCode_2.4.1_x64-setup.exe`, immutable asset `739178661`, is **23,870,723 bytes**, SHA-256 `d979725fe94ddb405d6180a73c8c48a268bff4ceeb51265d432fa09d5e4b8f99`. The [public download proof](qa/platform-release-2.4.1/windows-public-integrity.json) matched the API digest and published checksum before installation.
+
+The [installation receipt](qa/platform-release-2.4.1/windows-installation.json), SHA-256 `c887fdfe9ec15321503255b2c339cd52a64f20ad54fa51399a10b670eed22147`, binds the installed executable to the exact `shadowcode.exe` member independently extracted from that installer with 7-Zip 26.05. Both executable hashes are `abf7a230373dccd37e3bdb537eba32b830cb8fd7223e3ef64b40ded4c67ba058`. The receipt retains the payload path, extractor hash and version, and installer identity. This distinguishes the public binary from earlier candidates with the same version number.
+
+- **Installation and clean-PATH runtime: PASS.** The [original runtime log](qa/platform-release-2.4.1/windows-installed-runtime.txt) records the installed app version, isolated-profile status, and bundled llama-server/llama-cli checks.
+- **Native UI: PASS.** The [UI receipt](qa/platform-release-2.4.1/windows-native-ui.json), [runner](qa/platform-release-2.4.1/windows-ui-runner.json) and [checkpoint](qa/platform-release-2.4.1/windows-ui-checkpoint.json) record eight check groups, nine native window/zoom cases and all 45 Hide-control hit points. Conversation creation retained three distinct selected IDs as the count increased from one to three. Onboarding, editor/draft behavior, terminal checks and Settings completed without UI errors; the app and runner exited normally and cleanup passed. Requested 1440-wide cases were limited to the recorded 1366-wide work area; the receipt preserves actual native/CSS dimensions. Native WebView automation does not establish physical-keyboard/OS-shortcut arbitration or native accessibility acceptance.
+- **Scripted native-engine endurance: PASS.** The [result](qa/platform-release-2.4.1/windows-endurance-result.json), [public installation binding](qa/platform-release-2.4.1/windows-endurance-public-artifact.json) and [checkpoint](qa/platform-release-2.4.1/windows-endurance-checkpoint.json) record 100 sequential tasks, 80 concurrent tasks, five cancellations and persistence after stop. Sampled peak engine RSS was **31.96 MiB**, growth **8.50 MiB**, with **+12 handles and +2 threads**. Shutdown used **forced termination; graceful shutdown was not tested**. This exercised the installed native engine with a loopback scripted provider, not desktop UI, paid providers, real-model inference or inference-server memory.
+- **Real-model qualification: PASS.** One **Gemma 4 E4B Q4_0 CPU** coding fixture completed in **808.64 seconds**, starting at **2026-11-12 11:23:43 UTC**, on the exact public installed binary. It corrected `clamp`, `unique` and `chunks` in `helpers.py`. The agent ran `python3 -m unittest -q` successfully; an independent run passed the same five original tests, whose bytes and SHA-256 remained unchanged. Bounds were a **16,384-token context, 100,000-token task budget and 1,800-second timeout**. The recorded test command used AppContainer with network off. Two non-Git write-delegation guard errors were recovered without human intervention; no Git repository was created. The bundled runtime remained unchanged and owned cleanup completed normally. This is one bounded coding fixture, not general model quality, GPU performance, an inference-speed benchmark or broad security certification. See the [model result](qa/platform-release-2.4.1/windows-model-result.json), [checkpoint](qa/platform-release-2.4.1/windows-model-checkpoint.json), [independent test log](qa/platform-release-2.4.1/windows-model-independent-tests.txt), [AppContainer proof](qa/platform-release-2.4.1/windows-model-appcontainer-proof.json), and [recovered guard-error evidence](qa/platform-release-2.4.1/windows-model-delegation-context.json).
+
+### APT and other physical-platform scope
+
+[APT verification](qa/platform-release-2.4.1/apt-public-verification.json) passed at **10:50:26 UTC**, after release job `131132225135` completed. Both `InRelease` and detached `Release.gpg` signatures verified against the independently tracked key; the live armored and binary keys matched fingerprint `1BC07B5ECFDB514673A296FB021CAB3F2F7A1F61`. Six signed index sizes/hashes and decompressed package indices matched. The amd64/arm64 entries identified 2.4.1 and both pool DEBs were byte-identical to the verified public release packages. The verifier installed no package.
+
+**No new physical Mac/Linux installation acceptance was performed for 2.4.1.** Its evidence covers source CI, release packaging, public-byte integrity and Linux authentication/APT verification. Build success and browser fixtures do not establish physical native visual, accessibility, model or endurance acceptance. Earlier physical 2.3.3 results remain separately dated history.
+
+The [dated 2.4.0 resolution-note readback](qa/platform-release-2.4.1/known-issue-resolution.json) records its update at **2026-11-12 11:39:32 UTC**, verified at 11:39:45 UTC with assets unchanged. The older failures and incomplete checks below remain historical results.
+
+### Source validation and release prerequisites
+
+Release source `a3b09eca6333c2befda3504850f357f09cc25542` has **928 passing UI unit tests, 170 passing full Chromium tests and eight passing focused WebKit tests**, with no failures or skips in those runs. See [source test verification](qa/onboarding-navigation-2.4.1/verification.json), [source CI](qa/source-ci-2.4.1/verification.json), [Windows source CI](qa/source-ci-2.4.1/windows-source-run.json), and the [two native 100-task CI receipts](qa/source-ci-2.4.1/native-endurance-summary.json). Source/fixture results are separate from installed-public qualification.
+
+Both [x86_64](qa/platform-release-2.4.1/x86_64-handoff.json) and [aarch64](qa/platform-release-2.4.1/aarch64-handoff.json) passed all 15 required handoff gates. [Signing approval](qa/platform-release-2.4.1/signing-approval.json) was recorded at **10:44:07 UTC** after those independent main-reviewed checks and source/protection readbacks. The [a3b candidate UI checkpoint](qa/windows-candidate-a3b09ec/summary.json) remains a separate pre-publication record; its endurance/model checks were not run and it is not reused as public acceptance.
+
+## Historical qualification records
+
+The following records retain their original results and then-current pending statements. Neither later fixes nor publication convert earlier failures/incomplete checks into passes.
+
 ## 2.4.1 replacement candidate bf62 — held, not published
 
 Candidate `bf62e846f57d91df06aca3ab40158c0c7e5aee63`, Windows run

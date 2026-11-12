@@ -1,0 +1,366 @@
+{
+  "schema": 1,
+  "verified_at": "2026-11-12T10:03:58.004718+00:00",
+  "head_sha": "a3b09eca6333c2befda3504850f357f09cc25542",
+  "attempt": 1,
+  "all_required_source_workflows_successful": true,
+  "runs": [
+    {
+      "run": 43184020397,
+      "name": "Checks",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 131066648422,
+          "name": "ui",
+          "status": "completed",
+          "conclusion": "success",
+          "active": [],
+          "failed_steps": []
+        },
+        {
+          "id": 131066648733,
+          "name": "packaging-scripts",
+          "status": "completed",
+          "conclusion": "success",
+          "active": [],
+          "failed_steps": []
+        },
+        {
+          "id": 131066650334,
+          "name": "flatpak",
+          "status": "completed",
+          "conclusion": "skipped",
+          "active": [],
+          "failed_steps": []
+        },
+        {
+          "id": 131066650406,
+          "name": "packaging-changes",
+          "status": "completed",
+          "conclusion": "skipped",
+          "active": [],
+          "failed_steps": []
+        },
+        {
+          "id": 131066650837,
+          "name": "packaging dry run (${{ matrix.arch }})",
+          "status": "completed",
+          "conclusion": "skipped",
+          "active": [],
+          "failed_steps": []
+        }
+      ]
+    },
+    {
+      "run": 43184020664,
+      "name": "Native desktop",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 131066649924,
+          "name": "verify (x86_64)",
+          "status": "completed",
+          "conclusion": "success",
+          "active": [],
+          "failed_steps": []
+        },
+        {
+          "id": 131066650134,
+          "name": "verify (aarch64)",
+          "status": "completed",
+          "conclusion": "success",
+          "active": [],
+          "failed_steps": []
+        }
+      ]
+    },
+    {
+      "run": 43184020420,
+      "name": "macOS",
+      "status": "completed",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 131066648534,
+          "name": "build",
+          "status": "completed",
+          "conclusion": "success",
+          "active": [],
+          "failed_steps": []
+        }
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "run_id": 43184020397,
+      "id": 131066648422,
+      "name": "ui",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-12T08:34:13Z",
+      "completed_at": "2026-11-12T08:43:08Z",
+      "html_url": "https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43184020397/job/131066648422",
+      "failed_steps": []
+    },
+    {
+      "run_id": 43184020397,
+      "id": 131066648733,
+      "name": "packaging-scripts",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-12T08:34:13Z",
+      "completed_at": "2026-11-12T08:36:40Z",
+      "html_url": "https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43184020397/job/131066648733",
+      "failed_steps": []
+    },
+    {
+      "run_id": 43184020397,
+      "id": 131066650334,
+      "name": "flatpak",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-11-12T08:34:11Z",
+      "completed_at": "2026-11-12T08:34:11Z",
+      "html_url": "https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43184020397/job/131066650334",
+      "failed_steps": []
+    },
+    {
+      "run_id": 43184020397,
+      "id": 131066650406,
+      "name": "packaging-changes",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-11-12T08:34:11Z",
+      "completed_at": "2026-11-12T08:34:11Z",
+      "html_url": "https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43184020397/job/131066650406",
+      "failed_steps": []
+    },
+    {
+      "run_id": 43184020397,
+      "id": 131066650837,
+      "name": "packaging dry run (${{ matrix.arch }})",
+      "status": "completed",
+      "conclusion": "skipped",
+      "started_at": "2026-11-12T08:34:11Z",
+      "completed_at": "2026-11-12T08:34:11Z",
+      "html_url": "https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43184020397/job/131066650837",
+      "failed_steps": []
+    },
+    {
+      "run_id": 43184020664,
+      "id": 131066649924,
+      "name": "verify (x86_64)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-12T08:34:13Z",
+      "completed_at": "2026-11-12T10:01:56Z",
+      "html_url": "https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43184020664/job/131066649924",
+      "failed_steps": []
+    },
+    {
+      "run_id": 43184020664,
+      "id": 131066650134,
+      "name": "verify (aarch64)",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-12T08:34:15Z",
+      "completed_at": "2026-11-12T09:54:49Z",
+      "html_url": "https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43184020664/job/131066650134",
+      "failed_steps": []
+    },
+    {
+      "run_id": 43184020420,
+      "id": 131066648534,
+      "name": "build",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-12T08:34:15Z",
+      "completed_at": "2026-11-12T08:44:05Z",
+      "html_url": "https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43184020420/job/131066648534",
+      "failed_steps": []
+    }
+  ],
+  "native_artifacts": [
+    {
+      "id": 13932753777,
+      "name": "native-linux-development",
+      "size_in_bytes": 253144180,
+      "digest": "sha256:e3ecbe53d434c4f32eed1c1eaeaebf571220dcbf9df148cc039a06578acc4624",
+      "expired": false
+    },
+    {
+      "id": 13932404533,
+      "name": "native-package-diagnostics",
+      "size_in_bytes": 4218749,
+      "digest": "sha256:2f4829a70354c6c4d90a9c1869ff647fa2d2257d6fad6eef7e2f7f52278e93eb",
+      "expired": false
+    },
+    {
+      "id": 13932213950,
+      "name": "native-package-diagnostics-aarch64",
+      "size_in_bytes": 4232348,
+      "digest": "sha256:07e201bb0a4cfeeb45749a92bd7ee284216031cd806a7dcba048bb1369e6de25",
+      "expired": false
+    },
+    {
+      "id": 13931793853,
+      "name": "native-linux-development-aarch64",
+      "size_in_bytes": 243516905,
+      "digest": "sha256:7f36004cba979b80fd17504d06826d2e160f3cc872264840c5400fc2c40ed5b4",
+      "expired": false
+    },
+    {
+      "id": 13930060133,
+      "name": "native-stress-diagnostics",
+      "size_in_bytes": 586,
+      "digest": "sha256:65f5e37bfe7341c9a51ed097fa7d99c0feff988bbc521ffd8e04a33f110c83c9",
+      "expired": false
+    },
+    {
+      "id": 13930026088,
+      "name": "native-mcp-server-diagnostics",
+      "size_in_bytes": 14406,
+      "digest": "sha256:360511a9af09dea20eb99cf33c076eb4216f3a256e8dba5ca7e5c6b83a970c50",
+      "expired": false
+    },
+    {
+      "id": 13929776054,
+      "name": "native-mcp-server-diagnostics-aarch64",
+      "size_in_bytes": 14403,
+      "digest": "sha256:8713da6d31f416b0e1c1628f25ee0d1392ca18359321dd05b7741d29acb678b8",
+      "expired": false
+    },
+    {
+      "id": 13929741152,
+      "name": "native-cli-diagnostics-aarch64",
+      "size_in_bytes": 9428,
+      "digest": "sha256:9d229055b68a10fd1643dc9f93f54e42960bfcb1b4112aa06d3622e4cad2f399",
+      "expired": false
+    },
+    {
+      "id": 13929706408,
+      "name": "native-stress-diagnostics-aarch64",
+      "size_in_bytes": 587,
+      "digest": "sha256:6cb42f0be332c395a63211cdc0d289664667cba58b7bc13678555021a0c8892f",
+      "expired": false
+    },
+    {
+      "id": 13929623218,
+      "name": "native-window-diagnostics",
+      "size_in_bytes": 8497031,
+      "digest": "sha256:c673f1897881099f0acb3fae8984545d9105e50b266c96e73a484be77a6473b7",
+      "expired": false
+    },
+    {
+      "id": 13929116976,
+      "name": "built-project-cleanup-diagnostics-aarch64",
+      "size_in_bytes": 3240,
+      "digest": "sha256:3c2fff352ab2d6a285d0c70b30347aad2487bda8125cd0a98a492f4fdc61cb3a",
+      "expired": false
+    },
+    {
+      "id": 13928769525,
+      "name": "native-window-diagnostics-aarch64",
+      "size_in_bytes": 8504189,
+      "digest": "sha256:2408ca80480aee222907e091c70387fb415d40f126923066d87bc96c95551b72",
+      "expired": false
+    },
+    {
+      "id": 13928682844,
+      "name": "native-cli-diagnostics",
+      "size_in_bytes": 9252,
+      "digest": "sha256:916a466ba35ec7b437bd487a8e13b99a51fb7cb9a02d071aae0df2f7980a14f5",
+      "expired": false
+    },
+    {
+      "id": 13928677834,
+      "name": "built-project-cleanup-diagnostics",
+      "size_in_bytes": 3234,
+      "digest": "sha256:01064aa14b3fd946a65bfcb924fbde2ad9fae7af600601c14abc2edba392e243",
+      "expired": false
+    }
+  ],
+  "endurance": {
+    "head_sha": "a3b09eca6333c2befda3504850f357f09cc25542",
+    "run_id": 43184020664,
+    "attempt": 1,
+    "verified_at": "2026-11-12T09:10:55.158869+00:00",
+    "receipts": [
+      {
+        "artifact": "native-window-diagnostics",
+        "artifact_id": 13929623218,
+        "archive_sha256": "c673f1897881099f0acb3fae8984545d9105e50b266c96e73a484be77a6473b7",
+        "receipt_sha256": {
+          "native-endurance/native-endurance.json": "aaf30295fe5a25c7816627e0bbef3d2c46340e1f7cbc9f1109ee33661ba23daf",
+          "native-endurance/result.json": "5872f95c6283d534a9cff4987296aae4a1381a15c42f79aa884c378877b4c30c"
+        },
+        "passed": true,
+        "completed": 100,
+        "warmupTasks": 45,
+        "warmupConverged": true,
+        "databaseIntegrity": "ok",
+        "binarySha256": "a26b0b06e69e3544246bbb3420515f6f1f75c0574888545345f339fc50622bec",
+        "platform": {
+          "node": "v22.23.4",
+          "arch": "x64",
+          "kernel": "7.0.0-1017-azure",
+          "cpu": "AMD EPYC 7763 64-Core Processor",
+          "memoryKiB": 16367524
+        },
+        "scope": "Real X11/WebKit native window; 100 UI command tasks, each explicitly approved and awaited. App plus owned subprocess PSS/RSS/fds/threads; actual Tauri callback/listener registries and mounted DOM. No reload or forced GC. Does not cover all DOM listener registrations, GPU/model inference growth, Wayland, or UI-01 long-stream input p95.",
+        "private_session_cleanup_ok": true,
+        "skipped_checks": [
+          "no Ready cloud row on this machine: consent step skipped"
+        ]
+      },
+      {
+        "artifact": "native-window-diagnostics-aarch64",
+        "artifact_id": 13928769525,
+        "archive_sha256": "2408ca80480aee222907e091c70387fb415d40f126923066d87bc96c95551b72",
+        "receipt_sha256": {
+          "native-endurance/native-endurance.json": "2613dafa130c910b6721b2a034db3031ed8baeb44f53f9568445cdf99678ed4e",
+          "native-endurance/result.json": "e4da8a36bdaf3737dd1abb5c479ccdd81ebfa64a79170d7f399f2f9727f8a3e9"
+        },
+        "passed": true,
+        "completed": 100,
+        "warmupTasks": 25,
+        "warmupConverged": true,
+        "databaseIntegrity": "ok",
+        "binarySha256": "ecccd6c90d5a8cafa0d9cd37dfdde0011820ec2703858c23cb8e7c92ea524959",
+        "platform": {
+          "node": "v22.23.4",
+          "arch": "arm64",
+          "kernel": "7.0.0-1017-azure",
+          "cpu": "unknown",
+          "memoryKiB": 16324144
+        },
+        "scope": "Real X11/WebKit native window; 100 UI command tasks, each explicitly approved and awaited. App plus owned subprocess PSS/RSS/fds/threads; actual Tauri callback/listener registries and mounted DOM. No reload or forced GC. Does not cover all DOM listener registrations, GPU/model inference growth, Wayland, or UI-01 long-stream input p95.",
+        "private_session_cleanup_ok": true,
+        "skipped_checks": [
+          "no Ready cloud row on this machine: consent step skipped"
+        ]
+      }
+    ]
+  },
+  "failed_job_logs": [],
+  "monitor_process_completed": true,
+  "poll_interval_seconds": 60,
+  "mutations": "None to repo, workflows, runs, tags, release or approvals; only external evidence written",
+  "limits": [
+    "Source CI and development artifacts; separate release handoffs/signing/publication are not qualified by this report.",
+    "Endurance receipts cover 100 explicitly approved command tasks through real X11/WebKit; exclude GPU/model inference growth, Wayland and long-stream input p95.",
+    "Optional cloud consent step skipped on both runners because no Ready cloud row was present."
+  ],
+  "evidence_sha256": {
+    "endurance-verification.json": "996fccf042eb8bfe33a916b6f048157e30a9de69af6e9b5c2fa421373769d597",
+    "43184020664.json": "42223a57fba7927ad00ca6c2493e870a730b6c2f56f1dc361074f0a08e96df98",
+    "43184020664-artifacts.json": "55507621ac7195efa523797f4aee020e853d748b8ccc5ba49bdafd8c2918a435",
+    "terminal-summary.json": "b974fdb25de40e619800d08d93f744baf4f04e303c78f53c1cb8de16fdf16171",
+    "43184020397.json": "06a9ef33300cdde9c8a50b281d79c5ed3add104260af209a85fdee2aae2a4b6c",
+    "43184020420.json": "7ea8cacb324219807cfcf9dc85d85bfee8aa86aa2260e861f9c462cdda02c47f"
+  }
+}

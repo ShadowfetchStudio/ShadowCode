@@ -1,0 +1,28 @@
+{
+  "status": "PASS_PUBLIC_NATIVE_UI",
+  "source_commit": "a3b09eca6333c2befda3504850f357f09cc25542",
+  "installer_sha256": "d979725fe94ddb405d6180a73c8c48a268bff4ceeb51265d432fa09d5e4b8f99",
+  "installed_exe_sha256": "abf7a230373dccd37e3bdb537eba32b830cb8fd7223e3ef64b40ded4c67ba058",
+  "installation_receipt_sha256": "c887fdfe9ec15321503255b2c339cd52a64f20ad54fa51399a10b670eed22147",
+  "probe_sha256": "3524c0c8535c85506d9c7f5dad1613d7ca766186ff43f63defdf2dbe81853adc",
+  "ui_receipt_sha256": "67d25f6516fb73cbc7445d72915c0c8cbb202db7ea61f1420586ac46c83f8bb2",
+  "runner_receipt_sha256": "c6f05ac47eea920ecd68e3b4ff77727c53defc99159881a663e9049313512e07",
+  "ui_receipt_path": "/Volumes/NVME1TB/Development/ShadowCode-build/publication-2.4.1/windows-public-qualification/install-d6771de471904758906f15dabf41568a/ui-2.4.1-8a3e0e1923e04a0680a0e26f00d57a36/native-webview-result.json",
+  "runner_receipt_path": "/Volumes/NVME1TB/Development/ShadowCode-build/publication-2.4.1/windows-public-qualification/install-d6771de471904758906f15dabf41568a/ui-2.4.1-8a3e0e1923e04a0680a0e26f00d57a36/runner-result.json",
+  "check_groups": 8,
+  "geometry_cases": 9,
+  "hide_hit_points": 45,
+  "ui_passed": true,
+  "runner_passed": true,
+  "conversation_creation": {
+    "initial": "f5ce9a8936aa4e48b530977991056525",
+    "first": "dbf7e2f606784ff4b732665d2f6b221b",
+    "second": "3584dba0b0e340e4aef2e97c8648301e",
+    "initial_count": 1,
+    "final_count": 3
+  },
+  "priority_proof_files": 15,
+  "owned_cleanup_verified": true,
+  "endurance": "HELD_NOT_RUN",
+  "model": "HELD_NOT_RUN"
+}

@@ -1,9 +1,9 @@
 # Windows laptop qualification — October 31, 2026
 
-Latest published installer: **Windows 2.4.0**. Installation and engine endurance
-passed, but native UI acceptance failed on a short-window 175% zoom overlap;
-the real-model check is incomplete. The **2.4.1 candidate** is pending release
-and qualification. See [the current platform record](PLATFORM_QUALIFICATION.md#240-public-release--november-12-2026-utc).
+**Current published Windows release: 2.4.1.** Public installation/runtime, native UI and scripted engine endurance passed. Real-model qualification also passed: one bounded Gemma 4 E4B Q4_0 CPU coding fixture, with five unchanged original tests passing in both agent and independent runs. See [the current platform record](PLATFORM_QUALIFICATION.md#241-public-release) for exact receipts and limitations.
+
+Historical 2.4.0 context: its public installer passed installation and scripted engine endurance, but native UI acceptance failed on a short-window 175% zoom overlap and its real-model check remained incomplete. That outcome is unchanged by later fixes.
+
 This document retains the earlier 2.3.1 qualification and development history,
 including failures. The successful 2.3.3 qualification remains in its separately
 dated [platform record](PLATFORM_QUALIFICATION.md#233-public-release--november-2-2026).

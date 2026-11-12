@@ -1,0 +1,45 @@
+{
+  "status": "BOTH_UNSIGNED_HANDOFFS_VERIFIED",
+  "sourceCommit": "a3b09eca6333c2befda3504850f357f09cc25542",
+  "runId": 43192014736,
+  "runAttempt": 1,
+  "verifiedAtUTC": "2026-11-12T10:43:26.203965+00:00",
+  "architectures": {
+    "x86_64": {
+      "artifactId": 13935768088,
+      "zipSHA256": "98218d3d313ae667680c6bbee70a8a84f0629d08249338275f839e2aec356ffe",
+      "zipBytes": 253784155,
+      "jobId": 131093527991,
+      "jobStartedAt": "2026-11-12T09:30:22Z",
+      "jobCompletedAt": "2026-11-12T10:41:23Z",
+      "artifactCreatedAt": "2026-11-12T10:41:19Z",
+      "requiredGatesPassed": 15,
+      "requiredSkips": 0,
+      "packages": {
+        "ShadowCode_2.4.1_amd64.AppImage": "03a4f06ddceb8464da077ae24bd36e91738a52c0f9b19fa7e838f791cfcb656a",
+        "ShadowCode_2.4.1_amd64.deb": "e614066d8d15b0051a53a600aa2029b10e53daf4298517b2f39f04efba992320",
+        "ShadowCode_2.4.1_appimage-runtime-sources.tar.gz": "1170c3a5be7c8222101898639f12a83a790d15911dcd42ae2733e8744b460f32"
+      },
+      "receiptSHA256": "caa50a1a046c67f36e0b178341bb7b2d00478c9d89d7e754876039e2f4e44bfa"
+    },
+    "aarch64": {
+      "artifactId": 13935098522,
+      "zipSHA256": "a40f4c46ebc264a29bb3f37e224ede9cce1ce28564ec79666783cc0d09249967",
+      "zipBytes": 244152492,
+      "jobId": 131093526446,
+      "jobStartedAt": "2026-11-12T09:30:24Z",
+      "jobCompletedAt": "2026-11-12T10:38:31Z",
+      "artifactCreatedAt": "2026-11-12T10:38:28Z",
+      "requiredGatesPassed": 15,
+      "requiredSkips": 0,
+      "packages": {
+        "ShadowCode_2.4.1_aarch64.AppImage": "72fb3c00f19a1db89ed561aa8fade1bfe6c62e170104efe4e7b5bb8e57fecb4f",
+        "ShadowCode_2.4.1_arm64.deb": "e9e2075518de4fd42cbe46fa8340d83d7ebf97eef070f7d545d5093223023c60",
+        "ShadowCode_2.4.1_aarch64_appimage-runtime-sources.tar.gz": "4e4a26491589fe0543ebd8c9f7c6390faaa39bc93ab0b7426fcca9bf20459c0e"
+      },
+      "receiptSHA256": "432725a3a86dc59f45fb0bcc9e56597cedb0755b2f88ae546ef1f122d8aa50d1"
+    }
+  },
+  "scope": "Unsigned handoff integrity and declared CI gate receipts only. Not signing approval, publication proof, APT approval or physical platform qualification.",
+  "verifierSHA256": "b521351d91a87335dc59126e3ba2181d9e70aa636857b4bb26972dc1662e5d49"
+}

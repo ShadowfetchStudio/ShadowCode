@@ -1,0 +1,32 @@
+﻿{
+    "installer_payload":  {
+                              "installer_sha256":  "d979725fe94ddb405d6180a73c8c48a268bff4ceeb51265d432fa09d5e4b8f99",
+                              "installer_path":  "C:\\Users\\Robert\\shadowcode-qualification\\public-2.4.1\\install-d6771de471904758906f15dabf41568a\\ShadowCode_2.4.1_x64-setup.exe",
+                              "member":  "shadowcode.exe",
+                              "path":  "C:\\Users\\Robert\\shadowcode-qualification\\public-2.4.1\\install-d6771de471904758906f15dabf41568a\\payload-2feba4679930417faee5f2450951417d\\shadowcode.exe",
+                              "directory":  "C:\\Users\\Robert\\shadowcode-qualification\\public-2.4.1\\install-d6771de471904758906f15dabf41568a\\payload-2feba4679930417faee5f2450951417d",
+                              "size":  64868352,
+                              "sha256":  "abf7a230373dccd37e3bdb537eba32b830cb8fd7223e3ef64b40ded4c67ba058",
+                              "listing_path":  "C:\\Users\\Robert\\shadowcode-qualification\\public-2.4.1\\install-d6771de471904758906f15dabf41568a\\payload-2feba4679930417faee5f2450951417d\\listing.stdout.txt",
+                              "listing_sha256":  "1496f6a77dabb5d6d15bcbedc8cea4768c91474424da1e7a94e98c578c1a92aa",
+                              "extractor_path":  "C:\\Program Files\\7-Zip\\7z.exe",
+                              "extractor_sha256":  "94205cfc054dd3bbeb978905bc619a65b3f04e9e73bb2717841110b6f46d962e",
+                              "extractor_version":  "26.05",
+                              "method":  "7-Zip exact-member extraction, no payload execution"
+                          },
+    "schema_version":  1,
+    "provenance_kind":  "public",
+    "version":  "2.4.1",
+    "source_commit":  "a3b09eca6333c2befda3504850f357f09cc25542",
+    "installer_sha256":  "d979725fe94ddb405d6180a73c8c48a268bff4ceeb51265d432fa09d5e4b8f99",
+    "installed_exe_sha256":  "abf7a230373dccd37e3bdb537eba32b830cb8fd7223e3ef64b40ded4c67ba058",
+    "native_version":  "ShadowCode 2.4.1",
+    "installed_runtime":  "passed",
+    "qualification_root":  "C:\\Users\\Robert\\shadowcode-qualification\\public-2.4.1\\install-d6771de471904758906f15dabf41568a",
+    "installed_at":  "2026-11-12T03:15:29.5902493-08:00",
+    "scope":  "Installation and clean-PATH runtime smoke only. UI, endurance and real model require separate receipts.",
+    "installer_script_sha256":  "231832b6ba424de672d9e86b2397865e737330742ceb93d32309a54f73d093bf",
+    "release_id":  442808765,
+    "release_commit":  "a3b09eca6333c2befda3504850f357f09cc25542",
+    "public_asset_url":  "https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.4.1/ShadowCode_2.4.1_x64-setup.exe"
+}

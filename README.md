@@ -2,14 +2,11 @@
 
 **One harness. All models.**
 
-**Current stable downloads: 2.4.0** — [Windows, macOS and Linux](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.4.0) · [Windows installer](https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.4.0/ShadowCode_2.4.0_x64-setup.exe) · [Website](https://shadowcode.org)
+**Current release: 2.4.1** — [Windows, macOS and Linux downloads](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.4.1) · [Windows installer](https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.4.1/ShadowCode_2.4.1_x64-setup.exe) · [Website](https://shadowcode.org)
 
-**Version 2.4.0** brings a simpler first run, a workspace with files and a docked terminal, and local-runtime reliability improvements. See [what’s new in 2.4](#whats-new-in-24), the [release notes](docs/RELEASE_NOTES.md#shadowcode-240), and [platform qualification](docs/PLATFORM_QUALIFICATION.md) for the checks and their limits.
+**The 2.4 series** brings a simpler first run, a workspace with files and a docked terminal, and local-runtime reliability improvements. See [what’s new in 2.4](#whats-new-in-24), the [release notes](docs/RELEASE_NOTES.md#shadowcode-241), and [platform qualification](docs/PLATFORM_QUALIFICATION.md) for the checks and their limits.
 
-**2.4.1 source candidate:** physical Windows testing found short-window
-composer/dock overlap, terminal-row clipping and a delayed startup navigation
-race. The patch is being qualified; 2.4.0 remains the published version. See the
-[platform qualification record](docs/PLATFORM_QUALIFICATION.md) for exact scope.
+**2.4.1 maintenance update:** fixes short-window composer/dock overlap, terminal-row clipping with long Windows folder paths, and delayed onboarding navigation overriding a newer conversation choice. Exact public installation and qualification outcomes are recorded in [platform qualification](docs/PLATFORM_QUALIFICATION.md#241-public-release); source tests are separate evidence.
 
 ### An open-source project by Shadowfetch
 
@@ -83,9 +80,9 @@ The code is open source; the Shadowfetch and ShadowCode product identity is cove
   own terminal, go from commit to pull request, preview the app you're
   building, dictate with your voice, and follow along from your phone.
 
-ShadowCode **2.4.0** is available on [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.4.0). The download instructions below refer to that release. The [publication record](docs/RELEASING.md) distinguishes the signed Linux packages from the separately built Windows, macOS and Flatpak assets.
+ShadowCode **2.4.1** is available on [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.4.1). All four platform workflows and the full 23-asset integrity audit passed. Public Windows installation, runtime, native UI, scripted engine endurance and a bounded Gemma CPU coding fixture passed; exact scope and limitations are recorded in [platform qualification](docs/PLATFORM_QUALIFICATION.md#241-public-release). The [publication record](docs/RELEASING.md) distinguishes the signed Linux packages from the separately built Windows, macOS and Flatpak assets.
 
-Version 2.4.0 includes the workspace, first-run and runtime changes described in the [release notes](docs/RELEASE_NOTES.md). See also the [Windows qualification record](docs/WINDOWS_LAPTOP_QUALIFICATION.md) and [release history](CHANGELOG.md).
+Version 2.4.1 includes the workspace, first-run and runtime changes described in the [release notes](docs/RELEASE_NOTES.md). See also the [current platform qualification](docs/PLATFORM_QUALIFICATION.md#241-public-release) and [release history](CHANGELOG.md).
 
 
 ## What's new in 2.4
@@ -145,10 +142,10 @@ From 2.2.0 each release also carries Flatpak bundles for both architectures
 checked with `ShadowCode_VERSION_flatpak.sha256`; see [Flatpak](docs/FLATPAK.md))
 and macOS disk images (see [macOS](#macos)).
 Check [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases)
-for published versions. The 2.4.0 x86_64 Linux packages and checksums are:
+for published versions. The 2.4.1 x86_64 Linux packages and checksums are:
 
-- `ShadowCode_2.4.0_amd64.AppImage`
-- `ShadowCode_2.4.0_amd64.deb`
+- `ShadowCode_2.4.1_amd64.AppImage`
+- `ShadowCode_2.4.1_amd64.deb`
 - `SHA256SUMS`, `RELEASE-MANIFEST.json`, `RELEASE-AUTH` and
   `RELEASE-AUTH.sig` (download these beside the package; the installer checks
   the publisher's signature before running anything)
@@ -182,13 +179,13 @@ cmake.
 
 ### Windows
 
-Release 2.4.0 includes `ShadowCode_2.4.0_x64-setup.exe` for
+The Windows 2.4.1 release provides `ShadowCode_2.4.1_x64-setup.exe` for
 64-bit Windows 10 (version 1809 or later) and 11, with its SHA-256 checksum in
-`ShadowCode_VERSION_windows.sha256`. It installs for your user only (no
+`ShadowCode_2.4.1_windows.sha256`. It installs for your user only (no
 administrator rights) and includes llama.cpp for local models (CPU) and the
 shell used by the Windows sandbox (busybox-w32, GPL-2.0; its complete source
 is published beside the installer as
-`ShadowCode_VERSION_busybox-w32-source.tar.gz`).
+`ShadowCode_2.4.1_busybox-w32-source.tar.gz`).
 
 Install or update with one command in PowerShell; it checks the installer
 against the release's checksums, installs it for the current user and adds
@@ -218,14 +215,7 @@ The installer requires signed release packages. Published 0.32.0
 assets are checksum-only and cannot be installed by this new entry point; use
 the instructions shipped with that released version for those existing assets.
 The 0.33.0 release attempt failed before signing and publication. Its tag stays
-unchanged. Version 0.33.1 was the first signed release. The published 2.4.0 tag's
-trust policy authorizes 0.33.0 through 2.4.0; this 2.4.1 source candidate extends
-the existing key's ceiling to 2.4.1. The 2.4.0 Linux packages are published and
-their signatures verified. A policy range alone does not establish signing,
-publication or qualification. An older independently
-trusted installer bundle whose policy ends at 2.3.1 will reject 2.4.0. Obtain and
-independently authenticate a reviewed bundle with the updated policy before
-installing; do not replace trust files with copies from the downloaded release.
+unchanged. Version 0.33.1 was the first signed release. The published 2.4.1 tag's trust policy authorizes 0.33.0 through 2.4.1, retaining the same key, epoch, targets and historical floor. The 2.4.0 tag retains its original ceiling. Public signature verification is recorded in [release authentication](docs/RELEASE_AUTHENTICATION.md#published-linux-release-241); a policy range alone does not establish signing, publication or qualification. An independently trusted installer bundle whose policy ends below 2.4.1 will reject 2.4.1. Obtain and independently authenticate a reviewed bundle with the updated policy before installing; do not replace trust files with copies from the downloaded release.
 For development, use [Build from source](#build-from-source).
 
 Obtain an independently authenticated installer bundle as described below,
@@ -239,7 +229,7 @@ bundle and bootstrap requirements.
 From that independently authenticated installer bundle, run:
 
 ```bash
-bash /path/to/trusted-bundle/scripts/install-appimage.sh /path/to/downloads/ShadowCode_2.4.0_amd64.AppImage
+bash /path/to/trusted-bundle/scripts/install-appimage.sh /path/to/downloads/ShadowCode_2.4.1_amd64.AppImage
 ```
 
 The installer takes the AppImage path (or `--recover`), resolves its own trusted
@@ -285,7 +275,7 @@ as `--trust-dir` are not installer options.
   cannot corrupt it.
 
 After obtaining and verifying the intended package, run the AppImage without installing it:
-`./ShadowCode_2.4.0_amd64.AppImage --appimage-extract-and-run`. FUSE is not
+`./ShadowCode_2.4.1_amd64.AppImage --appimage-extract-and-run`. FUSE is not
 required.
 
 ### Debian package
@@ -333,16 +323,16 @@ installed. The repository is published by the release workflow only; nothing
 in ShadowCode adds or contacts it by itself.
 
 To install one release by hand instead, verify the Debian artifact using the independently trusted verifier bundle.
-`verified-deb-2.4.0` must not already exist; install the verified snapshot:
+`verified-deb-2.4.1` must not already exist; install the verified snapshot:
 
 ```bash
 bash /path/to/trusted-bundle/scripts/verify-native-release.sh \
   --bundle-dir /path/to/downloads \
   --trust-dir /path/to/trusted-bundle/release/trust \
-  --artifact ShadowCode_2.4.0_amd64.deb \
-  --stage-dir ./verified-deb-2.4.0 \
-  --expect-version 2.4.0
-sudo apt install ./verified-deb-2.4.0/ShadowCode_2.4.0_amd64.deb
+  --artifact ShadowCode_2.4.1_amd64.deb \
+  --stage-dir ./verified-deb-2.4.1 \
+  --expect-version 2.4.1
+sudo apt install ./verified-deb-2.4.1/ShadowCode_2.4.1_amd64.deb
 ```
 
 A `.deb` installed by hand this way gets no updates and none of the APT
@@ -858,6 +848,10 @@ pinned in [`tools/llama.cpp.pin`](tools/llama.cpp.pin) without root. It writes
 Release packaging is described in [docs/RELEASING.md](docs/RELEASING.md).
 
 ## Tests
+
+### 2.4.1 source validation
+
+The source checked into `a3b09eca6333c2befda3504850f357f09cc25542` has **928 passing UI unit tests, 170 passing full Chromium tests and eight passing focused WebKit tests**, with no failures or skips in those runs. See [the source verification record](docs/qa/onboarding-navigation-2.4.1/verification.json). These are source/fixture results; they do not qualify a downloaded public installer, a physical keyboard, native accessibility, endurance or real-model inference. Earlier terminal WebKit matrices remain separate dated evidence.
 
 Historical validation for the frozen **2.4.0 source baseline**
 (the 2.4.1 patch has separate results in its release notes and qualification record):

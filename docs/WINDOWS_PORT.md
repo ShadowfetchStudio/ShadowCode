@@ -1,5 +1,13 @@
 # Windows port
 
+Windows **2.4.1** is [published](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.4.1). Its exact public installer passed payload-bound installation, clean-PATH runtime checks, the complete native UI probe and scripted native-engine endurance. The installer SHA-256 is `d979725fe94ddb405d6180a73c8c48a268bff4ceeb51265d432fa09d5e4b8f99`; its independently extracted payload and installed executable both hash to `abf7a230373dccd37e3bdb537eba32b830cb8fd7223e3ef64b40ded4c67ba058`.
+
+Real-model qualification also passed: one bounded Gemma 4 E4B Q4_0 CPU coding fixture, with five unchanged original tests passing in both agent and independent runs. See [public qualification](PLATFORM_QUALIFICATION.md#241-public-release) for receipt hashes, native geometry, forced-termination endurance scope and other limitations. The 2.4.1 fixes cover short-window dock/composer layout, terminal row space and Windows folder labels, and startup navigation ownership; they do not change sandbox policy.
+
+## Historical 2.4.0 and pre-publication candidate checkpoint
+
+The following checkpoint is retained as recorded; its pending statements describe that earlier point in time.
+
 Status: Windows **2.4.0** is published. Its exact public installer passed CI
 installation, clean-PATH probes and installation on the Windows 11 laptop.
 Physical qualification found composer overlap with the terminal Hide control at
@@ -14,6 +22,9 @@ five cancellations and persistence after forced termination. Its real-model
 check was interrupted and is incomplete. See [the current qualification record](PLATFORM_QUALIFICATION.md#240-public-release--november-12-2026-utc)
 for hashes, failed-attempt evidence and scope. The earlier 2.3.3 Gemma result is
 historical evidence, not qualification of these new bytes.
+
+
+## Windows behavior and implementation
 
 External programs that open the Windows null device themselves can fail in
 AppContainer; external Git commands demonstrated this in the 2.3.0 public-installer

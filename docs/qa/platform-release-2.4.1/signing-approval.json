@@ -1,0 +1,10 @@
+{
+  "approved": true,
+  "run": 43192014736,
+  "attempt": 1,
+  "commit": "a3b09eca6333c2befda3504850f357f09cc25542",
+  "required_gates_per_target": 15,
+  "source_workflows": 4,
+  "approved_at": "2026-11-12T10:44:07.000471+00:00",
+  "scope": "sign only; public binaries and APT not yet verified"
+}

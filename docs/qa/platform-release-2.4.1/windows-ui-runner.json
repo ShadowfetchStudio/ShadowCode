@@ -1,0 +1,19 @@
+﻿{
+    "version":  "2.4.1",
+    "finished_at":  "2026-11-12T03:17:26.3277451-08:00",
+    "passed":  true,
+    "node_exited":  true,
+    "failure":  null,
+    "ui_passed":  true,
+    "installer_sha256":  "d979725fe94ddb405d6180a73c8c48a268bff4ceeb51265d432fa09d5e4b8f99",
+    "forced_node_termination":  false,
+    "app_exited":  true,
+    "provenance_kind":  "public",
+    "forced_app_termination":  false,
+    "cleanup_errors":  [
+
+                       ],
+    "source_commit":  "a3b09eca6333c2befda3504850f357f09cc25542",
+    "receipt_sha256":  "c887fdfe9ec15321503255b2c339cd52a64f20ad54fa51399a10b670eed22147",
+    "installed_exe_sha256":  "abf7a230373dccd37e3bdb537eba32b830cb8fd7223e3ef64b40ded4c67ba058"
+}

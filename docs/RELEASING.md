@@ -1,5 +1,29 @@
 # Release procedure
 
+## Current publication: 2.4.1
+
+[Release 2.4.1](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.4.1), ID `442808765`, was published at **2026-11-12 10:46:44 UTC**. Its immutable tag resolves to `a3b09eca6333c2befda3504850f357f09cc25542`. Linux `43192014736`, macOS `43203354756`, Flatpak `43203358489` and Windows `43203362035` all completed successfully on attempt 1.
+
+The [full public audit](qa/platform-release-2.4.1/public-assets/verification-summary.json) passed at 11:28:33 UTC: 23 assets, nine installers, three source archives, five checksum sets/12 rows and six authenticated Linux payloads. [Public Windows qualification](PLATFORM_QUALIFICATION.md#241-public-release) records separate installation, payload equality, native UI, scripted endurance and real-model outcomes.
+
+Main independently rechecked all 15 required gates for [x86_64](qa/platform-release-2.4.1/x86_64-handoff.json) and [aarch64](qa/platform-release-2.4.1/aarch64-handoff.json), including source/run/attempt, immutable artifact identities and script/package hashes. The [protected-source activation](qa/platform-release-2.4.1/protected-activation.json) pinned a3b09ec and added the exact v2.4.1 allowance with existing review protections retained. Fresh [environment](qa/platform-release-2.4.1/protected-environment.json), [tag-rule](qa/platform-release-2.4.1/protected-tag-rules.json) and [tooling](qa/platform-release-2.4.1/protected-tooling.json) readbacks preceded [signing approval](qa/platform-release-2.4.1/signing-approval.json) at **10:44:07 UTC**.
+
+[APT verification](qa/platform-release-2.4.1/apt-public-verification.json) passed at **10:50:26 UTC** after job `131132225135`. Both signatures verified against current fingerprint `1BC07B5ECFDB514673A296FB021CAB3F2F7A1F61`; six signed index sizes/hashes matched and both 2.4.1 pool DEBs matched the verified public release. This verifier installed no package.
+
+Current Linux download names:
+
+| Role | x86_64 | aarch64 |
+| --- | --- | --- |
+| AppImage | `ShadowCode_2.4.1_amd64.AppImage` | `ShadowCode_2.4.1_aarch64.AppImage` |
+| Debian package | `ShadowCode_2.4.1_amd64.deb` | `ShadowCode_2.4.1_arm64.deb` |
+| Runtime sources | `ShadowCode_2.4.1_appimage-runtime-sources.tar.gz` | `ShadowCode_2.4.1_aarch64_appimage-runtime-sources.tar.gz` |
+
+Checksums/manifests/envelopes/signatures retain their per-target filenames. Ed25519 authentication covers the six Linux payloads; other platforms have separate checksum and qualification records. No new physical Mac/Linux installation acceptance is claimed for 2.4.1. Tags and versioned assets remain immutable.
+
+## Historical 2.4.0 publication and configuration checkpoint
+
+The following is the retained November 12 checkpoint. Its current/pending wording describes that historical state, not the new release.
+
 The current published **Linux** release is [**2.4.0**](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.4.0),
 from immutable tag `v2.4.0` at `25c8345f99f246b37ea45bf9306eb551da9c0819`.
 [Release run 43145082420](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43145082420),
@@ -239,9 +263,9 @@ verifies and indexes both `.deb` files. The pinned tooling commit must include
 this multi-target signer and publisher; an older pin refuses the aarch64
 signing call, so the release fails rather than shipping x86_64 alone.
 
-The tagged 2.4.0 public trust allows the x86_64 and aarch64 targets, epoch 1
-and versions 0.33.0–2.4.0. The 2.4.1 candidate extends the same key ceiling to
-2.4.1 without changing the key, epoch, targets or historical floor. `release/install-policy` retains the
+The tagged 2.4.1 public trust allows the x86_64 and aarch64 targets, epoch 1
+and versions 0.33.0–2.4.1. The immutable 2.4.0 policy retains its 2.4.0 ceiling.
+The key, epoch, targets and historical floor are unchanged. `release/install-policy` retains the
 first authenticated version 0.33.0. This source change alone does not update
 GitHub's independently pinned tooling or signing environment.
 
@@ -296,7 +320,7 @@ checksums and the release text with what you expect.
 
 ### APT repository
 
-The live 2.4.0 checkpoint above verified
+The historical 2.4.0 checkpoint above verified
 [`InRelease`](https://shadowfetchstudio.github.io/ShadowCode/apt/dists/stable/InRelease)
 and the detached `Release.gpg` against the independently tracked public key in
 [`release/trust/APT-SIGNING-KEY`](../release/trust/APT-SIGNING-KEY). The downloaded
@@ -341,7 +365,7 @@ the downloaded AppImage beside `SHA256SUMS`, `RELEASE-MANIFEST.json`,
 `RELEASE-AUTH` and `RELEASE-AUTH.sig`.
 
 ```sh
-bash /path/to/trusted-bundle/scripts/install-appimage.sh /path/to/downloads/ShadowCode_2.4.0_amd64.AppImage
+bash /path/to/trusted-bundle/scripts/install-appimage.sh /path/to/downloads/ShadowCode_2.4.1_amd64.AppImage
 ```
 
 The installer accepts a single AppImage path or `--recover`; it does not accept

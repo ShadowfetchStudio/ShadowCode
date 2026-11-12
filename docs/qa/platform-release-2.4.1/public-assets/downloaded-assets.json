@@ -1,0 +1,186 @@
+[
+  {
+    "id": 739097333,
+    "name": "RELEASE-AUTH",
+    "apiSize": 857,
+    "apiDigest": "sha256:27317ee0be43bf7e08c329cc2ee63cde5d37e5515570c814e7170969319c2a0b",
+    "size": 857,
+    "sha256": "27317ee0be43bf7e08c329cc2ee63cde5d37e5515570c814e7170969319c2a0b"
+  },
+  {
+    "id": 739098305,
+    "name": "RELEASE-AUTH-aarch64",
+    "apiSize": 868,
+    "apiDigest": "sha256:c64abce6ecce40e2d8ac4e246ccd8f96b697e40d9c2ce8ca7bea4d8ac9bc931f",
+    "size": 868,
+    "sha256": "c64abce6ecce40e2d8ac4e246ccd8f96b697e40d9c2ce8ca7bea4d8ac9bc931f"
+  },
+  {
+    "id": 739098360,
+    "name": "RELEASE-AUTH-aarch64.sig",
+    "apiSize": 64,
+    "apiDigest": "sha256:090d3921269b22a6a150ebd208d3d354b57470d8d9158f8a418e87e2fe22f64d",
+    "size": 64,
+    "sha256": "090d3921269b22a6a150ebd208d3d354b57470d8d9158f8a418e87e2fe22f64d"
+  },
+  {
+    "id": 739097385,
+    "name": "RELEASE-AUTH.sig",
+    "apiSize": 64,
+    "apiDigest": "sha256:c33e8b8f633aaebb9560e810b1701218401525a52e269783e4006f7caf7710d5",
+    "size": 64,
+    "sha256": "c33e8b8f633aaebb9560e810b1701218401525a52e269783e4006f7caf7710d5"
+  },
+  {
+    "id": 739098266,
+    "name": "RELEASE-MANIFEST-aarch64.json",
+    "apiSize": 7976,
+    "apiDigest": "sha256:0394affb47c3ade22bc10011836a7b755a99b857a0f8a24097a766e984b91b24",
+    "size": 7976,
+    "sha256": "0394affb47c3ade22bc10011836a7b755a99b857a0f8a24097a766e984b91b24"
+  },
+  {
+    "id": 739097292,
+    "name": "RELEASE-MANIFEST.json",
+    "apiSize": 7965,
+    "apiDigest": "sha256:04ca7812821bb3907f505b312e3134b762a0763396f78029eaae9304e0c41afb",
+    "size": 7965,
+    "sha256": "04ca7812821bb3907f505b312e3134b762a0763396f78029eaae9304e0c41afb"
+  },
+  {
+    "id": 739097235,
+    "name": "SHA256SUMS",
+    "apiSize": 306,
+    "apiDigest": "sha256:da4d951e5eca972ab4fa234acb693af0436c553ab5938e54a22f6bc2f23d517d",
+    "size": 306,
+    "sha256": "da4d951e5eca972ab4fa234acb693af0436c553ab5938e54a22f6bc2f23d517d"
+  },
+  {
+    "id": 739098202,
+    "name": "SHA256SUMS-aarch64",
+    "apiSize": 316,
+    "apiDigest": "sha256:5528167d8f766a628ce10d25fd36a97ba3303b11828fa596401a70f55769e6ab",
+    "size": 316,
+    "sha256": "5528167d8f766a628ce10d25fd36a97ba3303b11828fa596401a70f55769e6ab"
+  },
+  {
+    "id": 739097432,
+    "name": "ShadowCode_2.4.1_aarch64.AppImage",
+    "apiSize": 113814024,
+    "apiDigest": "sha256:72fb3c00f19a1db89ed561aa8fade1bfe6c62e170104efe4e7b5bb8e57fecb4f",
+    "size": 113814024,
+    "sha256": "72fb3c00f19a1db89ed561aa8fade1bfe6c62e170104efe4e7b5bb8e57fecb4f"
+  },
+  {
+    "id": 739221735,
+    "name": "ShadowCode_2.4.1_aarch64.dmg",
+    "apiSize": 40492160,
+    "apiDigest": "sha256:6ee8d374cb907f5c9df33de739ae51220f96d5744a45ae0348be80e9e0a0247b",
+    "size": 40492160,
+    "sha256": "6ee8d374cb907f5c9df33de739ae51220f96d5744a45ae0348be80e9e0a0247b"
+  },
+  {
+    "id": 739178810,
+    "name": "ShadowCode_2.4.1_aarch64.flatpak",
+    "apiSize": 47896592,
+    "apiDigest": "sha256:4f144dcda32ed41e58aea07b74119ad6923b83d5f8c7d4d6f1fdf290f50a7903",
+    "size": 47896592,
+    "sha256": "4f144dcda32ed41e58aea07b74119ad6923b83d5f8c7d4d6f1fdf290f50a7903"
+  },
+  {
+    "id": 739097882,
+    "name": "ShadowCode_2.4.1_aarch64_appimage-runtime-sources.tar.gz",
+    "apiSize": 104182707,
+    "apiDigest": "sha256:4e4a26491589fe0543ebd8c9f7c6390faaa39bc93ab0b7426fcca9bf20459c0e",
+    "size": 104182707,
+    "sha256": "4e4a26491589fe0543ebd8c9f7c6390faaa39bc93ab0b7426fcca9bf20459c0e"
+  },
+  {
+    "id": 739096768,
+    "name": "ShadowCode_2.4.1_amd64.AppImage",
+    "apiSize": 120371704,
+    "apiDigest": "sha256:03a4f06ddceb8464da077ae24bd36e91738a52c0f9b19fa7e838f791cfcb656a",
+    "size": 120371704,
+    "sha256": "03a4f06ddceb8464da077ae24bd36e91738a52c0f9b19fa7e838f791cfcb656a"
+  },
+  {
+    "id": 739096993,
+    "name": "ShadowCode_2.4.1_amd64.deb",
+    "apiSize": 29221528,
+    "apiDigest": "sha256:e614066d8d15b0051a53a600aa2029b10e53daf4298517b2f39f04efba992320",
+    "size": 29221528,
+    "sha256": "e614066d8d15b0051a53a600aa2029b10e53daf4298517b2f39f04efba992320"
+  },
+  {
+    "id": 739097068,
+    "name": "ShadowCode_2.4.1_appimage-runtime-sources.tar.gz",
+    "apiSize": 104172197,
+    "apiDigest": "sha256:1170c3a5be7c8222101898639f12a83a790d15911dcd42ae2733e8744b460f32",
+    "size": 104172197,
+    "sha256": "1170c3a5be7c8222101898639f12a83a790d15911dcd42ae2733e8744b460f32"
+  },
+  {
+    "id": 739097737,
+    "name": "ShadowCode_2.4.1_arm64.deb",
+    "apiSize": 26136912,
+    "apiDigest": "sha256:e9e2075518de4fd42cbe46fa8340d83d7ebf97eef070f7d545d5093223023c60",
+    "size": 26136912,
+    "sha256": "e9e2075518de4fd42cbe46fa8340d83d7ebf97eef070f7d545d5093223023c60"
+  },
+  {
+    "id": 739178749,
+    "name": "ShadowCode_2.4.1_busybox-w32-source.tar.gz",
+    "apiSize": 3672106,
+    "apiDigest": "sha256:c6345e913686ff61ab46757b19fad23e9bb1b5e1e273f132bc4333770bd55a96",
+    "size": 3672106,
+    "sha256": "c6345e913686ff61ab46757b19fad23e9bb1b5e1e273f132bc4333770bd55a96"
+  },
+  {
+    "id": 739179020,
+    "name": "ShadowCode_2.4.1_flatpak.sha256",
+    "apiSize": 197,
+    "apiDigest": "sha256:f4cb3b5829e96b9cb57a57dfef8cd1090995700f3da358726fbe0fc5aaad74fc",
+    "size": 197,
+    "sha256": "f4cb3b5829e96b9cb57a57dfef8cd1090995700f3da358726fbe0fc5aaad74fc"
+  },
+  {
+    "id": 739221995,
+    "name": "ShadowCode_2.4.1_macos.sha256",
+    "apiSize": 186,
+    "apiDigest": "sha256:ac952ad8e3cba44b443f230a1b4da76de4df2ba66fec60bacb1f45cbe1c159e0",
+    "size": 186,
+    "sha256": "ac952ad8e3cba44b443f230a1b4da76de4df2ba66fec60bacb1f45cbe1c159e0"
+  },
+  {
+    "id": 739178818,
+    "name": "ShadowCode_2.4.1_windows.sha256",
+    "apiSize": 206,
+    "apiDigest": "sha256:7a5915faeb2634b0785aa8a486ae433982efbad275e51dbb4068401bd7509426",
+    "size": 206,
+    "sha256": "7a5915faeb2634b0785aa8a486ae433982efbad275e51dbb4068401bd7509426"
+  },
+  {
+    "id": 739178661,
+    "name": "ShadowCode_2.4.1_x64-setup.exe",
+    "apiSize": 23870723,
+    "apiDigest": "sha256:d979725fe94ddb405d6180a73c8c48a268bff4ceeb51265d432fa09d5e4b8f99",
+    "size": 23870723,
+    "sha256": "d979725fe94ddb405d6180a73c8c48a268bff4ceeb51265d432fa09d5e4b8f99"
+  },
+  {
+    "id": 739221862,
+    "name": "ShadowCode_2.4.1_x64.dmg",
+    "apiSize": 49147904,
+    "apiDigest": "sha256:5ee07d1bfb89d074ac9bef0913bdc208ec6b8463a5e820e34b79a8965ca7b22e",
+    "size": 49147904,
+    "sha256": "5ee07d1bfb89d074ac9bef0913bdc208ec6b8463a5e820e34b79a8965ca7b22e"
+  },
+  {
+    "id": 739178673,
+    "name": "ShadowCode_2.4.1_x86_64.flatpak",
+    "apiSize": 54417536,
+    "apiDigest": "sha256:1d108f476d4b589ea4ba271baca4bf56d9bcf5f1f585f4e9f597818b5d4c45d6",
+    "size": 54417536,
+    "sha256": "1d108f476d4b589ea4ba271baca4bf56d9bcf5f1f585f4e9f597818b5d4c45d6"
+  }
+]

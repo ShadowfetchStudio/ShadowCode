@@ -1,0 +1,16 @@
+ShadowCode-Release-Auth-v1
+repository=ShadowfetchStudio/ShadowCode
+repository-id=1377099349
+owner-id=209457103
+version=2.4.1
+tag=v2.4.1
+commit=a3b09eca6333c2befda3504850f357f09cc25542
+target=x86_64-unknown-linux-gnu
+channel=stable
+key-id=f0c60ff8228314616985712f8918c9798c0ecf72b7271e19343a041c25663b7f
+key-epoch=1
+manifest-sha256=04ca7812821bb3907f505b312e3134b762a0763396f78029eaae9304e0c41afb
+checksums-sha256=da4d951e5eca972ab4fa234acb693af0436c553ab5938e54a22f6bc2f23d517d
+asset=appimage	ShadowCode_2.4.1_amd64.AppImage	120371704	03a4f06ddceb8464da077ae24bd36e91738a52c0f9b19fa7e838f791cfcb656a
+asset=deb	ShadowCode_2.4.1_amd64.deb	29221528	e614066d8d15b0051a53a600aa2029b10e53daf4298517b2f39f04efba992320
+asset=runtime-sources	ShadowCode_2.4.1_appimage-runtime-sources.tar.gz	104172197	1170c3a5be7c8222101898639f12a83a790d15911dcd42ae2733e8744b460f32

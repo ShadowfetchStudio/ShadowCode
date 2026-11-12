@@ -1,0 +1,53 @@
+{
+  "id": 22906096664,
+  "node_id": "EN_kwDOUhTeVc8AAAAFVU9MGA",
+  "name": "release-signing",
+  "url": "https://api.github.com/repos/ShadowfetchStudio/ShadowCode/environments/release-signing",
+  "html_url": "https://github.com/ShadowfetchStudio/ShadowCode/deployments/activity_log?environments_filter=release-signing",
+  "created_at": "2026-09-28T08:17:33Z",
+  "updated_at": "2026-09-28T08:17:33Z",
+  "can_admins_bypass": true,
+  "protection_rules": [
+    {
+      "id": 66936923,
+      "node_id": "GA_kwDOUhTeVc4D_WBb",
+      "type": "required_reviewers",
+      "prevent_self_review": false,
+      "reviewers": [
+        {
+          "type": "User",
+          "reviewer": {
+            "login": "ShadowfetchStudio",
+            "id": 209457103,
+            "node_id": "U_kgDODHwPzw",
+            "avatar_url": "https://avatars.githubusercontent.com/u/209457103?v=4",
+            "gravatar_id": "",
+            "url": "https://api.github.com/users/ShadowfetchStudio",
+            "html_url": "https://github.com/ShadowfetchStudio",
+            "followers_url": "https://api.github.com/users/ShadowfetchStudio/followers",
+            "following_url": "https://api.github.com/users/ShadowfetchStudio/following{/other_user}",
+            "gists_url": "https://api.github.com/users/ShadowfetchStudio/gists{/gist_id}",
+            "starred_url": "https://api.github.com/users/ShadowfetchStudio/starred{/owner}{/repo}",
+            "subscriptions_url": "https://api.github.com/users/ShadowfetchStudio/subscriptions",
+            "organizations_url": "https://api.github.com/users/ShadowfetchStudio/orgs",
+            "repos_url": "https://api.github.com/users/ShadowfetchStudio/repos",
+            "events_url": "https://api.github.com/users/ShadowfetchStudio/events{/privacy}",
+            "received_events_url": "https://api.github.com/users/ShadowfetchStudio/received_events",
+            "type": "User",
+            "user_view_type": "public",
+            "site_admin": false
+          }
+        }
+      ]
+    },
+    {
+      "id": 66936924,
+      "node_id": "GA_kwDOUhTeVc4D_WBc",
+      "type": "branch_policy"
+    }
+  ],
+  "deployment_branch_policy": {
+    "protected_branches": false,
+    "custom_branch_policies": true
+  }
+}

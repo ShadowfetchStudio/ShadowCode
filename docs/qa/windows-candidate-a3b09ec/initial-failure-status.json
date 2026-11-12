@@ -1,0 +1,34 @@
+{
+    "task_state":  3,
+    "task_result":  1,
+    "ui_passed":  false,
+    "geometry_cases":  0,
+    "hide_cases":  0,
+    "stage_width_cases":  0,
+    "checks":  [
+                   {
+                       "name":  "fresh project onboarding through Open project",
+                       "passed":  true
+                   }
+               ],
+    "failure":  "Error: expect(received).not.toBe(expected) // Object.is equality\n\nExpected: not \"9e726902a64e4f7d97f74231ab0d269c\"\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate\n    at captureRawStack (C:\\Users\\Robert\\DEV\\ShadowCode-followup\\ui\\node_modules\\playwright-core\\lib\\coreBundle.js:8588:17)\n    at callMatcherAsStep (C:\\Users\\Robert\\DEV\\ShadowCode-followup\\ui\\node_modules\\playwright\\lib\\matchers\\expect.js:13310:57)\n    at Object.toBe (C:\\Users\\Robert\\DEV\\ShadowCode-followup\\ui\\node_modules\\playwright\\lib\\matchers\\expect.js:13302:23)\n    at C:\\Users\\Robert\\shadowcode-qualification\\windows-preparation-2.4.1\\qualify-windows-ui-2.4.1.cjs:160:121\n    at async checked (C:\\Users\\Robert\\shadowcode-qualification\\windows-preparation-2.4.1\\qualify-windows-ui-2.4.1.cjs:73:38)\n    at async main (C:\\Users\\Robert\\shadowcode-qualification\\windows-preparation-2.4.1\\qualify-windows-ui-2.4.1.cjs:147:5)",
+    "runner":  {
+                   "version":  "2.4.1",
+                   "finished_at":  "2026-11-12T01:09:52.9189088-08:00",
+                   "passed":  false,
+                   "node_exited":  true,
+                   "failure":  "System.Management.Automation.RuntimeException: Native UI probe failed with exit 1; inspect its retained logs",
+                   "ui_passed":  false,
+                   "installer_sha256":  "3cbf1f1d1439d53ee505c40050e9a03dc476cfb0a4377f9e8433fb32d0f8b97e",
+                   "forced_node_termination":  false,
+                   "app_exited":  true,
+                   "provenance_kind":  "candidate",
+                   "forced_app_termination":  false,
+                   "cleanup_errors":  [
+
+                                      ],
+                   "source_commit":  "a3b09eca6333c2befda3504850f357f09cc25542",
+                   "receipt_sha256":  "267a354f667c48210b5627b5ece5d8c3820c61fb1d76f23e53be84d7cd895150",
+                   "installed_exe_sha256":  "2b9b751420f08045f0f1e803119ccc38abf3b724db40139eabc8b151e0be4676"
+               }
+}

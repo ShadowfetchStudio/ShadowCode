@@ -1,0 +1,92 @@
+{
+  "config": {
+    "repository": "ShadowfetchStudio/ShadowCode",
+    "version": "2.4.1",
+    "sourceCommit": "a3b09eca6333c2befda3504850f357f09cc25542",
+    "approvedTrustToolingCommit": "a3b09eca6333c2befda3504850f357f09cc25542",
+    "runs": {
+      "linux": {
+        "id": 43192014736,
+        "attempt": 1,
+        "headSha": "a3b09eca6333c2befda3504850f357f09cc25542",
+        "workflowPath": ".github/workflows/release.yml"
+      },
+      "macos": {
+        "id": 43203354756,
+        "attempt": 1,
+        "headSha": "a3b09eca6333c2befda3504850f357f09cc25542",
+        "workflowPath": ".github/workflows/release-macos.yml"
+      },
+      "flatpak": {
+        "id": 43203358489,
+        "attempt": 1,
+        "headSha": "a3b09eca6333c2befda3504850f357f09cc25542",
+        "workflowPath": ".github/workflows/release-flatpak.yml"
+      },
+      "windows": {
+        "id": 43203362035,
+        "attempt": 1,
+        "headSha": "a3b09eca6333c2befda3504850f357f09cc25542",
+        "workflowPath": ".github/workflows/release-windows.yml"
+      }
+    }
+  },
+  "contract": {
+    "version": "2.4.1",
+    "checksumGroups": {
+      "SHA256SUMS": [
+        "ShadowCode_2.4.1_amd64.AppImage",
+        "ShadowCode_2.4.1_amd64.deb",
+        "ShadowCode_2.4.1_appimage-runtime-sources.tar.gz"
+      ],
+      "SHA256SUMS-aarch64": [
+        "ShadowCode_2.4.1_aarch64.AppImage",
+        "ShadowCode_2.4.1_arm64.deb",
+        "ShadowCode_2.4.1_aarch64_appimage-runtime-sources.tar.gz"
+      ],
+      "ShadowCode_2.4.1_macos.sha256": [
+        "ShadowCode_2.4.1_aarch64.dmg",
+        "ShadowCode_2.4.1_x64.dmg"
+      ],
+      "ShadowCode_2.4.1_flatpak.sha256": [
+        "ShadowCode_2.4.1_x86_64.flatpak",
+        "ShadowCode_2.4.1_aarch64.flatpak"
+      ],
+      "ShadowCode_2.4.1_windows.sha256": [
+        "ShadowCode_2.4.1_x64-setup.exe",
+        "ShadowCode_2.4.1_busybox-w32-source.tar.gz"
+      ]
+    },
+    "metadata": [
+      "RELEASE-AUTH",
+      "RELEASE-AUTH.sig",
+      "RELEASE-MANIFEST.json",
+      "RELEASE-AUTH-aarch64",
+      "RELEASE-AUTH-aarch64.sig",
+      "RELEASE-MANIFEST-aarch64.json"
+    ],
+    "assetCount": 23,
+    "installerCount": 9,
+    "sourceArchiveCount": 3
+  },
+  "pins": {
+    "commit": "a3b09eca6333c2befda3504850f357f09cc25542",
+    "files": {
+      ".github/workflows/release-flatpak.yml": "e22ca5ae6788c07e44cc7fde3dfab45e4237959b70f405aefaef28361e4ca1d5",
+      ".github/workflows/release-macos.yml": "b29915462973913adc324d05c2af6a0c4cdc93742eb80257ee3f78f3396c8a67",
+      ".github/workflows/release-windows.yml": "089cc14742c3f4a00401638519c0abcd3e486d12459e8f5e8ed82697a6679470",
+      ".github/workflows/release.yml": "514c06954ed1f345e164fa2c01715eea6ff1a393a533c9c8d32887c22ef7fd57",
+      "Cargo.lock": "4ff72957acefb0f334a4ebf10358057a4ab7383ef49587e3a6ed9beab58c90a9",
+      "Cargo.toml": "beae59310febe5a869827aeb560572821d47ed917cf51b3486426e61708cf94a",
+      "packaging/com.shadowfetch.shadowcode.appdata.xml": "391e7093ead1213a5eb6de117b3506adbe34a2c9fe8a56385814f5ad2b8edede",
+      "packaging/shadow-agent.desktop": "e0c972b3b99f643c1998993c7c7f183905fbbfce21f996a99e5167454e298d63",
+      "release/trust/f0c60ff8228314616985712f8918c9798c0ecf72b7271e19343a041c25663b7f.pem": "5cff52b3b22a22f67a3b1608ea990ad38bc04a68adb7a80a1f40eceae858ad65",
+      "release/trust/policy": "1a26fb0c5f54402d377cbf4803a0e030a7fb93a8fb5df4ece442979739ab2bb4",
+      "scripts/native-release-auth.mjs": "4cf3fd1d716961b4aa65506936c4142d3793ed0fd57a7af390eda4a29561914f",
+      "scripts/test-native-deb.mjs": "b7a5c4a1d04bdaeb8f26370ba6189a166939c14a2e5acc11c1e5b8cb0882c357",
+      "src-tauri/tauri.conf.json": "d2f43e79242ad7be0a41bee3d5a862a279343facf2701af7addbd0cb1b11d33a",
+      "ui/package-lock.json": "287f8567c73696469b581719b61532f2239f5ddcdc8cfb64e426cceecaf414ae",
+      "ui/package.json": "51bba7709ec3443fa5a6401f01b48a49a483a22bb2c8f2ce042ca393b951611f"
+    }
+  }
+}
