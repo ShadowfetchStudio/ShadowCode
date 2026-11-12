@@ -1,0 +1,39 @@
+{
+  "status": "PASSED_SOURCE_CHECKS",
+  "base_commit": "bf62e846f57d91df06aca3ab40158c0c7e5aee63",
+  "unit": {
+    "numTotalTests": 928,
+    "numPassedTests": 928,
+    "numFailedTests": 0,
+    "numPendingTests": 0
+  },
+  "chromium": {
+    "startTime": "2026-11-12T08:27:56.326Z",
+    "duration": 212925.57499999998,
+    "expected": 170,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "focused_webkit": {
+    "startTime": "2026-11-12T08:31:29.434Z",
+    "duration": 12362.395,
+    "expected": 8,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "source_sha256": {
+    "ui/src/hooks/useNavigation.ts": "4d4c49038629c9be1e3e564612b9020eb2d93e86728f655cd11c2a3cd2c036b9",
+    "ui/src/hooks/useWorkspace.ts": "72934cde5e3274bbb3034a9ab4af31ec6afa81758e9673e79125739a19259b92",
+    "ui/src/App.navigation.test.tsx": "404f85eded8b83ad0f1cd8dd302e7275172f4b1b4601906f7779cd3f862e08d0",
+    "ui/src/hooks/useNavigation.test.ts": "b6129cc7dc1a50830d375a354091d6301335c926631d3d9ace1f95371020c4fe",
+    "ui/src/hooks/useWorkspace.test.ts": "3994a3247a04112a6ecdda991c81c4ac16f934e5618c1909fc3be7dd454dee76"
+  },
+  "scope": "Source/fixture tests, not native candidate or public installer qualification. Previous terminal WebKit matrix is separate historical evidence.",
+  "proof_sha256": {
+    "full-unit.json": "e957aa5e040720ae5bc4232ddb4510649f11b8d8be6e7b05b32a2c06e5eee2ff",
+    "full-chromium.json": "e0610f3dc8f60917eb72676470bc6ba1f1f96363bbd722abf9b9a02b9dfcc5f6",
+    "focused-webkit.json": "91fa9494095cd9cc1bb8f6ede4b51e643b8f16a3d0221615d5586b91ce71ed13"
+  }
+}

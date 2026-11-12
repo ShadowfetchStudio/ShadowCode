@@ -1,11 +1,12 @@
 # Changelog
 
-## 2.4.1: Short-window workspace controls
+## 2.4.1: Short-window controls and reliable startup
 
 - Prevent the composer from painting over terminal dock controls at larger zoom levels in short windows.
 - Keep conversation/composer scrolling, menus and Latest activity reachable while preserving editor and composer drafts and the terminal session.
 - Include a fallback for webviews without size container queries and regression coverage for the measured Windows geometry and CSS zoom.
 - Display Windows folder names correctly in terminal notices, reserve complete terminal rows, and keep long notices, errors and terminal controls accessible by scrolling.
+- Keep delayed startup restoration and workspace results from overriding newer conversation or project navigation.
 - Check AppStream release metadata against the application version before native packaging.
 - Retain 2.4.0 publication evidence and the native Windows failure that prompted this patch; qualify new installer bytes separately.
 

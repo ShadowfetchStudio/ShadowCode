@@ -18,8 +18,18 @@ past the conversation area and cover the terminal dock’s Hide control.
   terminal rows, including their padding and borders. Long notices, errors,
   tabs and restart controls remain accessible in a separate scrollable area.
 
-The correction covers layout, terminal path labels and regression coverage. It does not change
-model backends, command permissions, signing keys or sandbox policy. The source
+## Startup and project navigation
+
+- Prevent delayed post-onboarding startup from restoring an older conversation
+  after the user has created or selected a newer one.
+- Keep late workspace, configuration, Git and trust results from overwriting a
+  newer navigation choice. Project opening and conversation activation share
+  the same ordered queue.
+- Preserve normal saved-session restoration and existing appearance callbacks.
+
+The correction covers layout, terminal path labels, startup navigation and
+regression coverage. It does not change model backends, command permissions,
+signing keys or sandbox policy. The source
 release trust ceiling is extended to 2.4.1 using the existing Linux signing key.
 AppStream metadata is checked against application versions before packaging.
 
@@ -32,10 +42,12 @@ and limitations.
 
 ## Validation
 
-The corrected patch passed 913 interface unit tests and all 170 Chromium browser
+The corrected patch passed 928 interface unit tests and all 170 Chromium browser
 tests. Focused WebKit coverage passed 32 existing workspace checks and the four
 new terminal-layout checks; the latter use the browser's supported Option-Tab
-navigation. Type checking, the production build and bundle checks passed.
+navigation. After the startup correction, eight focused WebKit first-run and
+conversation-navigation cases passed as well. Type checking, the production
+build and bundle checks passed.
 
 The terminal regressions fail against the earlier candidate in both Chromium
 and WebKit. They cover long Windows paths, long folder names, errors, multiple
@@ -43,6 +55,12 @@ tabs, exit/restart controls, complete visible rows and accessible notices. The
 original 12 composer regressions also failed against the 2.4.0 stylesheet.
 Linux release-authentication tests passed 115 checks, and the updated Debian
 packaging/metadata suites passed 19, including an early AppStream version check.
+
+Controlled startup tests delay refresh, session lookup and project opening,
+then verify that newer choices remain selected in the UI and active at the
+backend API boundary. The app-level regression fails against the previous
+candidate. See the [source validation record](https://github.com/ShadowfetchStudio/ShadowCode/blob/main/docs/qa/onboarding-navigation-2.4.1/verification.json). Additional tests preserve normal startup, trust prompts and existing
+theme/text-size callbacks. These tests use a simulated backend.
 
 A separate review-before-commit test timing race was corrected without changing
 the application's commit guard. Browser checks use a simulated backend; exact

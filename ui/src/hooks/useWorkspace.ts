@@ -19,39 +19,56 @@ export function useWorkspace(setJobs: (jobs: Job[]) => void) {
     repo: false,
   });
 
-  const refresh = useCallback(async () => {
-    const [s, p, active, state] = await Promise.all([
-      api.sessions(),
-      api.projects(),
-      api.jobs(),
-      api.status(),
-    ]);
-    setSessions(s.sessions);
-    setProjects(p.projects);
-    setJobs(active.jobs);
-    setStatus(state);
-    try {
-      const g = await api.git();
-      setGit({
-        branch: g.repo
-          ? g.status
-              .split("\n")[0]
-              .replace(/^##\s*/, "")
-              .split("...")[0]
-          : "",
-        count: g.files?.length || 0,
-        repo: Boolean(g.repo),
-      });
-    } catch {
-      /* status is optional outside git */
-    }
-  }, [setJobs]);
+  const refreshIfCurrent = useCallback(
+    async (current: () => boolean) => {
+      const [s, p, active, state] = await Promise.all([
+        api.sessions(),
+        api.projects(),
+        api.jobs(),
+        api.status(),
+      ]);
+      if (!current()) return;
+      setSessions(s.sessions);
+      setProjects(p.projects);
+      setJobs(active.jobs);
+      setStatus(state);
+      try {
+        const g = await api.git();
+        if (!current()) return;
+        setGit({
+          branch: g.repo
+            ? g.status
+                .split("\n")[0]
+                .replace(/^##\s*/, "")
+                .split("...")[0]
+            : "",
+          count: g.files?.length || 0,
+          repo: Boolean(g.repo),
+        });
+      } catch {
+        /* status is optional outside git */
+      }
+    },
+    [setJobs],
+  );
 
-  const reloadConfig = useCallback(async () => {
+  const reloadConfigIfCurrent = useCallback(async (current: () => boolean) => {
     const [config, state] = await Promise.all([api.config(), api.status()]);
+    if (!current()) return;
     setCfg(config);
     setStatus(state);
   }, []);
+
+  // Public callbacks also run as Promise handlers and event callbacks. Ignore
+  // their arguments; navigation supplies ownership only to the explicit helpers.
+  const refresh = useCallback(
+    () => refreshIfCurrent(() => true),
+    [refreshIfCurrent],
+  );
+  const reloadConfig = useCallback(
+    () => reloadConfigIfCurrent(() => true),
+    [reloadConfigIfCurrent],
+  );
 
   return {
     workspace,
@@ -66,6 +83,8 @@ export function useWorkspace(setJobs: (jobs: Job[]) => void) {
     git,
     refresh,
     reloadConfig,
+    refreshIfCurrent,
+    reloadConfigIfCurrent,
     /** The config has been read at least once. */
     configLoaded: Object.keys(cfg).length > 0,
   };

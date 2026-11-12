@@ -65,8 +65,9 @@ export function useNavigation(ctx: NavigationContext) {
   const creating = useRef(false);
   const workspace = ws.workspace;
 
-  async function openSession(id: string) {
+  async function openSession(id: string, owner?: number) {
     if (ctx.submittingRef.current) return;
+    if (owner !== undefined && owner !== selection.current) return;
     if (selectedRef.current) {
       const draft = ctx.taskRef.current;
       if (draft && !isSessionCommand(draft))
@@ -74,7 +75,7 @@ export function useNavigation(ctx: NavigationContext) {
       else if (!draft)
         writeStore(draftKey(selectedRef.current, workspace), null);
     }
-    const ticket = ++selection.current;
+    const ticket = owner ?? ++selection.current;
     setSwitching(true);
     setError("");
     try {
@@ -103,7 +104,7 @@ export function useNavigation(ctx: NavigationContext) {
       ctx.setTask(readStore(draftKey(id, detail.workspace)) || "");
       ctx.clearComposer();
       ctx.pin();
-      await ws.refresh();
+      await ws.refreshIfCurrent(() => ticket === selection.current);
     } catch (e) {
       if (ticket === selection.current) {
         setError(String(e));
@@ -118,6 +119,10 @@ export function useNavigation(ctx: NavigationContext) {
   }
 
   async function boot() {
+    // Startup restoration owns only this generation. In particular, the UI is
+    // already interactive while the post-onboarding boot refresh is pending.
+    const ticket = ++selection.current;
+    const current = () => ticket === selection.current;
     setError("");
     try {
       const [h, onboard, sessionData] = await Promise.all([
@@ -125,16 +130,21 @@ export function useNavigation(ctx: NavigationContext) {
         api.onboarding(),
         api.sessions(),
       ]);
+      if (!current()) return;
       ws.setHealth(h);
       ws.setWorkspace(h.workspace);
       setNeedsOnboard(!onboard.completed);
       void api
         .compares(h.workspace)
-        .then((r) => ctx.lanes.note(r.compares))
+        .then((r) => {
+          if (current()) ctx.lanes.note(r.compares);
+        })
         .catch(() => undefined);
-      await ws.reloadConfig();
+      await ws.reloadConfigIfCurrent(current);
+      if (!current()) return;
       ctx.reloadCatalog();
-      await ws.refresh();
+      await ws.refreshIfCurrent(current);
+      if (!current()) return;
       const saved = readStore("shadow:selected");
       let initial =
         sessionData.sessions.find((s) => s.id === saved) ||
@@ -142,11 +152,14 @@ export function useNavigation(ctx: NavigationContext) {
       // Lane conversations are left out of the list; reopen one directly.
       if (saved && !sessionData.sessions.some((s) => s.id === saved)) {
         const lane = await api.session(saved).catch(() => null);
+        if (!current()) return;
         if (lane?.compare_id) initial = lane;
       }
-      if (onboard.completed && initial) await openSession(initial.id);
+      if (onboard.completed && initial) await openSession(initial.id, ticket);
       else setModelChoice(readStore(targetKey(h.workspace)) || "");
+      if (!current()) return;
       const latest = await api.status();
+      if (!current()) return;
       ws.setStatus(latest);
       const prompt = trustPromptFor(
         latest.workspace || h.workspace,
@@ -157,9 +170,9 @@ export function useNavigation(ctx: NavigationContext) {
       // would show a second trust prompt once onboarding closes.
       setTrust(onboard.completed ? prompt : null);
     } catch (e) {
-      setError(String(e));
+      if (current()) setError(String(e));
     } finally {
-      setReady(true);
+      if (current()) setReady(true);
     }
   }
   useEffect(() => {
@@ -250,8 +263,15 @@ export function useNavigation(ctx: NavigationContext) {
       ctx.showProjects();
       return;
     }
+    const ticket = ++selection.current;
+    setSwitching(true);
     try {
-      const opened = await api.openProject(path);
+      // Opening a trusted project also activates a native session. Share the
+      // activation queue so a later conversation choice wins in both places.
+      const opening = activationQueue.current.then(() => api.openProject(path));
+      activationQueue.current = opening.catch(() => undefined);
+      const opened = await opening;
+      if (ticket !== selection.current) return;
       ctx.closeOverlay();
       if (opened.needs_trust) {
         setTrust({
@@ -261,9 +281,11 @@ export function useNavigation(ctx: NavigationContext) {
         });
         return;
       }
-      await openSession(opened.session_id);
+      await openSession(opened.session_id, ticket);
     } catch (e) {
-      ctx.toast(String(e), "err");
+      if (ticket === selection.current) ctx.toast(String(e), "err");
+    } finally {
+      if (ticket === selection.current) setSwitching(false);
     }
   }
 

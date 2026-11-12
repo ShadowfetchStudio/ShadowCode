@@ -1,0 +1,30 @@
+
+> shadow-agent-ui@2.4.1 test
+> vitest run src/App.navigation.test.tsx
+
+
+ RUN  v5.0.1 /Users/shadowfetch/Projects/ShadowCode/ui
+
+ ❯ src/App.navigation.test.tsx (1 test | 1 failed) 95ms
+   × keeps the user's new conversation when post-onboarding boot refresh finishes late 95ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/App.navigation.test.tsx > keeps the user's new conversation when post-onboarding boot refresh finishes late
+AssertionError: expected null not to be null
+ ❯ src/App.navigation.test.tsx:38:26
+     36|   fireEvent.change(screen.getByRole("textbox", { name: "Message Shadow…
+     37|   await act(async () => { release(projects); await held; });
+     38|   expect(selected()).not.toBeNull();
+       |                          ^
+     39|   expect(fake.state.activeSession).toBe("s2");
+     40|   expect(localStorage.getItem("shadow:selected")).toBe("s2");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  03:17:00
+   Duration  901ms (transform 50%, import 25%, environment 14%, tests 11%)
+

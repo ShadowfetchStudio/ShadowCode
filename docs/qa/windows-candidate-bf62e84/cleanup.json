@@ -1,0 +1,190 @@
+{
+    "checked_at":  "2026-11-12T00:08:50.3238950-08:00",
+    "hostname":  "DESKTOP-6VG0GUB",
+    "user":  "robert",
+    "tasks":  [
+
+              ],
+    "processes":  [
+
+                  ],
+    "free_ram_gib":  27.65,
+    "cdp_listener_count":  0,
+    "hashes":  [
+                   {
+                       "relative_path":  "actions-artifact.json",
+                       "bytes":  982,
+                       "sha256":  "5d058c73acb7af7eb84f2e86bbd24a067d2f2aac454d1950a6723994221c75a9"
+                   },
+                   {
+                       "relative_path":  "actions-artifact.zip",
+                       "bytes":  23878427,
+                       "sha256":  "57cf838179a9a8774440d1d50ff6da2c5886c671c87af66eca01780f41beca05"
+                   },
+                   {
+                       "relative_path":  "actions-jobs.json",
+                       "bytes":  26610,
+                       "sha256":  "80e234b1ab3fed1b74ef9fb9180127cd3afd4ee7d92db152b4f1202f008e0b47"
+                   },
+                   {
+                       "relative_path":  "actions-run.json",
+                       "bytes":  20006,
+                       "sha256":  "efe1a2a0ac6bf375cdc50788cc7ad225b2e493fbb017c2cdae694fa7e282d10f"
+                   },
+                   {
+                       "relative_path":  "installation.json",
+                       "bytes":  3629,
+                       "sha256":  "6c439125db808f4674aebd5c7fe82ed59d653b723b18bcc2185cc9ef15e98a31"
+                   },
+                   {
+                       "relative_path":  "installed-runtime.log",
+                       "bytes":  778,
+                       "sha256":  "1caa9bb0ce31240a2308f5f3cb26221d8c42c2b586b27b924e5a0c2b892f3157"
+                   },
+                   {
+                       "relative_path":  "installer-process.json",
+                       "bytes":  176,
+                       "sha256":  "5eb4b06bfebc528a123762e2334253bfc829a319d503e6281815147b11af36fe"
+                   },
+                   {
+                       "relative_path":  "ShadowCode_2.4.1_x64-setup.exe",
+                       "bytes":  23878253,
+                       "sha256":  "1aaee7eedbb956be59e0da25c92f7b1a2bb99096b0b5deb51e5c42a568d5808f"
+                   },
+                   {
+                       "relative_path":  "payload-07711a8f629b4d139dff2ae0d15ffa7e/extraction.stderr.txt",
+                       "bytes":  0,
+                       "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                   },
+                   {
+                       "relative_path":  "payload-07711a8f629b4d139dff2ae0d15ffa7e/extraction.stdout.txt",
+                       "bytes":  644,
+                       "sha256":  "fa7304fcb7ad74061216203728d1e7e298c20e0473c4b0245e62fade50ce2f4a"
+                   },
+                   {
+                       "relative_path":  "payload-07711a8f629b4d139dff2ae0d15ffa7e/listing.stderr.txt",
+                       "bytes":  0,
+                       "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                   },
+                   {
+                       "relative_path":  "payload-07711a8f629b4d139dff2ae0d15ffa7e/listing.stdout.txt",
+                       "bytes":  9926,
+                       "sha256":  "75df495eda76fb9421a538474638b6d14650ded28b08be67d5e7ca1ed8513dff"
+                   },
+                   {
+                       "relative_path":  "payload-07711a8f629b4d139dff2ae0d15ffa7e/payload.json",
+                       "bytes":  1294,
+                       "sha256":  "1f5746f77ac2f5168997bed5fba4c547b2e7ddcaadc19c3e88d7d7c0dbb84f6c"
+                   },
+                   {
+                       "relative_path":  "payload-07711a8f629b4d139dff2ae0d15ffa7e/shadowcode.exe",
+                       "bytes":  64867328,
+                       "sha256":  "665c5e44f8a698dc36c0f5386c6404d1c3b4e6072b21fad429074b8691956a8c"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-14a018b5ca2d427da6a5019d5f8aa514/launch-request.json",
+                       "bytes":  972,
+                       "sha256":  "156ca35bd3f8fecf08928892caa5c2d7193c959540e333f27e936a65b9670f73"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-14a018b5ca2d427da6a5019d5f8aa514/native-failure.png",
+                       "bytes":  69149,
+                       "sha256":  "7a92d391f68c9107a7748bd8e6619182118b726f6a4ae585b05dd173702b815d"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-14a018b5ca2d427da6a5019d5f8aa514/native-stderr.log",
+                       "bytes":  115,
+                       "sha256":  "7aec5c07df072b12eb18c34e7c23c3631094b2213f147cb99967e51c0cad4578"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-14a018b5ca2d427da6a5019d5f8aa514/native-stdout.log",
+                       "bytes":  0,
+                       "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-14a018b5ca2d427da6a5019d5f8aa514/native-webview-result.json",
+                       "bytes":  2968,
+                       "sha256":  "50137c2724bd0be84d278024e156496bfe2994c2cc392a6f36e310b8255094a8"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-14a018b5ca2d427da6a5019d5f8aa514/native-window.json",
+                       "bytes":  587,
+                       "sha256":  "42bd9ed97799a1abb9c9ed590256fdb781ed7d366821b0de66a1d45e8d34a7e6"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-14a018b5ca2d427da6a5019d5f8aa514/probe-stderr.log",
+                       "bytes":  910,
+                       "sha256":  "ebcf445267db8edf667b2ce87ef5df9a3546e217576d1ee00e882a4872a7944a"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-14a018b5ca2d427da6a5019d5f8aa514/probe-stdout.log",
+                       "bytes":  0,
+                       "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-14a018b5ca2d427da6a5019d5f8aa514/runner-result.json",
+                       "bytes":  846,
+                       "sha256":  "e361bb39e600207f8dad93e8151c3c695eba17b5c00abd07429970045e3735ec"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-14a018b5ca2d427da6a5019d5f8aa514/task-cleanup.json",
+                       "bytes":  301,
+                       "sha256":  "176f83b3d95758e7d5825dbc174cae9740b5903886efe0ae7786b30abb6f24f6"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-77ed51fb036a43069d2a09e096abce37/launch-request.json",
+                       "bytes":  972,
+                       "sha256":  "f776ed847394a4a5eb8f9e9c7292f92eee63bcf2f317638976d453ded0ecd11a"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-77ed51fb036a43069d2a09e096abce37/native-failure.png",
+                       "bytes":  71641,
+                       "sha256":  "5c4c8477cd4dc32fc70774479fd77a49c1f0debf8979783d5e173483f250844a"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-77ed51fb036a43069d2a09e096abce37/native-stderr.log",
+                       "bytes":  115,
+                       "sha256":  "58a2fc1ba703237d6c4ceb97db0e7ff33c53ef14a0fdcb40f5d893382921172f"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-77ed51fb036a43069d2a09e096abce37/native-stdout.log",
+                       "bytes":  0,
+                       "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-77ed51fb036a43069d2a09e096abce37/native-webview-result.json",
+                       "bytes":  79089,
+                       "sha256":  "d560d9d804e2e70e17b3fe9391e6eaeb6240b83b7b721fd10ce5c9665c7c6456"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-77ed51fb036a43069d2a09e096abce37/native-window.json",
+                       "bytes":  587,
+                       "sha256":  "eecd1489bd35d07880cfe54856926903e87b27afc6bf17999c32290d123f54fe"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-77ed51fb036a43069d2a09e096abce37/native-workspace-dock.png",
+                       "bytes":  93264,
+                       "sha256":  "897d4547b8b0980238481e42985587b48bdf3cc89a1bfe4b45d79b42c966bf62"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-77ed51fb036a43069d2a09e096abce37/probe-stderr.log",
+                       "bytes":  775,
+                       "sha256":  "4992056449f9cdfee61bb9689cad2b4af1a12644f1948e1be0ce92c2d9b0bce5"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-77ed51fb036a43069d2a09e096abce37/probe-stdout.log",
+                       "bytes":  0,
+                       "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-77ed51fb036a43069d2a09e096abce37/runner-result.json",
+                       "bytes":  846,
+                       "sha256":  "05938fd5e0044ed834b64d2710e19cff4ee92ffc504c2922aa3093328f3321d4"
+                   },
+                   {
+                       "relative_path":  "ui-2.4.1-77ed51fb036a43069d2a09e096abce37/task-cleanup.json",
+                       "bytes":  301,
+                       "sha256":  "3f25e375342fd97c7f16864842e5bcba7e0475c5eb2fe9c395dc563796e7f585"
+                   }
+               ]
+}

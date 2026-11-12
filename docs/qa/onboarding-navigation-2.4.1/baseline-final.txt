@@ -1,0 +1,5 @@
+
+> shadow-agent-ui@2.4.1 test
+> vitest run src/App.navigation.test.tsx src/hooks/useNavigation.test.ts --reporter=json --outputFile=/Volumes/NVME1TB/Development/ShadowCode-build/publication-2.4.1/onboarding-navigation-fix/baseline-final.json
+
+JSON report written to /Volumes/NVME1TB/Development/ShadowCode-build/publication-2.4.1/onboarding-navigation-fix/baseline-final.json

@@ -1,0 +1,44 @@
+[
+  {
+    "name": "full-unit",
+    "command": [
+      "npm",
+      "--prefix",
+      "ui",
+      "test",
+      "--",
+      "--maxWorkers=2",
+      "--reporter=json",
+      "--outputFile=/Volumes/NVME1TB/Development/ShadowCode-build/publication-2.4.1/onboarding-navigation-fix/full-unit.json"
+    ],
+    "started_at": "2026-11-12T08:24:05.957273+00:00",
+    "completed_at": "2026-11-12T08:24:31.747205+00:00",
+    "exit_code": 0
+  },
+  {
+    "name": "production-build",
+    "command": [
+      "npm",
+      "--prefix",
+      "ui",
+      "run",
+      "build"
+    ],
+    "started_at": "2026-11-12T08:24:31.747499+00:00",
+    "completed_at": "2026-11-12T08:24:36.200318+00:00",
+    "exit_code": 0
+  },
+  {
+    "name": "check-bundle",
+    "command": [
+      "npm",
+      "--prefix",
+      "ui",
+      "run",
+      "check:bundle"
+    ],
+    "started_at": "2026-11-12T08:24:36.200542+00:00",
+    "completed_at": "2026-11-12T08:24:37.908655+00:00",
+    "exit_code": 0
+  }
+]

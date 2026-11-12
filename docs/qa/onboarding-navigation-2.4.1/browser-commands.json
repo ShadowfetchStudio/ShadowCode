@@ -1,0 +1,37 @@
+[
+  {
+    "name": "full-chromium",
+    "command": [
+      "node",
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "--browser=chromium",
+      "--workers=2",
+      "--reporter=line,json",
+      "--output=/Volumes/NVME1TB/Development/ShadowCode-build/publication-2.4.1/onboarding-navigation-fix/full-chromium"
+    ],
+    "started_at": "2026-11-12T08:27:56.131450+00:00",
+    "completed_at": "2026-11-12T08:31:29.260069+00:00",
+    "exit_code": 0
+  },
+  {
+    "name": "focused-webkit",
+    "command": [
+      "node",
+      "node_modules/@playwright/test/cli.js",
+      "test",
+      "firstRun.spec.ts",
+      "palette.spec.ts",
+      "flagship.spec.ts",
+      "--browser=webkit",
+      "--grep",
+      "no accounts:|Settings \u203a Local models:|finds commands by letters|opens a conversation by name|commands run last|arrows, Page Up|project-scoped creation cannot override",
+      "--workers=2",
+      "--reporter=line,json",
+      "--output=/Volumes/NVME1TB/Development/ShadowCode-build/publication-2.4.1/onboarding-navigation-fix/focused-webkit"
+    ],
+    "started_at": "2026-11-12T08:31:29.260425+00:00",
+    "completed_at": "2026-11-12T08:31:41.803895+00:00",
+    "exit_code": 0
+  }
+]

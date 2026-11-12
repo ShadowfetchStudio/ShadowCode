@@ -1,0 +1,9 @@
+{
+  "head_sha": "bf62e846f57d91df06aca3ab40158c0c7e5aee63",
+  "source": "git archive; unchanged product sources; final regression tests copied in",
+  "test_exit_code": 1,
+  "test_sha256": {
+    "ui/src/App.navigation.test.tsx": "404f85eded8b83ad0f1cd8dd302e7275172f4b1b4601906f7779cd3f862e08d0",
+    "ui/src/hooks/useNavigation.test.ts": "b6129cc7dc1a50830d375a354091d6301335c926631d3d9ace1f95371020c4fe"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "ui/src/hooks/useNavigation.ts": "4d4c49038629c9be1e3e564612b9020eb2d93e86728f655cd11c2a3cd2c036b9",
+  "ui/src/hooks/useWorkspace.ts": "72934cde5e3274bbb3034a9ab4af31ec6afa81758e9673e79125739a19259b92",
+  "ui/src/App.navigation.test.tsx": "404f85eded8b83ad0f1cd8dd302e7275172f4b1b4601906f7779cd3f862e08d0",
+  "ui/src/hooks/useNavigation.test.ts": "b6129cc7dc1a50830d375a354091d6301335c926631d3d9ace1f95371020c4fe",
+  "ui/src/hooks/useWorkspace.test.ts": "3994a3247a04112a6ecdda991c81c4ac16f934e5618c1909fc3be7dd454dee76"
+}

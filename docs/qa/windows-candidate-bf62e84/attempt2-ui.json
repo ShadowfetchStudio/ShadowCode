@@ -1,0 +1,2959 @@
+{
+  "passed": false,
+  "version": "2.4.1",
+  "installer_sha256": "1aaee7eedbb956be59e0da25c92f7b1a2bb99096b0b5deb51e5c42a568d5808f",
+  "installed_exe_sha256": "665c5e44f8a698dc36c0f5386c6404d1c3b4e6072b21fad429074b8691956a8c",
+  "provenance_kind": "candidate",
+  "source_commit": "bf62e846f57d91df06aca3ab40158c0c7e5aee63",
+  "receipt_sha256": "6c439125db808f4674aebd5c7fe82ed59d653b723b18bcc2185cc9ef15e98a31",
+  "candidate": {
+    "repository": "ShadowfetchStudio/ShadowCode",
+    "run_id": "43176133588",
+    "run_attempt": 1,
+    "artifact_id": "13924953752",
+    "artifact_name": "windows-preview-installer",
+    "archive_sha256": "57cf838179a9a8774440d1d50ff6da2c5886c671c87af66eca01780f41beca05",
+    "installer_job_id": 131041616972,
+    "observed_run_status": "completed",
+    "observed_run_conclusion": "success",
+    "run_url": "https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43176133588",
+    "metadata_sha256": {
+      "run": "efe1a2a0ac6bf375cdc50788cc7ad225b2e493fbb017c2cdae694fa7e282d10f",
+      "artifact": "5d058c73acb7af7eb84f2e86bbd24a067d2f2aac454d1950a6723994221c75a9",
+      "jobs": "80e234b1ab3fed1b74ef9fb9180127cd3afd4ee7d92db152b4f1202f008e0b47"
+    }
+  },
+  "probe_sha256": "8087e4b11b7b92e43a9bf4de426aebfd4bf60c7bd10318423847f4ab50a3fbfa",
+  "checks": [
+    {
+      "name": "fresh project onboarding through Open project",
+      "passed": true
+    },
+    {
+      "name": "project-scoped conversation creation",
+      "passed": true
+    },
+    {
+      "name": "editor replace, undo, both Windows redo shortcuts and disk save",
+      "passed": true
+    },
+    {
+      "name": "dirty editor survives terminal placement and focus commands",
+      "passed": true
+    },
+    {
+      "name": "newer editor focus wins over dock reveal",
+      "passed": true
+    },
+    {
+      "name": "actual native-window resize and application zoom geometry",
+      "passed": true
+    },
+    {
+      "name": "same shell returns to side panel and owned shell closes",
+      "passed": true
+    }
+  ],
+  "geometries": [
+    {
+      "requestedOuterWidth": 1440,
+      "requestedZoom": 1,
+      "nativeBounds": {
+        "workAreaWidth": 1366,
+        "pid": 3024,
+        "window_handle": 1901248,
+        "width": 1366,
+        "requestedWidth": 1440,
+        "height": 720,
+        "requestedHeight": 1000,
+        "workAreaHeight": 720
+      },
+      "innerWidth": 1350,
+      "innerHeight": 681,
+      "devicePixelRatio": 1,
+      "cssZoom": 1,
+      "stageWidth": 656,
+      "classes": "app workspace-layout     with-sidebar drawer-open  terminal-docked"
+    },
+    {
+      "requestedOuterWidth": 1440,
+      "requestedZoom": 1.25,
+      "nativeBounds": {
+        "workAreaWidth": 1366,
+        "pid": 3024,
+        "window_handle": 1901248,
+        "width": 1366,
+        "requestedWidth": 1440,
+        "height": 720,
+        "requestedHeight": 1000,
+        "workAreaHeight": 720
+      },
+      "innerWidth": 1080,
+      "innerHeight": 545,
+      "devicePixelRatio": 1.25,
+      "cssZoom": 1,
+      "stageWidth": 632,
+      "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked"
+    },
+    {
+      "requestedOuterWidth": 1440,
+      "requestedZoom": 1.75,
+      "nativeBounds": {
+        "workAreaWidth": 1366,
+        "pid": 3024,
+        "window_handle": 1901248,
+        "width": 1366,
+        "requestedWidth": 1440,
+        "height": 720,
+        "requestedHeight": 1000,
+        "workAreaHeight": 720
+      },
+      "innerWidth": 771,
+      "innerHeight": 389,
+      "devicePixelRatio": 1.75,
+      "cssZoom": 1,
+      "stageWidth": 375,
+      "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked"
+    },
+    {
+      "requestedOuterWidth": 1160,
+      "requestedZoom": 1,
+      "nativeBounds": {
+        "workAreaWidth": 1366,
+        "pid": 3024,
+        "window_handle": 1901248,
+        "width": 1160,
+        "requestedWidth": 1160,
+        "height": 720,
+        "requestedHeight": 1000,
+        "workAreaHeight": 720
+      },
+      "innerWidth": 1144,
+      "innerHeight": 681,
+      "devicePixelRatio": 1,
+      "cssZoom": 1,
+      "stageWidth": 704,
+      "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked"
+    },
+    {
+      "requestedOuterWidth": 1160,
+      "requestedZoom": 1.25,
+      "nativeBounds": {
+        "workAreaWidth": 1366,
+        "pid": 3024,
+        "window_handle": 1901248,
+        "width": 1160,
+        "requestedWidth": 1160,
+        "height": 720,
+        "requestedHeight": 1000,
+        "workAreaHeight": 720
+      },
+      "innerWidth": 915,
+      "innerHeight": 545,
+      "devicePixelRatio": 1.25,
+      "cssZoom": 1,
+      "stageWidth": 467,
+      "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked"
+    },
+    {
+      "requestedOuterWidth": 1160,
+      "requestedZoom": 1.75,
+      "nativeBounds": {
+        "workAreaWidth": 1366,
+        "pid": 3024,
+        "window_handle": 1901248,
+        "width": 1160,
+        "requestedWidth": 1160,
+        "height": 720,
+        "requestedHeight": 1000,
+        "workAreaHeight": 720
+      },
+      "innerWidth": 654,
+      "innerHeight": 389,
+      "devicePixelRatio": 1.75,
+      "cssZoom": 1,
+      "stageWidth": 648,
+      "classes": "app workspace-layout workspace-compact workspace-overlay workspace-icon-tools   drawer-open  terminal-docked"
+    },
+    {
+      "requestedOuterWidth": 800,
+      "requestedZoom": 1,
+      "nativeBounds": {
+        "workAreaWidth": 1366,
+        "pid": 3024,
+        "window_handle": 1901248,
+        "width": 800,
+        "requestedWidth": 800,
+        "height": 720,
+        "requestedHeight": 1000,
+        "workAreaHeight": 720
+      },
+      "innerWidth": 784,
+      "innerHeight": 681,
+      "devicePixelRatio": 1,
+      "cssZoom": 1,
+      "stageWidth": 380,
+      "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked"
+    },
+    {
+      "requestedOuterWidth": 800,
+      "requestedZoom": 1.25,
+      "nativeBounds": {
+        "workAreaWidth": 1366,
+        "pid": 3024,
+        "window_handle": 1901248,
+        "width": 800,
+        "requestedWidth": 800,
+        "height": 720,
+        "requestedHeight": 1000,
+        "workAreaHeight": 720
+      },
+      "innerWidth": 627,
+      "innerHeight": 545,
+      "devicePixelRatio": 1.25,
+      "cssZoom": 1,
+      "stageWidth": 619,
+      "classes": "app workspace-layout workspace-compact workspace-overlay workspace-icon-tools   drawer-open  terminal-docked"
+    },
+    {
+      "requestedOuterWidth": 800,
+      "requestedZoom": 1.75,
+      "nativeBounds": {
+        "workAreaWidth": 1366,
+        "pid": 3024,
+        "window_handle": 1901248,
+        "width": 800,
+        "requestedWidth": 800,
+        "height": 720,
+        "requestedHeight": 1000,
+        "workAreaHeight": 720
+      },
+      "innerWidth": 448,
+      "innerHeight": 389,
+      "devicePixelRatio": 1.75,
+      "cssZoom": 1,
+      "stageWidth": 442,
+      "classes": "app workspace-layout workspace-compact workspace-overlay workspace-icon-tools   drawer-open  terminal-docked"
+    }
+  ],
+  "errors": [],
+  "scope": "Installed Windows WebView via local CDP, actual native window resizing and app zoom. No fake backend, viewport emulation, paid provider or model inference. Input through CDP does not qualify physical-keyboard/OS shortcut arbitration.",
+  "native_url": "http://tauri.localhost/",
+  "window": {
+    "workAreaWidth": 1366,
+    "pid": 3024,
+    "window_handle": 1901248,
+    "width": 1366,
+    "requestedWidth": 1440,
+    "height": 720,
+    "requestedHeight": 1000,
+    "workAreaHeight": 720
+  },
+  "shell_prompt_setup": {
+    "command": "function prompt { 'SC_' + 'QA> ' }",
+    "before": "PS C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-a731cc05b626449e8e996a5597af575a\\ui-2.4.1-77ed51fb036a43069d2a09e096abce37\n\\project>  ",
+    "screen": {
+      "width": 1065,
+      "height": 51
+    },
+    "after": "PS C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-a731cc05b626449e8e996a5597af575a\\ui-2.4.1-77ed51fb036a43069d2a09e096abce37\n\\project> function prompt { 'SC_' + 'QA> ' }\nSC_QA>  "
+  },
+  "shell_roundtrip": {
+    "command": "Write-Output ('SC24_' + '96abce37')",
+    "expected_output": "SC24_96abce37",
+    "visible_output": "\\project> function prompt { 'SC_' + 'QA> ' }\nSC_QA> Write-Output ('SC24_' + '96abce37')\nSC24_96abce37"
+  },
+  "terminal_id": "db1abd179c724017a3d0869823e6a1f3",
+  "stage_width_evidence": [
+    {
+      "requestedOuterWidth": 1440,
+      "requestedZoom": 1,
+      "rect": {
+        "x": 254,
+        "y": 55,
+        "width": 656,
+        "height": 435.328125
+      },
+      "offsetWidth": 656,
+      "clientWidth": 656,
+      "scrollWidth": 656,
+      "clientHeight": 435,
+      "scrollHeight": 435,
+      "borderLeft": "0px",
+      "borderRight": "0px",
+      "paddingLeft": "0px",
+      "paddingRight": "0px",
+      "overflowX": "visible",
+      "overflowY": "visible",
+      "scrollbarWidth": "thin",
+      "gridTemplateColumns": "254px 656px 440px",
+      "visiblePanel": "min( 440px, calc(100% - 254px - 380px) )",
+      "visibleRail": "254px",
+      "appClientWidth": 1350,
+      "cssZoom": "",
+      "devicePixelRatio": 1
+    },
+    {
+      "requestedOuterWidth": 1440,
+      "requestedZoom": 1.25,
+      "rect": {
+        "x": 0,
+        "y": 55,
+        "width": 640,
+        "height": 319.8000183105469
+      },
+      "offsetWidth": 640,
+      "clientWidth": 632,
+      "scrollWidth": 632,
+      "clientHeight": 320,
+      "scrollHeight": 419,
+      "borderLeft": "0px",
+      "borderRight": "0px",
+      "paddingLeft": "0px",
+      "paddingRight": "0px",
+      "overflowX": "auto",
+      "overflowY": "auto",
+      "scrollbarWidth": "thin",
+      "gridTemplateColumns": "0px 640px 440px",
+      "visiblePanel": "min( 440px, calc(100% - 0px - 380px) )",
+      "visibleRail": "0px",
+      "appClientWidth": 1080,
+      "cssZoom": "",
+      "devicePixelRatio": 1.25
+    },
+    {
+      "requestedOuterWidth": 1440,
+      "requestedZoom": 1.75,
+      "rect": {
+        "x": 0,
+        "y": 55.000003814697266,
+        "width": 380.4285888671875,
+        "height": 164.1428680419922
+      },
+      "offsetWidth": 380,
+      "clientWidth": 375,
+      "scrollWidth": 375,
+      "clientHeight": 164,
+      "scrollHeight": 475,
+      "borderLeft": "0px",
+      "borderRight": "0px",
+      "paddingLeft": "0px",
+      "paddingRight": "0px",
+      "overflowX": "auto",
+      "overflowY": "auto",
+      "scrollbarWidth": "thin",
+      "gridTemplateColumns": "0px 380.429px 391px",
+      "visiblePanel": "min( 391px, calc(100% - 0px - 380px) )",
+      "visibleRail": "0px",
+      "appClientWidth": 771,
+      "cssZoom": "",
+      "devicePixelRatio": 1.75
+    },
+    {
+      "requestedOuterWidth": 1160,
+      "requestedZoom": 1,
+      "rect": {
+        "x": 0,
+        "y": 55,
+        "width": 704,
+        "height": 435.328125
+      },
+      "offsetWidth": 704,
+      "clientWidth": 704,
+      "scrollWidth": 704,
+      "clientHeight": 435,
+      "scrollHeight": 435,
+      "borderLeft": "0px",
+      "borderRight": "0px",
+      "paddingLeft": "0px",
+      "paddingRight": "0px",
+      "overflowX": "visible",
+      "overflowY": "visible",
+      "scrollbarWidth": "thin",
+      "gridTemplateColumns": "0px 704px 440px",
+      "visiblePanel": "min( 440px, calc(100% - 0px - 380px) )",
+      "visibleRail": "0px",
+      "appClientWidth": 1144,
+      "cssZoom": "",
+      "devicePixelRatio": 1
+    },
+    {
+      "requestedOuterWidth": 1160,
+      "requestedZoom": 1.25,
+      "rect": {
+        "x": 0,
+        "y": 55,
+        "width": 475.20001220703125,
+        "height": 319.8000183105469
+      },
+      "offsetWidth": 475,
+      "clientWidth": 467,
+      "scrollWidth": 467,
+      "clientHeight": 320,
+      "scrollHeight": 453,
+      "borderLeft": "0px",
+      "borderRight": "0px",
+      "paddingLeft": "0px",
+      "paddingRight": "0px",
+      "overflowX": "auto",
+      "overflowY": "auto",
+      "scrollbarWidth": "thin",
+      "gridTemplateColumns": "0px 475.2px 440px",
+      "visiblePanel": "min( 440px, calc(100% - 0px - 380px) )",
+      "visibleRail": "0px",
+      "appClientWidth": 915,
+      "cssZoom": "",
+      "devicePixelRatio": 1.25
+    },
+    {
+      "requestedOuterWidth": 1160,
+      "requestedZoom": 1.75,
+      "rect": {
+        "x": 0,
+        "y": 55.000003814697266,
+        "width": 653.7142944335938,
+        "height": 164.1428680419922
+      },
+      "offsetWidth": 654,
+      "clientWidth": 648,
+      "scrollWidth": 648,
+      "clientHeight": 164,
+      "scrollHeight": 417,
+      "borderLeft": "0px",
+      "borderRight": "0px",
+      "paddingLeft": "0px",
+      "paddingRight": "0px",
+      "overflowX": "auto",
+      "overflowY": "auto",
+      "scrollbarWidth": "thin",
+      "gridTemplateColumns": "0px 653.714px 0px",
+      "visiblePanel": "0px",
+      "visibleRail": "0px",
+      "appClientWidth": 654,
+      "cssZoom": "",
+      "devicePixelRatio": 1.75
+    },
+    {
+      "requestedOuterWidth": 800,
+      "requestedZoom": 1,
+      "rect": {
+        "x": 0,
+        "y": 55,
+        "width": 380,
+        "height": 435.328125
+      },
+      "offsetWidth": 380,
+      "clientWidth": 380,
+      "scrollWidth": 380,
+      "clientHeight": 435,
+      "scrollHeight": 435,
+      "borderLeft": "0px",
+      "borderRight": "0px",
+      "paddingLeft": "0px",
+      "paddingRight": "0px",
+      "overflowX": "visible",
+      "overflowY": "visible",
+      "scrollbarWidth": "thin",
+      "gridTemplateColumns": "0px 380px 404px",
+      "visiblePanel": "min( 404px, calc(100% - 0px - 380px) )",
+      "visibleRail": "0px",
+      "appClientWidth": 784,
+      "cssZoom": "",
+      "devicePixelRatio": 1
+    },
+    {
+      "requestedOuterWidth": 800,
+      "requestedZoom": 1.25,
+      "rect": {
+        "x": 0,
+        "y": 55,
+        "width": 627.2000122070312,
+        "height": 319.8000183105469
+      },
+      "offsetWidth": 627,
+      "clientWidth": 619,
+      "scrollWidth": 619,
+      "clientHeight": 320,
+      "scrollHeight": 381,
+      "borderLeft": "0px",
+      "borderRight": "0px",
+      "paddingLeft": "0px",
+      "paddingRight": "0px",
+      "overflowX": "auto",
+      "overflowY": "auto",
+      "scrollbarWidth": "thin",
+      "gridTemplateColumns": "0px 627.2px 0px",
+      "visiblePanel": "0px",
+      "visibleRail": "0px",
+      "appClientWidth": 627,
+      "cssZoom": "",
+      "devicePixelRatio": 1.25
+    },
+    {
+      "requestedOuterWidth": 800,
+      "requestedZoom": 1.75,
+      "rect": {
+        "x": 0,
+        "y": 55.000003814697266,
+        "width": 448.0000305175781,
+        "height": 164.1428680419922
+      },
+      "offsetWidth": 448,
+      "clientWidth": 442,
+      "scrollWidth": 442,
+      "clientHeight": 164,
+      "scrollHeight": 451,
+      "borderLeft": "0px",
+      "borderRight": "0px",
+      "paddingLeft": "0px",
+      "paddingRight": "0px",
+      "overflowX": "auto",
+      "overflowY": "auto",
+      "scrollbarWidth": "thin",
+      "gridTemplateColumns": "0px 448px 0px",
+      "visiblePanel": "0px",
+      "visibleRail": "0px",
+      "appClientWidth": 448,
+      "cssZoom": "",
+      "devicePixelRatio": 1.75
+    }
+  ],
+  "editor_scroll_evidence": [
+    {
+      "requestedOuterWidth": 1440,
+      "requestedZoom": 1,
+      "before": {
+        "line": {
+          "top": 369.75,
+          "bottom": 386.546875
+        },
+        "body": {
+          "top": 104,
+          "bottom": 490.328125,
+          "scrollTop": 0,
+          "clientHeight": 386,
+          "scrollHeight": 706
+        },
+        "editorScrollTop": 0,
+        "devicePixelRatio": 1
+      },
+      "wheel": [],
+      "after": {
+        "line": {
+          "top": 369.75,
+          "bottom": 386.546875
+        },
+        "body": {
+          "top": 104,
+          "bottom": 490.328125,
+          "scrollTop": 0,
+          "clientHeight": 386,
+          "scrollHeight": 706
+        },
+        "editorScrollTop": 0,
+        "devicePixelRatio": 1
+      }
+    },
+    {
+      "requestedOuterWidth": 1440,
+      "requestedZoom": 1.25,
+      "before": {
+        "line": {
+          "top": 369.3500061035156,
+          "bottom": 386.1500072479248
+        },
+        "body": {
+          "top": 103.80000305175781,
+          "bottom": 374.8000030517578,
+          "scrollTop": 0,
+          "clientHeight": 271,
+          "scrollHeight": 706
+        },
+        "editorScrollTop": 0,
+        "devicePixelRatio": 1.25
+      },
+      "wheel": [
+        {
+          "deltaY": 40,
+          "after": {
+            "line": {
+              "top": 337.3500061035156,
+              "bottom": 354.1500072479248
+            },
+            "body": {
+              "top": 103.80000305175781,
+              "bottom": 374.8000030517578,
+              "scrollTop": 32,
+              "clientHeight": 271,
+              "scrollHeight": 706
+            },
+            "editorScrollTop": 0,
+            "devicePixelRatio": 1.25
+          }
+        }
+      ],
+      "after": {
+        "line": {
+          "top": 337.3500061035156,
+          "bottom": 354.1500072479248
+        },
+        "body": {
+          "top": 103.80000305175781,
+          "bottom": 374.8000030517578,
+          "scrollTop": 32,
+          "clientHeight": 271,
+          "scrollHeight": 706
+        },
+        "editorScrollTop": 0,
+        "devicePixelRatio": 1.25
+      }
+    },
+    {
+      "requestedOuterWidth": 1440,
+      "requestedZoom": 1.75,
+      "before": {
+        "line": {
+          "top": 336.89288330078125,
+          "bottom": 353.68752670288086
+        },
+        "body": {
+          "top": 103.5714340209961,
+          "bottom": 219.1428680419922,
+          "scrollTop": 32,
+          "clientHeight": 116,
+          "scrollHeight": 598
+        },
+        "editorScrollTop": 0,
+        "devicePixelRatio": 1.75
+      },
+      "wheel": [
+        {
+          "deltaY": 264,
+          "after": {
+            "line": {
+              "top": 186.0357208251953,
+              "bottom": 202.83036422729492
+            },
+            "body": {
+              "top": 103.5714340209961,
+              "bottom": 219.1428680419922,
+              "scrollTop": 182.85714721679688,
+              "clientHeight": 116,
+              "scrollHeight": 598
+            },
+            "editorScrollTop": 0,
+            "devicePixelRatio": 1.75
+          }
+        }
+      ],
+      "after": {
+        "line": {
+          "top": 186.0357208251953,
+          "bottom": 202.83036422729492
+        },
+        "body": {
+          "top": 103.5714340209961,
+          "bottom": 219.1428680419922,
+          "scrollTop": 182.85714721679688,
+          "clientHeight": 116,
+          "scrollHeight": 598
+        },
+        "editorScrollTop": 0,
+        "devicePixelRatio": 1.75
+      }
+    },
+    {
+      "requestedOuterWidth": 1160,
+      "requestedZoom": 1,
+      "before": {
+        "line": {
+          "top": 186.75,
+          "bottom": 203.546875
+        },
+        "body": {
+          "top": 104,
+          "bottom": 490.328125,
+          "scrollTop": 183,
+          "clientHeight": 386,
+          "scrollHeight": 706
+        },
+        "editorScrollTop": 0,
+        "devicePixelRatio": 1
+      },
+      "wheel": [],
+      "after": {
+        "line": {
+          "top": 186.75,
+          "bottom": 203.546875
+        },
+        "body": {
+          "top": 104,
+          "bottom": 490.328125,
+          "scrollTop": 183,
+          "clientHeight": 386,
+          "scrollHeight": 706
+        },
+        "editorScrollTop": 0,
+        "devicePixelRatio": 1
+      }
+    },
+    {
+      "requestedOuterWidth": 1160,
+      "requestedZoom": 1.25,
+      "before": {
+        "line": {
+          "top": 186.9499969482422,
+          "bottom": 203.74999809265137
+        },
+        "body": {
+          "top": 103.80000305175781,
+          "bottom": 374.8000030517578,
+          "scrollTop": 182.39999389648438,
+          "clientHeight": 271,
+          "scrollHeight": 706
+        },
+        "editorScrollTop": 0,
+        "devicePixelRatio": 1.25
+      },
+      "wheel": [],
+      "after": {
+        "line": {
+          "top": 186.9499969482422,
+          "bottom": 203.74999809265137
+        },
+        "body": {
+          "top": 103.80000305175781,
+          "bottom": 374.8000030517578,
+          "scrollTop": 182.39999389648438,
+          "clientHeight": 271,
+          "scrollHeight": 706
+        },
+        "editorScrollTop": 0,
+        "devicePixelRatio": 1.25
+      }
+    },
+    {
+      "requestedOuterWidth": 1160,
+      "requestedZoom": 1.75,
+      "before": {
+        "line": {
+          "top": 187.75001525878906,
+          "bottom": 204.54465866088867
+        },
+        "body": {
+          "top": 103.5714340209961,
+          "bottom": 219.1428680419922,
+          "scrollTop": 181.14285278320312,
+          "clientHeight": 116,
+          "scrollHeight": 598
+        },
+        "editorScrollTop": 0,
+        "devicePixelRatio": 1.75
+      },
+      "wheel": [],
+      "after": {
+        "line": {
+          "top": 187.75001525878906,
+          "bottom": 204.54465866088867
+        },
+        "body": {
+          "top": 103.5714340209961,
+          "bottom": 219.1428680419922,
+          "scrollTop": 181.14285278320312,
+          "clientHeight": 116,
+          "scrollHeight": 598
+        },
+        "editorScrollTop": 0,
+        "devicePixelRatio": 1.75
+      }
+    },
+    {
+      "requestedOuterWidth": 800,
+      "requestedZoom": 1,
+      "before": {
+        "line": {
+          "top": 188.75,
+          "bottom": 205.546875
+        },
+        "body": {
+          "top": 104,
+          "bottom": 490.328125,
+          "scrollTop": 181,
+          "clientHeight": 386,
+          "scrollHeight": 706
+        },
+        "editorScrollTop": 0,
+        "devicePixelRatio": 1
+      },
+      "wheel": [],
+      "after": {
+        "line": {
+          "top": 188.75,
+          "bottom": 205.546875
+        },
+        "body": {
+          "top": 104,
+          "bottom": 490.328125,
+          "scrollTop": 181,
+          "clientHeight": 386,
+          "scrollHeight": 706
+        },
+        "editorScrollTop": 0,
+        "devicePixelRatio": 1
+      }
+    },
+    {
+      "requestedOuterWidth": 800,
+      "requestedZoom": 1.25,
+      "before": {
+        "line": {
+          "top": 188.5500030517578,
+          "bottom": 205.350004196167
+        },
+        "body": {
+          "top": 103.80000305175781,
+          "bottom": 374.8000030517578,
+          "scrollTop": 180.8000030517578,
+          "clientHeight": 271,
+          "scrollHeight": 706
+        },
+        "editorScrollTop": 0,
+        "devicePixelRatio": 1.25
+      },
+      "wheel": [],
+      "after": {
+        "line": {
+          "top": 188.5500030517578,
+          "bottom": 205.350004196167
+        },
+        "body": {
+          "top": 103.80000305175781,
+          "bottom": 374.8000030517578,
+          "scrollTop": 180.8000030517578,
+          "clientHeight": 271,
+          "scrollHeight": 706
+        },
+        "editorScrollTop": 0,
+        "devicePixelRatio": 1.25
+      }
+    },
+    {
+      "requestedOuterWidth": 800,
+      "requestedZoom": 1.75,
+      "before": {
+        "line": {
+          "top": 188.32144165039062,
+          "bottom": 205.11608505249023
+        },
+        "body": {
+          "top": 103.5714340209961,
+          "bottom": 219.1428680419922,
+          "scrollTop": 180.57142639160156,
+          "clientHeight": 116,
+          "scrollHeight": 598
+        },
+        "editorScrollTop": 0,
+        "devicePixelRatio": 1.75
+      },
+      "wheel": [],
+      "after": {
+        "line": {
+          "top": 188.32144165039062,
+          "bottom": 205.11608505249023
+        },
+        "body": {
+          "top": 103.5714340209961,
+          "bottom": 219.1428680419922,
+          "scrollTop": 180.57142639160156,
+          "clientHeight": 116,
+          "scrollHeight": 598
+        },
+        "editorScrollTop": 0,
+        "devicePixelRatio": 1.75
+      }
+    }
+  ],
+  "hide_hit_evidence": [
+    {
+      "requestedOuterWidth": 1440,
+      "requestedZoom": 1,
+      "rect": {
+        "x": 1297.28125,
+        "y": 497.328125,
+        "width": 38.71875,
+        "height": 28
+      },
+      "withinViewport": true,
+      "innerWidth": 1350,
+      "innerHeight": 681,
+      "devicePixelRatio": 1,
+      "samples": [
+        {
+          "name": "center",
+          "x": 1316.640625,
+          "y": 511.328125,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout     with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "topLeft",
+          "x": 1300.28125,
+          "y": 500.328125,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout     with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "topRight",
+          "x": 1333,
+          "y": 500.328125,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout     with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "bottomLeft",
+          "x": 1300.28125,
+          "y": 522.328125,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout     with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "bottomRight",
+          "x": 1333,
+          "y": 522.328125,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout     with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requestedOuterWidth": 1440,
+      "requestedZoom": 1.25,
+      "rect": {
+        "x": 1027.2874755859375,
+        "y": 381.6000061035156,
+        "width": 38.712501525878906,
+        "height": 28
+      },
+      "withinViewport": true,
+      "innerWidth": 1080,
+      "innerHeight": 545,
+      "devicePixelRatio": 1.25,
+      "samples": [
+        {
+          "name": "center",
+          "x": 1046.643726348877,
+          "y": 395.6000061035156,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "topLeft",
+          "x": 1030.2874755859375,
+          "y": 384.6000061035156,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "topRight",
+          "x": 1062.9999771118164,
+          "y": 384.6000061035156,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "bottomLeft",
+          "x": 1030.2874755859375,
+          "y": 406.6000061035156,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "bottomRight",
+          "x": 1062.9999771118164,
+          "y": 406.6000061035156,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requestedOuterWidth": 1440,
+      "requestedZoom": 1.75,
+      "rect": {
+        "x": 718.7232666015625,
+        "y": 225.71429443359375,
+        "width": 38.705360412597656,
+        "height": 28.000001907348633
+      },
+      "withinViewport": true,
+      "innerWidth": 771,
+      "innerHeight": 389,
+      "devicePixelRatio": 1.75,
+      "samples": [
+        {
+          "name": "center",
+          "x": 738.0759468078613,
+          "y": 239.71429538726807,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "topLeft",
+          "x": 721.7232666015625,
+          "y": 228.71429443359375,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "topRight",
+          "x": 754.4286270141602,
+          "y": 228.71429443359375,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "bottomLeft",
+          "x": 721.7232666015625,
+          "y": 250.71429634094238,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "bottomRight",
+          "x": 754.4286270141602,
+          "y": 250.71429634094238,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requestedOuterWidth": 1160,
+      "requestedZoom": 1,
+      "rect": {
+        "x": 1091.28125,
+        "y": 497.328125,
+        "width": 38.71875,
+        "height": 28
+      },
+      "withinViewport": true,
+      "innerWidth": 1144,
+      "innerHeight": 681,
+      "devicePixelRatio": 1,
+      "samples": [
+        {
+          "name": "center",
+          "x": 1110.640625,
+          "y": 511.328125,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "topLeft",
+          "x": 1094.28125,
+          "y": 500.328125,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "topRight",
+          "x": 1127,
+          "y": 500.328125,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "bottomLeft",
+          "x": 1094.28125,
+          "y": 522.328125,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "bottomRight",
+          "x": 1127,
+          "y": 522.328125,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requestedOuterWidth": 1160,
+      "requestedZoom": 1.25,
+      "rect": {
+        "x": 862.4874877929688,
+        "y": 381.6000061035156,
+        "width": 38.712501525878906,
+        "height": 28
+      },
+      "withinViewport": true,
+      "innerWidth": 915,
+      "innerHeight": 545,
+      "devicePixelRatio": 1.25,
+      "samples": [
+        {
+          "name": "center",
+          "x": 881.8437385559082,
+          "y": 395.6000061035156,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "topLeft",
+          "x": 865.4874877929688,
+          "y": 384.6000061035156,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "topRight",
+          "x": 898.1999893188477,
+          "y": 384.6000061035156,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "bottomLeft",
+          "x": 865.4874877929688,
+          "y": 406.6000061035156,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "bottomRight",
+          "x": 898.1999893188477,
+          "y": 406.6000061035156,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requestedOuterWidth": 1160,
+      "requestedZoom": 1.75,
+      "rect": {
+        "x": 601.0089721679688,
+        "y": 225.71429443359375,
+        "width": 38.705360412597656,
+        "height": 28.000001907348633
+      },
+      "withinViewport": true,
+      "innerWidth": 654,
+      "innerHeight": 389,
+      "devicePixelRatio": 1.75,
+      "samples": [
+        {
+          "name": "center",
+          "x": 620.3616523742676,
+          "y": 239.71429538726807,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact workspace-overlay workspace-icon-tools   drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "topLeft",
+          "x": 604.0089721679688,
+          "y": 228.71429443359375,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact workspace-overlay workspace-icon-tools   drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "topRight",
+          "x": 636.7143325805664,
+          "y": 228.71429443359375,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact workspace-overlay workspace-icon-tools   drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "bottomLeft",
+          "x": 604.0089721679688,
+          "y": 250.71429634094238,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact workspace-overlay workspace-icon-tools   drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "bottomRight",
+          "x": 636.7143325805664,
+          "y": 250.71429634094238,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact workspace-overlay workspace-icon-tools   drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requestedOuterWidth": 800,
+      "requestedZoom": 1,
+      "rect": {
+        "x": 731.28125,
+        "y": 497.328125,
+        "width": 38.71875,
+        "height": 28
+      },
+      "withinViewport": true,
+      "innerWidth": 784,
+      "innerHeight": 681,
+      "devicePixelRatio": 1,
+      "samples": [
+        {
+          "name": "center",
+          "x": 750.640625,
+          "y": 511.328125,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "topLeft",
+          "x": 734.28125,
+          "y": 500.328125,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "topRight",
+          "x": 767,
+          "y": 500.328125,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "bottomLeft",
+          "x": 734.28125,
+          "y": 522.328125,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "bottomRight",
+          "x": 767,
+          "y": 522.328125,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact  workspace-icon-tools  with-sidebar drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requestedOuterWidth": 800,
+      "requestedZoom": 1.25,
+      "rect": {
+        "x": 574.4874877929688,
+        "y": 381.6000061035156,
+        "width": 38.712501525878906,
+        "height": 28
+      },
+      "withinViewport": true,
+      "innerWidth": 627,
+      "innerHeight": 545,
+      "devicePixelRatio": 1.25,
+      "samples": [
+        {
+          "name": "center",
+          "x": 593.8437385559082,
+          "y": 395.6000061035156,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact workspace-overlay workspace-icon-tools   drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "topLeft",
+          "x": 577.4874877929688,
+          "y": 384.6000061035156,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact workspace-overlay workspace-icon-tools   drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "topRight",
+          "x": 610.1999893188477,
+          "y": 384.6000061035156,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact workspace-overlay workspace-icon-tools   drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "bottomLeft",
+          "x": 577.4874877929688,
+          "y": 406.6000061035156,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact workspace-overlay workspace-icon-tools   drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "bottomRight",
+          "x": 610.1999893188477,
+          "y": 406.6000061035156,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact workspace-overlay workspace-icon-tools   drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "requestedOuterWidth": 800,
+      "requestedZoom": 1.75,
+      "rect": {
+        "x": 395.2946472167969,
+        "y": 225.71429443359375,
+        "width": 38.705360412597656,
+        "height": 28.000001907348633
+      },
+      "withinViewport": true,
+      "innerWidth": 448,
+      "innerHeight": 389,
+      "devicePixelRatio": 1.75,
+      "samples": [
+        {
+          "name": "center",
+          "x": 414.6473274230957,
+          "y": 239.71429538726807,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact workspace-overlay workspace-icon-tools   drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "topLeft",
+          "x": 398.2946472167969,
+          "y": 228.71429443359375,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact workspace-overlay workspace-icon-tools   drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "topRight",
+          "x": 431.00000762939453,
+          "y": 228.71429443359375,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact workspace-overlay workspace-icon-tools   drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "bottomLeft",
+          "x": 398.2946472167969,
+          "y": 250.71429634094238,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact workspace-overlay workspace-icon-tools   drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        },
+        {
+          "name": "bottomRight",
+          "x": 431.00000762939453,
+          "y": 250.71429634094238,
+          "hit": true,
+          "stack": [
+            {
+              "tag": "BUTTON",
+              "classes": "",
+              "label": "Hide workspace terminal"
+            },
+            {
+              "tag": "HEADER",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "SECTION",
+              "classes": "terminal-dock",
+              "label": "Workspace terminal"
+            },
+            {
+              "tag": "DIV",
+              "classes": "app workspace-layout workspace-compact workspace-overlay workspace-icon-tools   drawer-open  terminal-docked",
+              "label": null
+            },
+            {
+              "tag": "DIV",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "BODY",
+              "classes": "",
+              "label": null
+            },
+            {
+              "tag": "HTML",
+              "classes": "",
+              "label": null
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "failure": "locator.click: Error: strict mode violation: getByRole('button', { name: /^Settings/ }) resolved to 2 elements:\n    1) <button type=\"button\">…</button> aka getByRole('button', { name: 'Settings Ctrl+' })\n    2) <button class=\"link\" type=\"button\">Settings › Accounts</button> aka getByRole('button', { name: 'Settings › Accounts' })\n\nCall log:\n\u001b[2m  - waiting for getByRole('button', { name: /^Settings/ })\u001b[22m\n\n    at C:\\Users\\Robert\\shadowcode-qualification\\windows-preparation-2.4.1\\qualify-windows-ui-2.4.1.cjs:336:57\n    at async checked (C:\\Users\\Robert\\shadowcode-qualification\\windows-preparation-2.4.1\\qualify-windows-ui-2.4.1.cjs:73:38)\n    at async main (C:\\Users\\Robert\\shadowcode-qualification\\windows-preparation-2.4.1\\qualify-windows-ui-2.4.1.cjs:333:5)",
+  "checked_at": "2026-11-12T08:07:35.557Z"
+}

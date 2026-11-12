@@ -1,5 +1,26 @@
 # Physical-machine platform qualification
 
+## 2.4.1 replacement candidate bf62 — held, not published
+
+Candidate `bf62e846f57d91df06aca3ab40158c0c7e5aee63`, Windows run
+`43176133588` attempt 1, artifact `13924953752`, installed successfully. The
+installed executable matched the payload independently extracted from the exact
+installer. See the [identity and receipt hashes](qa/windows-candidate-bf62e84/summary.json).
+
+The first native UI attempt failed conversation selection after creation. Source
+review found that a delayed post-onboarding boot can override newer navigation;
+the retained database is consistent with that race but does not establish its
+exact asynchronous ordering. An unchanged second attempt passed all nine window
+and zoom cases, all 45 Hide-control hit points, editor/draft checks and terminal
+continuity. Its final Settings check failed because a broad test locator matched
+two buttons. Both attempts remain failed overall. A sidebar-scoped locator was
+reviewed separately; no startup wait is being added to hide the product race.
+
+This candidate was not tagged or published. Navigation ownership must be fixed
+and a fresh installer must pass the complete native check. No endurance or
+real-model test was run for this candidate. Native WebView automation does not
+establish physical-keyboard or OS-shortcut arbitration.
+
 ## 2.4.1 initial candidate — failed, not published
 
 Candidate `3984b7f5dfe39976c1eb3c1aec2a71de5b2c9666` installed successfully on

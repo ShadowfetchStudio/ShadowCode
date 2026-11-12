@@ -1,0 +1,13 @@
+
+> shadow-agent-ui@2.4.1 test
+> vitest run src/App.navigation.test.tsx src/hooks/useNavigation.test.ts src/hooks/useWorkspace.test.ts src/hooks/useAppearance.test.ts
+
+
+ RUN  v5.0.1 /Users/shadowfetch/Projects/ShadowCode/ui
+
+
+ Test Files  4 passed (4)
+      Tests  23 passed (23)
+   Start at  03:23:40
+   Duration  1.47s (tests 42%, transform 23%, environment 21%, import 14%)
+

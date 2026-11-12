@@ -1,0 +1,19 @@
+﻿{
+    "version":  "2.4.1",
+    "finished_at":  "2026-11-12T00:07:35.7163254-08:00",
+    "passed":  false,
+    "node_exited":  true,
+    "failure":  "System.Management.Automation.RuntimeException: Native UI probe failed with exit 1; inspect its retained logs",
+    "ui_passed":  false,
+    "installer_sha256":  "1aaee7eedbb956be59e0da25c92f7b1a2bb99096b0b5deb51e5c42a568d5808f",
+    "forced_node_termination":  false,
+    "app_exited":  true,
+    "provenance_kind":  "candidate",
+    "forced_app_termination":  false,
+    "cleanup_errors":  [
+
+                       ],
+    "source_commit":  "bf62e846f57d91df06aca3ab40158c0c7e5aee63",
+    "receipt_sha256":  "6c439125db808f4674aebd5c7fe82ed59d653b723b18bcc2185cc9ef15e98a31",
+    "installed_exe_sha256":  "665c5e44f8a698dc36c0f5386c6404d1c3b4e6072b21fad429074b8691956a8c"
+}

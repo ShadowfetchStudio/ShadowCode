@@ -1,0 +1,49 @@
+{
+  "sessions": [
+    {
+      "id": "558fe76f7c304438937fca58e2b57665",
+      "workspace": "C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-a731cc05b626449e8e996a5597af575a\\ui-2.4.1-14a018b5ca2d427da6a5019d5f8aa514\\project",
+      "created_at": 1794470626.126266,
+      "updated_at": 1794470626.126266,
+      "status": "active",
+      "title": "",
+      "created_utc": "2026-11-12T08:03:46.126266+00:00"
+    },
+    {
+      "id": "532e28985d3c4e409461d817116d7fdd",
+      "workspace": "C:\\Users\\Robert\\shadowcode-qualification\\candidate-2.4.1\\install-a731cc05b626449e8e996a5597af575a\\ui-2.4.1-14a018b5ca2d427da6a5019d5f8aa514\\project",
+      "created_at": 1794470626.550097,
+      "updated_at": 1794470626.550097,
+      "status": "active",
+      "title": "",
+      "created_utc": "2026-11-12T08:03:46.550097+00:00"
+    }
+  ],
+  "session_count": 2,
+  "tables": [
+    "sessions",
+    "tasks",
+    "events",
+    "sqlite_sequence",
+    "models",
+    "projects",
+    "session_meta",
+    "pins",
+    "desktop_jobs",
+    "background_processes",
+    "native_meta",
+    "goals",
+    "milestones",
+    "goal_runs",
+    "file_changes",
+    "job_messages",
+    "queued_tasks",
+    "task_notes",
+    "usage_snapshots",
+    "automations",
+    "automation_runs",
+    "editor_drafts",
+    "model_outcomes"
+  ],
+  "failure_before_session_id": "558fe76f7c304438937fca58e2b57665"
+}

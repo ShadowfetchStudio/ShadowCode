@@ -6,9 +6,9 @@
 
 **Version 2.4.0** brings a simpler first run, a workspace with files and a docked terminal, and local-runtime reliability improvements. See [what’s new in 2.4](#whats-new-in-24), the [release notes](docs/RELEASE_NOTES.md#shadowcode-240), and [platform qualification](docs/PLATFORM_QUALIFICATION.md) for the checks and their limits.
 
-**2.4.1 source candidate:** physical Windows testing found that the composer can
-overlap the terminal’s Hide control at 175% zoom in a short window. The patch is
-being qualified; 2.4.0 remains the published version. See the
+**2.4.1 source candidate:** physical Windows testing found short-window
+composer/dock overlap, terminal-row clipping and a delayed startup navigation
+race. The patch is being qualified; 2.4.0 remains the published version. See the
 [platform qualification record](docs/PLATFORM_QUALIFICATION.md) for exact scope.
 
 ### An open-source project by Shadowfetch
@@ -859,7 +859,8 @@ Release packaging is described in [docs/RELEASING.md](docs/RELEASING.md).
 
 ## Tests
 
-Recorded validation for the frozen **2.4 source implementation**:
+Historical validation for the frozen **2.4.0 source baseline**
+(the 2.4.1 patch has separate results in its release notes and qualification record):
 
 | Check | Result |
 | --- | --- |

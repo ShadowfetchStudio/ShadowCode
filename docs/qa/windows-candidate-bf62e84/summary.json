@@ -1,0 +1,25 @@
+{
+  "status": "HELD_NOT_PUBLISHED",
+  "commit": "bf62e846f57d91df06aca3ab40158c0c7e5aee63",
+  "candidate_workflow_run": 43176133588,
+  "attempt": 1,
+  "artifact_id": 13924953752,
+  "installer_sha256": "1aaee7eedbb956be59e0da25c92f7b1a2bb99096b0b5deb51e5c42a568d5808f",
+  "installed_and_embedded_exe_sha256": "665c5e44f8a698dc36c0f5386c6404d1c3b4e6072b21fad429074b8691956a8c",
+  "installation": "passed including payload equality and clean-PATH runtime",
+  "attempt1": "failed conversation selection; creation persisted but old conversation stayed selected",
+  "attempt2": "9 geometry cases,45 Hide hit points,editor,drafts,shell checks passed; final Settings selector ambiguous, overall UI and runner failed",
+  "source_review": "post-onboarding boot can acquire a newer navigation ticket after a user action; runtime failure is consistent with that race but exact ordering was not instrumented",
+  "next": "Fix navigation ownership with controlled regression and qualify a fresh installer; no startup wait to mask the defect",
+  "endurance": "not run",
+  "real_model": "not run",
+  "files": {
+    "installation.json": "6c439125db808f4674aebd5c7fe82ed59d653b723b18bcc2185cc9ef15e98a31",
+    "attempt1-session-evidence.json": "89262e07fa32c7b0ee37e9acdc883607bd0c4ca1ca4477f02b9d1740d9756241",
+    "attempt1-ui.json": "50137c2724bd0be84d278024e156496bfe2994c2cc392a6f36e310b8255094a8",
+    "attempt1-runner.json": "e361bb39e600207f8dad93e8151c3c695eba17b5c00abd07429970045e3735ec",
+    "attempt2-ui.json": "d560d9d804e2e70e17b3fe9391e6eaeb6240b83b7b721fd10ce5c9665c7c6456",
+    "attempt2-runner.json": "05938fd5e0044ed834b64d2710e19cff4ee92ffc504c2922aa3093328f3321d4",
+    "cleanup.json": "9767527001e2126c4a096dbf7bd6e92f78541477b15de40a54be8410026d18f0"
+  }
+}

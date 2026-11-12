@@ -6,3 +6,7 @@ tools/busybox-w32-patches/*.patch whitespace=-space-before-tab,-blank-at-eol
 
 # Qualification logs preserve exact emitted bytes for recorded SHA-256 digests.
 reports/*.log whitespace=-blank-at-eol,-blank-at-eof
+
+# Preserve original Windows qualification receipt bytes and their recorded hashes.
+docs/qa/windows-candidate-bf62e84/*.json -text whitespace=cr-at-eol
+docs/qa/onboarding-navigation-2.4.1/*.txt whitespace=-blank-at-eof
