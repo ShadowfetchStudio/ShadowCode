@@ -1,9 +1,11 @@
 # Windows laptop qualification — October 31, 2026
 
-Current status: the **public Windows 2.3.1 installer passed** the bounded laptop
-qualification. See [the final public-installer record](#231-public-installer-qualification)
-for its exact hashes and results. Earlier sections retain the development and
-preview history, including failures.
+Latest public qualification: **Windows 2.3.3**, recorded in
+[the platform qualification report](PLATFORM_QUALIFICATION.md#233-public-release--november-2-2026).
+The **2.4.0 source candidate is awaiting installer qualification**.
+This document retains the earlier 2.3.1 qualification and development history,
+including failures. See [the 2.3.1 public-installer record](#231-public-installer-qualification)
+for that version's exact hashes and results.
 
 Test machine: Windows 11 Home x64, Ryzen 3 5300U, 32 GB RAM. Baseline:
 `9c82cae76d4c94a4416405c93f00e198080a18ac`, Windows CI preview 2.3.0.

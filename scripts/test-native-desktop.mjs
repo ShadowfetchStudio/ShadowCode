@@ -29,6 +29,7 @@
 //   SHADOW_EXPECT_VENDORS   e.g. "codex=Ready,claude=Sign in": exact picker
 //                           availability expected for vendors on this machine
 import assert from "node:assert/strict";
+import { assertFolderOnboarding, assertWorkspacePermissions, assertWelcomeModelSetup, assertWelcomeControls } from "./fixtures/native-onboarding-smoke.mjs";
 import { capturePrivateSession, writePrivateSessionReport } from "./native-test-session.mjs";
 import { EDITOR_FILE, OTHER_FILE, seedNativeEditorFixtures, nativeEditorBeforeReload, nativeEditorAfterReload } from "./fixtures/native-editor-smoke.mjs";
 import { nativeRunCheck } from "./fixtures/native-run-check-smoke.mjs";
@@ -489,34 +490,15 @@ try {
   }
   const expectedScript = (await readFile(path.join(root, "ui/dist/index.html"), "utf8")).match(/src="([^"]+\.js)"/)[1];
   assert.equal(await execute("return new URL(document.querySelector('script[type=module]').src).pathname"), expectedScript, "The binary embeds the current ui/dist build");
-  const onboarding = await text();
-  assert.match(onboarding, /Welcome to ShadowCode/);
-  assert.match(onboarding, /Ask before actions/); assert.match(onboarding, /Allow project edits/);
-  assert.doesNotMatch(onboarding, /\b(Provider|provider|Endpoint|endpoint|API key|Choose a model|Next)\b/, "Onboarding has no model step");
-  assert.deepEqual(await execute("return [...document.querySelectorAll('.wizard input, .wizard select, .wizard textarea')].map(e=>e.type||e.tagName)"), ["text", "radio", "radio"], "Onboarding asks only for the folder and the permission mode");
-  assert.equal(await execute("return document.querySelector('input[name=onboarding-mode]:checked').closest('label').textContent.includes('Ask before actions')"), true, "Ask before actions is the default");
+  await assertFolderOnboarding(execute);
   await fill("#onboarding-folder", project);
   await setTheme("light");
   await screenshot("onboarding");
   await accessibility("onboarding");
-  await clickButton("Trust and open");
-  // Without any ready model (no signed-in subscription on this machine), the
-  // first run asks how to get one; this run skips it (test-native-first-run.mjs
-  // covers that step).
-  const modelStep = await until("Onboarding closes or asks for a model", () => execute("if(!document.querySelector('.wizard'))return 'closed';return /Choose how ShadowCode thinks/.test(document.body.innerText)?'model':false"), 20000);
-  if (modelStep === "model") {
-    const choices = await text();
-    for (const choice of [/Download a free model to run on this computer/, /Use an OpenRouter key/, /Sign in to a subscription/]) assert.match(choices, choice);
-    await clickButton("Skip for now");
-    note("first run without a ready model offers download, OpenRouter and subscription; skipped here");
-  }
+  await clickButton("Open project");
   await until("Workspace ready", () => execute("const t=document.querySelector(arguments[0]);return !!t && !t.disabled && !document.querySelector('.wizard')", [composer]), 20000);
-  const status = await api("GET", "/api/workspace/status");
-  assert.equal(status.workspace, project);
-  const config = await api("GET", "/api/config");
-  const cfgValues = config.values || config.config || config;
-  assert.equal(cfgValues.permissions?.mode, "ask", "Onboarding saved Ask before actions");
-  note("first run: folder, trust and permission mode (Ask before actions), no model step");
+  await assertWorkspacePermissions(api, project);
+  note("first run: Open project trusts the folder, saves ask-first workspace permissions and opens the composer directly");
   // Onboarding saves "system"; the screenshots below choose explicitly.
   await setTheme("light");
 
@@ -528,8 +510,7 @@ try {
   });
   assert.ok(suggestions.length <= 3, `At most three suggestions (${suggestions})`);
   assert.equal(await execute("return document.querySelectorAll('.unified-picker-trigger').length"), 1, "Exactly one model picker");
-  // More's "New worktree starts from" branch list is the one select allowed.
-  assert.equal(await execute("return [...document.querySelectorAll('select')].filter(s=>!s.closest('.worktree-base')).length"), 0, "No select-based model controls in the workspace");
+  await assertWelcomeControls(execute);
   assert.ok(await visible('button[aria-label^="Attach"]'), "Attachment button");
   await screenshot("welcome-light");
   await accessibility("welcome-light");
@@ -555,19 +536,16 @@ try {
   await until("Welcome model action", () => visible(".welcome-model-setup button"));
   await screenshot("welcome-model-ready");
   // With a ready model (a signed-in vendor CLI on this machine) the welcome
-  // offers "Choose a model"; with none (a clean CI host) it offers a free
-  // download, an OpenRouter key or a subscription instead.
+  // offers "Choose a model"; with none (a clean CI host) the conversation
+  // offers vendor connection controls, an API key form and a free download.
   const canChoose = await execute("return [...document.querySelectorAll('.welcome-model-setup button')].some(b => b.textContent.trim() === 'Choose a model' && b.getClientRects().length > 0)");
   if (canChoose) {
     await clickButton("Choose a model", "//div[contains(@class,'welcome-model-setup')]");
     await until("Welcome action opens picker", () => visible(".unified-picker-menu"));
     note("first-run Choose a model opens the unified picker after model discovery");
   } else {
-    const setup = await execute("return document.querySelector('.welcome-model-setup').innerText");
-    assert.match(setup, /free model|Download/i, "No-model welcome offers a free model");
-    assert.match(setup, /OpenRouter/i, "No-model welcome offers an OpenRouter key");
-    assert.match(setup, /subscription/i, "No-model welcome offers a subscription");
-    note("no model ready: the welcome offers a free model, an OpenRouter key or a subscription");
+    await assertWelcomeModelSetup(execute);
+    note("no model ready: inline vendor connection/status controls, API key form and local download");
   }
   await until("Vendor rows probed", async () => {
     const data = await api("GET", "/api/picker");

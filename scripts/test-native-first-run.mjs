@@ -2,8 +2,8 @@
 // no vendor CLI on PATH, an empty HOME, no API keys, no local model. The real
 // llama.cpp runtime (the managed install) detects this computer's hardware.
 //
-// The run: onboarding → the model step (three choices; the recommendation
-// comes from this computer) → "See other free models" → download one model
+// The run: folder onboarding → the empty conversation (provider connections,
+// API key form and hardware-based local recommendation) → "See other free models" → download one model
 // for real from Hugging Face with Pause and Resume → it is selected in the
 // composer → one short read-only task on it → Delete → quit. Nothing is
 // downloaded before the click. The profile (and the ~2 GB download) lives in
@@ -19,6 +19,7 @@
 //   SHADOW_FIRST_RUN_MODEL  catalog id to download (default granite-4.2-3b, the smallest)
 //   SHADOW_KEEP_SCRATCH=1   keep the scratch profile
 import assert from "node:assert/strict";
+import { assertFolderOnboarding, assertWorkspacePermissions, assertWelcomeModelSetup, assertWelcomeControls } from "./fixtures/native-onboarding-smoke.mjs";
 import { capturePrivateSession, writePrivateSessionReport } from "./native-test-session.mjs";
 import { createServer } from "node:http";
 import { spawn, execFile } from "node:child_process";
@@ -221,28 +222,34 @@ try {
   assert.ok(target, `${modelId} is in the download list`);
   const recommended = catalog.models.find((m) => m.id === catalog.recommended);
   note(`hardware: ${catalog.hardware.gpu || "no GPU"} (${Math.round((catalog.hardware.vram_bytes || 0) / 2 ** 30)} GB) · ${Math.round(catalog.hardware.ram_bytes / 2 ** 30)} GB RAM → recommended ${recommended?.name || "none"} (${catalog.recommended_fit || "-"})`);
+  await assertFolderOnboarding(execute);
   await fill("#onboarding-folder", project);
-  await clickButton("Trust and open");
+  await clickButton("Open project");
+  await until("Workspace ready", () => execute("const t=document.querySelector('textarea[aria-label=\"Message ShadowCode\"]');return !!t && !t.disabled && !document.querySelector('.wizard')"), 30000);
+  await assertWorkspacePermissions(api, project);
 
-  // ------------------------------------------------------------ step 2
-  await until("Model step", async () => /Choose how ShadowCode thinks/.test(await text()), 30000);
-  const step = await text();
-  for (const choice of [/Download a free model to run on this computer/, /Use an OpenRouter key/, /Sign in to a subscription/]) assert.match(step, choice);
+  // ------------------------------------------------------------ empty conversation
+  await until("Inline model setup", () => visible(".welcome-model-setup .model-setup"), 30000);
+  await assertWelcomeModelSetup(execute);
+  await assertWelcomeControls(execute);
+  // Catalog rendering is asynchronous even when the API above has returned.
+  await until("Local recommendation settled", () => execute("const e=document.querySelector('.welcome-model-setup .model-setup-detail');return !!e && !/Checking what this computer can run/.test(e.innerText)"), 30000);
+  const step = await execute("return document.querySelector('.welcome-model-setup').innerText");
   if (recommended) {
     assert.match(step, new RegExp(`${recommended.name} by ${recommended.publisher}: [\\d.]+ GB, about`), "Recommended model with size and time");
     assert.match(step, /Picked for this computer: /);
-    assert.equal(await execute("const r=document.querySelector('.wizard input[type=radio]:checked');return r?r.closest('label').innerText:''").then((t) => /Download a free model/.test(t)), true, "Download is preselected");
+    assert.equal(await execute("const r=document.querySelector('.welcome-model-setup .mode-options input[type=radio]:checked');return r?r.closest('label').innerText:''").then((t) => /Download a free model/.test(t)), true, "Download is preselected");
   }
   const picker = await api("GET", "/api/picker?cached=1");
   assert.ok(!picker.targets.some((t) => t.availability === "ready"), "No model is ready on a first run without accounts");
   assert.equal(existsSync(downloads) ? (await readdir(downloads)).length : 0, 0, "Nothing is downloaded before a click");
   await screenshot("first-run-model-step");
   await accessibility("first-run-model-step");
-  note(`first run without accounts: model step with three choices${recommended ? `, ${recommended.name} preselected` : ""}; nothing downloaded`);
+  note(`first run without accounts: inline provider connections, API key form and local download${recommended ? `, ${recommended.name} preselected` : ""}; nothing downloaded`);
 
   // ------------------------------------------------------------ download
   await clickButton("See other free models");
-  await until("Settings › Local models", async () => /Download a free model/.test(await text()), 20000);
+  await until("Settings › Local models", () => execute("const s=document.querySelector('.settings-body');return !!s?.querySelector('#local-gguf') && /Download a free model/i.test(s.innerText)"), 20000);
   const sizeLabel = await until(`${target.name} offers Download`, async () => (await rowText(target.name)).match(/Download \(([^)]+)\)/)?.[1], 20000);
   await screenshot("local-models-before");
   await accessibility("local-models");

@@ -1,13 +1,16 @@
 # Windows port
 
-Status: Windows 2.3.1 is published. The exact public installer passed installation,
+Status: Windows 2.3.3 is the latest published release. The exact public installer passed installation,
 clean-PATH startup, native editor/settings checks and a local-model coding task
 on a Windows 11 Home x64 laptop (Ryzen 3 5300U, 32 GB RAM). Gemma 4 E4B on CPU
 completed the repair, executed its tests inside AppContainer, and preserved all
 five original tests; the independent check also passed. This is one bounded
 fixture, not a broad model-reliability or Windows-hardware benchmark.
-See [the laptop qualification record](WINDOWS_LAPTOP_QUALIFICATION.md#231-public-installer-qualification)
-for exact hashes, workflow provenance, earlier failed attempts and limitations.
+See [the current platform qualification record](PLATFORM_QUALIFICATION.md#233-public-release--november-2-2026)
+for the 2.3.3 hashes and results, and [the earlier laptop qualification record](WINDOWS_LAPTOP_QUALIFICATION.md#231-public-installer-qualification)
+for the 2.3.1 history, workflow provenance, earlier failed attempts and limitations.
+The 2.4.0 workspace upgrade is a source candidate; its installer qualification is
+pending and is not covered by those older receipts.
 
 External programs that open the Windows null device themselves can fail in
 AppContainer; external Git commands demonstrated this in the 2.3.0 public-installer

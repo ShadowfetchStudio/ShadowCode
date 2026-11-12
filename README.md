@@ -214,7 +214,12 @@ assets are checksum-only and cannot be installed by this new entry point; use
 the instructions shipped with that released version for those existing assets.
 The 0.33.0 release attempt failed before signing and publication. Its tag stays
 unchanged. Version 0.33.1 was the first signed release; the public trust policy
-in `release/trust` now authorizes 0.33.0 through 2.3.3. An older independently trusted installer bundle whose policy ends at 2.3.1 will reject 2.3.3. Obtain and independently authenticate a reviewed bundle with the updated policy before installing; do not replace trust files with copies from the downloaded release.
+in this source checkout's `release/trust` authorizes 0.33.0 through the 2.4.0 candidate;
+the latest published release is still 2.3.3. The policy range does not establish
+that a candidate has been published or qualified. An older independently trusted
+installer bundle whose policy ends at 2.3.1 will reject 2.3.3. Obtain and
+independently authenticate a reviewed bundle with the updated policy before
+installing; do not replace trust files with copies from the downloaded release.
 For development, use [Build from source](#build-from-source).
 
 Obtain an independently authenticated installer bundle as described below,
