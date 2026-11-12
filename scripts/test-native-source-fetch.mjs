@@ -113,3 +113,30 @@ test("source retrieval verifies every candidate and reuses retained bytes", asyn
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+// These checks run before the expensive native packaging phase in existing CI.
+test("runtime APK pins and retained source provenance agree on both architectures", async () => {
+  const { runtimePins, validateRuntimeSourcePins, runtimeIndexError } = await import("./native-runtime-pins.mjs");
+  const recipe = new URL("../packaging/native-runtime/", import.meta.url);
+  const pins = await readFile(new URL("apk-packages.txt", recipe), "utf8");
+  const sources = JSON.parse(await readFile(new URL("alpine-sources.json", recipe), "utf8"));
+  validateRuntimeSourcePins(pins, sources);
+  assert.throws(() => validateRuntimeSourcePins(pins.replace("zlib-static=1.4-r0", "zlib-static=1.3.2-r1"), sources), /differs from retained zlib/);
+  assert.throws(() => validateRuntimeSourcePins(`${pins}aarch64:zlib-static=1.3.2-r1\n`, sources), /aarch64.*differs from retained zlib/);
+  const changed = structuredClone(sources);
+  changed.packages.find(p => p.name === "zlib").files[0].url = "https://raw.githubusercontent.com/alpinelinux/aports/master/main/zlib/APKBUILD";
+  assert.throws(() => validateRuntimeSourcePins(pins, changed), /immutable aports commit/);
+  assert.throws(() => runtimePins("zlib-static>=1.4-r0", "aarch64"), /must be exact/);
+  assert.throws(() => runtimePins("zlib-static=1.*-r0", "aarch64"), /must be exact/);
+  assert.throws(() => runtimePins("zlib-static=1.4-r0\nzlib-static=1.4-r0", "x86_64"), /Duplicate/);
+  assert.throws(() => runtimePins("aarch64:zlib-static=1.4-r0", "aarch64"), /no pinned package/);
+  const zlib = sources.packages.find(p => p.name === "zlib");
+  assert.equal(runtimeIndexError("zlib-static", { o: "zlib", c: zlib.aportsCommit }, sources), null);
+  assert.match(runtimeIndexError("zlib-static", { c: zlib.aportsCommit }, sources), /origin must be zlib/);
+  assert.match(runtimeIndexError("zlib-static", { o: "unexpected", c: zlib.aportsCommit }, sources), /origin must be zlib/);
+  assert.match(runtimeIndexError("zlib-static", { o: "zlib", c: "0".repeat(40) }, sources), /recipe differs/);
+  assert.match(runtimeIndexError("zlib-static", undefined, sources), /exact pin missing/);
+  assert.equal(runtimeIndexError("bash", {}, sources), null, "Unlinked build tools remain availability-only");
+  assert.equal(zlib.version, "1.4-r0");
+  assert.deepEqual(zlib.files.map(f => f.file), ["APKBUILD", "zlib-1.4.tar.gz"], "Alpine 1.4 recipe no longer applies the old CVE patch");
+});

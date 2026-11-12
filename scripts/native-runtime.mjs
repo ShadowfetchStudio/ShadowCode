@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { applyPackagingPath } from "./native-packaging-env.mjs";
 import { archInfo, hostArch } from "./native-arch.mjs";
+import { validateRuntimeSourcePins } from "./native-runtime-pins.mjs";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const exec = promisify(execFile);
 const sha = (value) => createHash("sha256").update(value).digest("hex");
@@ -50,6 +51,10 @@ export async function buildRuntime(arch = hostArch().arch) {
   const info = archInfo(arch);
   applyPackagingPath(root);
   const recipe = path.join(root, "packaging/native-runtime");
+  validateRuntimeSourcePins(
+    await readFile(path.join(recipe, "apk-packages.txt"), "utf8"),
+    JSON.parse(await readFile(path.join(recipe, "alpine-sources.json"), "utf8")),
+  );
   const files = [
     "manifest.json",
     "Dockerfile",

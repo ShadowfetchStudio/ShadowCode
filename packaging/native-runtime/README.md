@@ -80,6 +80,24 @@ reproducibility across compiler build timestamps.
 
 ## Regression checks
 
+Before changing APK pins, run `node scripts/check-native-runtime-pins.mjs`
+(optionally `--output /path/to/audit.json`). This read-only audit checks every
+exact pin against the official Alpine v3.21 `main` and `community` indexes for
+both `aarch64` and `x86_64`, and compares retained dependency recipes with the
+APKs' aports commits. Its index hashes record the observation; they do not
+replace APK signature or dependency verification in the pinned container.
+The audit never updates a pin automatically.
+
+Packaging validates linked-library versions against `alpine-sources.json`
+before reusing a cached runtime or building a new one. The source-fetch tests
+also reject mismatched architecture overrides, floating or duplicate pins,
+and recipe URLs that do not identify the retained immutable aports commit.
+When a library version changes, update its archive, recipe hash and complete
+patch list together. For example, Alpine's zlib 1.4-r0 recipe at
+`d3332621d44c2c4cf52e52217b16674db190212c` has only the upstream archive;
+the separate `CVE-2026-85091.patch` from 1.3.2-r1 is no longer a build input.
+
+
 `node --test scripts/test-native-source-fetch.mjs` checks unexpected HTTP 200
 bodies, HTTP errors, redirects, identical-byte mirror recovery, both digest
 algorithms, retained-source reuse without HTTP requests, corrupt retained inputs,
