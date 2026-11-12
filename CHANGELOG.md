@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.4.1: Short-window workspace controls
+
+- Prevent the composer from painting over terminal dock controls at larger zoom levels in short windows.
+- Keep conversation/composer scrolling, menus and Latest activity reachable while preserving editor and composer drafts and the terminal session.
+- Include a fallback for webviews without size container queries and regression coverage for the measured Windows geometry and CSS zoom.
+- Retain 2.4.0 publication evidence and the native Windows failure that prompted this patch; qualify new installer bytes separately.
+
 ## 2.4.0: Mac workspace, local models and reliable review
 
 - **Mac workspace.** Direct Files/Terminal/Preview controls, a remembered resizable

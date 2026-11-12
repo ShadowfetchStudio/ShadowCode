@@ -346,9 +346,71 @@
   opacity: 0.55;
 }
 .app.terminal-docked {
+  container: docked-workspace / size;
   --terminal-dock-height: clamp(170px, 28vh, 300px);
   grid-template-rows: 55px minmax(0, 1fr) var(--terminal-dock-height);
   grid-template-areas: "sidebar top top" "sidebar stage drawer" "sidebar terminal terminal";
+}
+/* Query layout height, not raw viewport height: native and CSS fallback zoom
+   must enter the same short-window layout. Keep the header and terminal fixed
+   while the conversation/composer can scroll instead of painting over the dock. */
+@container docked-workspace (max-height: 560px) {
+  .terminal-docked > .stage {
+    overflow: auto;
+  }
+  .terminal-docked > .stage > .workspace-context,
+  .terminal-docked > .stage > .composer-wrap,
+  .terminal-docked > .stage > .statusline {
+    flex-shrink: 0;
+  }
+  .terminal-docked > .stage > .chat-stream {
+    flex: 1 0 120px;
+  }
+  /* Upward menus can extend before the scroll origin. Open them into the
+     scrollable content instead, so their first and last actions stay reachable. */
+  .terminal-docked .stage .composer-more-menu,
+  .terminal-docked .stage .composer-popover,
+  .terminal-docked .stage .unified-picker-menu,
+  .terminal-docked .stage .slash-menu {
+    top: calc(100% + 8px);
+    bottom: auto;
+  }
+  .terminal-docked > .stage > .jump-latest {
+    position: static;
+    flex-shrink: 0;
+    align-self: center;
+    transform: none;
+    margin-block: 4px;
+  }
+}
+/* Older supported WebViews (including macOS 12) may lack size queries. Keep
+   the same accessible scroll layout at every docked height on those engines. */
+@supports not (container-type: size) {
+  .terminal-docked > .stage {
+    overflow: auto;
+  }
+  .terminal-docked > .stage > .workspace-context,
+  .terminal-docked > .stage > .composer-wrap,
+  .terminal-docked > .stage > .statusline {
+    flex-shrink: 0;
+  }
+  .terminal-docked > .stage > .chat-stream {
+    flex: 1 0 120px;
+  }
+  .terminal-docked .stage .composer-more-menu,
+  .terminal-docked .stage .composer-popover,
+  .terminal-docked .stage .unified-picker-menu,
+  .terminal-docked .stage .slash-menu {
+    top: calc(100% + 8px);
+    bottom: auto;
+  }
+  .terminal-docked > .stage > .jump-latest {
+    position: static;
+    flex-shrink: 0;
+    align-self: center;
+    transform: none;
+    margin-block: 4px;
+  }
 }
 .terminal-dock {
   grid-area: terminal;

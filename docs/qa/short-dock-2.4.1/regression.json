@@ -1,0 +1,95 @@
+{
+  "schema": 1,
+  "scope": "Browser fixtures only; native zoom equivalent is a reduced viewport and compatibility fallback is exercised in modern engines, not an old native WebView. Exact candidate/public Windows installation is separately required.",
+  "source_files": {
+    "ui/src/flagship.css": "c70cb56d2650874787a47e8ba23607584ac0797d23a9d8d809c174f7951664ef",
+    "ui/e2e/shortDock.spec.ts": "d8b0ca26d9afa0a89164ee59ae41fccda57cf1952f9ac1fc69c84c88c3c6cb7a"
+  },
+  "runs": {
+    "chromium-report.json": {
+      "stats": {
+        "startTime": "2026-11-12T05:47:44.307Z",
+        "duration": 65014.854999999996,
+        "expected": 32,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "report_sha256": "0ca5fdad5f2d58e28c1c516914e5c92090e469555b07821f3c1306d3344285da"
+    },
+    "webkit-report.json": {
+      "stats": {
+        "startTime": "2026-11-12T05:48:53.421Z",
+        "duration": 29833.469999999998,
+        "expected": 12,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "report_sha256": "28e9c3b4a4693c48b72ef2f46e67f7914fba3a0a9172f7ae515b73d55a1840e8"
+    },
+    "baseline-report.json": {
+      "stats": {
+        "startTime": "2026-11-12T05:47:45.265Z",
+        "duration": 74525.938,
+        "expected": 0,
+        "skipped": 0,
+        "unexpected": 12,
+        "flaky": 0
+      },
+      "report_sha256": "68058be50c75eee0090d43c7d0c5e72f0359632694c81d35615021e9c68d7862"
+    }
+  },
+  "baseline_provenance": {
+    "tagCommit": "25c8345f99f246b37ea45bf9306eb551da9c0819",
+    "cssSha256": "c496a5614dc088d1dc5db6bd8d3bf1a35feb14a2657150e108aeec8639658c24",
+    "testSha256": "d8b0ca26d9afa0a89164ee59ae41fccda57cf1952f9ac1fc69c84c88c3c6cb7a",
+    "scope": "Working UI with only flagship.css substituted from v2.4.0 by a build-only loader; no checkout mutation."
+  },
+  "review": "Independent source review: prior slash/mention, Latest activity, and older-engine fallback findings resolved; no new actionable findings in the frozen two-file patch.",
+  "additional_validation": {
+    "unit_tests": 906,
+    "typecheck": "passed",
+    "production_build": "passed",
+    "release_authentication_tests_linux": 115,
+    "full_chromium_initial": {
+      "passed": 165,
+      "failed": 1,
+      "failure": "secondOpinions.spec.ts commit-click raced queued-task busy transition; test synchronization under correction"
+    },
+    "log_sha256": {
+      "ui-unit.log": "9d80e8e6a76b932bfe3653accb3b2e9e3e32d82f8d0b2e5be859aa91f2631d5c",
+      "typecheck.log": "79281e424ffddf6d647ffee15275de2ecf8d1585b0cb59458fe0c42eb949e403",
+      "ui-production-build.log": "608b58381004bd0e6554735694973ea400fa3f7dd17f3a201f4a6e002258d0b0",
+      "release-script-tests-linux.log": "e06b752ae4c7524c9f230fa9c3b60c94a37d5d5160b2590bf186f113a54fd834",
+      "ui-e2e-full.log": "17fd30a3a1a3675c30b7c47bed54cd2e015c07947ce976821e88432b43263f45"
+    },
+    "observer-scoped-report.json": {
+      "stats": {
+        "startTime": "2026-11-12T06:03:16.044Z",
+        "duration": 67722.80500000001,
+        "expected": 15,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "sha256": "a358d33001e75ab3fea15b1c35bb72cea05760913ebb0b85352b3167e064b668"
+    },
+    "observer-full-report.json": {
+      "stats": {
+        "startTime": "2026-11-12T06:04:31.122Z",
+        "duration": 209879.918,
+        "expected": 166,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "sha256": "7ac10fd44d337d77f6a0c6c7f4b37dca4ac845adcf4177a11d3865cfba7d9fd0"
+    },
+    "second_opinions_test": {
+      "sha256": "36f49aa5b2dd9fbfcea1ff5bf0f445872ddf05775e603796f8e9952619e2e7f7",
+      "root_cause": "Commit click overlapped the queued fix entering busy state; production guard correctly prevented commit. Test now records disabled transition before queuing and waits for the second completed task summary.",
+      "review": "Independent source review found no remaining issue; no product guard or existing assertions weakened."
+    }
+  }
+}

@@ -1,5 +1,51 @@
 # Physical-machine platform qualification
 
+## 2.4.0 public release — November 12, 2026 UTC
+
+All nine platform installers are published from immutable commit
+`25c8345f99f246b37ea45bf9306eb551da9c0819`. All 23 public files passed
+[downloaded-byte verification](qa/platform-release-2.4.0/public-assets-verification.json).
+Both Linux targets passed the 15 required release gates, including real native
+window/endurance checks and offline clean-host package installation. The public
+Linux payloads authenticated against the tracked Ed25519 key, and the live APT
+repository passed independent signature/index/package verification. See the
+[publication procedure](RELEASING.md) and [APT proof](qa/platform-release-2.4.0/apt-public-verification.json).
+These CI and download checks do not replace physical-machine acceptance.
+
+**Windows laptop qualification did not pass overall.** The exact public installer
+SHA-256 `a9d459d482b4509109566e888d281373ef4a68b40c9613b614a107300b09f986`
+installed and passed clean-PATH runtime checks on Windows 11 Home x64, Ryzen 3
+5300U, 32 GB RAM. The installed executable SHA-256 is
+`ff6e1cb61232c57d70e639056ecd7fc0de3f90295d546bd3655d0e8a4672cab2`.
+Onboarding, project task creation, editor find/replace/undo/redo/save, dirty-file
+preservation and terminal focus checks passed before the layout failure.
+
+At a 1160×720 native window and 175% native WebView zoom (654×389 CSS pixels),
+the composer overflowed its stage by 84.571 pixels. Its content intercepted the
+terminal Hide control's center and all four inset corners. This is a product
+layout defect under investigation for **2.4.1**, not a passed native UI run.
+An earlier editor-line failure at 125% was a probe assumption: ordinary drawer
+scrolling made the line visible and focusable. Failed and diagnostic attempts
+are retained; completing a measurement does not count as acceptance.
+
+The installed engine separately passed 100 sequential and 80 concurrent tasks,
+five cancellations and persistence after forced termination using a scripted
+provider. The real Gemma task was interrupted for patch work and remains
+**incomplete**; no real-model pass is claimed for 2.4.0. Owned qualification
+processes and tasks were cleaned up. Evidence:
+[installation](qa/platform-release-2.4.0/windows-installation.json),
+[endurance](qa/platform-release-2.4.0/windows-endurance.json),
+[artifact binding](qa/platform-release-2.4.0/windows-endurance-artifact.json),
+[geometry measurement](qa/platform-release-2.4.0/windows-geometry-measurement.json),
+and [final checkpoint](qa/platform-release-2.4.0/windows-checkpoint.json).
+
+The macOS workflow passed bundled-app/runtime smoke tests and disk-image
+verification for Apple Silicon and Intel. It uses ad-hoc signing, not Developer
+ID signing or notarization. Flatpak install/start probes passed on x86_64 and
+ARM64. No new physical iMac, native Mac accessibility or Omarchy 2.4.0 acceptance
+is implied; older machine records below remain tied to their original versions.
+
+
 ## 2.3.3 public release — November 2, 2026
 
 Linux 2.3.3 is published. The Windows, macOS and Flatpak packages are also published.

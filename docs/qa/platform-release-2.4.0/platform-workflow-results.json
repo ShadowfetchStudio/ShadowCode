@@ -1,0 +1,284 @@
+[
+  {
+    "run": 43155796172,
+    "source": "25c8345f99f246b37ea45bf9306eb551da9c0819",
+    "jobs": [
+      {
+        "id": 130975304466,
+        "name": "build (macos-15-intel, x64)",
+        "status": "completed",
+        "conclusion": "success",
+        "completed_at": "2026-11-12T05:19:45Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install the pinned Rust toolchain",
+            "conclusion": "success"
+          },
+          {
+            "name": "Require the tag to match the app version",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build the Metal runtime, ShadowCode.app and the .dmg",
+            "conclusion": "success"
+          },
+          {
+            "name": "Smoke-test the bundled app and runtime",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "id": 130975304696,
+        "name": "build (macos-15, aarch64)",
+        "status": "completed",
+        "conclusion": "success",
+        "completed_at": "2026-11-12T04:58:53Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install the pinned Rust toolchain",
+            "conclusion": "success"
+          },
+          {
+            "name": "Require the tag to match the app version",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build the Metal runtime, ShadowCode.app and the .dmg",
+            "conclusion": "success"
+          },
+          {
+            "name": "Smoke-test the bundled app and runtime",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "id": 130990741182,
+        "name": "attach",
+        "status": "completed",
+        "conclusion": "success",
+        "completed_at": "2026-11-12T05:20:03Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "conclusion": "success"
+          },
+          {
+            "name": "Attach the images and their checksums without replacing anything",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "run": 43155799430,
+    "source": "25c8345f99f246b37ea45bf9306eb551da9c0819",
+    "jobs": [
+      {
+        "id": 130975312604,
+        "name": "build (ubuntu-24.04, x86_64)",
+        "status": "completed",
+        "conclusion": "success",
+        "completed_at": "2026-11-12T05:04:59Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "conclusion": "success"
+          },
+          {
+            "name": "Require the tag to match the app version",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install the pinned Rust toolchain",
+            "conclusion": "success"
+          },
+          {
+            "name": "Flatpak tools and Flathub",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build the Flatpak with the GNOME 50 SDK (Vulkan + CPU llama.cpp)",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install and start the bundle",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "id": 130975312893,
+        "name": "build (ubuntu-24.04-arm, aarch64)",
+        "status": "completed",
+        "conclusion": "success",
+        "completed_at": "2026-11-12T04:58:53Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "conclusion": "success"
+          },
+          {
+            "name": "Require the tag to match the app version",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install the pinned Rust toolchain",
+            "conclusion": "success"
+          },
+          {
+            "name": "Flatpak tools and Flathub",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build the Flatpak with the GNOME 50 SDK (Vulkan + CPU llama.cpp)",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install and start the bundle",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+            "conclusion": "success"
+          },
+          {
+            "name": "Post Run actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      },
+      {
+        "id": 130985386398,
+        "name": "attach",
+        "status": "completed",
+        "conclusion": "success",
+        "completed_at": "2026-11-12T05:05:13Z",
+        "steps": [
+          {
+            "name": "Set up job",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093",
+            "conclusion": "success"
+          },
+          {
+            "name": "Attach the bundles and their checksums without replacing anything",
+            "conclusion": "success"
+          },
+          {
+            "name": "Complete job",
+            "conclusion": "success"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -1,11 +1,12 @@
 # Windows laptop qualification — October 31, 2026
 
-Latest public qualification: **Windows 2.3.3**, recorded in
-[the platform qualification report](PLATFORM_QUALIFICATION.md#233-public-release--november-2-2026).
-The **2.4.0 source candidate is awaiting installer qualification**.
+Latest published installer: **Windows 2.4.0**. Installation and engine endurance
+passed, but native UI acceptance failed on a short-window 175% zoom overlap;
+the real-model check is incomplete. The **2.4.1 candidate** is pending release
+and qualification. See [the current platform record](PLATFORM_QUALIFICATION.md#240-public-release--november-12-2026-utc).
 This document retains the earlier 2.3.1 qualification and development history,
-including failures. See [the 2.3.1 public-installer record](#231-public-installer-qualification)
-for that version's exact hashes and results.
+including failures. The successful 2.3.3 qualification remains in its separately
+dated [platform record](PLATFORM_QUALIFICATION.md#233-public-release--november-2-2026).
 
 Test machine: Windows 11 Home x64, Ryzen 3 5300U, 32 GB RAM. Baseline:
 `9c82cae76d4c94a4416405c93f00e198080a18ac`, Windows CI preview 2.3.0.

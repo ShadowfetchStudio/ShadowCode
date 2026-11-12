@@ -1,7 +1,13 @@
 # Apple silicon workspace upgrade — implementation and qualification
 
-Status: research and local implementation delivered, November 11, 2026. This is a development
-candidate, not a published release or an installed-app acceptance certificate.
+This document records the November 11, 2026 development qualification. Its tests
+and captures retain their original scope; publication does not convert them into
+installed-app acceptance evidence.
+
+The implementation was subsequently published in the [2.4.0 source and release](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.4.0),
+at `25c8345f99f246b37ea45bf9306eb551da9c0819`. See the
+[release procedure and publication record](RELEASING.md) and
+[platform qualification](PLATFORM_QUALIFICATION.md) for later package evidence.
 Baseline: `82c60ee6a8bb8174c617d92aae0c8d5b14bc82a0` (2.4.0), branch
 `cursor/apple-silicon-t3-ux-610c`.
 
@@ -134,8 +140,11 @@ focus and input ownership. Native CLI/model probes exercise the real engine.
 Neither establishes installed WKWebView menu arbitration, VoiceOver behavior,
 non-US physical keyboard behavior or a developer usability study. Those require
 separate native/human qualification. The development app is ad-hoc signed. Developer ID signing, notarization, a
-distribution installer, release publication and website deployment are not
-part of this local upgrade delivery and have not been performed.
+distribution installer, release publication and website deployment were not
+part of that November 11 local qualification. Later publication evidence is
+recorded separately in the linked release and platform records; native
+VoiceOver, physical-keyboard acceptance and notarization are not established by
+the tests in this document.
 
 Future research proposals include a larger execution-history surface, an
 opt-in guided first task, OS pressure-event policy, and controlled MLX/cache
@@ -149,5 +158,7 @@ claimed complete by the current implementation.
 - Real-model qualification receipts: `/Volumes/NVME1TB/Development/ShadowCode-build/silicon-validation/`.
 - Final interface captures: `reports/visuals/final-chromium/`; these are browser test-fixture captures, not native-window screenshots.
 
-Sources remain as local working-tree changes on the named branch. No commit,
-push, public release or website update was made for this upgrade.
+At the end of the November 11 development qualification, the sources were local
+working-tree changes on the named branch. They were subsequently committed and
+pushed, and the 2.4.0 release was published as linked above. The original
+development artifacts and browser-fixture provenance remain unchanged.

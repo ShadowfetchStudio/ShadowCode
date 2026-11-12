@@ -1,0 +1,51 @@
+{
+  "passed": true,
+  "verifiedAt": "2026-11-12T04:37:08.368Z",
+  "releaseId": 442500290,
+  "releaseUrl": "https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.4.0",
+  "assetsChecked": 14,
+  "packages": [
+    {
+      "name": "ShadowCode_2.4.0_aarch64.AppImage",
+      "digest": "sha256:ffa707d7017471c92518b6bc6ad80c61b2a33cc2297f34e49fbe8a752f8d6e06",
+      "target": "aarch64-unknown-linux-gnu",
+      "keyId": "f0c60ff8228314616985712f8918c9798c0ecf72b7271e19343a041c25663b7f",
+      "signatureVerified": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_aarch64_appimage-runtime-sources.tar.gz",
+      "digest": "sha256:882941ffc4cefe860bd9ae609090563d77d5ef4f482757398a81ef250137d144",
+      "target": "aarch64-unknown-linux-gnu",
+      "keyId": "f0c60ff8228314616985712f8918c9798c0ecf72b7271e19343a041c25663b7f",
+      "signatureVerified": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_amd64.AppImage",
+      "digest": "sha256:88dd8d9727abd5559a6fd4130889efab0139293d93401481fd6a053c0dc48c39",
+      "target": "x86_64-unknown-linux-gnu",
+      "keyId": "f0c60ff8228314616985712f8918c9798c0ecf72b7271e19343a041c25663b7f",
+      "signatureVerified": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_amd64.deb",
+      "digest": "sha256:925928dfcc78a72b3574f0adc348a4f09b07adbd226a6c4af3b8881bf16e6af0",
+      "target": "x86_64-unknown-linux-gnu",
+      "keyId": "f0c60ff8228314616985712f8918c9798c0ecf72b7271e19343a041c25663b7f",
+      "signatureVerified": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_appimage-runtime-sources.tar.gz",
+      "digest": "sha256:4efa7dbaf0266cefcdb6f10907248d3db28b3f96ad332bd7feadb96ba9c5ea15",
+      "target": "x86_64-unknown-linux-gnu",
+      "keyId": "f0c60ff8228314616985712f8918c9798c0ecf72b7271e19343a041c25663b7f",
+      "signatureVerified": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_arm64.deb",
+      "digest": "sha256:fef3f92e22d7aab9371833580803c7d681e20c6918c926627656edc07457e420",
+      "target": "aarch64-unknown-linux-gnu",
+      "keyId": "f0c60ff8228314616985712f8918c9798c0ecf72b7271e19343a041c25663b7f",
+      "signatureVerified": true
+    }
+  ]
+}

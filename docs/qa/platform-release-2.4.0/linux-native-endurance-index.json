@@ -1,0 +1,20 @@
+[
+  {
+    "architecture": "x86_64",
+    "artifact_id": 13912813020,
+    "run_id": 43144949367,
+    "commit": "25c8345f99f246b37ea45bf9306eb551da9c0819",
+    "passed": true,
+    "completed": 100,
+    "zip_sha256": "b14690b6ed3b06f92eb4fec293e9bdd92a719ca1bf86022014fe1145cbf7daa5"
+  },
+  {
+    "architecture": "aarch64",
+    "artifact_id": 13912094067,
+    "run_id": 43144949367,
+    "commit": "25c8345f99f246b37ea45bf9306eb551da9c0819",
+    "passed": true,
+    "completed": 100,
+    "zip_sha256": "f775a39d5005fe7473becb8a97b6532065477ac40c268a3d2efe08068c2206e6"
+  }
+]

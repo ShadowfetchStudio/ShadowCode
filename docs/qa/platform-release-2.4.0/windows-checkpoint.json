@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-11-12T05:27:02.575192+00:00",
+  "release_commit": "25c8345f99f246b37ea45bf9306eb551da9c0819",
+  "installer_sha256": "a9d459d482b4509109566e888d281373ef4a68b40c9613b614a107300b09f986",
+  "installed_exe_sha256": "ff6e1cb61232c57d70e639056ecd7fc0de3f90295d546bd3655d0e8a4672cab2",
+  "installation": "passed",
+  "native_ui": "failed: overflowing composer covers Hide center and all four3px inset corners at1160x720 outer /175% native zoom",
+  "endurance": "passed before main stop instruction:100 sequential80 concurrent5 cancellations; scripted provider",
+  "model": "incomplete: stopped on main instruction; no pass or model-failure claim",
+  "overall_passed": false,
+  "measurement_completed": true,
+  "cleanup": "complete: no remaining owned QA tasks or relevant processes",
+  "report": "native-ui-geometry-finding.md",
+  "last_measurement": "ui-attempts/ui-2.4.0-28cf6d7595224364a8ab4f0a14591667/native-webview-result.json",
+  "frozen": true
+}

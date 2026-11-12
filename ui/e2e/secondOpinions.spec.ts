@@ -127,6 +127,28 @@ test("reviews the staged changes before a commit, with consent for a cloud revie
   await expect(
     general.getByRole("button", { name: "Show again" }),
   ).toBeVisible();
+  // Record the busy guard before queuing: a fast fix can finish before
+  // the test gets back to observing the button after the request.
+  const busyObservation = await panel
+    .getByRole("button", { name: "Commit anyway" })
+    .evaluateHandle((button) => {
+      const evidence = { disabled: false };
+      const observer = new MutationObserver((changes) => {
+        // oldValue also records a disabled state that was already cleared
+        // before this mutation batch was delivered.
+        if (
+          button.hasAttribute("disabled") ||
+          changes.some((change) => change.oldValue !== null)
+        )
+          evidence.disabled = true;
+      });
+      observer.observe(button, {
+        attributes: true,
+        attributeFilter: ["disabled"],
+        attributeOldValue: true,
+      });
+      return { evidence, observer };
+    });
   await finding
     .getByRole("button", { name: "Ask the agent to fix this" })
     .click();
@@ -150,6 +172,22 @@ test("reviews the staged changes before a commit, with consent for a cloud revie
     panel.getByText("The review is done. Commit when you are ready."),
   ).toBeVisible();
   const commit = panel.getByRole("button", { name: "Commit", exact: true });
+  // An enabled button alone can still be the pre-task idle state. Require
+  // the recorded busy transition and the second task's completed summary.
+  await expect
+    .poll(() => busyObservation.evaluate(({ evidence }) => evidence.disabled))
+    .toBe(true);
+  expect(
+    (await fakeLog(page)).filter(
+      (r) => r.method === "POST" && r.path === "/api/workspace/git/commit",
+    ),
+  ).toHaveLength(0);
+  await expect(page.getByRole("region", { name: "Task summary" })).toHaveCount(
+    2,
+    { timeout: 15000 },
+  );
+  await busyObservation.evaluate(({ observer }) => observer.disconnect());
+  await busyObservation.dispose();
   await expect(commit).toBeEnabled({ timeout: 15000 });
   await commit.click();
   await expect(page.getByText("Committed")).toBeVisible();

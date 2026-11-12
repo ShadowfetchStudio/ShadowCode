@@ -1,0 +1,192 @@
+{
+  "checkedAtUTC": "2026-11-12T05:22:41.484957+00:00",
+  "release": 442500290,
+  "tag": "v2.4.0",
+  "source": "25c8345f99f246b37ea45bf9306eb551da9c0819",
+  "scope": "Public payload integrity; no installation, execution, platform qualification, signing/notarization, website or release mutations",
+  "assets": [
+    {
+      "name": "RELEASE-AUTH",
+      "size": 857,
+      "sha256": "5b7a6506e14a68ec2b08c3536d647ada81fcec6e1ea5dd6e00221f53ef5b7e95",
+      "matchesAPI": true
+    },
+    {
+      "name": "RELEASE-AUTH-aarch64",
+      "size": 868,
+      "sha256": "4bd06f495f78ae51a3d7aab0d8b358cc3fab893fcbc608bd4f950437baeb511b",
+      "matchesAPI": true
+    },
+    {
+      "name": "RELEASE-AUTH-aarch64.sig",
+      "size": 64,
+      "sha256": "25c1caf1c22f2a6938c9d3d010e5ba9a6020e8de6791a47dd697f8da2aef10ec",
+      "matchesAPI": true
+    },
+    {
+      "name": "RELEASE-AUTH.sig",
+      "size": 64,
+      "sha256": "ed12aba39d0f25e4ce1f13ddb115184c66d363b4d1a3b7e2fe880f68e7e6f759",
+      "matchesAPI": true
+    },
+    {
+      "name": "RELEASE-MANIFEST-aarch64.json",
+      "size": 7976,
+      "sha256": "1e19a24bf175acfe289614fbd8633c5e122822f719a50ce9e5b52bd0bb42219c",
+      "matchesAPI": true
+    },
+    {
+      "name": "RELEASE-MANIFEST.json",
+      "size": 7965,
+      "sha256": "f30904be11f8b60b2870ffd3587d39c28322ce797e81f74290fe1f0c47256d3a",
+      "matchesAPI": true
+    },
+    {
+      "name": "SHA256SUMS",
+      "size": 306,
+      "sha256": "8b1a8d0e53d799564f2bf1786bccef2ca8fe0839d044c4c8b6656e1801e7b3ec",
+      "matchesAPI": true
+    },
+    {
+      "name": "SHA256SUMS-aarch64",
+      "size": 316,
+      "sha256": "84b5cf5bc40cac61864fefd011918c76c28982697b41ef22ddbeb873f1f2f1a8",
+      "matchesAPI": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_aarch64.AppImage",
+      "size": 113814024,
+      "sha256": "ffa707d7017471c92518b6bc6ad80c61b2a33cc2297f34e49fbe8a752f8d6e06",
+      "matchesAPI": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_aarch64.dmg",
+      "size": 40495373,
+      "sha256": "5aa16edfe53407a845ea5f36a019e8750109a374ec3cde5f8728e5baaf1c553d",
+      "matchesAPI": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_aarch64.flatpak",
+      "size": 47916664,
+      "sha256": "7908023dad436d85163c7a7bdba3624b7b79e41a805990a4e2869a5bf8a1b7db",
+      "matchesAPI": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_aarch64_appimage-runtime-sources.tar.gz",
+      "size": 104182637,
+      "sha256": "882941ffc4cefe860bd9ae609090563d77d5ef4f482757398a81ef250137d144",
+      "matchesAPI": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_amd64.AppImage",
+      "size": 120363512,
+      "sha256": "88dd8d9727abd5559a6fd4130889efab0139293d93401481fd6a053c0dc48c39",
+      "matchesAPI": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_amd64.deb",
+      "size": 29226508,
+      "sha256": "925928dfcc78a72b3574f0adc348a4f09b07adbd226a6c4af3b8881bf16e6af0",
+      "matchesAPI": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_appimage-runtime-sources.tar.gz",
+      "size": 104172105,
+      "sha256": "4efa7dbaf0266cefcdb6f10907248d3db28b3f96ad332bd7feadb96ba9c5ea15",
+      "matchesAPI": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_arm64.deb",
+      "size": 26126860,
+      "sha256": "fef3f92e22d7aab9371833580803c7d681e20c6918c926627656edc07457e420",
+      "matchesAPI": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_busybox-w32-source.tar.gz",
+      "size": 3672106,
+      "sha256": "c6345e913686ff61ab46757b19fad23e9bb1b5e1e273f132bc4333770bd55a96",
+      "matchesAPI": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_flatpak.sha256",
+      "size": 197,
+      "sha256": "f4db35a675e599cf79e5b73a55a6dc3050a20b8b9da02da7ff78605ad84da604",
+      "matchesAPI": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_macos.sha256",
+      "size": 186,
+      "sha256": "9e7f8208bdccb1dcc2347a65272ba2e53e4b56cbf2208a09dba47e20933cfbe8",
+      "matchesAPI": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_windows.sha256",
+      "size": 206,
+      "sha256": "c0657822ec7f3d7fff04ae091eae211af3c4813260c5516a03fe6f1f62a76a82",
+      "matchesAPI": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_x64-setup.exe",
+      "size": 23880602,
+      "sha256": "a9d459d482b4509109566e888d281373ef4a68b40c9613b614a107300b09f986",
+      "matchesAPI": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_x64.dmg",
+      "size": 49169956,
+      "sha256": "8e2e9639c063b43528a51a9f64f083a78e8bd56b9a997c814f5adeb5c2564f04",
+      "matchesAPI": true
+    },
+    {
+      "name": "ShadowCode_2.4.0_x86_64.flatpak",
+      "size": 54397144,
+      "sha256": "b862ca1afd5b1ed696b8d146c743ed3499e1155c693ac22b8cbdc0cb0854dc46",
+      "matchesAPI": true
+    }
+  ],
+  "checksums": [
+    {
+      "file": "SHA256SUMS",
+      "entries": [
+        "ShadowCode_2.4.0_amd64.AppImage",
+        "ShadowCode_2.4.0_amd64.deb",
+        "ShadowCode_2.4.0_appimage-runtime-sources.tar.gz"
+      ],
+      "passed": true
+    },
+    {
+      "file": "SHA256SUMS-aarch64",
+      "entries": [
+        "ShadowCode_2.4.0_aarch64.AppImage",
+        "ShadowCode_2.4.0_arm64.deb",
+        "ShadowCode_2.4.0_aarch64_appimage-runtime-sources.tar.gz"
+      ],
+      "passed": true
+    },
+    {
+      "file": "ShadowCode_2.4.0_windows.sha256",
+      "entries": [
+        "ShadowCode_2.4.0_x64-setup.exe",
+        "ShadowCode_2.4.0_busybox-w32-source.tar.gz"
+      ],
+      "passed": true
+    },
+    {
+      "file": "ShadowCode_2.4.0_macos.sha256",
+      "entries": [
+        "ShadowCode_2.4.0_aarch64.dmg",
+        "ShadowCode_2.4.0_x64.dmg"
+      ],
+      "passed": true
+    },
+    {
+      "file": "ShadowCode_2.4.0_flatpak.sha256",
+      "entries": [
+        "ShadowCode_2.4.0_x86_64.flatpak",
+        "ShadowCode_2.4.0_aarch64.flatpak"
+      ],
+      "passed": true
+    }
+  ],
+  "passed": true
+}

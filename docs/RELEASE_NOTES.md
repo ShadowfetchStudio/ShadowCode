@@ -1,3 +1,43 @@
+# ShadowCode 2.4.1
+
+This patch addresses a layout defect found while qualifying the public 2.4.0
+Windows installer: at 175% zoom in a short window, the composer could extend
+past the conversation area and cover the terminal dock’s Hide control.
+
+## Short windows and larger text
+
+- Keep the dock and header controls separate from the conversation. In short
+  docked layouts, the conversation and composer scroll within their own area.
+- Keep composer actions and menus reachable, including slash commands, mentions,
+  permissions and model selection, without discarding an unsent draft.
+- Keep the Latest activity control reachable when returning to recent output.
+- Provide a scrolling fallback for engines without size container queries.
+- Preserve the open editor draft and existing terminal session when hiding,
+  restoring or moving the terminal.
+
+The correction is limited to layout and regression coverage. It does not change
+model backends, command permissions, signing keys or sandbox policy. The source
+release trust ceiling is extended to 2.4.1 using the existing Linux signing key.
+
+The 2.4.0 release remains immutable. Its failed Windows interface qualification,
+successful installer/endurance checks and incomplete real-model attempt remain
+separately recorded in [platform qualification](https://github.com/ShadowfetchStudio/ShadowCode/blob/main/docs/PLATFORM_QUALIFICATION.md).
+Browser regression coverage is distinct from the exact public-installer checks;
+consult that record for version-specific native qualification status, results
+and limitations.
+
+## Validation
+
+The patch passed 906 interface unit tests, all 166 Chromium browser tests,
+12 focused WebKit tests and 115 Linux release-authentication tests. The 12
+short-window regressions also failed against the previous release’s stylesheet,
+confirming that they exercise the defect. Type checking and the production
+interface build passed. A separate review-before-commit test timing race was
+corrected without changing the application’s commit guard. These browser tests
+use a simulated backend; native installer qualification is recorded separately.
+
+---
+
 # ShadowCode 2.4.0
 
 ShadowCode 2.4 introduces a simpler first run, a more accessible coding workspace

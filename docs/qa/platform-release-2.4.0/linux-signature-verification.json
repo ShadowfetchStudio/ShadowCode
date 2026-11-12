@@ -1,0 +1,55 @@
+{
+  "checkedAtUTC": "2026-11-12T05:22:52.504Z",
+  "trustedTooling": "Existing repository verifier and release/trust; checked unchanged against 25c8345f99f246b37ea45bf9306eb551da9c0819",
+  "scope": "Six Linux payloads only. macOS DMGs, Windows EXE/BusyBox source and Flatpak bundles are not covered by these Ed25519 envelopes. SHA-256 agreement does not establish code signing, notarization, installation or human qualification.",
+  "results": [
+    {
+      "artifact": "ShadowCode_2.4.0_aarch64.AppImage",
+      "target": "aarch64-unknown-linux-gnu",
+      "keyId": "f0c60ff8228314616985712f8918c9798c0ecf72b7271e19343a041c25663b7f",
+      "version": "2.4.0",
+      "commit": "25c8345f99f246b37ea45bf9306eb551da9c0819",
+      "passed": true
+    },
+    {
+      "artifact": "ShadowCode_2.4.0_aarch64_appimage-runtime-sources.tar.gz",
+      "target": "aarch64-unknown-linux-gnu",
+      "keyId": "f0c60ff8228314616985712f8918c9798c0ecf72b7271e19343a041c25663b7f",
+      "version": "2.4.0",
+      "commit": "25c8345f99f246b37ea45bf9306eb551da9c0819",
+      "passed": true
+    },
+    {
+      "artifact": "ShadowCode_2.4.0_amd64.AppImage",
+      "target": "x86_64-unknown-linux-gnu",
+      "keyId": "f0c60ff8228314616985712f8918c9798c0ecf72b7271e19343a041c25663b7f",
+      "version": "2.4.0",
+      "commit": "25c8345f99f246b37ea45bf9306eb551da9c0819",
+      "passed": true
+    },
+    {
+      "artifact": "ShadowCode_2.4.0_amd64.deb",
+      "target": "x86_64-unknown-linux-gnu",
+      "keyId": "f0c60ff8228314616985712f8918c9798c0ecf72b7271e19343a041c25663b7f",
+      "version": "2.4.0",
+      "commit": "25c8345f99f246b37ea45bf9306eb551da9c0819",
+      "passed": true
+    },
+    {
+      "artifact": "ShadowCode_2.4.0_appimage-runtime-sources.tar.gz",
+      "target": "x86_64-unknown-linux-gnu",
+      "keyId": "f0c60ff8228314616985712f8918c9798c0ecf72b7271e19343a041c25663b7f",
+      "version": "2.4.0",
+      "commit": "25c8345f99f246b37ea45bf9306eb551da9c0819",
+      "passed": true
+    },
+    {
+      "artifact": "ShadowCode_2.4.0_arm64.deb",
+      "target": "aarch64-unknown-linux-gnu",
+      "keyId": "f0c60ff8228314616985712f8918c9798c0ecf72b7271e19343a041c25663b7f",
+      "version": "2.4.0",
+      "commit": "25c8345f99f246b37ea45bf9306eb551da9c0819",
+      "passed": true
+    }
+  ]
+}

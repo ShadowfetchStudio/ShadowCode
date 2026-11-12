@@ -1,16 +1,15 @@
 # Windows port
 
-Status: Windows 2.3.3 is the latest published release. The exact public installer passed installation,
-clean-PATH startup, native editor/settings checks and a local-model coding task
-on a Windows 11 Home x64 laptop (Ryzen 3 5300U, 32 GB RAM). Gemma 4 E4B on CPU
-completed the repair, executed its tests inside AppContainer, and preserved all
-five original tests; the independent check also passed. This is one bounded
-fixture, not a broad model-reliability or Windows-hardware benchmark.
-See [the current platform qualification record](PLATFORM_QUALIFICATION.md#233-public-release--november-2-2026)
-for the 2.3.3 hashes and results, and [the earlier laptop qualification record](WINDOWS_LAPTOP_QUALIFICATION.md#231-public-installer-qualification)
-for the 2.3.1 history, workflow provenance, earlier failed attempts and limitations.
-The 2.4.0 workspace upgrade is a source candidate; its installer qualification is
-pending and is not covered by those older receipts.
+Status: Windows **2.4.0** is published. Its exact public installer passed CI
+installation, clean-PATH probes and installation on the Windows 11 laptop.
+Physical qualification found composer overlap with the terminal Hide control at
+175% zoom in a short window, so **native UI acceptance failed**. A 2.4.1 source
+candidate addresses that defect; its installer is not yet qualified or published.
+The 2.4.0 engine endurance test passed 100 sequential and 80 concurrent tasks,
+five cancellations and persistence after forced termination. Its real-model
+check was interrupted and is incomplete. See [the current qualification record](PLATFORM_QUALIFICATION.md#240-public-release--november-12-2026-utc)
+for hashes, failed-attempt evidence and scope. The earlier 2.3.3 Gemma result is
+historical evidence, not qualification of these new bytes.
 
 External programs that open the Windows null device themselves can fail in
 AppContainer; external Git commands demonstrated this in the 2.3.0 public-installer

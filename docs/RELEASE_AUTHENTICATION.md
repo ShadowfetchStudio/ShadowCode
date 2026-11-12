@@ -1,20 +1,59 @@
 # Publisher authentication contract
 
-The helpers in `scripts/native-release-auth.mjs` and `scripts/verify-native-release.sh` verify offline publisher signatures. They do not install, execute, download or publish an application, update trusted keys, or generate production keys. CI tests their behavior with disposable fixture keys. Public trust for 0.33.0–2.1.0 is tracked and the protected signing environment is configured. The installer uses these helpers before executing a candidate and explicitly refuses `--unverified`. [Version 0.33.1](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v0.33.1), published on September 28, 2026, is the first signed release.
+The helpers in `scripts/native-release-auth.mjs` and `scripts/verify-native-release.sh` verify offline publisher signatures. They do not install, execute, download or publish an application, update trusted keys, or generate production keys. CI tests their behavior with disposable fixture keys. Current public trust and protected-environment observations are recorded below. The installer uses these helpers before executing a candidate and explicitly refuses `--unverified`. [Version 0.33.1](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v0.33.1), published on September 28, 2026, is the first signed release.
 
 The Bash verifier loads `scripts/native-release-auth-lib.sh` from its own script directory. Keep both reviewed code files together in the trusted tooling bundle; do not obtain the library from the candidate download or source metadata as shell code. The installer uses the same reviewed routines for current candidates and signed historical receipts; it never sources release metadata as code.
 
-## Current public release and next candidate
+## Published Linux release: 2.4.0
 
-Version [2.3.3](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.3.3)
-is the current public release, from `fd13dc10dbdcc6aac63cdfb292f9ec4d47838347`.
-The 2.4.0 candidate extends the same public key's maximum trusted version to
-2.4.0. The key fingerprint, epoch, targets, minimum version, signature format,
-and required receipt verification are unchanged. Candidate source policy does
-not itself authorize signing: the separately reviewed tooling pin and protected
-environment must be updated after qualification as described in
-[RELEASING.md](RELEASING.md). Check live release and asset state before describing
-2.4.0 as published. Historical release evidence follows.
+[Version 2.4.0](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.4.0)
+was published for x86_64 and aarch64 on **November 12, 2026 at 04:35:24 UTC**
+(November 11 in US Eastern time), as public release `442500290`. The immutable
+`v2.4.0` tag and independently reviewed tooling pin both identify
+`25c8345f99f246b37ea45bf9306eb551da9c0819`.
+[Release run 43145082420](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43145082420),
+**attempt 1**, completed successfully through protected signing, publication and
+APT publication.
+
+Before signing approval, all **15 required gate receipts for each Linux target**
+were validated against that exact commit, run and attempt, including gate-script
+digests and handoff artifact hashes. All required gates passed; optional live
+checks retain their recorded exclusions. At 04:37:08 UTC, all **14 public Linux
+assets** were downloaded and their hashes checked. Both signed envelopes verified
+with the tracked Ed25519 key, authenticating all **six payloads**: an AppImage,
+DEB and runtime-source archive per architecture. The exact inventory is in
+[the release procedure](RELEASING.md). This is published-byte authentication;
+it does not claim qualification beyond the recorded gate scopes.
+
+Independent live APT verification at **04:40:38 UTC** confirmed `shadow-code`
+2.4.0 for amd64 and arm64. Both `InRelease` and `Release.gpg` verified using only
+the tracked public key with primary fingerprint
+`1BC07B5ECFDB514673A296FB021CAB3F2F7A1F61`. All six signed architecture index files
+matched their hashes and sizes, and both live pool DEBs were byte-identical to
+the public GitHub release DEBs. The
+[APT job](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43145082420/job/130975332956)
+succeeded at 04:38:26 UTC; the
+[live signed index](https://shadowfetchstudio.github.io/ShadowCode/apt/dists/stable/InRelease)
+is separate from the Ed25519 release envelopes. Evidence is retained externally
+in `publication-2.4.0/public-linux/public-verification.json`,
+`publication-2.4.0/release-handoffs/{x86_64,aarch64}-verified.json`, and
+`publication-2.4.0/apt-public-verification/proof.json` with public files and logs. A portable copy of the [public Linux verification](qa/platform-release-2.4.0/linux-public-verification.json), [APT verification](qa/platform-release-2.4.0/apt-public-verification.json), and [x86_64](qa/platform-release-2.4.0/linux-x86_64-handoff.json)/[aarch64](qa/platform-release-2.4.0/linux-aarch64-handoff.json) handoff checks is tracked with this documentation.
+
+Windows, macOS and Flatpak 2.4.0 were subsequently published by their separate
+workflows. All final 23 public assets passed [downloaded-byte verification](qa/platform-release-2.4.0/public-assets-verification.json).
+Linux signatures do not cover those other formats. Physical Windows testing
+found a short-window composer/dock overlap at 175% zoom; 2.4.1 is a source
+candidate to correct it. This does not alter the immutable 2.4.0 tag or assets.
+
+The published 2.4.0 policy extends the existing key through 2.4.0. The 2.4.1
+source candidate extends the same ceiling to 2.4.1; its signing configuration
+and package qualification are separate pending work. Its key ID,
+epoch, targets, minimum version, signature format and required receipt verification
+are unchanged. Live configuration confirms the reviewed tooling SHA above and
+an exact `v2.4.0` deployment allowance, retaining the three 2.3.x tag rules and
+existing owner-review protections. A source policy change alone never authorizes
+signing; later releases require the independent review described in
+[RELEASING.md](RELEASING.md). Historical release evidence follows.
 
 ## Published release: 2.2.0
 
@@ -47,7 +86,7 @@ or qualification beyond the recorded gates.
 
 ## Trust and security contract
 
-The authorized canonical publisher is `ShadowfetchStudio/ShadowCode`, repository ID `1377099349`, owner ID `209457103`. GitHub confirmed the account rename on October 10, 2026 with both numeric identities unchanged. The historical `Shadowfetchapps/ShadowCode` and `ShadowfetchLinux/ShadowCode` URLs redirect to this repository. Only stable `MAJOR.MINOR.PATCH`, `x86_64-unknown-linux-gnu` releases are supported by this slice.
+The authorized canonical publisher is `ShadowfetchStudio/ShadowCode`, repository ID `1377099349`, owner ID `209457103`. GitHub confirmed the account rename on October 10, 2026 with both numeric identities unchanged. The historical `Shadowfetchapps/ShadowCode` and `ShadowfetchLinux/ShadowCode` URLs redirect to this repository. The current contract supports stable `MAJOR.MINOR.PATCH` releases for `x86_64-unknown-linux-gnu` and `aarch64-unknown-linux-gnu`, with separate target-bound envelopes.
 
 SHA-256 establishes byte integrity. The detached Ed25519 signature establishes that the holder of an already trusted publisher key signed the release envelope. It does not independently prove which workflow ran, that code is safe, or that the release is the newest available. The workflow identity is currently a publisher assertion; a future GitHub attestation can add an OIDC-backed workflow identity proof.
 
@@ -118,7 +157,7 @@ Each key has an inclusive version range and exactly one epoch. Unknown keys, dif
 
 For a reviewed rotation, distribute a new authenticated trust bundle with the new public key and higher minimum epoch/version. Retain the old public key with its historical version range only when needed to verify an existing accepted-state receipt. The internal history check may ignore current minimum floors, but it still verifies the old signature, identity, key epoch and historical key range. This exception is not exposed as an install-verification API. Deleting an old key outright can make old state unverifiable; the installer must then fail pending explicit migration, not erase the state or assume a fresh install.
 
-The tracked `release/trust` bundle contains the public Ed25519 key with ID `f0c60ff8228314616985712f8918c9798c0ecf72b7271e19343a041c25663b7f`. Its epoch is 1, minimum version is 0.33.0, and its inclusive key range is 0.33.0–2.2.0. It authorizes no later version without a reviewed policy update. The private key is not distributed in the repository or installer bundle. Fixture keys remain temporary and separate. Public fingerprint distribution, custody and future rotation/revocation remain owner responsibilities.
+The tracked `release/trust` bundle contains the public Ed25519 key with ID `f0c60ff8228314616985712f8918c9798c0ecf72b7271e19343a041c25663b7f`. Its epoch is 1, minimum version is 0.33.0, and its source-candidate inclusive key range is 0.33.0–2.4.1 (the published 2.4.0 tag ends at 2.4.0). Historical provisioning checkpoints covered 0.33.0–2.1.0 on October 11, 2026 and 0.33.0–2.2.0 on October 17, 2026; those are dated records, not current ceilings. It authorizes no version after 2.4.1 without a reviewed policy update; the candidate extension alone does not authorize signing or publication. The private key is not distributed in the repository or installer bundle. Fixture keys remain temporary and separate. Public fingerprint distribution, custody and future rotation/revocation remain owner responsibilities.
 
 ## Downgrade, replay and accepted state
 
@@ -144,9 +183,9 @@ The end-user path is Bash plus OpenSSL 3 and ordinary GNU coreutils/diffutils; i
 bash verify-native-release.sh \
   --bundle-dir DOWNLOADED_FILES \
   --trust-dir INDEPENDENTLY_TRUSTED_KEYS \
-  --artifact ShadowCode_0.33.1_amd64.AppImage \
+  --artifact ShadowCode_2.4.0_amd64.AppImage \
   --stage-dir NEW_PRIVATE_STAGE \
-  --expect-version 0.33.1 \
+  --expect-version 2.4.0 \
   --expect-commit EXPECTED_COMMIT
 ```
 
@@ -160,20 +199,20 @@ The installer executes and installs only this verified private snapshot, never t
 
 The release workflow now separates source build/qualification, signing, and publication. `prepare-native-release.mjs` creates an unsigned handoff containing the exact three packages, canonical checksums/manifest and required gate receipts. A fresh signing runner downloads that build's immutable Actions artifact ID as data. It checks out signing code and public trust from an independently reviewed commit, validates the current repository/tag/commit/run/attempt and all required receipts, and signs private snapshots. It does not execute packages, install source dependencies, or restore build caches. Only its signing step receives the private key.
 
-A separate publisher runner receives the signing job's immutable artifact ID and repository write permission, but no signing secret. `publish-native-release.mjs` requires the exact seven public assets (three packages plus the four metadata/signature files), verifies private snapshots before any GitHub call, checks remote repository and tag identity, stages a draft, and compares every remote asset's bytes before publication. Identical published retries are read-only; changed bytes under an existing version are refused. `VERIFICATION.json` is bounded CI transport data, not a release asset. Run IDs qualify each attempt without changing immutable release bytes.
+A separate publisher runner receives the signing job's immutable artifact ID and repository write permission, but no signing secret. `publish-native-release.mjs` requires exactly seven public assets per target (three payloads plus four metadata/signature files), fourteen for the two-target Linux publication, verifies private snapshots before any GitHub call, checks remote repository and tag identity, stages a draft, and compares every remote asset's bytes before publication. Identical published retries are read-only; changed bytes under an existing version are refused. `VERIFICATION.json` is bounded CI transport data, not a release asset. Run IDs qualify each attempt without changing immutable release bytes.
 
-The workflow deliberately refuses missing owner configuration. The following records the 0.33.1 setup; recheck it before dispatching a release:
+The workflow deliberately refuses missing owner configuration. The following records the November 12, 2026 UTC provisioning observation with historical checkpoints identified explicitly; recheck live settings before dispatching any later release:
 
 - The tracked `release/trust` public policy and key bundle must be included in the reviewed tooling commit and distributed through an authenticated channel. It contains public material only; no default fixture key is trusted.
-- Repository variable `NATIVE_RELEASE_TOOLING_COMMIT` must pin the exact 40-character reviewed and pushed commit containing the current gate definitions, signing/publisher code, public trust and release-appropriate notes. The reviewed pin for 0.33.1 was `e15c4480e65db5650af012bb2a9773dbe89acf84`; for 2.2.0 it is the tagged `v2.2.0` release commit (`v2.1.0` for 2.1.0, `v1.0.1` for 1.0.1, `v1.0.0` for 1.0.0, `v0.34.2` for 0.34.2). Never infer this pin from an unreviewed tag.
-- Repository variable `NATIVE_RELEASE_SIGNING_ENVIRONMENT` is set to `release-signing`. Its verified configuration requires the `ShadowfetchStudio` User reviewer (ID `209457103`, unchanged after the account rename), allows self-review and retains GitHub's default administrator override. Its sole deployment rule allows the tag being released (`v2.2.0` for 2.2.0; `v2.1.0`, `v1.0.1`, `v1.0.0`, `v0.34.2` and `v0.33.1` before). This is an owner-reviewed gate, not a two-person approval guarantee; a later release needs an explicit rule/policy update.
+- Repository variable `NATIVE_RELEASE_TOOLING_COMMIT` must pin the exact 40-character reviewed and pushed commit containing the current gate definitions, signing/publisher code, public trust and release-appropriate notes. The reviewed and live-read-back pin for 2.4.0 is `25c8345f99f246b37ea45bf9306eb551da9c0819`. Historical pins included `e15c4480e65db5650af012bb2a9773dbe89acf84` for 0.33.1 on September 28, 2026 and the tagged `v2.2.0` release commit on October 17, 2026 (`v2.1.0` for 2.1.0, `v1.0.1` for 1.0.1, `v1.0.0` for 1.0.0, `v0.34.2` for 0.34.2). Never infer this pin from an unreviewed tag.
+- Repository variable `NATIVE_RELEASE_SIGNING_ENVIRONMENT` is set to `release-signing`. Its verified configuration requires the `ShadowfetchStudio` User reviewer (ID `209457103`, unchanged after the account rename), allows self-review and retains GitHub's default administrator override. Its current custom deployment rules permit exactly `v2.3.1`, `v2.3.2`, `v2.3.3` and `v2.4.0`; the 2.4.0 allowance was added without weakening review protections. Historical release-specific rules included `v2.2.0` on October 17, 2026 and `v2.1.0`, `v1.0.1`, `v1.0.0`, `v0.34.2` and `v0.33.1` for their earlier releases. This is an owner-reviewed gate, not a two-person approval guarantee; a later release needs an explicit rule/policy update.
 - Environment secret `NATIVE_RELEASE_SIGNING_KEY_PEM` has been uploaded to `release-signing`. It is scoped to the signing environment, not repository-wide secrets or the build job. Its presence does not prove that a candidate has been signed.
 
 Owner review of the release workflow/source and repository protections remains necessary: another authorized workflow could request the same environment secret. Local gate receipts are validated assertions, not independent attestations that an adversarial producer executed the commands. Workflow dependencies and exact artifact IDs bind the proposed job flow; local fixtures do not prove GitHub control-plane behavior. Remote checks are observations, not atomic compare-and-swap against independently authorized concurrent changes.
 
 All existing required gates remain, with a new required `built-project-cleanup` gate running the exact release-profile cleanup test over actual installed UI dependencies and output. The default Rust suite transfers only this test to that gate; missing, failed or ignored qualification rejects signing and publication. This scope does not claim full Cargo-cache cleanup qualification.
 
-The tracked AppImage installer authenticates candidates and retains durable accepted-state receipts. Production signing and publication of the seven authenticated 0.33.1 assets are complete, with the workflow failure and publication recovery recorded above. The published .deb was also authenticated into a private snapshot and installed in a network-disabled runtime-only container; version, CLI/MCP and first-window checks passed (see the implementation ledger). Independently authenticated installer bootstrap distribution and the broader installation/upgrade/rollback lifecycle remain separate qualification requirements. Existing installed applications and older public releases are not authenticated retroactively.
+The tracked AppImage installer authenticates candidates and retains durable accepted-state receipts. The historical September 28, 2026 publication of seven authenticated 0.33.1 assets completed with the workflow failure and publication recovery recorded above. The published .deb was also authenticated into a private snapshot and installed in a network-disabled runtime-only container; version, CLI/MCP and first-window checks passed (see the implementation ledger). Independently authenticated installer bootstrap distribution and the broader installation/upgrade/rollback lifecycle remain separate qualification requirements. Existing installed applications and older public releases are not authenticated retroactively.
 
 ## Trusted installer and durable accepted state
 

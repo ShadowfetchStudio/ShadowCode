@@ -1,25 +1,66 @@
 # Release procedure
 
-The current public release is [**2.3.3**](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.3.3),
-from `fd13dc10dbdcc6aac63cdfb292f9ec4d47838347`. Version **2.4.0** is the
-next candidate and includes the Apple Silicon workspace upgrade. Publication
-must be verified before changing the public download links or calling it released.
-The local Mac development qualification is recorded in
-[MAC_FLAGSHIP_UPGRADE.md](MAC_FLAGSHIP_UPGRADE.md); it does not replace the
-release workflow's exact-source and packaged-artifact gates.
+The current published **Linux** release is [**2.4.0**](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.4.0),
+from immutable tag `v2.4.0` at `25c8345f99f246b37ea45bf9306eb551da9c0819`.
+[Release run 43145082420](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43145082420),
+attempt **1**, passed all **15 required gates for each of x86_64 and aarch64**,
+then protected signing, publication and APT publication. GitHub release
+`442500290` became public on **November 12, 2026 at 04:35:24 UTC**
+(November 11 in US Eastern time). At 04:37:08 UTC, all 14 Linux public assets
+were downloaded and their hashes checked; all six payloads were authenticated
+against the tracked Ed25519 trust bundle. Required gates had no required skips;
+explicitly optional live checks retain the exclusions recorded in their receipts.
+
+**Windows, macOS and Flatpak 2.4.0 are also published.** Their separate workflows
+passed and all 23 final public assets were downloaded and checked against their
+published hashes. See [platform workflow results](qa/platform-release-2.4.0/platform-workflow-results.json)
+and [public-byte verification](qa/platform-release-2.4.0/public-assets-verification.json).
+Physical Windows qualification then exposed composer overlap with the terminal
+Hide control at 175% zoom in a short window. A **2.4.1 source candidate** is being
+prepared for that fix; the immutable 2.4.0 release remains unchanged and the
+website download promotion waits for the corrected installer’s qualification.
+The local Mac development qualification in [MAC_FLAGSHIP_UPGRADE.md](MAC_FLAGSHIP_UPGRADE.md)
+remains separate from native platform acceptance.
+
+The verified 14-asset Linux publication contains exactly these seven files per
+target; later platform attachments are outside this inventory:
+
+| Role | x86_64 | aarch64 |
+| --- | --- | --- |
+| AppImage | `ShadowCode_2.4.0_amd64.AppImage` | `ShadowCode_2.4.0_aarch64.AppImage` |
+| Debian package | `ShadowCode_2.4.0_amd64.deb` | `ShadowCode_2.4.0_arm64.deb` |
+| Runtime sources | `ShadowCode_2.4.0_appimage-runtime-sources.tar.gz` | `ShadowCode_2.4.0_aarch64_appimage-runtime-sources.tar.gz` |
+| Checksums | `SHA256SUMS` | `SHA256SUMS-aarch64` |
+| Manifest | `RELEASE-MANIFEST.json` | `RELEASE-MANIFEST-aarch64.json` |
+| Signed envelope | `RELEASE-AUTH` | `RELEASE-AUTH-aarch64` |
+| Ed25519 signature | `RELEASE-AUTH.sig` | `RELEASE-AUTH-aarch64.sig` |
+
+The [APT job](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/43145082420/job/130975332956)
+succeeded at 04:38:26 UTC. Independent live verification at 04:40:38 UTC
+confirmed 2.4.0 for amd64 and arm64, both repository signatures, all six signed
+index files and byte-for-byte equality of the APT pool packages with the public
+GitHub DEBs. The pinned GPG fingerprint is
+`1BC07B5ECFDB514673A296FB021CAB3F2F7A1F61`; see [APT repository](#apt-repository).
+The external publication evidence is retained under `publication-2.4.0/`:
+`release-handoffs/{x86_64,aarch64}-verified.json`,
+`public-linux/public-verification.json`, and `apt-public-verification/proof.json`. A portable copy of the [public Linux verification](qa/platform-release-2.4.0/linux-public-verification.json), [APT verification](qa/platform-release-2.4.0/apt-public-verification.json), and [x86_64](qa/platform-release-2.4.0/linux-x86_64-handoff.json)/[aarch64](qa/platform-release-2.4.0/linux-aarch64-handoff.json) handoff checks is tracked with this documentation.
 
 Pushing a `v*` tag starts `.github/workflows/release.yml`. Publication follows
 both Linux architectures' build/qualification, protected signing review and
 verification of the signed public assets. The publish job then dispatches the
 Windows, macOS and Flatpak workflows. Confirm their assets independently before
-advertising that platform's new version. Existing versioned assets are immutable.
+advertising that platform's new version. Existing versioned assets and tags are
+immutable; do not move `v2.4.0` or overwrite its published assets.
 
-All environment settings must be read live. At the start of the 2.4.0
-preparation, the signing environment allowed `v2.3.1`, `v2.3.2`, and `v2.3.3`,
-and the reviewed tooling pin was `fd13dc10dbdcc6aac63cdfb292f9ec4d47838347`.
-The candidate's trust policy extends the existing key through 2.4.0 without
-changing its identity, epoch, historical floor or target set. Review and qualify
-the candidate before permitting its tag and updating the immutable tooling pin.
+Live configuration was read back for this publication: the independently reviewed
+`NATIVE_RELEASE_TOOLING_COMMIT` is `25c8345f99f246b37ea45bf9306eb551da9c0819`,
+and `release-signing` permits the exact tag `v2.4.0` alongside the retained
+`v2.3.1`, `v2.3.2` and `v2.3.3` rules. Required owner review and self-review settings
+are unchanged. All environment settings must be read live for later releases.
+**Historical preparation snapshot, November 11, 2026:** before the 2.4.0 update,
+only those three 2.3.x tags were allowed and the reviewed tooling pin was
+`fd13dc10dbdcc6aac63cdfb292f9ec4d47838347`. The reviewed policy extension through
+2.4.0 preserved the existing key identity, epoch, historical floor and targets.
 
 ## 1. Version files
 
@@ -195,8 +236,9 @@ verifies and indexes both `.deb` files. The pinned tooling commit must include
 this multi-target signer and publisher; an older pin refuses the aarch64
 signing call, so the release fails rather than shipping x86_64 alone.
 
-The candidate public trust in `release/trust` allows the x86_64 and aarch64
-targets, epoch 1 and versions 0.33.0–2.4.0. `release/install-policy` retains the
+The tagged 2.4.0 public trust allows the x86_64 and aarch64 targets, epoch 1
+and versions 0.33.0–2.4.0. The 2.4.1 candidate extends the same key ceiling to
+2.4.1 without changing the key, epoch, targets or historical floor. `release/install-policy` retains the
 first authenticated version 0.33.0. This source change alone does not update
 GitHub's independently pinned tooling or signing environment.
 
@@ -232,8 +274,9 @@ git push origin vVERSION
 9. Prepares an unsigned handoff with required receipts. After protected review,
    a fresh runner verifies that immutable handoff using pinned tooling and signs
    private snapshots; the build job never receives the key.
-10. A separate publisher verifies and stages these seven assets in a draft,
-    compares every remote asset's bytes, then publishes:
+10. A separate publisher verifies and stages seven assets per target (fourteen
+    for this two-target Linux release), compares every remote asset's bytes, then
+    publishes. The x86_64 names are:
    - `ShadowCode_VERSION_amd64.AppImage`
    - `ShadowCode_VERSION_amd64.deb`
    - `ShadowCode_VERSION_appimage-runtime-sources.tar.gz`
@@ -249,6 +292,15 @@ Don't announce a tag until this job succeeds. Afterwards, compare the uploaded
 checksums and the release text with what you expect.
 
 ### APT repository
+
+The live 2.4.0 checkpoint above verified
+[`InRelease`](https://shadowfetchstudio.github.io/ShadowCode/apt/dists/stable/InRelease)
+and the detached `Release.gpg` against the independently tracked public key in
+[`release/trust/APT-SIGNING-KEY`](../release/trust/APT-SIGNING-KEY). The downloaded
+binary and armored public keys both matched fingerprint
+`1BC07B5ECFDB514673A296FB021CAB3F2F7A1F61`. Signed index sizes and hashes matched,
+`Packages.gz` decompressed to `Packages`, and both DEBs' control fields identified
+`shadow-code` 2.4.0 with the correct architecture. Verification installed no package.
 
 After `publish`, the `apt-repository` job re-verifies the `.deb` with
 `verify-native-release.sh` against `release/trust`, rebuilds the repository
@@ -286,7 +338,7 @@ the downloaded AppImage beside `SHA256SUMS`, `RELEASE-MANIFEST.json`,
 `RELEASE-AUTH` and `RELEASE-AUTH.sig`.
 
 ```sh
-bash /path/to/trusted-bundle/scripts/install-appimage.sh /path/to/downloads/ShadowCode_0.33.1_amd64.AppImage
+bash /path/to/trusted-bundle/scripts/install-appimage.sh /path/to/downloads/ShadowCode_2.4.0_amd64.AppImage
 ```
 
 The installer accepts a single AppImage path or `--recover`; it does not accept

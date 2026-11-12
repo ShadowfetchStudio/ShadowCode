@@ -1,0 +1,12 @@
+﻿{
+    "public_asset_url":  "https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.4.0/ShadowCode_2.4.0_x64-setup.exe",
+    "version":  "2.4.0",
+    "release_commit":  "25c8345f99f246b37ea45bf9306eb551da9c0819",
+    "native_version":  "ShadowCode 2.4.0",
+    "scope":  "Public installer, official checksum-verifying installer, clean-PATH runtime probes. Native UI, endurance and real-model tests are separate receipts.",
+    "installer_script_sha256":  "231832b6ba424de672d9e86b2397865e737330742ceb93d32309a54f73d093bf",
+    "installer_sha256":  "a9d459d482b4509109566e888d281373ef4a68b40c9613b614a107300b09f986",
+    "installed_at":  "2026-11-11T21:02:32.6644930-08:00",
+    "installed_runtime":  "passed",
+    "installed_exe_sha256":  "ff6e1cb61232c57d70e639056ecd7fc0de3f90295d546bd3655d0e8a4672cab2"
+}

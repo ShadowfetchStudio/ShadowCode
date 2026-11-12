@@ -1,0 +1,75 @@
+{
+  "result": "PASS",
+  "verifiedAt": "2026-11-12T04:40:38.382962+00:00",
+  "commit": "25c8345f99f246b37ea45bf9306eb551da9c0819",
+  "releaseRun": 43145082420,
+  "aptJob": 130975332956,
+  "aptJobConclusion": "success",
+  "aptJobCompletedAt": "2026-11-12T04:38:26Z",
+  "publicReleaseId": 442500290,
+  "publicReleasePublishedAt": "2026-11-12T04:35:24Z",
+  "base": "https://shadowfetchstudio.github.io/ShadowCode/apt/",
+  "pinnedFingerprint": "1BC07B5ECFDB514673A296FB021CAB3F2F7A1F61",
+  "trackedAndLivePrimaryKeysMatch": true,
+  "inReleaseAndDetachedSignatureVerified": true,
+  "releaseDate": "Thu, 12 Nov 2026 04:38:13 UTC",
+  "validUntil": null,
+  "signedIndexes": [
+    {
+      "path": "main/binary-amd64/Packages",
+      "size": 6101,
+      "sha256": "df7e46153b6865990b381778ac198d8d36e2d9106707dc79a350e33fdec220ae"
+    },
+    {
+      "path": "main/binary-amd64/Packages.gz",
+      "size": 1108,
+      "sha256": "5d25611fa2b0afff5a0b9a0a3b4bd5b61b52dde78b8ff7bb810aa75876e5eee1"
+    },
+    {
+      "path": "main/binary-amd64/Release",
+      "size": 103,
+      "sha256": "4c505dd35a52497c76a01a45dbc9c9934215fd44ad4f1310e5e8991f041f1a98"
+    },
+    {
+      "path": "main/binary-arm64/Packages",
+      "size": 6101,
+      "sha256": "96f9f4c23c3741af5e8d5c1ebe059eb96b23b991aa2a3626e612762d1d754d54"
+    },
+    {
+      "path": "main/binary-arm64/Packages.gz",
+      "size": 1108,
+      "sha256": "7b238c780168906b849c41393b4387b789706e0f8992fbe2d8d7e9507e62ac7c"
+    },
+    {
+      "path": "main/binary-arm64/Release",
+      "size": 103,
+      "sha256": "3b53a4e0c5f33dd1d803f375fd992e951780bbbcc51e0e71621c31ac8d08271c"
+    }
+  ],
+  "packages": [
+    {
+      "architecture": "amd64",
+      "version": "2.4.0",
+      "aptUrl": "https://shadowfetchstudio.github.io/ShadowCode/apt/pool/main/s/shadow-code/shadow-code_2.4.0_amd64.deb",
+      "assetId": 738072503,
+      "url": "https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.4.0/ShadowCode_2.4.0_amd64.deb",
+      "size": 29226508,
+      "sha256": "925928dfcc78a72b3574f0adc348a4f09b07adbd226a6c4af3b8881bf16e6af0",
+      "controlVerified": true
+    },
+    {
+      "architecture": "arm64",
+      "version": "2.4.0",
+      "aptUrl": "https://shadowfetchstudio.github.io/ShadowCode/apt/pool/main/s/shadow-code/shadow-code_2.4.0_arm64.deb",
+      "assetId": 738073155,
+      "url": "https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.4.0/ShadowCode_2.4.0_arm64.deb",
+      "size": 26126860,
+      "sha256": "fef3f92e22d7aab9371833580803c7d681e20c6918c926627656edc07457e420",
+      "controlVerified": true
+    }
+  ],
+  "successfulSnapshot": "attempts/001/",
+  "scope": "Public files and signatures only; no package installation, repository mutation or private-key access.",
+  "releaseRunHeadVerified": "25c8345f99f246b37ea45bf9306eb551da9c0819",
+  "verifierSha256": "83804ded7d1b017f6323232c5488616416141709dbcc6b97ccc7a1c6274750ae"
+}
