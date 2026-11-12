@@ -35,6 +35,8 @@ type PanelProps = {
   toast: Toast;
   memory: DrawerMemory;
   onMemory: DrawerMemoryUpdate;
+  onRequestFocus?: () => void;
+  onReady?: (element: HTMLElement) => void;
 };
 
 export function TerminalPanel(props: PanelProps) {
@@ -52,7 +54,14 @@ export function TerminalPanel(props: PanelProps) {
   return <LocalTerminals {...props} />;
 }
 
-function LocalTerminals({ workspace, toast, memory, onMemory }: PanelProps) {
+function LocalTerminals({
+  workspace,
+  toast,
+  memory,
+  onMemory,
+  onRequestFocus,
+  onReady,
+}: PanelProps) {
   const [active, setActive] = remembered(memory, onMemory, "terminalActive");
   const [terminals, setTerminals] = useState<TerminalInfo[] | null>(null);
   const [error, setError] = useState("");
@@ -122,7 +131,16 @@ function LocalTerminals({ workspace, toast, memory, onMemory }: PanelProps) {
             <button
               type="button"
               aria-pressed={shown?.id === t.id}
-              onClick={() => setActive(t.id)}
+              onClick={(event) => {
+                onRequestFocus?.();
+                if (shown?.id === t.id) {
+                  const input = event.currentTarget
+                    .closest(".terminal-panel")
+                    ?.querySelector<HTMLElement>(".xterm-helper-textarea");
+                  if (input) onReady?.(input);
+                }
+                setActive(t.id);
+              }}
               title={t.shell}
             >
               {t.title}
@@ -144,7 +162,10 @@ function LocalTerminals({ workspace, toast, memory, onMemory }: PanelProps) {
           aria-label="New terminal"
           title="New terminal"
           disabled={opening}
-          onClick={() => void open()}
+          onClick={() => {
+            onRequestFocus?.();
+            void open();
+          }}
         >
           <Plus size={14} aria-hidden="true" />
         </button>
@@ -163,7 +184,14 @@ function LocalTerminals({ workspace, toast, memory, onMemory }: PanelProps) {
       {terminals !== null && !list.length && !opening && (
         <div className="terminal-empty">
           <p className="hint">No terminal is open in this project.</p>
-          <button type="button" className="mini" onClick={() => void open()}>
+          <button
+            type="button"
+            className="mini"
+            onClick={() => {
+              onRequestFocus?.();
+              void open();
+            }}
+          >
             Open a terminal
           </button>
         </div>
@@ -173,6 +201,7 @@ function LocalTerminals({ workspace, toast, memory, onMemory }: PanelProps) {
           <TerminalView
             key={shown.id}
             id={shown.id}
+            onReady={onReady}
             title={shown.title}
             onError={(message) => setError(message)}
             onState={(chunk) => {
@@ -203,6 +232,7 @@ function LocalTerminals({ workspace, toast, memory, onMemory }: PanelProps) {
                 type="button"
                 className="mini"
                 onClick={() => {
+                  onRequestFocus?.();
                   void close(shown.id).then(open);
                 }}
               >

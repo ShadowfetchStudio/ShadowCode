@@ -216,3 +216,48 @@ it("keys inside any modal dialog are the dialog's, even one the app does not tra
     modal.remove();
   }
 });
+
+it("leaves Mac Minimize and Cycle Windows to the OS, with reachable alternatives", () => {
+  vi.spyOn(navigator, "platform", "get").mockReturnValue("MacIntel");
+  expect(shortcutFor(key("m", { metaKey: true }), closed)).toBeNull();
+  expect(shortcutFor(key("`", { metaKey: true }), closed)).toBeNull();
+  expect(shortcutFor(key("M", { metaKey: true, shiftKey: true }), closed)).toBe(
+    "model",
+  );
+  expect(shortcutFor(key("m", { ctrlKey: true }), closed)).toBe("model");
+  expect(shortcutFor(key("`", { ctrlKey: true }), closed)).toBe("terminal");
+  const run = vi.fn();
+  renderHook(() => useShortcuts(closed, run));
+  for (const k of ["m", "`"]) {
+    const event = new KeyboardEvent("keydown", {
+      key: k,
+      metaKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+    document.body.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+  }
+  expect(run).not.toHaveBeenCalled();
+});
+
+it("preserves Option-arrow editing and IME composition in input owners", () => {
+  const input = document.createElement("textarea");
+  const editor = document.createElement("div");
+  editor.setAttribute("contenteditable", "true");
+  for (const target of [input, editor]) {
+    for (const arrow of ["ArrowUp", "ArrowDown"])
+      expect(
+        shortcutFor(key(arrow, { target, altKey: true }), closed),
+      ).toBeNull();
+  }
+  expect(
+    shortcutFor({ ...key("k", { metaKey: true }), isComposing: true }, closed),
+  ).toBeNull();
+  expect(
+    shortcutFor(
+      { ...key("Escape"), isComposing: true },
+      { ...closed, panel: true },
+    ),
+  ).toBeNull();
+});

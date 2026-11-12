@@ -1,4 +1,5 @@
-import { X } from "lucide-react";
+import { X, PanelBottom } from "lucide-react";
+import { PanelResizeHandle } from "./shell/PanelResizeHandle";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { api, type Session } from "../api";
 import { Empty } from "./cards";
@@ -85,6 +86,11 @@ export function Drawer({
   onDiscardFileDraft,
   onResolveFileDraftConflict,
   targets = [],
+  onDockTerminal,
+  onFocusDockTerminal,
+  terminalDocked = false,
+  onRequestTerminalFocus,
+  onTerminalReady,
 }: {
   tab: DrawerTab;
   onTab: (t: DrawerTab) => void;
@@ -110,6 +116,11 @@ export function Drawer({
   ) => Promise<void>;
   /** Picker rows, for the Git tab's reviewer. */
   targets?: PickerTarget[];
+  onDockTerminal?: () => void;
+  onFocusDockTerminal?: () => void;
+  terminalDocked?: boolean;
+  onRequestTerminalFocus?: () => void;
+  onTerminalReady?: (element: HTMLElement) => void;
 }) {
   const tool = isToolTab(tab) ? tab : null;
   const selected = tool ? "tools" : tab;
@@ -118,6 +129,7 @@ export function Drawer({
   }, [tool, onMemory]);
   return (
     <aside className="drawer" aria-label="Drawer">
+      <PanelResizeHandle />
       <div className="drawer-tabs">
         {/* The tabs wrap inside their own list so Close stays on the first
             row, at the top right, whatever the drawer's width. */}
@@ -195,13 +207,32 @@ export function Drawer({
             toast={toast}
           />
         )}
-        {tab === "terminal" && (
-          <TerminalPanel
-            workspace={workspace}
-            toast={toast}
-            memory={memory}
-            onMemory={onMemory}
-          />
+        {tab === "terminal" && !terminalDocked && (
+          <>
+            {onDockTerminal && (
+              <button
+                type="button"
+                className="ghost terminal-dock-action"
+                onClick={onDockTerminal}
+              >
+                <PanelBottom size={15} aria-hidden="true" />
+                Dock terminal below workspace
+              </button>
+            )}
+            <TerminalPanel
+              onRequestFocus={onRequestTerminalFocus}
+              onReady={onTerminalReady}
+              workspace={workspace}
+              toast={toast}
+              memory={memory}
+              onMemory={onMemory}
+            />
+          </>
+        )}
+        {tab === "terminal" && terminalDocked && (
+          <button type="button" className="ghost" onClick={onFocusDockTerminal}>
+            Focus workspace terminal
+          </button>
         )}
         {tab === "preview" && (
           <Suspense fallback={<PanelFallback />}>

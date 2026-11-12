@@ -665,6 +665,12 @@ impl LocalRuntime {
                 .await;
             return match result {
                 Ok(server) => {
+                    // Publication boundary: Stop observed before this check wins.
+                    // No awaits occur between the check and publishing the lease.
+                    if cancel.is_cancelled() || abort.is_cancelled() {
+                        server.stop().await;
+                        bail!("Model load cancelled");
+                    }
                     if let Ok(mut errors) = self.errors.lock() {
                         errors.remove(&spec.id);
                     }
@@ -846,6 +852,31 @@ pub fn server_args(spec: &LaunchSpec, port: u16, gpu: GpuMode) -> Vec<String> {
     args
 }
 
+/// The audited pin supports --cache-ram. Do not send new flags to unknown
+/// user-configured runtimes. Disable the extra host prompt cache on Apple
+/// shared-memory devices; the active KV cache is unaffected. Discrete/CPU-only
+/// runtimes retain their policy. Zero adds no hidden host-cache allowance to
+/// the active-memory estimate; SWA/recurrent checkpoints remain an estimate gap.
+fn prompt_cache_limit_mib(shared: bool, commit: Option<&str>) -> Option<u64> {
+    const AUDITED: &str = "18f9f7bef960b76b693d8dcbb33cbbd6148c1631";
+    (shared && commit.is_some_and(|c| c.len() >= 7 && AUDITED.starts_with(c))).then_some(0)
+}
+
+fn server_args_with_memory_policy(
+    spec: &LaunchSpec,
+    port: u16,
+    gpu: GpuMode,
+    shared: bool,
+    commit: Option<&str>,
+) -> (Vec<String>, Option<u64>) {
+    let limit = prompt_cache_limit_mib(shared, commit);
+    let mut args = server_args(spec, port, gpu);
+    if let Some(limit) = limit {
+        args.extend(["--cache-ram".into(), limit.to_string()]);
+    }
+    (args, limit)
+}
+
 /// HTTP client for the local server: loopback only, never through a proxy.
 pub fn loopback_client(timeout: Duration) -> Result<reqwest::Client> {
     Ok(reqwest::Client::builder()
@@ -898,6 +929,8 @@ async fn launch(
     let model_path = spec.model.clone();
     let runtime_path = spec.binary.clone();
     let template_profile = spec.template_profile;
+    let context = spec.ctx;
+    let projector_bytes = sources.projector.as_ref().map_or(0, |p| p.bytes);
     let metadata = tokio::task::spawn_blocking(move || -> Result<_> {
         let header = crate::local_engine::header(&model_path)?;
         if let Some(profile) = template_profile {
@@ -906,6 +939,13 @@ async fn launch(
                 "Model metadata no longer matches the selected local tool template"
             );
         }
+        let estimate = crate::gguf::estimate_memory(
+            &header,
+            std::fs::metadata(&model_path)?.len(),
+            projector_bytes,
+            context,
+        )
+        .total_bytes;
         let model = header.provenance();
         let probe = crate::local_engine::probe(&runtime_path);
         ensure!(
@@ -913,11 +953,11 @@ async fn launch(
             "{}",
             probe.error.as_deref().unwrap_or("Runtime probe failed")
         );
-        Ok((model, probe))
+        Ok((model, probe, estimate))
     });
     // File reads and short-lived CLI probes remain bounded blocking work,
     // but neither a task nor the inference slot waits for them after Stop.
-    let (model_provenance, runtime_probe) = tokio::select! {
+    let (model_provenance, runtime_probe, estimate) = tokio::select! {
         biased;
         _ = cancel.cancelled() => return Err(other(anyhow!("Model load cancelled"))),
         _ = abort.cancelled() => return Err(other(anyhow!("Model load cancelled because the model was unloaded"))),
@@ -938,9 +978,17 @@ async fn launch(
     }
     let port = free_loopback_port().map_err(other)?;
     let api_key = random_key().map_err(other)?;
+    let shared_memory = crate::local_engine::apple_shared_memory(&runtime_probe.devices);
+    let (args, prompt_cache_mib) = server_args_with_memory_policy(
+        spec,
+        port,
+        gpu,
+        shared_memory,
+        runtime_probe.commit.as_deref(),
+    );
     let mut command = Command::new(&spec.binary);
     command
-        .args(server_args(spec, port, gpu))
+        .args(args)
         .env_clear()
         .envs(crate::local_engine::runtime_env(&spec.binary))
         .env("LLAMA_API_KEY", &api_key)
@@ -960,6 +1008,17 @@ async fn launch(
     }
     if cancel.is_cancelled() || abort.is_cancelled() {
         return Err(other(anyhow!("Model load cancelled")));
+    }
+    // Runs for the original attempt AND a CPU retry, after the prior child
+    // has exited. Reuse of an already-loaded server never reaches this check.
+    if shared_memory {
+        crate::local_engine::check_shared_memory_headroom(
+            true,
+            estimate,
+            crate::local_engine::available_memory(),
+            crate::local_engine::read_meminfo(),
+        )
+        .map_err(other)?;
     }
     let mut child = command
         .spawn()
@@ -1024,7 +1083,19 @@ async fn launch(
             Ok(None) => {}
             Err(error) => return Err(other(error.into())),
         }
-        if health(&client, port, &api_key).await {
+        let ready = tokio::select! {
+            biased;
+            _ = cancel.cancelled() => {
+                terminate(&mut child).await;
+                return Err(other(anyhow!("Model load cancelled")));
+            }
+            _ = abort.cancelled() => {
+                terminate(&mut child).await;
+                return Err(other(anyhow!("Model load cancelled because the model was unloaded")));
+            }
+            ready = health(&client, port, &api_key) => ready,
+        };
+        if ready {
             break;
         }
         if started.elapsed() > STARTUP_TIMEOUT {
@@ -1047,7 +1118,13 @@ async fn launch(
             _ = tokio::time::sleep(Duration::from_millis(200)) => {}
         }
     }
-    let props = match props(&client, port, &api_key).await {
+    let response = tokio::select! {
+        biased;
+        _ = cancel.cancelled() => Err(anyhow!("Model load cancelled")),
+        _ = abort.cancelled() => Err(anyhow!("Model load cancelled because the model was unloaded")),
+        response = props(&client, port, &api_key) => response,
+    };
+    let props = match response {
         Ok(props) => props,
         Err(error) => {
             terminate(&mut child).await;
@@ -1088,6 +1165,10 @@ async fn launch(
         .and_then(Value::as_bool)
         .unwrap_or(spec.mmproj.is_some())
         && spec.mmproj.is_some();
+    if cancel.is_cancelled() || abort.is_cancelled() {
+        terminate(&mut child).await;
+        return Err(other(anyhow!("Model load cancelled")));
+    }
     let pid = child.id();
     let mode = |gpu| match gpu {
         GpuMode::All => "all",
@@ -1130,6 +1211,11 @@ async fn launch(
                     "reported_tool_capabilities": reported_tool_capabilities(&props),
                 },
                 "context": {"requested_tokens": spec.ctx, "reported_tokens": n_ctx},
+                "memory_policy": {
+                    "apple_shared_memory": shared_memory,
+                    "host_prompt_cache_limit_mib": prompt_cache_mib,
+                    "estimated_active_bytes": estimate,
+                },
                 "gpu": {"requested_mode": mode(spec.gpu), "launch_mode": mode(gpu), "reported_backend": spec.backend},
             }),
         },
@@ -1451,6 +1537,23 @@ mod tests {
     }
 
     #[test]
+    fn prompt_cache_policy_only_changes_audited_shared_memory_runtime() {
+        for commit in ["18f9f7b", "18f9f7bef960b76b693d8dcbb33cbbd6148c1631"] {
+            assert_eq!(prompt_cache_limit_mib(true, Some(commit)), Some(0));
+            assert_eq!(prompt_cache_limit_mib(false, Some(commit)), None);
+        }
+        for commit in [
+            None,
+            Some(""),
+            Some("18f9"),
+            Some("fakecommit"),
+            Some("18f9f7b-dirty"),
+        ] {
+            assert_eq!(prompt_cache_limit_mib(true, commit), None);
+        }
+    }
+
+    #[test]
     fn argv_has_the_security_and_context_flags() {
         let spec = LaunchSpec {
             id: "local:gguf:x".into(),
@@ -1469,6 +1572,19 @@ mod tests {
         assert!(args.contains("--mmproj /m/x.mmproj.gguf"));
         assert!(args.ends_with("-ngl 999"));
         assert!(!args.contains("api-key"), "the key never appears in argv");
+        for gpu in [GpuMode::All, GpuMode::Auto, GpuMode::Off] {
+            let (bounded, limit) =
+                server_args_with_memory_policy(&spec, 5555, gpu, true, Some("18f9f7b"));
+            assert_eq!(limit, Some(0));
+            assert_eq!(bounded.iter().filter(|s| *s == "--cache-ram").count(), 1);
+            assert_eq!(&bounded[bounded.len() - 2..], ["--cache-ram", "0"]);
+            for (shared, commit) in [(false, Some("18f9f7b")), (true, None), (true, Some("old"))] {
+                let (unchanged, limit) =
+                    server_args_with_memory_policy(&spec, 5555, gpu, shared, commit);
+                assert_eq!(unchanged, server_args(&spec, 5555, gpu));
+                assert_eq!(limit, None);
+            }
+        }
         let cpu = server_args(&spec, 5555, GpuMode::Off).join(" ");
         assert!(cpu.ends_with("--device none -ngl 0"));
         let mut changed = spec.clone();

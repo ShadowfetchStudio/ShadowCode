@@ -1,0 +1,439 @@
+/* Workspace hierarchy: navigation / conversation / tools. Tokens and semantic
+   colours remain shared with the editor, review surface and both themes. */
+.app {
+  --workspace-panel: var(--panel-width, var(--drawer-w));
+}
+.app.drawer-open {
+  grid-template-columns: 0 minmax(0, 1fr) var(--workspace-panel);
+}
+.app.with-sidebar.drawer-open {
+  grid-template-columns: var(--rail-w) minmax(0, 1fr) var(--workspace-panel);
+}
+.top {
+  padding-inline: 20px;
+  gap: 10px;
+}
+.top-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+.project-crumb {
+  color: var(--text-2);
+}
+.workspace-tools {
+  display: flex;
+  gap: 2px;
+}
+.top-action {
+  min-height: 32px;
+  border-color: transparent;
+  font-size: 12px;
+}
+.top-action.on {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--border-strong);
+}
+.top-right {
+  gap: 4px;
+}
+.compare-action span {
+  display: none;
+}
+.brand {
+  height: 65px;
+}
+.sidebar {
+  background: var(--sidebar);
+}
+.new-task {
+  padding-block: 11px;
+  border-color: var(--border-strong);
+}
+.task-row.selected {
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.welcome {
+  max-width: 760px;
+  margin-inline: auto;
+}
+.welcome .welcome-mark {
+  width: 44px;
+  height: 44px;
+}
+.welcome-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  font-weight: 650;
+  color: var(--muted);
+  margin: 20px 0 12px;
+}
+.welcome .welcome-title {
+  font-size: clamp(27px, 3vw, 38px);
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+}
+.welcome-intro {
+  color: var(--text-2);
+  font-size: 14px;
+  margin: 12px 0 28px;
+}
+.welcome-suggestions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+.welcome-chip {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 11px;
+  text-align: left;
+  white-space: normal;
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text-2);
+}
+.welcome-chip > svg:first-child {
+  color: var(--accent);
+}
+.welcome-chip strong {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.welcome-chip > span {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.welcome-chip .suggestion-arrow {
+  position: absolute;
+  right: 14px;
+  top: 17px;
+  color: var(--muted);
+}
+.welcome-chip:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-2);
+}
+.drawer {
+  position: relative;
+  overflow: visible;
+  min-width: 0;
+}
+.drawer-body {
+  overflow: auto;
+}
+.panel-resizer {
+  position: absolute;
+  z-index: 4;
+  inset: 0 auto 0 -4px;
+  width: 8px;
+  cursor: col-resize;
+  touch-action: none;
+}
+.panel-resizer::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 3px;
+  width: 2px;
+  background: transparent;
+}
+.panel-resizer:hover::after,
+.panel-resizer:focus-visible::after {
+  background: var(--accent);
+}
+.panel-resizer:focus-visible {
+  outline-offset: -2px;
+}
+/* App and CSS share effective layout pixels, including fallback zoom.
+   Override the older raw-viewport shell rules in both zoom directions. */
+.app.workspace-layout {
+  --rail-w: 254px;
+  --drawer-w: 440px;
+  --visible-rail: 0px;
+  --visible-panel: 0px;
+}
+.app.workspace-layout,
+.app.workspace-layout.with-sidebar,
+.app.workspace-layout.drawer-open,
+.app.workspace-layout.with-sidebar.drawer-open {
+  grid-template-columns: var(--visible-rail) minmax(0, 1fr) var(--visible-panel);
+}
+.app.workspace-layout.with-sidebar {
+  --visible-rail: var(--rail-w);
+}
+.app.workspace-layout.drawer-open {
+  --visible-panel: min(
+    var(--workspace-panel),
+    calc(100% - var(--visible-rail) - 380px)
+  );
+}
+.app.workspace-layout .sidebar {
+  display: flex;
+  position: static;
+  inset: auto;
+  width: auto;
+  box-shadow: none;
+}
+.app.workspace-layout .drawer {
+  position: relative;
+  inset: auto;
+  width: auto;
+  box-shadow: none;
+}
+.app.workspace-layout .top-action span {
+  display: inline;
+}
+.app.workspace-layout .compare-action span {
+  display: none;
+}
+.app.workspace-layout .top-divider {
+  display: block;
+}
+.app.workspace-layout .project-crumb {
+  max-width: 200px;
+}
+.app.workspace-icon-tools .workspace-tools .top-action > span {
+  display: none;
+}
+.app.workspace-compact {
+  --rail-w: 220px;
+  --drawer-w: 370px;
+}
+.app.workspace-compact.with-sidebar.drawer-open {
+  --visible-rail: 0px;
+}
+.app.workspace-compact.drawer-open .sidebar {
+  display: none;
+}
+.app.workspace-compact .chat-inner {
+  padding-inline: 26px;
+}
+.app.workspace-compact .composer-wrap {
+  padding-inline: 26px;
+}
+.app.workspace-wide {
+  --rail-w: 270px;
+  --drawer-w: 480px;
+}
+.app.workspace-layout.workspace-overlay {
+  --visible-rail: 0px;
+  --visible-panel: 0px;
+}
+.app.workspace-overlay .sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: min(260px, 100%);
+  z-index: 15;
+  box-shadow: 10px 0 40px #0002;
+}
+.app.workspace-overlay .drawer {
+  position: fixed;
+  inset: 55px 0 0 auto;
+  width: min(100%, 450px);
+  z-index: 14;
+  box-shadow: -8px 0 30px #0001;
+}
+.app.workspace-overlay .panel-resizer {
+  display: none;
+}
+.app.workspace-overlay .top {
+  padding-inline: 10px;
+  gap: 5px;
+}
+.app.workspace-overlay .top-action {
+  padding-inline: 6px;
+}
+.app.workspace-overlay .top-action span:not(.count),
+.app.workspace-overlay .top-divider {
+  display: none;
+}
+.app.workspace-overlay .project-crumb {
+  max-width: 90px;
+}
+.app.workspace-overlay .chat-inner {
+  padding: 0 18px 16px;
+}
+.app.workspace-overlay .composer-wrap {
+  padding: 8px 14px 0;
+}
+.app.workspace-overlay .welcome-suggestions {
+  grid-template-columns: 1fr;
+}
+.app.workspace-overlay .welcome-chip {
+  padding: 13px 36px 13px 44px;
+  gap: 3px;
+}
+.app.workspace-overlay .welcome-chip > svg:first-child {
+  position: absolute;
+  left: 14px;
+  top: 16px;
+}
+.app.workspace-overlay .welcome-intro {
+  margin-bottom: 20px;
+}
+/* A narrow split view needs the same compact start cards as a small window. */
+.stage {
+  container-type: inline-size;
+}
+@container (max-width: 560px) {
+  .welcome-suggestions {
+    grid-template-columns: 1fr;
+  }
+  .welcome-chip {
+    padding: 12px 34px 12px 42px;
+    gap: 3px;
+  }
+  .welcome-chip > svg:first-child {
+    position: absolute;
+    left: 12px;
+    top: 15px;
+  }
+}
+.workspace-context {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px 12px;
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 11px;
+}
+.workspace-location {
+  flex: 1 1 140px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.workspace-branch {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 180px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.workspace-evidence {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.workspace-evidence button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 4px 7px;
+  font-size: 11px;
+  color: var(--text-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.workspace-evidence button:hover {
+  background: var(--hover);
+}
+.workspace-evidence button:disabled {
+  opacity: 0.55;
+}
+.app.terminal-docked {
+  --terminal-dock-height: clamp(170px, 28vh, 300px);
+  grid-template-rows: 55px minmax(0, 1fr) var(--terminal-dock-height);
+  grid-template-areas: "sidebar top top" "sidebar stage drawer" "sidebar terminal terminal";
+}
+.terminal-dock {
+  grid-area: terminal;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  border-top: 1px solid var(--border-strong);
+  background: var(--surface);
+}
+.terminal-dock > header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 14px;
+  font-size: 11px;
+  color: var(--text-2);
+  flex-shrink: 0;
+}
+.terminal-dock > header span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.terminal-dock > header button {
+  min-height: 28px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--surface-2);
+}
+.terminal-dock-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 8px;
+}
+.terminal-dock > .terminal-panel {
+  flex: 1;
+  min-height: 0;
+}
+.terminal-dock .terminal-screen {
+  min-height: 0;
+  height: 0;
+  flex: 1 1 0;
+}
+.terminal-dock .terminal-tabs {
+  flex-shrink: 0;
+  max-height: 64px;
+  overflow-y: auto;
+}
+.terminal-dock .terminal-hint {
+  flex-shrink: 0;
+}
+.app.workspace-overlay.terminal-docked .drawer {
+  bottom: var(--terminal-dock-height);
+}
+.project-new {
+  opacity: 0.65;
+  flex: none;
+}
+.project-heading:hover .project-new,
+.project-new:focus-visible {
+  opacity: 1;
+}
+.project-parent {
+  padding: 0 8px 5px 28px;
+  font-size: 10px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+/* A dock reduces vertical room: keep first-task actions above the composer. */
+.terminal-docked .welcome {
+  padding-block: 8px;
+}
+.terminal-docked .welcome-mark,
+.terminal-docked .welcome-eyebrow {
+  display: none;
+}
+.terminal-docked .welcome .welcome-title {
+  font-size: 28px;
+}
+.terminal-docked .welcome-intro {
+  margin-bottom: 12px;
+}
+.terminal-docked .chat-stream {
+  padding-top: 14px;
+}

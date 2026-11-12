@@ -162,6 +162,13 @@ impl Profile<'_> {
             quoted(self.scratch)
         ));
         if let Some(temp) = &self.user_temp {
+            // xcrun checks the temp directory itself before creating its cache.
+            // Ancestors above omit this directory when scratch is elsewhere;
+            // allow only its metadata, not listing or unrelated cache contents.
+            profile.push_str(&format!(
+                "(allow file-read-metadata (literal {}))\n",
+                quoted(temp)
+            ));
             profile.push_str(&format!(
                 "(allow file-read* file-write* (prefix {}))\n",
                 quoted(&temp.join("xcrun_db"))

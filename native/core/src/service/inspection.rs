@@ -23,7 +23,7 @@ fn proc_translated() -> bool {
     let mut size = std::mem::size_of_val(&value);
     let rc = unsafe {
         libc::sysctlbyname(
-            b"sysctl.proc_translated\0".as_ptr().cast(),
+            c"sysctl.proc_translated".as_ptr(),
             std::ptr::from_mut(&mut value).cast(),
             &mut size,
             std::ptr::null_mut(),

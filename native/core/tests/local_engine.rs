@@ -170,6 +170,11 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
     def do_GET(self):
+        phase = self.path.lstrip("/")
+        if phase in ("health", "props") and os.path.exists(os.path.join(HERE, "hold-" + phase)):
+            open(os.path.join(HERE, phase + "-requested"), "w").close()
+            while not os.path.exists(os.path.join(HERE, "release-" + phase)):
+                time.sleep(0.01)
         if self.path == "/health":
             return self.reply(200, {"status": "ok"})
         if not self.authorized():
@@ -1213,6 +1218,92 @@ async fn cancel_or_unload_during_provenance_probe_never_launches_a_server() {
         .unwrap();
         assert!(lines(&f.bin.join("launches.jsonl")).is_empty());
         local.stop().await;
+    }
+}
+
+/// Deterministic request barriers exercise both successful readiness awaits.
+/// No real weights/GPU and no sleep used to guess when readiness was reached.
+#[tokio::test]
+async fn cancellation_at_health_and_props_never_publishes_a_loaded_server() {
+    use shadowcode_core::local_runtime::{GpuMode, LaunchSpec, LocalRuntime};
+    for phase in ["health", "props"] {
+        for unload in [false, true] {
+            for release_response in [false, true] {
+                let f = fixture(GPU);
+                let path = f.models.join("ready-boundary.gguf");
+                qwen_like(&path, "qwen3", TOOLS_TEMPLATE);
+                fs::write(f.bin.join(format!("hold-{phase}")), b"").unwrap();
+                let local = std::sync::Arc::new(LocalRuntime::new());
+                let cancel = CancellationToken::new();
+                let spec = LaunchSpec {
+                    id: local_engine::entry_id(&path),
+                    name: "boundary".into(),
+                    binary: f.bin.join("llama-server"),
+                    model: path,
+                    mmproj: None,
+                    ctx: 4096,
+                    gpu: GpuMode::All,
+                    backend: "vulkan".into(),
+                    template_profile: None,
+                };
+                let loading = {
+                    let local = local.clone();
+                    let cancel = cancel.clone();
+                    let spec = spec.clone();
+                    tokio::spawn(async move { local.acquire(spec, &cancel).await })
+                };
+                tokio::time::timeout(Duration::from_secs(8), async {
+                    while !f.bin.join(format!("{phase}-requested")).is_file() {
+                        tokio::time::sleep(Duration::from_millis(10)).await;
+                    }
+                })
+                .await
+                .expect("fake server reached readiness barrier");
+                let pid = lines(&f.bin.join("launches.jsonl"))[0]["pid"]
+                    .as_u64()
+                    .unwrap();
+                let abort = async {
+                    if unload {
+                        local.unload().await.unwrap();
+                    } else {
+                        cancel.cancel();
+                    }
+                };
+                // Poll unload first so its abort token is set before allowing
+                // the successful HTTP response. Both futures run on this task.
+                let release = async {
+                    if release_response {
+                        fs::write(f.bin.join(format!("release-{phase}")), b"").unwrap();
+                    }
+                };
+                tokio::time::timeout(Duration::from_secs(1), async {
+                    tokio::join!(biased; abort, release);
+                })
+                .await
+                .expect("cancellation does not wait for HTTP timeout");
+                let result = tokio::time::timeout(Duration::from_secs(1), loading)
+                    .await
+                    .expect("cancelled load joins promptly")
+                    .unwrap();
+                assert!(result
+                    .err()
+                    .expect("cancel must beat readiness")
+                    .to_string()
+                    .contains("cancelled"));
+                assert!(local.loaded().is_none(), "{phase}, unload={unload}");
+                assert_eq!(local.in_use(), 0);
+                assert!(!pid_alive(pid), "cancelled load's child must be reaped");
+                fs::remove_file(f.bin.join(format!("hold-{phase}"))).unwrap();
+                // Cancellation leaves the slot usable; it never became a
+                // sticky model error or leaked lease that prevents retry.
+                let (_, lease) = local
+                    .acquire(spec, &CancellationToken::new())
+                    .await
+                    .unwrap();
+                drop(lease);
+                assert!(local.unload().await.unwrap());
+            }
+        }
     }
 }
 

@@ -1,4 +1,4 @@
-# ShadowCode architecture (0.30)
+# ShadowCode architecture (2.4.0 development)
 
 ```text
 React window (ui/)                 shadowcode CLI / TUI / MCP clients
@@ -215,6 +215,20 @@ Job statuses end in `completed`, `failed`, `cancelled`, `interrupted` or
   `useStickyScroll` and `useDrawerMemory`. Layout is in
   `ui/src/components/shell/` (`TopBar`, `Stage`, `ChatView`,
   `TranscriptRows`, `ComposerDock`, `StatusBar`, `AppDialogs`).
+- **Workspace surfaces.** `WorkspaceContextBar` keeps project/branch identity,
+  task review and the existing `RunCheck` action visible outside transcript
+  scrolling. `PanelResizeHandle` owns only the side-panel width preference and
+  clamps its effective size to the available workspace; it supports pointer and
+  keyboard resizing. An optional terminal dock uses the same engine shell and
+  `useDrawerMemory` selection as the side panel, with one mounted terminal view.
+  Project-specific New task passes an explicit workspace into `useNavigation`;
+  session creation and activation share one queue because creating a session also
+  changes the engine's active session.
+- **Mac keyboard ownership.** Hints follow the viewing computer, including remote
+  access. Command-Shift-M selects a model and Control-backtick reaches Terminal,
+  preserving Command-M and Command-backtick for native window actions. IME
+  composition and Option-arrow editing remain with their focused input owner.
+  Terminal cursor blinking follows live reduced-motion changes.
 - **Push, not polling.** The desktop shell forwards every engine broadcast as
   `shadowcode:events {session_id, type}`. `useFeed` reads `GET /api/feed`
   (pending approvals and the job list) only for the types it lists

@@ -1,8 +1,35 @@
 # Changelog
 
-## Unreleased
+## 2.4.0: Mac workspace, local models and reliable review
 
-## 2.4.0: Apple silicon, T3-style first run, easy sign-in
+- **Mac workspace.** Direct Files/Terminal/Preview controls, a remembered resizable
+  side panel, and an optional bottom terminal make code, conversation and output
+  available together. Compact-window navigation remains recoverable.
+- **Project and evidence context.** Show the working folder and branch alongside
+  project checks and latest-task review. Project headings create tasks in their
+  own workspace; creation and activation share one queue to prevent late replies
+  from changing a newer selection.
+- **Mac keyboard and motion.** Command-Shift-M chooses a model and Control-backtick
+  reaches Terminal, leaving native window shortcuts intact. Option-arrow editing
+  and IME composition stay with text input. Terminal cursor blinking follows
+  reduced-motion changes.
+- **Apple shared memory.** Correct speculative-page accounting, check current
+  headroom before allocating on identified Apple Metal hardware, and explicitly
+  disable the audited runtime's extra host prompt cache. Estimates and requested
+  backend remain distinct from guaranteed allocation or observed GPU execution.
+- **Model load cancellation.** Cancel pending preparation from Local models;
+  cancellation interrupts readiness requests, and a rejected cancellation keeps
+  tracking the original load until it settles.
+- **Review freshness.** Keep markers bind to the content shown, expire after file
+  changes, and cannot be restored from legacy path-only storage. Review requests
+  stay with their task; failed/no-op undo retries an interrupted diff read.
+- **External-drive Mac work.** Apple developer tools can access the metadata of
+  their system temp directory while the sandbox continues blocking unrelated
+  temp-file contents and writes.
+- Research rationale and qualification evidence are recorded in
+  [the Mac upgrade report](docs/MAC_FLAGSHIP_UPGRADE.md).
+
+### Also included: Apple silicon and project-first setup
 
 - **Apple silicon.** Packaging prefers native arm64 even when the shell is under Rosetta. llama.cpp Metal builds require `default.metallib` and set `GGML_METAL_PATH_RESOURCES` at runtime. `shadowcode doctor` reports Apple silicon vs Intel vs Rosetta and whether the Metal shaders are present.
 - **TMPDIR redaction.** Darwin `/var/folders/<xx>/<yyyy>/T` names are no longer treated as high-entropy secrets, so macOS command cards stay readable.

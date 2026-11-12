@@ -125,6 +125,7 @@ beforeEach(() => {
     files: [
       {
         path: "src/app.ts",
+        hash: "h",
         status: "modified",
         source: "checkpoint",
         added: 2,

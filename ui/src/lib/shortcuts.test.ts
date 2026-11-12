@@ -14,3 +14,9 @@ describe("keyboard shortcut hints", () => {
     expect(shortcutModifier(navigator.platform)).toBe(shortcutModifier());
   });
 });
+
+it("preserves native Mac window shortcuts in model and terminal hints", () => {
+  expect(shortcutHint("M", "MacIntel")).toBe("⌘+Shift+M");
+  expect(shortcutHint("`", "MacIntel")).toBe("Ctrl+`");
+  expect(shortcutHint("M", "Win32")).toBe("Ctrl+M");
+});

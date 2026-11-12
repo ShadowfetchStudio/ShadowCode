@@ -114,6 +114,7 @@ export function Stage({
   onTryOnModel,
   find: findRequest = 0,
   onCloseFind = () => undefined,
+  workspaceBar,
 }: {
   conversation: ReturnType<typeof useConversation>;
   compare: ReturnType<typeof useCompare>;
@@ -187,6 +188,7 @@ export function Stage({
    * focuses the query again. */
   find?: number;
   onCloseFind?: () => void;
+  workspaceBar?: ReactNode;
 }) {
   const { transcript, job, busy, connection, history } = conversation;
   const { switching, sessionId, modelChoice, runningChoice } = nav;
@@ -263,11 +265,15 @@ export function Stage({
       onOpenRouter={() => openSettings("accounts", { vendor: "openrouter" })}
       onSubscription={() => openSettings("accounts")}
       onBrowse={() => openSettings("local")}
-      onConnected={() => void onRefreshModels()}
+      onConnected={() => {
+        toast("Connection ready. Choose a model to begin.", "ok");
+        void onRefreshModels();
+      }}
     />
   ) : undefined;
   return (
     <main className="stage">
+      {workspaceBar}
       {findRequest > 0 && !chatHidden && (
         <FindBar
           query={find.query}

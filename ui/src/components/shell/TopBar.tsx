@@ -5,7 +5,12 @@ import {
   GitPullRequest,
   PanelLeft,
   Search,
+  Files,
+  Terminal,
+  PanelTop,
 } from "lucide-react";
+import type { DrawerTab } from "../Drawer";
+import { shortcutHint } from "../../lib/shortcuts";
 
 /** Project crumb, conversation title and the Comparisons, Changes and
  * command palette buttons. */
@@ -21,6 +26,9 @@ export function TopBar({
   onChanges,
   changeCount,
   onPalette,
+  panel,
+  terminalVisible,
+  onPanel,
 }: {
   sidebar: boolean;
   onShowSidebar: () => void;
@@ -33,6 +41,9 @@ export function TopBar({
   onChanges: () => void;
   changeCount: number;
   onPalette: () => void;
+  panel?: DrawerTab | null;
+  terminalVisible?: boolean;
+  onPanel?: (panel: DrawerTab) => void;
 }) {
   return (
     <header className="top">
@@ -41,7 +52,7 @@ export function TopBar({
           type="button"
           className="icon-btn"
           aria-label="Show sidebar"
-          title="Show sidebar (Ctrl+B)"
+          title={`Show sidebar (${shortcutHint("B")})`}
           onClick={onShowSidebar}
         >
           <PanelLeft size={18} aria-hidden="true" />
@@ -62,9 +73,43 @@ export function TopBar({
         {comparing ? "Comparisons" : title}
       </h1>
       <div className="top-right">
+        {onPanel && (
+          <nav className="workspace-tools" aria-label="Workspace tools">
+            {(
+              [
+                ["files", "Files", Files],
+                ["terminal", "Terminal", Terminal],
+                ["preview", "Preview", PanelTop],
+              ] as const
+            ).map(([id, label, Icon]) => {
+              const pressed =
+                id === "terminal"
+                  ? (terminalVisible ?? panel === id)
+                  : panel === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  className={`top-action ${pressed ? "on" : ""}`}
+                  aria-label={`Show ${label.toLowerCase()}`}
+                  aria-pressed={pressed}
+                  title={
+                    id === "terminal"
+                      ? `${label} (${shortcutHint("`")})`
+                      : label
+                  }
+                  onClick={() => onPanel(id)}
+                >
+                  <Icon size={16} aria-hidden="true" />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        )}
         <button
           type="button"
-          className={`top-action ${comparing ? "on" : ""}`}
+          className={`top-action compare-action ${comparing ? "on" : ""}`}
           aria-label="Comparisons"
           aria-pressed={comparing}
           title="Comparisons in this project"
@@ -77,7 +122,8 @@ export function TopBar({
           type="button"
           className={`top-action ${changesOpen ? "on" : ""}`}
           aria-label="Review changes"
-          title="Review diffs, commit, and open a pull request (Ctrl+Shift+B)"
+          aria-pressed={changesOpen}
+          title={`Review diffs, commit, and open a pull request (${shortcutHint("Shift+B")})`}
           onClick={onChanges}
         >
           <GitPullRequest size={15} aria-hidden="true" />
@@ -88,7 +134,7 @@ export function TopBar({
         <button
           type="button"
           className="icon-btn"
-          title="Command palette (Ctrl+K)"
+          title={`Command palette (${shortcutHint("K")})`}
           aria-label="Command palette"
           onClick={onPalette}
         >

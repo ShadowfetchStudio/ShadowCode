@@ -44,6 +44,7 @@ export function Sidebar({
   onSettings,
   onHide,
   onAction,
+  onNewProject,
 }: {
   sessions: Session[];
   projects: Project[];
@@ -56,6 +57,7 @@ export function Sidebar({
   onProject: (path?: string) => void;
   onSettings: () => void;
   onHide: () => void;
+  onNewProject?: (path: string) => void;
   /** Rename (with the new title), Fork, Export or Delete a conversation. */
   onAction?: (
     action: Exclude<ConversationAction, "pin">,
@@ -256,7 +258,14 @@ export function Sidebar({
           <PanelLeftClose size={17} />
         </button>
       </div>
-      <button type="button" className="new-task" onClick={onNew}>
+      <button
+        type="button"
+        className="new-task"
+        title={
+          workspace ? `New task in ${workspace}` : "Open a project to start"
+        }
+        onClick={onNew}
+      >
         <SquarePen size={17} />
         <span>New task</span>
         <kbd>{shortcutHint("N")}</kbd>
@@ -325,7 +334,27 @@ export function Sidebar({
                 >
                   <ArrowUpRight size={13} />
                 </button>
+                {onNewProject && (
+                  <button
+                    type="button"
+                    className="project-new icon-btn"
+                    aria-label={`New task in ${path}`}
+                    title={`New task in ${path}`}
+                    onClick={() => onNewProject(path)}
+                  >
+                    <Plus size={13} aria-hidden="true" />
+                  </button>
+                )}
               </div>
+              {groups.some(
+                (other) =>
+                  other !== path &&
+                  other.split("/").pop() === path.split("/").pop(),
+              ) && (
+                <div className="project-parent" title={path}>
+                  {path.slice(0, path.lastIndexOf("/")) || "/"}
+                </div>
+              )}
               {!shut &&
                 (tasks.length ? (
                   tasks.map(task)

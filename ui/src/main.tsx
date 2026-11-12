@@ -13,6 +13,7 @@ import "./components.css";
 import "./review.css";
 import "./tasks.css";
 import "./remote.css";
+import "./flagship.css";
 
 // The last saved appearance (else the system theme) and text size until the
 // config loads.

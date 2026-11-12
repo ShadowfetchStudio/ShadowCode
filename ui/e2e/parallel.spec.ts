@@ -216,13 +216,16 @@ test("badges show approvals, running and unread; shortcuts move between conversa
   const s2 = page.locator('[data-session-id="s2"]');
   await expect(s2).toHaveAttribute("data-badge", "running");
   // Alt+↓ opens the next conversation in the sidebar (s2 is listed first).
+  await page.locator(".top-title").click();
   await page.keyboard.press("Alt+ArrowDown");
   await expect(page.locator('[data-session-id="s1"]')).toHaveAttribute(
     "aria-current",
     "page",
   );
+  await page.locator(".top-title").click();
   await page.keyboard.press("Alt+ArrowUp");
   await expect(s2).toHaveAttribute("aria-current", "page");
+  await page.locator(".top-title").click();
   await page.keyboard.press("Alt+ArrowDown");
   await expect(page.locator('[data-session-id="s1"]')).toHaveAttribute(
     "aria-current",

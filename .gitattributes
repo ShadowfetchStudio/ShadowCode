@@ -3,3 +3,6 @@
 * text=auto eol=lf
 # Unified diffs require a leading context space before upstream tabs/blank lines.
 tools/busybox-w32-patches/*.patch whitespace=-space-before-tab,-blank-at-eol
+
+# Qualification logs preserve exact emitted bytes for recorded SHA-256 digests.
+reports/*.log whitespace=-blank-at-eol,-blank-at-eof

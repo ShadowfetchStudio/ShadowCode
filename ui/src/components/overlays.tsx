@@ -1,3 +1,4 @@
+import { shortcutHint } from "../lib/shortcuts";
 import { Dialog } from "./Dialog";
 import { useState } from "react";
 import type { Project } from "../api";
@@ -22,10 +23,10 @@ const SHORTCUT_GROUPS: { label: string; rows: [string, string][] }[] = [
       ["Ctrl+K", "Command palette"],
       ["Ctrl+B", "Toggle sidebar"],
       ["Ctrl+Shift+B", "Toggle the Changes drawer"],
-      ["Ctrl+`", "Toggle the Terminal (works inside it too)"],
+      ["Ctrl+`", "Open or focus the Terminal"],
       ["Ctrl+P", "Open project…"],
       ["Ctrl+N", "New task"],
-      ["Alt+↑ / Alt+↓", "Previous / next conversation"],
+      ["Alt+↑ / Alt+↓", "Previous / next conversation (outside text fields)"],
       ["Ctrl+Tab", "Back to the last conversation"],
       ["Ctrl+F", "Find in conversation"],
       ["Ctrl+L", "Focus composer"],
@@ -86,7 +87,13 @@ export function Help({
               {group.rows.map(([k, label]) => (
                 <div className="help-row" key={k}>
                   <span>{label}</span>
-                  <span className="kbd">{k}</span>
+                  <span className="kbd">
+                    {k.startsWith("Ctrl+") &&
+                    k !== "Ctrl+Tab" &&
+                    k !== "Ctrl+Shift+Space"
+                      ? shortcutHint(k.slice(5))
+                      : k}
+                  </span>
                 </div>
               ))}
             </div>

@@ -4,6 +4,18 @@ The helpers in `scripts/native-release-auth.mjs` and `scripts/verify-native-rele
 
 The Bash verifier loads `scripts/native-release-auth-lib.sh` from its own script directory. Keep both reviewed code files together in the trusted tooling bundle; do not obtain the library from the candidate download or source metadata as shell code. The installer uses the same reviewed routines for current candidates and signed historical receipts; it never sources release metadata as code.
 
+## Current public release and next candidate
+
+Version [2.3.3](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.3.3)
+is the current public release, from `fd13dc10dbdcc6aac63cdfb292f9ec4d47838347`.
+The 2.4.0 candidate extends the same public key's maximum trusted version to
+2.4.0. The key fingerprint, epoch, targets, minimum version, signature format,
+and required receipt verification are unchanged. Candidate source policy does
+not itself authorize signing: the separately reviewed tooling pin and protected
+environment must be updated after qualification as described in
+[RELEASING.md](RELEASING.md). Check live release and asset state before describing
+2.4.0 as published. Historical release evidence follows.
+
 ## Published release: 2.2.0
 
 [Version 2.2.0](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.2.0) was published on October 17, 2026 from `444e75f13c3512d57c226b39d6edf59fdb08a4c6` by [run 39059462934](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/39059462934) (attempt 1), for x86_64 and aarch64. Before approving the signing review, all 15 receipts of each target were checked: passed for that commit, run and attempt, no required skips, exit status 0, script digests matching the tagged gate definitions for that architecture, and artifact hashes matching the handoff files. The published packages are byte-identical to the verified handoff; the authenticated installer installed it over 2.1.0 on the release machine and its first-window check passed. The APT repository lists 2.2.0 for amd64 and arm64 and verifies with `gpgv` against the key recorded in `release/trust/APT-SIGNING-KEY`. The macOS disk images and Flatpak bundles were then built from the tag by `release-macos.yml` and `release-flatpak.yml` and attached with their SHA-256 files; they are not covered by the publisher signature. Those two workflows had to be started by hand for 2.2.0 (a release published with `GITHUB_TOKEN` does not trigger them); from the next release the publish job dispatches them.

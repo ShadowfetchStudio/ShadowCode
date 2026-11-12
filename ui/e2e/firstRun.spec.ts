@@ -54,10 +54,10 @@ test("no accounts: download the recommended free model and start with it", async
     name: /Download a free model to run on this computer/,
   });
   await expect(download).toBeChecked();
-  await expect(page).toContainText(
+  await expect(page.locator("body")).toContainText(
     "Gemma 4 E4B by Google: 4.8 GB, about 14 minutes on a 50 Mbit/s connection. Runs on your graphics card.",
   );
-  await expect(page).toContainText(
+  await expect(page.locator("body")).toContainText(
     "Picked for this computer: Intel Arc A750 (8.0 GB) · 16 GB memory.",
   );
   await expect(
@@ -66,7 +66,7 @@ test("no accounts: download the recommended free model and start with it", async
   await expect(
     page.getByRole("button", { name: "Connect Claude Code" }),
   ).toBeVisible();
-  await expect(page.getByLabelText("OpenRouter API key")).toBeVisible();
+  await expect(page.getByLabel("OpenRouter API key")).toBeVisible();
   await page.screenshot({ path: "test-results/first-run-model-step.png" });
   expect(await downloadPosts(page)).toEqual([]);
 
@@ -122,9 +122,13 @@ test("no accounts: sign-in and API keys stay on the empty conversation", async (
     settings.getByRole("heading", { name: "Download a free model" }),
   ).toBeVisible();
   await page.keyboard.press("Escape");
-  await page.getByLabelText("OpenRouter API key").fill("sk-or-valid");
+  await page.getByLabel("OpenRouter API key").fill("sk-or-valid");
   await page.getByRole("button", { name: "Save key" }).click();
-  await expect(page.getByText(/OpenRouter API key saved/)).toBeVisible();
+  await expect(
+    page.getByText("Connection ready. Choose a model to begin."),
+  ).toBeVisible();
+  await page.getByRole("button", { name: /Model for this task/ }).click();
+  await expect(page.getByRole("group", { name: "API keys" })).toBeVisible();
   expect(await downloadPosts(page)).toEqual([]);
 });
 

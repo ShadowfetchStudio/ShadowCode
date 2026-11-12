@@ -1,9 +1,40 @@
 # ShadowCode user guide
 
-This guide describes the 2.3.0 workflow: open a
+This guide describes the 2.4.0 development workflow: open a
 project, pick a model, describe the task, watch the agent work, then review
 what changed. Installation and a feature overview are in the
 [README](../README.md).
+
+On a Mac, the interface displays Command shortcuts in place of Control for
+most app actions. Model selection is **Command-Shift-M**; Terminal remains
+**Control-backtick**. Command-M and Command-backtick retain their system roles.
+Control-Tab still switches to the previous conversation. Option-Up/Down moves
+between conversations when focus is outside a text field.
+
+## Arrange your workspace
+
+The top bar provides direct **Files**, **Terminal**, **Preview**, and **Changes**
+controls. Drag the boundary of a side panel to resize it. With the boundary
+focused, use the arrow keys to adjust, Shift-arrow for larger steps, Home/End
+for the allowed limits, or Enter to reset. Your preferred width is remembered
+and temporarily reduced when the window needs more room for the conversation.
+On compact windows, **Show sidebar** reveals navigation even while a panel is open.
+
+The project context bar shows the working folder and branch. **Run project
+check…** uses the same approval and verification flow as checks offered after
+a task; it also works before selecting a model and preserves your unsent draft.
+**Review latest task** opens the latest completed task's review when one exists.
+**Changes** continues to show changes in the workspace.
+
+In Terminal, **Dock terminal below workspace** leaves room for a file beside
+the conversation. **Move to side panel** returns it. Hiding a terminal view
+leaves its shell running; closing its terminal tab ends that shell. The terminal
+command focuses the dock when it is there. Reduced motion disables cursor
+blinking, including when the system preference changes while the view is open.
+
+Each project heading has its own **New task** control. Its destination is that
+project; the global New task control uses the current project. Projects with
+the same folder name show their parent path to distinguish them.
 
 ## Open a project
 
@@ -16,24 +47,12 @@ On first launch, onboarding asks for the project and a permission mode.
 *Ask before actions* is the default. You can change it later in
 **Settings › Permissions & network**.
 
-If no model is ready yet (no signed-in subscription, no OpenRouter key and no
-local model), a second step asks how ShadowCode should think:
-
-- **Download a free model to run on this computer** is preselected when one
-  fits. ShadowCode recommends one for your memory and graphics card and shows
-  its size and about how long it takes (see
-  [free models](LOCAL_MODELS.md#download-a-free-model)). It is free, needs no
-  account, and your code stays on the computer. The download starts only when
-  you press **Download**; the conversation shows its progress with **Pause**
-  and **Cancel**, and selects the model as soon as it is ready. *See other
-  free models* opens **Settings › Local models**.
-- **Use an OpenRouter key** opens **Settings › Accounts › OpenRouter**
-  (paid per use).
-- **Sign in to a subscription** opens **Settings › Accounts** (Codex, Claude
-  Code, Cursor, Antigravity, Grok).
-
-**Skip for now** leaves the choice for later; the empty conversation offers
-the same three choices until a model is ready.
+The empty conversation offers provider sign-in, API-key setup, and a free local
+model download when no model is ready. Choose the option there or reopen the
+model picker later. A starter card fills the composer with an example request;
+it does not send a task. Connections and downloads start only when chosen.
+**Settings › Accounts** and **Settings › Local models** remain available for
+managing these choices.
 
 The sidebar groups conversations by project. **New task** (`Ctrl+N`) starts a
 new conversation in the current project.

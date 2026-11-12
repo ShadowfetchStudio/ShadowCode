@@ -1,0 +1,9 @@
+
+ RUN  v5.0.1 /Users/shadowfetch/Projects/ShadowCode/ui
+
+
+ Test Files  2 passed (2)
+      Tests  26 passed (26)
+   Start at  19:32:18
+   Duration  1.57s (tests 62%, import 14%, environment 13%, transform 12%)
+

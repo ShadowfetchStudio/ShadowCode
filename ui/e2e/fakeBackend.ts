@@ -979,7 +979,7 @@ export function installFakeBackend(options: FakeOptions = {}) {
       added,
       removed,
       binary: false,
-      hash: String(now),
+      hash: now === null ? "missing" : `content:${now}`,
       hunks: hunks.map(({ id, header, lines }: Json) => ({
         id,
         header,
@@ -3587,15 +3587,18 @@ export function installFakeBackend(options: FakeOptions = {}) {
     }
     if (path === "/api/sessions" && method === "POST") {
       const id = `s${state.sessions.length + 1}`;
+      const destination = body.workspace || state.selected || workspace;
       state.sessions.unshift({
         id,
-        workspace,
+        workspace: destination,
         status: "idle",
         title: body.title || "New task",
         updated_at: now(),
         target: null,
       });
-      return { id, workspace };
+      state.selected = destination;
+      state.activeSession = id;
+      return { id, workspace: destination };
     }
     if ((m = path.match(/^\/api\/sessions\/([^/]+)\/fork$/))) {
       const parent = state.sessions.find((s: Json) => s.id === m![1]);
@@ -3778,7 +3781,7 @@ export function installFakeBackend(options: FakeOptions = {}) {
         workspace,
         busy: busyProject(),
         files: Object.keys(state.checkpoints[tid] || {}).map((file) => {
-          const { hunks: _hunks, hash: _hash, ...row } = reviewFile(tid, file);
+          const { hunks: _hunks, ...row } = reviewFile(tid, file);
           return row;
         }),
       };

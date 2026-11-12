@@ -2,7 +2,9 @@
 
 **One harness. All models.**
 
-**Download:** [shadowcode.org](https://shadowcode.org) — Windows, macOS and Linux · [Windows installer](https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.3.3/ShadowCode_2.3.3_x64-setup.exe)
+**Current stable downloads: 2.3.3** — [Windows, macOS and Linux](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.3.3) · [Windows installer](https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.3.3/ShadowCode_2.3.3_x64-setup.exe) · [Website](https://shadowcode.org)
+
+**Source release target: 2.4.0.** The first-run, Mac workspace and runtime improvements below are in the 2.4 source/candidate. They do not change the current stable download version. See [what changes in 2.4](#whats-new-in-the-24-source) and the [2.4.0 release notes](docs/RELEASE_NOTES.md#shadowcode-240).
 
 ### An open-source project by Shadowfetch
 
@@ -30,7 +32,9 @@ The code is open source; the Shadowfetch and ShadowCode product identity is cove
   <img src="assets/branding/shadowcode-original.png" alt="ShadowCode — One Harness. All Models." width="420" />
 </p>
 
-![ShadowCode workspace](docs/images/workspace-light.png)
+![ShadowCode workspace — native Linux 2.3.3](docs/images/workspace-light.png)
+
+*The screenshots in this README are from native Linux 2.3.3. They retain that provenance and do not depict the new 2.4 Mac workspace.*
 
 - **One picker.** The composer lists **Subscriptions** (or **Vendor CLIs** when billing is unconfirmed), **On this computer**
   and **API keys** in one menu. Each row shows whether it is ready, whether it
@@ -38,8 +42,9 @@ The code is open source; the Shadowfetch and ShadowCode product identity is cove
 - **Usage figures come from the vendor.** If a vendor exposes no usage, the row
   says *Usage unavailable* and gives the reason. ShadowCode never makes up a
   figure.
-- **Local models run on your hardware.** A bundled, pinned llama.cpp runs on
-  Vulkan GPUs or the CPU. A short list of free, Apache-2.0 models (Granite,
+- **Local models run on your hardware.** A bundled, pinned llama.cpp supports
+  Metal/CPU on macOS, Vulkan/CPU in the Linux packages, and CPU in the
+  Windows package. A short list of free, Apache-2.0 models (Granite,
   Gemma 4, gpt-oss, Qwen3.6) downloads on request, with a recommendation for
   your memory and graphics card. Models already in an Ollama store can be
   imported by reference without copying.
@@ -67,15 +72,56 @@ The code is open source; the Shadowfetch and ShadowCode product identity is cove
   uses.
 - **Edit and verify.** The editor highlights code and preserves drafts; attached
   context shows bounded content and estimates. **Run a check…** starts an explicit
-  command from a completed task without another model turn, keeping your draft.
+  command without another model turn, keeping your draft. The 2.4 workspace
+  also exposes project checks before the first model turn.
 - **Everything in one window.** Run tasks side by side in worktrees, use your
   own terminal, go from commit to pull request, preview the app you're
   building, dictate with your voice, and follow along from your phone.
 
-ShadowCode **2.3.3** is published for Windows, macOS and Linux on [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.3.3). Downloads and the current interface screenshots are also available at [shadowcode.org](https://shadowcode.org/).
+ShadowCode **2.3.3** is published for Windows, macOS and Linux on [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.3.3). The download instructions below refer to that stable release. Version 2.4.0 source and candidate validation do not establish that 2.4.0 distribution assets have been published.
 
 Version 2.3.3 includes the desktop fixes and signing-policy update described in the [release notes](docs/RELEASE_NOTES.md). See also the [Windows qualification record](docs/WINDOWS_LAPTOP_QUALIFICATION.md) and [release history](CHANGELOG.md).
 
+
+## What's new in the 2.4 source
+
+Version 2.4 combines a simpler first run with an Apple Silicon-focused workspace
+and local-runtime reliability work. These changes are in source/candidate;
+**2.3.3 remains the current stable download** until release verification completes.
+
+- **Start in the conversation.** Open a project with ask-first approvals, then
+  connect a subscription, enter an API key, or choose a local download from the
+  empty conversation. No second blocking setup wizard. Starter cards prepare a
+  prompt without sending it or changing permissions.
+- **Files, conversation and terminal together.** Direct Files, Terminal and
+  Preview controls, a keyboard/pointer resizable side pane with a remembered
+  width, and an optional bottom terminal keep the working surfaces accessible.
+  Terminal commands preserve unsaved Files; Hide preserves the shell and restores
+  focus. A delayed terminal load cannot take focus from a newer editor/composer
+  choice. Toolbar pressed states reflect both Files and a visible dock.
+- **Layout that follows text size.** Split panes preserve at least 380 layout
+  pixels for the conversation; compact windows use overlays. Browser/CSS zoom
+  and native webview zoom keep their separate scaling paths.
+- **Project and verification context.** Folder, branch, project checks and the
+  latest task review stay within reach. Project-specific New task actions share
+  the activation queue, so a late creation response cannot replace a newer
+  conversation selection. A finished task is not presented as a passed check.
+- **Mac keyboard and accessibility behavior.** Command-Shift-M opens the model
+  picker; Control-backtick reaches Terminal. Command-M and Command-backtick stay
+  available to native window behavior. Option-arrow editing and IME composition
+  remain with text input; terminal cursor blinking follows Reduce Motion changes.
+- **Review the content actually shown.** Keep markers bind to file revisions,
+  expire after content changes, and reject stale task/list/detail responses.
+  Failed, busy or no-op undo operations recover an interrupted diff load.
+- **Apple Silicon runtime reliability.** Native arm64 packaging is preferred
+  even from Rosetta shells, and Metal shader resources are checked. Fresh
+  shared-memory headroom is checked before eligible loads and CPU retries;
+  cancellation interrupts readiness waits and preserves tracking when refused.
+  These are bounded correctness changes, not measured speed improvements.
+
+See [the implementation and qualification record](docs/MAC_FLAGSHIP_UPGRADE.md)
+and [local-model behavior and limits](docs/LOCAL_MODELS.md). The recorded 2.4
+validation is summarized under [Tests](#tests).
 
 ## Install
 
@@ -318,19 +364,22 @@ day**; Offline mode pauses it. Distributions can turn it off for everyone.
 
 ## First run
 
-1. Choose a project folder. The first time, you are asked to trust it, because
-   project instructions, hooks and plugins can influence or run work.
-2. Choose a permission mode. *Ask before actions* is the default for new
-   installs.
-3. If no model is ready (no subscription signed in, no OpenRouter key, no
-   local model), choose how ShadowCode should think: **Download a free model
-   to run on this computer** (recommended for your hardware and preselected;
-   size and time are shown, and nothing downloads until you press Download),
-   **Use an OpenRouter key**, or **Sign in to a subscription**. A downloaded
-   model is selected as soon as it is ready.
-4. Open the picker with `Ctrl+M` or the model button in the composer. Rows that
-   aren't ready yet point you to **Settings › Accounts** (sign in) or
-   **Settings › Local models** (download a free model or add a GGUF).
+The following describes the **2.4 source/candidate** flow; stable 2.3.3 has the
+older setup screens pictured in this README.
+
+1. Open a project folder. Trust is requested because project instructions,
+   hooks and plugins can influence or run work. Ask-first approvals remain the
+   default for a new installation.
+2. Start from the empty conversation. Connect Codex, Claude Code, Cursor,
+   Antigravity or Grok through the vendor's sign-in flow; Antigravity also offers
+   Install & connect. Other missing vendor CLIs still need installation.
+3. Alternatively, enter an OpenRouter, xAI or OpenAI API key inline, or choose
+   a free local model. Downloads start only after explicit confirmation. New
+   keys use the macOS Keychain or Linux desktop keyring when available.
+4. Choose a ready model and write a task. Open the picker with
+   `Command+Shift+M` on Mac or `Ctrl+M` on Windows/Linux, or use the composer
+   button. **Settings › Accounts** and **Settings › Local models** remain
+   available for managing connections, models and endpoints.
 
 ## The picker
 
@@ -446,6 +495,14 @@ mode local, and asks before local work goes to a cloud reviewer. Details:
 
 ## Working in the window
 
+The direct workspace controls and dock described here are part of the 2.4
+source/candidate; see the stable/source distinction above.
+
+- **Workspace.** Open Files, Terminal or Preview directly from the toolbar.
+  Resize the side pane by pointer or keyboard; compact layouts use an overlay.
+  Dock the terminal below the workspace to keep a file and conversation visible.
+  Hiding its view leaves the shell running.
+
 - **Composer.** Type `@` to attach project files or folders (or a
   subagent), ↑ for earlier prompts, and switch between **Code**, **Plan**
   and **Ask**. Model, mode, permission and web controls stay visible; **More**
@@ -455,8 +512,9 @@ mode local, and asks before local work goes to a cloud reviewer. Details:
 - **Editor.** Open project files with syntax highlighting, find/replace,
   undo/redo and recovery drafts. Saving checks whether the file changed on
   disk before replacing it.
-- **Run a check.** A completed task offers **Run a check…** for a command you
-  choose. It uses the usual approvals, keeps your composer draft and records
+- **Run a check.** Use **Run project check…** in the workspace context bar,
+  even before the first model turn, or **Run a check…** on a completed task.
+  You choose the command. It uses the usual approvals, keeps your composer draft and records
   fresh output without another model turn. A passing check confirms that
   command only.
 - **Drawer.** Your own terminals (a real shell, never shown to the model), a
@@ -601,12 +659,21 @@ loaded model, your models, free models to download, and GGUF files you add
   vision projector. It never copies the blobs, never writes to the store and
   doesn't need the Ollama daemon. The store is found through `OLLAMA_MODELS`,
   the Ollama systemd user unit, or `~/.ollama/models`.
-- **GPU or CPU.** The runtime has a Vulkan module and CPU variants for every
-  x86-64 level. When the memory estimate fits in VRAM, all layers go to the GPU.
-  When it doesn't, llama.cpp offloads what fits. If the GPU start fails, ShadowCode
-  retries once on the CPU and the row says *CPU fallback*. Only one model is
-  loaded at a time. The model can't be swapped or unloaded while a task is
-  using it.
+- **Metal, Vulkan or CPU.** macOS bundles llama.cpp with Metal and compiled
+  shaders, Linux packages support Vulkan and CPU execution, and the Windows
+  package uses CPU execution. GPU placement is requested according to hardware
+  and memory estimates; detected support or requested placement is not proof
+  of observed layer offload. A failed GPU start may retry once on CPU when
+  admission permits, with the fallback identified separately. Only one model
+  is loaded at a time; a task's active model cannot be swapped or unloaded.
+- **Apple shared memory in 2.4.** Eligible loads on positively identified Apple
+  Metal hardware recheck current estimated headroom with a 2 GiB reserve,
+  including CPU retries after the previous child exits. Unknown/inconsistent
+  telemetry is not a hard refusal. The audited pinned runtime's extra host
+  prompt cache is disabled; the active KV cache remains. These estimates do
+  not reserve memory or guarantee allocation. Canceling preparation interrupts
+  readiness waits; if cancellation is refused, the UI continues tracking the
+  original load until it settles.
 - **Memory estimate.** Context starts at the lower of the trained context and
   16,384 tokens (`local_engine.context_size`). It is halved until the estimate
   fits in VRAM (1 GiB kept free) or RAM (2 GiB kept free), but not below 4,096
@@ -781,6 +848,26 @@ pinned in [`tools/llama.cpp.pin`](tools/llama.cpp.pin) without root. It writes
 Release packaging is described in [docs/RELEASING.md](docs/RELEASING.md).
 
 ## Tests
+
+Recorded validation for the frozen **2.4 source implementation**:
+
+| Check | Result |
+| --- | --- |
+| UI unit tests | 906 passed in 157 files |
+| Full Chromium browser suite | 154 passed |
+| Focused WebKit browser suite | 35 passed |
+| Native core unit tests | 677 passed; 8 ignored |
+| TypeScript, Rust formatting, Clippy and production test-fixture isolation | Passed |
+
+The browser suite uses deterministic service fixtures. A bounded real-model
+check on Apple Silicon also exercised load, a short response, reuse, unload,
+reload and failure cleanup with Qwen3-0.6B-Q8_0. It does not establish coding
+quality, sustained performance, large-model behavior or confirmed Metal layer
+offload. Native VoiceOver and non-US physical keyboard qualification remain
+outside these results. The development app build is not a notarized distribution
+installer. See [qualification details](docs/MAC_FLAGSHIP_UPGRADE.md).
+
+To run the checks from source:
 
 ```bash
 cargo +1.95.0 fmt --all --check

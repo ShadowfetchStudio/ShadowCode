@@ -44,13 +44,17 @@ export function TerminalView({
   title,
   onState,
   onError,
+  onReady,
 }: {
   id: string;
   title: string;
   onState: (chunk: TerminalChunk) => void;
   onError: (message: string) => void;
+  onReady?: (element: HTMLElement) => void;
 }) {
   const host = useRef<HTMLDivElement>(null);
+  const ready = useRef(onReady);
+  ready.current = onReady;
   const state = useRef(onState);
   state.current = onState;
   const failed = useRef(onError);
@@ -60,8 +64,9 @@ export function TerminalView({
     const element = host.current;
     if (!element) return;
     const css = getComputedStyle(document.documentElement);
+    const motion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
     const term = new Terminal({
-      cursorBlink: true,
+      cursorBlink: !motion?.matches,
       fontFamily:
         css.getPropertyValue("--mono").trim() || "ui-monospace, monospace",
       fontSize: FONT_SIZE * cssZoom(),
@@ -69,6 +74,10 @@ export function TerminalView({
       allowProposedApi: false,
       theme: theme(),
     });
+    const updateMotion = () => {
+      term.options.cursorBlink = !motion?.matches;
+    };
+    motion?.addEventListener("change", updateMotion);
     const fit = new FitAddon();
     term.loadAddon(fit);
     unzoom(element, cssZoom());
@@ -123,8 +132,12 @@ export function TerminalView({
       attributes: true,
       attributeFilter: ["data-theme", "class"],
     });
-    term.focus();
+    const inputElement = element.querySelector<HTMLElement>(
+      ".xterm-helper-textarea",
+    );
+    if (inputElement) ready.current?.(inputElement);
     return () => {
+      motion?.removeEventListener("change", updateMotion);
       stopWakeups();
       stopZoom();
       observer.disconnect();

@@ -1,0 +1,39 @@
+   Compiling ring v0.17.14
+   Compiling libsqlite3-sys v0.38.2
+   Compiling tree-sitter-c v0.24.2
+   Compiling tree-sitter-typescript v0.23.2
+   Compiling tree-sitter-go v0.25.0
+   Compiling tree-sitter-bash v0.25.1
+   Compiling tree-sitter-cpp v0.23.4
+   Compiling rustls v0.23.45
+   Compiling tree-sitter-java v0.23.5
+   Compiling tree-sitter-python v0.25.0
+   Compiling rustls-webpki v0.103.15
+   Compiling tree-sitter-rust v0.24.2
+   Compiling rusqlite v0.40.2
+   Compiling tokio-rustls v0.26.5
+   Compiling hyper-rustls v0.27.9
+   Compiling reqwest v0.12.28
+   Compiling shadowcode-core v2.4.0 (/Users/shadowfetch/Projects/ShadowCode/native/core)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 15.98s
+     Running tests/api_contract.rs (/Volumes/NVME1TB/Development/ShadowCode-build/debug/deps/api_contract-a74d7d5aaaecc3ba)
+
+running 2 tests
+test the_contract_has_a_versioning_policy_and_old_links_point_to_it ... ok
+test every_route_is_in_the_contract_and_every_documented_route_exists ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+
+     Running tests/composer_review.rs (/Volumes/NVME1TB/Development/ShadowCode-build/debug/deps/composer_review-700a0ea6792cddb2)
+
+running 7 tests
+test allow_for_task_maps_to_the_vendors_session_choice_and_notes_to_claude ... ok
+test mentions_are_searched_and_read_by_a_native_model ... ok
+test reasoning_effort_reaches_each_vendors_own_control ... ok
+test edit_and_resend_forks_just_before_the_message ... ok
+test explain_this_change_sends_only_that_files_diff_on_request ... ok
+test allow_for_task_skips_matching_prompts_and_a_deny_note_reaches_the_model ... ok
+test review_undoes_one_hunk_and_a_rewind_can_be_undone ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.54s
+

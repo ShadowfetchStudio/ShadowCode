@@ -62,6 +62,7 @@ export function useNavigation(ctx: NavigationContext) {
   const booted = useRef(false);
   const activationQueue = useRef<Promise<unknown>>(Promise.resolve());
   const appliedFallback = useRef("");
+  const creating = useRef(false);
   const workspace = ws.workspace;
 
   async function openSession(id: string) {
@@ -207,19 +208,40 @@ export function useNavigation(ctx: NavigationContext) {
       });
   }
 
-  async function newSession(opts?: { force?: boolean }) {
-    if (!opts?.force && (ctx.submitting || switching)) return;
-    if (!workspace) {
+  async function newSession(opts?: { force?: boolean; workspace?: string }) {
+    if (
+      creating.current ||
+      ctx.submittingRef.current ||
+      (!opts?.force && (ctx.submitting || switching))
+    )
+      return;
+    const destination = opts?.workspace || workspace;
+    if (!destination) {
       ctx.showProjects();
       return;
     }
+    const ticket = ++selection.current;
+    creating.current = true;
+    setSwitching(true);
     try {
-      const created = await api.createSession(workspace);
-      writeStore("shadow:selected", created.id);
+      // Creating also activates in the native service. Put it on the same
+      // queue as activation, so a later selection wins on the engine as well
+      // as in React when creation is slow.
+      const creation = activationQueue.current.then(() =>
+        api.createSession(destination),
+      );
+      activationQueue.current = creation.catch(() => undefined);
+      const created = await creation;
+      // A later conversation selection owns navigation, even if this request
+      // finishes last. Creation never silently switches the destination project.
+      if (ticket !== selection.current) return;
       await openSession(created.id);
       ctx.focusPrompt();
     } catch (e) {
-      ctx.toast(String(e), "err");
+      if (ticket === selection.current) ctx.toast(String(e), "err");
+    } finally {
+      creating.current = false;
+      if (ticket === selection.current) setSwitching(false);
     }
   }
 

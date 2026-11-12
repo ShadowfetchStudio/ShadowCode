@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Eye, MessageSquareText } from "lucide-react";
 import {
   api,
@@ -45,13 +45,38 @@ export function LocalModelsPage({
   const [error, setError] = useState("");
   const [path, setPath] = useState("");
   const [pending, setPending] = useState("");
+  const [canceling, setCanceling] = useState(false);
+  const activeLoad = useRef<{
+    ticket: number;
+    cancelAttempted: boolean;
+    cancellation?: Promise<void>;
+  } | null>(null);
+  const operation = useRef(0);
+  const catalogRequest = useRef(0);
+  useEffect(
+    () => () => {
+      operation.current++;
+      catalogRequest.current++;
+    },
+    [],
+  );
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (owner?: number) => {
+    const request = ++catalogRequest.current;
     setError("");
     try {
-      setCatalog(await api.localModels());
+      const next = await api.localModels();
+      if (
+        request === catalogRequest.current &&
+        (owner === undefined || owner === operation.current)
+      )
+        setCatalog(next);
     } catch (e) {
-      setError(String(e));
+      if (
+        request === catalogRequest.current &&
+        (owner === undefined || owner === operation.current)
+      )
+        setError(String(e));
     }
   }, []);
   useEffect(() => {
@@ -77,20 +102,75 @@ export function LocalModelsPage({
     action: () => Promise<unknown>,
     done?: string,
   ) {
+    const ticket = ++operation.current;
+    const loading = key.startsWith("load:")
+      ? {
+          ticket,
+          cancelAttempted: false,
+          cancellation: undefined as Promise<void> | undefined,
+        }
+      : null;
+    activeLoad.current = loading;
     setPending(key);
     try {
       const result = (await action()) as
         { local_engine?: LocalCatalog } | undefined;
+      // Keep load ownership until cancellation is confirmed. A rejected
+      // cancellation must let this operation reconcile its eventual result.
+      await loading?.cancellation;
+      if (ticket !== operation.current) return;
       if (result && typeof result === "object" && result.local_engine)
         setCatalog(result.local_engine);
-      else await load();
-      if (done) onToast(done, "ok");
+      else await load(ticket);
+      await loading?.cancellation;
+      if (ticket !== operation.current) return;
+      if (done && !loading?.cancelAttempted) onToast(done, "ok");
       onChanged();
     } catch (e) {
+      await loading?.cancellation;
+      if (ticket !== operation.current) return;
       onToast(String(e), "err");
-      await load();
+      await load(ticket);
     } finally {
-      setPending("");
+      await loading?.cancellation;
+      if (ticket === operation.current) {
+        setPending("");
+        activeLoad.current = null;
+      }
+    }
+  }
+
+  async function cancelLoading() {
+    const loading = activeLoad.current;
+    if (!loading || loading.cancellation) return;
+    let ticket = loading.ticket;
+    let release!: () => void;
+    loading.cancelAttempted = true;
+    loading.cancellation = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    setCanceling(true);
+    let canceled = false;
+    try {
+      await api.unloadLocalModel();
+      if (ticket !== operation.current) return;
+      // Only a successful unload supersedes the load (and its catalog reads).
+      ticket = ++operation.current;
+      canceled = true;
+      activeLoad.current = null;
+      await load(ticket);
+      if (ticket !== operation.current) return;
+      onToast("Model loading canceled", "ok");
+      onChanged();
+    } catch (e) {
+      if (ticket === operation.current) onToast(String(e), "err");
+    } finally {
+      if (ticket === operation.current) {
+        setCanceling(false);
+        if (canceled) setPending("");
+      }
+      loading.cancellation = undefined;
+      release();
     }
   }
 
@@ -138,7 +218,7 @@ export function LocalModelsPage({
         <>
           <div className="kv local-runtime">
             <div>
-              <span>Runtime</span>
+              <span>Runtime support</span>
               <code
                 className={
                   runtime?.state === "ready" ? "health-ok" : "health-bad"
@@ -163,6 +243,15 @@ export function LocalModelsPage({
                 <code>{hardwareLine}</code>
               </div>
             )}
+            {typeof hardware?.available_bytes === "number" && (
+              <div>
+                <span>Estimated memory headroom</span>
+                <code>
+                  {formatBytes(hardware.available_bytes)} · sampled when
+                  refreshed, not an allocation guarantee
+                </code>
+              </div>
+            )}
             {hardware?.devices && hardware.devices.length > 0 && (
               <div>
                 <span>Devices</span>
@@ -173,11 +262,33 @@ export function LocalModelsPage({
               <span>Loaded</span>
               <code>
                 {loaded
-                  ? `${loaded.name}${loaded.backend ? ` · ${loaded.backend}` : ""}${loaded.context_tokens ? ` · ${loaded.context_tokens.toLocaleString()} tokens context` : ""}`
+                  ? `${loaded.name}${loaded.cpu_fallback ? " · CPU fallback" : loaded.backend ? ` · ${loaded.backend} requested` : ""}${loaded.context_tokens ? ` · ${loaded.context_tokens.toLocaleString()} tokens context` : ""}`
                   : "No model loaded"}
               </code>
             </div>
           </div>
+          {loaded?.fallback_reason && (
+            <p className="hint">Fallback reason: {loaded.fallback_reason}</p>
+          )}
+          {typeof loaded?.in_use === "number" && loaded.in_use > 0 && (
+            <p className="hint">
+              In use by {loaded.in_use} active request
+              {loaded.in_use === 1 ? "" : "s"}. Stop the task before unloading.
+            </p>
+          )}
+          {pending.startsWith("load:") && !canceling && (
+            <div className="notice" role="status">
+              <span>Loading model. You can cancel while it prepares.</span>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => void cancelLoading()}
+              >
+                Cancel loading
+              </button>
+            </div>
+          )}
+          {canceling && <p role="status">Canceling model load…</p>}
           {loaded && (
             <button
               type="button"

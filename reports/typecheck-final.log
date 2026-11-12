@@ -1,0 +1,4 @@
+
+> shadow-agent-ui@2.4.0 typecheck
+> tsc --noEmit
+

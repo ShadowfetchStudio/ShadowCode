@@ -1,26 +1,25 @@
 # Release procedure
 
-The current release is [**2.3.1**](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.3.1),
-from `e7fdef1b774affa2d288944b4384dba21a806d46`. The
-[Linux release and signed APT workflow](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/41248454973),
-[Windows installer](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/41253795862),
-[macOS disk images](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/41253793352),
-and [Flatpak bundles](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/41253794538)
-all passed and published their assets. Public downloads were verified against
-their release checksums; Linux packages and the APT indexes also passed
-publisher-signature verification. The Windows laptop checks are recorded
-separately in [the qualification record](WINDOWS_LAPTOP_QUALIFICATION.md).
-Updating version files or these instructions does not publish or sign a release.
-Bind final build, test and authentication receipts to the exact candidate before
-publication.
+The current public release is [**2.3.3**](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.3.3),
+from `fd13dc10dbdcc6aac63cdfb292f9ec4d47838347`. Version **2.4.0** is the
+next candidate and includes the Apple Silicon workspace upgrade. Publication
+must be verified before changing the public download links or calling it released.
+The local Mac development qualification is recorded in
+[MAC_FLAGSHIP_UPGRADE.md](MAC_FLAGSHIP_UPGRADE.md); it does not replace the
+release workflow's exact-source and packaged-artifact gates.
 
 Pushing a `v*` tag starts `.github/workflows/release.yml`. Publication follows
-build/qualification, protected signing review and verification of all seven
-public assets for each Linux architecture. The signing environment must permit the tag being released. As verified
-for 2.3.1, it permits `v2.3.1`, updated after PR #12 passed
-Windows, both macOS architectures, and both Linux qualification jobs. Every later version needs reviewed trust-policy,
-deployment-rule and tooling-pin updates. The workflow uses
-`docs/RELEASE_NOTES.md` as the release text.
+both Linux architectures' build/qualification, protected signing review and
+verification of the signed public assets. The publish job then dispatches the
+Windows, macOS and Flatpak workflows. Confirm their assets independently before
+advertising that platform's new version. Existing versioned assets are immutable.
+
+All environment settings must be read live. At the start of the 2.4.0
+preparation, the signing environment allowed `v2.3.1`, `v2.3.2`, and `v2.3.3`,
+and the reviewed tooling pin was `fd13dc10dbdcc6aac63cdfb292f9ec4d47838347`.
+The candidate's trust policy extends the existing key through 2.4.0 without
+changing its identity, epoch, historical floor or target set. Review and qualify
+the candidate before permitting its tag and updating the immutable tooling pin.
 
 ## 1. Version files
 
@@ -196,18 +195,17 @@ verifies and indexes both `.deb` files. The pinned tooling commit must include
 this multi-target signer and publisher; an older pin refuses the aarch64
 signing call, so the release fails rather than shipping x86_64 alone.
 
-Public trust in `release/trust` currently allows the x86_64 and aarch64 targets, epoch 1 and versions 0.33.0–2.3.1
-(raise the key's maximum version in the release commit, as for earlier releases);
-`release/install-policy` fixes the first authenticated version at 0.33.0.
-The `release-signing` environment has the signing secret and requires review by
-`ShadowfetchStudio` (User ID `209457103`). Self-review is allowed and GitHub's
-default administrator override remains unchanged. For 2.3.1 its sole
-deployment rule is `v2.3.1`, updated after candidate qualification on
-October 31, 2026. `NATIVE_RELEASE_SIGNING_ENVIRONMENT` points to
-`release-signing`. Before pushing the tag, set `NATIVE_RELEASE_TOOLING_COMMIT`
-to the reviewed tagged release commit itself and read it back. The verified
-2.3.1 pin is `e7fdef1b774affa2d288944b4384dba21a806d46`. A permitted tag
-does not prove publication.
+The candidate public trust in `release/trust` allows the x86_64 and aarch64
+targets, epoch 1 and versions 0.33.0–2.4.0. `release/install-policy` retains the
+first authenticated version 0.33.0. This source change alone does not update
+GitHub's independently pinned tooling or signing environment.
+
+The `release-signing` environment requires review by `ShadowfetchStudio`
+(User ID `209457103`), with self-review allowed. Preserve those protections.
+`NATIVE_RELEASE_SIGNING_ENVIRONMENT` points to that environment. After candidate
+qualification, add the exact release tag to its deployment policy and set
+`NATIVE_RELEASE_TOOLING_COMMIT` to the independently reviewed immutable release
+commit. Read back both settings. A permitted tag is not proof of publication.
 
 Before tagging, finish review and push the tooling commit, then set
 `NATIVE_RELEASE_TOOLING_COMMIT` to that exact 40-character SHA. Read back this pin from GitHub configuration before dispatching the release. Verify the environment protections and source/candidate

@@ -278,6 +278,7 @@ export type LocalCatalog = {
   hardware?: {
     cpu_cores?: number;
     ram_bytes?: number;
+    available_bytes?: number;
     gpu?: string | null;
     vram_bytes?: number | null;
     backend?: "vulkan" | "metal" | "cpu" | "unknown" | string;
@@ -301,6 +302,9 @@ export type LocalCatalog = {
     since?: number;
     context_tokens?: number;
     backend?: string;
+    cpu_fallback?: boolean;
+    fallback_reason?: string | null;
+    in_use?: number;
   } | null;
   ollama_store?: {
     path?: string | null;
@@ -936,6 +940,9 @@ export type ReviewFile = {
   added: number;
   removed: number;
   binary: boolean;
+  /** Current content digest, or "missing" for a deleted file. Absent when
+   * unavailable or served by an older engine; never trust marks without it. */
+  hash?: string;
   error?: string;
 };
 export type ReviewHunk = {

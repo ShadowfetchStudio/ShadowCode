@@ -29,8 +29,8 @@
     <binary>shadowcode</binary>
   </provides>
   <releases>
-    <release version="2.4.0" date="2026-11-05">
-      <description><p>Apple silicon Metal runtime path, T3-style first-run (open a project then chat), and one-click Connect for Codex, Claude, Cursor, Antigravity, Grok and API keys stored in the macOS Keychain.</p></description>
+    <release version="2.4.0" date="2026-11-11">
+      <description><p>A clearer project workspace with resizable file panels, a bottom terminal, persistent review and checks, and Mac keyboard and reduced-motion support. Improves Apple silicon memory accounting, local-model cancellation and revision-aware change review. Includes the Metal runtime path, project-first setup and provider sign-in.</p></description>
     </release>
     <release version="2.3.3" date="2026-11-01">
       <description><p>Improves AppImage startup on rolling Linux desktops, model-picker focus, and platform keyboard hints.</p></description>

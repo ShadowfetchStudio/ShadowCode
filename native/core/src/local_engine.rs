@@ -848,8 +848,8 @@ pub fn runtime_from(candidates: Vec<(PathBuf, &'static str)>) -> Runtime {
 }
 
 /// Memory available to a new process now, in bytes (0 when unknown):
-/// Linux's `MemAvailable`; on macOS free, inactive, speculative and
-/// purgeable pages (what Activity Monitor does not count as used).
+/// Linux's `MemAvailable`; on macOS an estimate from free, inactive and
+/// purgeable pages, not an allocation guarantee. Free already includes speculative.
 #[cfg(target_os = "macos")]
 pub fn available_memory() -> u64 {
     extern "C" {
@@ -876,11 +876,42 @@ pub fn available_memory() -> u64 {
     if result != 0 || page <= 0 {
         return 0;
     }
-    let pages = u64::from(info.free_count)
-        + u64::from(info.inactive_count)
-        + u64::from(info.speculative_count)
-        + u64::from(info.purgeable_count);
-    pages.saturating_mul(page as u64)
+    mac_reclaimable_bytes(&info, page as u64)
+}
+
+#[cfg(target_os = "macos")]
+fn mac_reclaimable_bytes(info: &libc::vm_statistics64, page: u64) -> u64 {
+    // XNU vm_statistics64: speculative_count is a subset of free_count.
+    (u64::from(info.free_count) + u64::from(info.inactive_count) + u64::from(info.purgeable_count))
+        .saturating_mul(page)
+}
+
+/// Positive identification only: Metal also serves discrete GPUs on Intel Macs.
+/// Unknown device discovery must not impose a shared-memory admission policy.
+pub(crate) fn apple_shared_memory(devices: &[Device]) -> bool {
+    devices
+        .iter()
+        .any(|d| d.id.starts_with("MTL") && d.name.starts_with("Apple "))
+}
+
+/// A fresh check for a NEW allocation, after releasing the previous model.
+/// Installed capacity and live headroom are different; unknown or inconsistent
+/// samples never refuse a model. This is advisory accounting, not OS pressure.
+pub(crate) fn check_shared_memory_headroom(
+    shared: bool,
+    estimate: u64,
+    available: u64,
+    installed: u64,
+) -> Result<()> {
+    if !shared || available == 0 || installed == 0 || available > installed {
+        return Ok(());
+    }
+    ensure!(
+        estimate <= available.saturating_sub(RAM_MARGIN),
+        "Not enough estimated shared-memory headroom to load this model: needs about {:.1} GB plus {:.1} GB for other apps; about {:.1} GB is available now. Close other apps or choose a smaller context or model, then retry. CPU fallback uses the same memory pool.",
+        gb(estimate), gb(RAM_MARGIN), gb(available)
+    );
+    Ok(())
 }
 
 /// Windows: physical memory and what is available now.
@@ -2074,6 +2105,55 @@ mod tests {
         );
     }
 
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn mac_memory_counts_speculative_pages_once() {
+        let mut info: libc::vm_statistics64 = unsafe { std::mem::zeroed() };
+        info.free_count = 100;
+        info.inactive_count = 200;
+        info.speculative_count = 25;
+        for page in [4096, 16384] {
+            assert_eq!(mac_reclaimable_bytes(&info, page), 300 * page);
+            info.speculative_count = 100;
+            assert_eq!(mac_reclaimable_bytes(&info, page), 300 * page);
+        }
+        info.free_count = u32::MAX;
+        info.inactive_count = u32::MAX;
+        info.purgeable_count = u32::MAX;
+        assert_eq!(
+            mac_reclaimable_bytes(&info, 16384),
+            3 * u64::from(u32::MAX) * 16384
+        );
+        assert_eq!(mac_reclaimable_bytes(&info, u64::MAX), u64::MAX);
+    }
+
+    #[test]
+    fn shared_headroom_admission_preserves_unknown_and_discrete_behavior() {
+        let estimate = 8 * GIB + 3 * GIB / 4;
+        assert!(check_shared_memory_headroom(true, estimate, 2 * GIB, 16 * GIB).is_err());
+        assert!(
+            check_shared_memory_headroom(true, estimate, estimate + RAM_MARGIN, 16 * GIB).is_ok()
+        );
+        assert!(
+            check_shared_memory_headroom(true, estimate, estimate + RAM_MARGIN - 1, 16 * GIB)
+                .is_err()
+        );
+        for (available, installed) in [(0, 16 * GIB), (GIB, 0), (17 * GIB, 16 * GIB)] {
+            assert!(check_shared_memory_headroom(true, estimate, available, installed).is_ok());
+        }
+        assert!(check_shared_memory_headroom(false, estimate, GIB, 16 * GIB).is_ok());
+        assert!(!apple_shared_memory(&parse_devices(
+            "MTL0: AMD Radeon Pro (8192 MiB, 4096 MiB free)"
+        )));
+        assert!(!apple_shared_memory(&parse_devices(
+            "CUDA0: NVIDIA (8192 MiB, 4096 MiB free)"
+        )));
+        assert!(!apple_shared_memory(&[]));
+        assert!(apple_shared_memory(&parse_devices(
+            "MTL0: Apple M4 (12288 MiB, 12288 MiB free)"
+        )));
+    }
+
     #[test]
     fn free_memory_is_read_and_never_exceeds_installed() {
         let available = available_memory();
@@ -2248,9 +2328,8 @@ mod tests {
         assert_eq!(metal[0].name, "AMD Radeon Pro 555X");
         assert_eq!(backend_of(&metal), "metal");
         // Apple silicon (M-series reports as MTL0: Apple M…).
-        let apple = parse_devices(
-            "Available devices:\n  MTL0: Apple M4 (21845 MiB, 19660 MiB free)\n",
-        );
+        let apple =
+            parse_devices("Available devices:\n  MTL0: Apple M4 (21845 MiB, 19660 MiB free)\n");
         assert_eq!(apple[0].name, "Apple M4");
         assert_eq!(backend_of(&apple), "metal");
         let (v, c) =
@@ -2328,7 +2407,9 @@ mod tests {
             assert_eq!(metal.as_deref(), Some(dir.path().as_os_str()));
         }
         #[cfg(not(target_os = "macos"))]
-        assert!(!env.iter().any(|(name, _)| name == "GGML_METAL_PATH_RESOURCES"));
+        assert!(!env
+            .iter()
+            .any(|(name, _)| name == "GGML_METAL_PATH_RESOURCES"));
         let _ = binary;
     }
 }

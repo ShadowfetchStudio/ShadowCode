@@ -1,3 +1,4 @@
+import { shortcutHint } from "../../lib/shortcuts";
 import type { PaletteItem } from "../overlays";
 import type { AdvancedTab, SettingsSection } from "../Settings";
 import type { DrawerTab } from "../Drawer";
@@ -25,23 +26,23 @@ export type PaletteActions = {
 /** The command palette (Ctrl+K) entries, in display order. */
 export function paletteItems(a: PaletteActions): PaletteItem[] {
   return [
-    { id: "new", label: "New task", hint: "Ctrl+N", run: a.newTask },
+    { id: "new", label: "New task", hint: shortcutHint("N"), run: a.newTask },
     {
       id: "model",
       label: "Choose a model",
-      hint: "Ctrl+M",
+      hint: shortcutHint("M"),
       run: a.chooseModel,
     },
     {
       id: "project",
       label: "Open project",
-      hint: "Ctrl+P",
+      hint: shortcutHint("P"),
       run: a.openProject,
     },
     {
       id: "find",
       label: "Find in conversation",
-      hint: "Ctrl+F",
+      hint: shortcutHint("F"),
       run: a.find,
     },
     { id: "changes", label: "Review changes", run: () => a.panel("changes") },
@@ -60,7 +61,7 @@ export function paletteItems(a: PaletteActions): PaletteItem[] {
     {
       id: "terminal",
       label: "Open a terminal",
-      hint: "Ctrl+`",
+      hint: shortcutHint("`"),
       run: () => a.panel("terminal"),
     },
     {
@@ -154,7 +155,7 @@ export function paletteItems(a: PaletteActions): PaletteItem[] {
     {
       id: "export",
       label: "Export this task as Markdown",
-      hint: "Ctrl+Shift+E",
+      hint: shortcutHint("Shift+E"),
       run: () => a.exportTask("md"),
     },
     {
@@ -163,11 +164,16 @@ export function paletteItems(a: PaletteActions): PaletteItem[] {
       hint: "Complete event records",
       run: () => a.exportTask("json"),
     },
-    { id: "stop", label: "Stop the agent", hint: "Ctrl+.", run: a.stop },
+    {
+      id: "stop",
+      label: "Stop the agent",
+      hint: shortcutHint("."),
+      run: a.stop,
+    },
     {
       id: "settings",
       label: "Settings",
-      hint: "Ctrl+,",
+      hint: shortcutHint(","),
       run: () => a.settings(),
     },
     ...(
@@ -185,19 +191,19 @@ export function paletteItems(a: PaletteActions): PaletteItem[] {
     {
       id: "zoom-in",
       label: "Zoom in · larger text",
-      hint: "Ctrl+=",
+      hint: shortcutHint("="),
       run: () => a.zoom(1),
     },
     {
       id: "zoom-out",
       label: "Zoom out · smaller text",
-      hint: "Ctrl+-",
+      hint: shortcutHint("-"),
       run: () => a.zoom(-1),
     },
     {
       id: "zoom-reset",
       label: "Reset zoom to 100%",
-      hint: "Ctrl+0",
+      hint: shortcutHint("0"),
       run: () => a.zoom(0),
     },
     { id: "help", label: "Keyboard shortcuts", hint: "?", run: a.help },

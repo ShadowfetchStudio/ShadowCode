@@ -155,7 +155,8 @@ fn current(ws: &Workspace, path: &str) -> Result<Snapshot> {
     ws.snapshot(path)
 }
 
-/// `{path, status, source, added, removed, binary}` for one file.
+/// Current content identity is shared by list and detail responses. Missing
+/// files have a distinct revision; unavailable files deliberately have no hash.
 fn summary(path: &str, base: &Baseline, now: &Snapshot) -> Value {
     let state = status(&base.bytes, &now.bytes);
     let (added, removed, binary) = match (text(&base.bytes), text(&now.bytes)) {
@@ -169,7 +170,7 @@ fn summary(path: &str, base: &Baseline, now: &Snapshot) -> Value {
         }
         _ => (0, 0, true),
     };
-    json!({"path":path,"status":state,"source":base.source,"added":added,"removed":removed,"binary":binary})
+    json!({"path":path,"status":state,"source":base.source,"added":added,"removed":removed,"binary":binary,"hash":now.hash.as_deref().unwrap_or("missing")})
 }
 
 /// The files this task changed, with their state now.
@@ -218,7 +219,6 @@ pub fn file(store: &Store, ws: &Workspace, task: &str, path: &str) -> Result<Val
         // as a whole, but its contents are not shown.
         out["secret"] = json!(true);
         out["hunks"] = json!([]);
-        out["hash"] = json!(now.hash.as_deref().unwrap_or("missing"));
         return Ok(out);
     }
     if crate::supply_chain::is_lockfile(&path) {
@@ -235,7 +235,6 @@ pub fn file(store: &Store, ws: &Workspace, task: &str, path: &str) -> Result<Val
             .collect::<Vec<_>>()),
         _ => json!([]),
     };
-    out["hash"] = json!(now.hash.as_deref().unwrap_or("missing"));
     Ok(out)
 }
 
@@ -508,6 +507,46 @@ mod tests {
         let detail = file(&store, &ws, &task, "keep.txt").unwrap();
         assert_eq!(detail["hunks"].as_array().unwrap().len(), 2);
         assert!(file(&store, &ws, &task, "untouched.txt").is_err());
+    }
+
+    #[test]
+    fn review_revisions_follow_current_content_including_missing_and_binary_files() {
+        let (_root, store, ws, _session, task) = setup();
+        fs::write(ws.path.join("keep.txt"), OLD).unwrap();
+        change(&store, &ws, &task, "keep.txt", Some(NEW));
+        let original = files(&store, &ws, &task).unwrap()[0]["hash"].clone();
+        assert_eq!(original, json!(hash(NEW.as_bytes())));
+        assert_eq!(
+            original,
+            file(&store, &ws, &task, "keep.txt").unwrap()["hash"]
+        );
+
+        // An external writer need not create a new task/checkpoint.
+        fs::write(ws.path.join("keep.txt"), b"changed\0binary").unwrap();
+        let changed = files(&store, &ws, &task).unwrap();
+        assert_ne!(changed[0]["hash"], original);
+        assert_eq!(changed[0]["binary"], true);
+        assert_eq!(
+            changed[0]["hash"],
+            file(&store, &ws, &task, "keep.txt").unwrap()["hash"]
+        );
+
+        fs::remove_file(ws.path.join("keep.txt")).unwrap();
+        let missing = files(&store, &ws, &task).unwrap();
+        assert_eq!(missing[0]["status"], "deleted");
+        assert_eq!(missing[0]["hash"], "missing");
+        assert_eq!(
+            missing[0]["hash"],
+            file(&store, &ws, &task, "keep.txt").unwrap()["hash"]
+        );
+
+        fs::write(ws.path.join("keep.txt"), b"").unwrap();
+        assert_ne!(files(&store, &ws, &task).unwrap()[0]["hash"], "missing");
+        fs::remove_file(ws.path.join("keep.txt")).unwrap();
+        fs::create_dir(ws.path.join("keep.txt")).unwrap();
+        let unavailable = files(&store, &ws, &task).unwrap();
+        assert_eq!(unavailable[0]["status"], "unavailable");
+        assert!(unavailable[0].get("hash").is_none());
     }
 
     #[cfg(unix)]

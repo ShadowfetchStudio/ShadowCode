@@ -1,4 +1,14 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import {
+  lazy,
+  useCallback,
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type SetStateAction,
+} from "react";
+import { flushSync } from "react-dom";
 import { api, type CommandResult, type DownloadModel, type Job } from "./api";
 import { Drawer, type DrawerTab } from "./components/Drawer";
 import { Sidebar } from "./components/Sidebar";
@@ -8,6 +18,8 @@ import type { ApprovalDecision } from "./components/ApprovalCard";
 import type { AdvancedTab, SettingsSection } from "./components/Settings";
 import { Stage } from "./components/shell/Stage";
 import { TopBar } from "./components/shell/TopBar";
+import { WorkspaceContextBar } from "./components/shell/WorkspaceContextBar";
+import { TerminalPanel } from "./components/TerminalPanel";
 import { BootScreen, Toasts } from "./components/shell/Chrome";
 import { composerAccess } from "./components/shell/ComposerDock";
 import { AppDialogs, type Overlay } from "./components/shell/AppDialogs";
@@ -27,6 +39,8 @@ import {
 import { useCompare } from "./hooks/useCompare";
 import { useStickyScroll } from "./hooks/useStickyScroll";
 import { useDrawerMemory } from "./hooks/useDrawerMemory";
+import { useTerminalFocus } from "./hooks/useTerminalFocus";
+import { useWorkspaceLayout } from "./hooks/useWorkspaceLayout";
 import { useStableCallback } from "./hooks/useStableCallback";
 import {
   useTaskActions,
@@ -95,7 +109,24 @@ export default function App() {
     () => readStore("shadow:web") === "on",
   );
   const [consent, setConsent] = useState<Consent | null>(null);
-  const [panel, setPanel] = useState<DrawerTab | null>(null);
+  const [panel, setPanelState] = useState<DrawerTab | null>(null);
+  const [terminalDocked, setTerminalDocked] = useState(false);
+  const [terminalDockVisible, setTerminalDockVisible] = useState(false);
+  const terminalFocus = useTerminalFocus();
+  const terminalDockRef = useRef<HTMLElement>(null);
+  const workspaceFocus = useRef<HTMLElement | null>(null);
+  const terminalReturnFocus = useRef<HTMLElement | null>(null);
+  const restoreTerminalFocus = useRef(false);
+  const dockOpen = terminalDocked && terminalDockVisible;
+  const drawerReturnFocus = useRef<HTMLElement | null>(null);
+  const panelClick = useRef<HTMLElement | null>(null);
+  const panelPointerFocus = useRef<HTMLElement | null>(null);
+  const drawerFocusToRestore = useRef<{
+    from: HTMLElement;
+    to: HTMLElement | null;
+  } | null>(null);
+  const layout = useWorkspaceLayout();
+  const compactWorkspace = layout.compact;
   const [diffPath, setDiffPath] = useState("");
   const [overlay, setOverlay] = useState<Overlay>("");
   /** Find in conversation: 0 while closed, bumped by each Ctrl+F. */
@@ -103,6 +134,60 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false);
   const allowanceReturn = useRef(false);
   const promptRef = useRef<HTMLTextAreaElement>(null);
+  const focusDockedTerminal = useStableCallback(() => {
+    if (!terminalDockRef.current?.contains(document.activeElement))
+      terminalReturnFocus.current = workspaceFocus.current;
+    setTerminalDockVisible(true);
+    terminalFocus.request(workspace);
+  });
+  // Every existing panel entry point (toolbar, palette, shortcuts, and tabs)
+  // addresses the same terminal, regardless of its placement.
+  const setPanel = useStableCallback(
+    (next: SetStateAction<DrawerTab | null>) => {
+      const selected = typeof next === "function" ? next(panel) : next;
+      if (selected === "terminal" && terminalDocked) {
+        focusDockedTerminal();
+        return;
+      }
+      if (selected === "terminal") terminalFocus.request(workspace);
+      else terminalFocus.cancel();
+      const active = document.activeElement as HTMLElement | null;
+      if (selected && !active?.closest(".drawer"))
+        drawerReturnFocus.current = panelClick.current || active;
+      // WebKit may blur the editor on pointer-down without focusing the button.
+      const closingFocus =
+        active === document.body ? panelPointerFocus.current : active;
+      if (!selected && closingFocus?.closest(".drawer"))
+        drawerFocusToRestore.current = {
+          from: closingFocus,
+          to: drawerReturnFocus.current,
+        };
+      setPanelState(selected);
+    },
+  );
+  useEffect(() => {
+    const pending = drawerFocusToRestore.current;
+    drawerFocusToRestore.current = null;
+    if (panel || !pending) return;
+    // An intervening click owns focus. Only repair focus lost with the drawer.
+    if (
+      document.activeElement !== document.body &&
+      document.activeElement !== pending.from
+    )
+      return;
+    if (pending.to?.isConnected && pending.to.getClientRects().length)
+      pending.to.focus();
+    else promptRef.current?.focus();
+  }, [panel]);
+  useEffect(() => {
+    if (!dockOpen && restoreTerminalFocus.current) {
+      restoreTerminalFocus.current = false;
+      const previous = terminalReturnFocus.current;
+      if (previous?.isConnected && previous.getClientRects().length)
+        previous.focus();
+      else promptRef.current?.focus();
+    }
+  }, [dockOpen]);
   const submittingRef = useRef(false);
   const taskRef = useRef("");
   taskRef.current = task;
@@ -113,6 +198,24 @@ export default function App() {
   const setJobs = useStableCallback((jobs: Job[]) => feed.setJobs(jobs));
   const ws = useWorkspace(setJobs);
   const { workspace, cfg, status, health, sessions, git, refresh } = ws;
+  // Workspace changes are not requests to type in a shell. Cancel even if
+  // navigation later returns to a workspace whose list was still pending.
+  useEffect(() => terminalFocus.cancel(), [workspace, terminalFocus.cancel]);
+  useEffect(() => {
+    const input = document.querySelector<HTMLElement>(
+      dockOpen
+        ? ".terminal-dock .xterm-helper-textarea"
+        : ".drawer .xterm-helper-textarea",
+    );
+    if (input) terminalFocus.ready(workspace, input);
+  }, [dockOpen, panel, workspace, terminalFocus.revision, terminalFocus.ready]);
+  const requestTerminalFocus = useStableCallback(() =>
+    terminalFocus.request(workspace, false),
+  );
+  const terminalReady = useCallback(
+    (element: HTMLElement) => terminalFocus.ready(workspace, element),
+    [workspace, terminalFocus.ready],
+  );
   const picker = usePickerTargets(toast);
   const pickerTargets = picker.targets;
   const allowance = useAllowance();
@@ -474,8 +577,13 @@ export default function App() {
     "close-picker": () => setPickerOpen(false),
     "close-panel": () => setPanel(null),
     palette: () => setOverlay("palette"),
-    sidebar: () => setSidebar((v) => !v),
-    changes: () => setPanel((p) => (p ? null : "changes")),
+    sidebar: () => {
+      if (compactWorkspace && panel) {
+        setPanel(null);
+        setSidebar(true);
+      } else setSidebar((v) => !v);
+    },
+    changes: () => setPanel((p) => (p === "changes" ? null : "changes")),
     terminal: () => setPanel((p) => (p === "terminal" ? null : "terminal")),
     settings: () => openSettings(),
     project: () => setOverlay("project"),
@@ -636,11 +744,19 @@ export default function App() {
     void nav.openSession(id);
   };
   const currentSession = sessions.find((s) => s.id === sessionId);
+  const latestTask = [...transcript.items]
+    .reverse()
+    .find((item) => item.kind === "summary")?.taskId;
   const palette = paletteItems({
     newTask: () => void nav.newSession(),
     chooseModel: () => setPickerOpen(true),
     openProject: () => setOverlay("project"),
-    panel: setPanel,
+    panel: (next) => {
+      // Finish the palette's focus restoration before assigning a new owner.
+      // Later user choices still revoke the request while the shell loads.
+      if (next === "terminal") flushSync(() => setOverlay(""));
+      setPanel(next);
+    },
     compare: () =>
       compare.blocked ? toast(compare.blocked, "info") : compare.open(),
     comparisons: () => compare.openList(),
@@ -657,7 +773,31 @@ export default function App() {
 
   return (
     <div
-      className={`app ${sidebar ? "with-sidebar" : ""} ${panel ? "drawer-open" : ""} ${panel === "preview" ? "drawer-preview" : ""}`}
+      className={`app ${layout.classes} ${sidebar ? "with-sidebar" : ""} ${panel ? "drawer-open" : ""} ${panel === "preview" ? "drawer-preview" : ""} ${dockOpen ? "terminal-docked" : ""}`}
+      onFocusCapture={(event) => {
+        const target = event.target as HTMLElement;
+        if (
+          target.closest(".stage, .drawer") &&
+          !target.closest(".terminal-panel, .terminal-dock-action")
+        )
+          workspaceFocus.current = target;
+      }}
+      onClickCapture={(event) => {
+        const button = (event.target as HTMLElement).closest<HTMLElement>(
+          "button",
+        );
+        if (button && !button.closest(".drawer")) panelClick.current = button;
+        // WebKit can run microtasks between the native capture and bubble
+        // listeners. Keep this click's opener until its handler has run.
+        setTimeout(() => {
+          panelClick.current = null;
+          panelPointerFocus.current = null;
+        }, 0);
+      }}
+      onPointerDownCapture={() => {
+        panelPointerFocus.current =
+          document.activeElement as HTMLElement | null;
+      }}
     >
       {sidebar && (
         <Sidebar
@@ -672,14 +812,18 @@ export default function App() {
           }
           onSelect={openConversation}
           onNew={() => void nav.newSession()}
+          onNewProject={(path) => void nav.newSession({ workspace: path })}
           onProject={(path) => void nav.pickProject(path)}
           onSettings={() => openSettings()}
           onHide={() => setSidebar(false)}
         />
       )}
       <TopBar
-        sidebar={sidebar}
-        onShowSidebar={() => setSidebar(true)}
+        sidebar={sidebar && !(compactWorkspace && panel)}
+        onShowSidebar={() => {
+          if (compactWorkspace) setPanel(null);
+          setSidebar(true);
+        }}
         projectPath={projectPath}
         onProject={() => setOverlay("project")}
         title={currentSession?.title || compare.laneOf?.title || "New task"}
@@ -691,8 +835,28 @@ export default function App() {
         onChanges={() => setPanel(panel === "changes" ? null : "changes")}
         changeCount={git.count}
         onPalette={() => setOverlay("palette")}
+        panel={panel}
+        terminalVisible={dockOpen || panel === "terminal"}
+        onPanel={(next) => setPanel(panel === next ? null : next)}
       />
       <Stage
+        workspaceBar={
+          <WorkspaceContextBar
+            workspace={workspace}
+            branch={git.branch}
+            runCheck={{
+              workspace,
+              sessionId,
+              disabled: composerLocked || queueing,
+              onRun: runCheck,
+            }}
+            latestTask={latestTask}
+            reviewing={Boolean(review.target)}
+            onReview={(id) => reviewChanges(undefined, id)}
+            onConversation={review.close}
+            onRuns={() => setPanel("background")}
+          />
+        }
         conversation={conversation}
         compare={compare}
         scroll={scroll}
@@ -802,6 +966,15 @@ export default function App() {
       )}
       {panel && (
         <Drawer
+          terminalDocked={terminalDocked}
+          onRequestTerminalFocus={requestTerminalFocus}
+          onTerminalReady={terminalReady}
+          onFocusDockTerminal={focusDockedTerminal}
+          onDockTerminal={() => {
+            setTerminalDocked(true);
+            setPanel("files");
+            focusDockedTerminal();
+          }}
           key={workspace}
           tab={panel}
           onTab={setPanel}
@@ -837,6 +1010,50 @@ export default function App() {
           onResolveFileDraftConflict={memory.resolveFileDraftConflict}
           targets={pickerTargets}
         />
+      )}
+      {dockOpen && (
+        <section
+          ref={terminalDockRef}
+          tabIndex={-1}
+          className="terminal-dock"
+          aria-label="Workspace terminal"
+        >
+          <header>
+            <strong>Terminal</strong>
+            <span title={workspace}>{workspace}</span>
+            <button
+              type="button"
+              onClick={() => {
+                setTerminalDocked(false);
+                setTerminalDockVisible(false);
+                terminalFocus.request(workspace);
+                setPanelState("terminal");
+              }}
+            >
+              Move to side panel
+            </button>
+            <button
+              type="button"
+              aria-label="Hide workspace terminal"
+              onClick={() => {
+                terminalFocus.cancel();
+                restoreTerminalFocus.current = true;
+                setTerminalDockVisible(false);
+              }}
+            >
+              Hide
+            </button>
+          </header>
+          <TerminalPanel
+            onRequestFocus={requestTerminalFocus}
+            onReady={terminalReady}
+            key={workspace}
+            workspace={workspace}
+            toast={toast}
+            memory={memory.memory}
+            onMemory={memory.update}
+          />
+        </section>
       )}
       <Toasts toasts={toasts} onDismiss={dismiss} onHold={hold} />
       <ZoomStatus notice={appearance.notice} />

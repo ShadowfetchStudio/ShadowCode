@@ -1,0 +1,56 @@
+[
+  {
+    "file": "targeted-68-before-palette-fix.log",
+    "source": "/tmp/shadowcode-integration/browser.log",
+    "source_mtime": "2026-11-11T19:41:48.713089-05:00",
+    "sha256": "838915a6e0e0d452734a4a4d2092b1e6f8436a6bb643ef0778a2d3ea15034fcf"
+  },
+  {
+    "file": "held-focus-zoom-and-palette-before-fix.log",
+    "source": "/tmp/shadowcode-integration/final-check.log",
+    "source_mtime": "2026-11-11T19:43:50.412309-05:00",
+    "sha256": "addfbca343e6b2a66479f9d803b3a2da1d9c7c19cb66b7a9b056b64af70e1307"
+  },
+  {
+    "file": "interrupted-after-palette-fix.log",
+    "source": "/tmp/shadowcode-integration/final-check-fixed.log",
+    "source_mtime": "2026-11-11T19:44:48.315183-05:00",
+    "sha256": "6f2b0909f7b0ae03081ce20305eb832827e58695b84adaf93681e6f5458701af"
+  },
+  {
+    "file": "review-recovery-26.log",
+    "source": "/Users/shadowfetch/Projects/ShadowCode/reports/review-recovery.log",
+    "source_mtime": "2026-11-11T19:32:19.759940-05:00",
+    "sha256": "4feb849680e9466f242cd81132cc5e0098d638c2bb6498ee5ffc062b22054eca"
+  },
+  {
+    "file": "css-zoom-geometry-chromium.json",
+    "source": "/tmp/shadowcode-integration/results/flagship-CSS-zoom-uses-eff-a9d97-ual-dock-geometry-reachable-chromium/css-zoom-geometry.json",
+    "source_mtime": "2026-11-11T19:43:29.450295-05:00",
+    "sha256": "3b265ae3adb9c362e3de32b3691df2816a9d89519cead701af1ac2111cb303c3"
+  },
+  {
+    "file": "css-zoom-geometry-webkit.json",
+    "source": "/tmp/shadowcode-integration/results/flagship-CSS-zoom-uses-eff-a9d97-ual-dock-geometry-reachable-webkit/css-zoom-geometry.json",
+    "source_mtime": "2026-11-11T19:43:44.858796-05:00",
+    "sha256": "4db45f1730fbb0de414c9363a62b65da9bdca975b90baa6302952ea23a9afe62"
+  },
+  {
+    "file": "zoom-800-175-shared-output.png",
+    "source": "/Users/shadowfetch/Projects/ShadowCode/ui/test-results/flagship-zoom-800-175.png",
+    "source_mtime": "2026-11-11T19:46:29.793199-05:00",
+    "sha256": "64c88a240a8adca1c5b37a1d867315cd624ed4c50a0105b3ba0a85df1800fd7d"
+  },
+  {
+    "file": "zoom-1160-175-shared-output.png",
+    "source": "/Users/shadowfetch/Projects/ShadowCode/ui/test-results/flagship-zoom-1160-175.png",
+    "source_mtime": "2026-11-11T19:46:31.233504-05:00",
+    "sha256": "fc8da486b5704cd61e073da75b5cbe7133ff77d1d5bae087b7ee9a8bc32957dd"
+  },
+  {
+    "file": "zoom-1440-175-shared-output.png",
+    "source": "/Users/shadowfetch/Projects/ShadowCode/ui/test-results/flagship-zoom-1440-175.png",
+    "source_mtime": "2026-11-11T19:46:33.289136-05:00",
+    "sha256": "d89a0c7dd9973bfbec5b76371bebccbc7b8d19b78c9c271f23ece468de94b65e"
+  }
+]

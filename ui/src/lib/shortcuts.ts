@@ -7,5 +7,9 @@ export function shortcutModifier(
 }
 
 export function shortcutHint(keys: string, platform?: string): string {
-  return `${shortcutModifier(platform)}+${keys}`;
+  const modifier = shortcutModifier(platform);
+  // Keep macOS Minimize and Cycle Windows available to the native window.
+  if (modifier === "⌘" && keys === "M") return "⌘+Shift+M";
+  if (modifier === "⌘" && keys === "`") return "Ctrl+`";
+  return `${modifier}+${keys}`;
 }

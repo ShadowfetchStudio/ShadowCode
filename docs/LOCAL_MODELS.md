@@ -32,6 +32,34 @@ and use ShadowCode's own agent loop, tools and permissions.
   are present (`libvulkan1` plus your GPU driver). Otherwise the runtime stays
   on the CPU.
 
+## Apple silicon
+
+On macOS the app bundles the native arm64 Metal/CPU runtime and its compiled
+Metal shader library. The managed runtime location is
+`~/Library/Application Support/ShadowCode/llama.cpp`. Device discovery uses the
+runtime's own device list; macOS RAM measurements use Mach VM statistics rather
+than Linux's `/proc/meminfo`.
+
+**Settings › Local models** separates runtime support from the requested backend
+of the loaded model. An available Metal device is not proof that every layer
+executed on the GPU. A CPU fallback is identified separately, including its
+reason when reported. The available-memory figure is a sampled estimate of
+reclaimable memory, not a reservation or a promise that allocation will succeed.
+
+For positively identified Apple shared-memory hardware, each new model launch
+checks fresh headroom and retains a 2 GiB reserve. CPU retries use that same
+memory pool. Unknown or inconsistent measurements do not block loading. The
+pinned, audited llama.cpp revision disables its extra host prompt cache with
+`--cache-ram 0`; this leaves the active KV cache unchanged and can increase
+repeat-prompt processing time. Unknown runtime revisions keep their existing
+arguments. The runtime records this policy and the active-memory estimate in
+loaded-model provenance.
+
+**Cancel loading** interrupts manual preparation. A failed cancellation remains
+an error and the continuing load is reconciled when it completes. **Unload**
+releases an idle loaded model and refuses while tasks hold it. Stopping a task,
+cancelling a load, and unloading an idle model are distinct operations.
+
 ## Download a free model
 
 **Settings › Local models › Download a free model** lists a few GGUF models

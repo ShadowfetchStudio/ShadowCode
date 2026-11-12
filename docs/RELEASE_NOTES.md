@@ -1,14 +1,131 @@
-# ShadowCode 2.4.0 (candidate)
+# ShadowCode 2.4.0
 
-Not yet tagged. This candidate is the first Apple silicon verification and fine-tune pass, plus T3-style first-run and one-click provider sign-in. Do not overwrite published 2.3.3 assets. Suggested tag: `v2.4.0` after CI and a real-model Metal smoke if a GGUF is available.
+ShadowCode 2.4 introduces a simpler first run, a more accessible coding workspace
+for Apple Silicon Macs, revision-aware review, and bounded local-runtime
+reliability improvements. It builds on the existing Metal runtime and preserves
+project trust, approvals, editor drafts and engine-owned terminal sessions.
 
-**Apple silicon.** Native arm64 packaging when `hw.optional.arm64=1` even if `uname -m` is `x86_64` under Rosetta. Metal llama.cpp sets `GGML_METAL_PATH_RESOURCES` to the directory that holds `default.metallib`. Doctor reports processor and Metal shader presence. Darwin temp-folder names are no longer redacted as secrets.
+## Start work from the conversation
 
-**T3-style first run.** Open project lands in chat with the composer ready. Connect, paste an API key, or download a free local model on that same screen. Sidebar states are Working / Done / Needs approval. Git: commit from Changes, then Open pull request….
+- **One first-run screen.** Open a project and arrive in the conversation with
+  ask-first approvals. Model setup stays on the empty conversation instead of
+  a second blocking wizard. Starter cards fill the composer without sending
+  a task or changing permissions.
+- **Connect where you choose a model.** Codex, Claude Code, Cursor, Antigravity
+  and Grok use their vendor sign-in flows; Antigravity can Install & connect.
+  Enter OpenRouter, xAI or OpenAI keys inline, or explicitly choose a local
+  download. New keys use the macOS Keychain or Linux desktop keyring when
+  available. Settings › Accounts remains the place to manage connections.
+- **Clear conversation state.** Sidebar conversations show Working, Done or
+  Needs approval. Project-specific New task actions join the activation queue,
+  so delayed creation cannot override a later selection. Changes leads into
+  the existing commit and Open pull request workflow.
 
-**Easy sign-in.** Codex, Claude, Cursor, Antigravity and Grok each have Connect (Antigravity can Install & connect). API keys: OpenRouter, xAI (Grok) and OpenAI on the same picker; stored in Keychain on Mac when available.
+## Files, conversation and terminal together
 
-**Still blocked.** Vendor CLIs that are not installed still show Not installed (except Antigravity, which can download the agent). Cursor/Claude/Codex have no password form — they use each vendor's own browser sign-in. macOS images remain ad-hoc signed, not notarized. Real GGUF generation on this Mac is not part of this candidate unless a model is present.
+- **Direct workspace controls.** Files, Terminal and Preview are available in
+  the toolbar. Resize the side pane with a pointer or keyboard; its preferred
+  width is remembered and clamped to leave room for the conversation.
+- **Optional terminal dock.** Keep Files and the conversation visible above a
+  terminal. Commands focus the existing dock without replacing dirty Files or
+  creating a second shell. Hiding the dock restores workspace focus while the
+  shell keeps running. A delayed terminal mount respects a newer editor or
+  composer focus choice; palette commands transfer focus after dialog cleanup.
+  Toolbar active and pressed states reflect the visible surfaces.
+- **Layout follows text size.** Split layouts preserve at least 380 layout
+  pixels for the conversation and use overlays at compact widths. Sidebar,
+  drawer and toolbar states use effective width under CSS fallback zoom;
+  native webview zoom retains its independent scaling path. Dock controls and
+  the rendered terminal screen remain separate from the compact drawer.
+- **Project context and explicit checks.** Folder, branch, project checks and
+  latest-task review are accessible from the workspace. Run a project check
+  before the first model turn or from completed-task evidence, using the normal
+  trust and approval flow. The composer draft is retained; task completion is
+  not treated as verification.
+- **Mac keyboard and reduced motion.** Command-Shift-M opens the model picker;
+  Control-backtick reaches Terminal. Command-M and Command-backtick remain
+  available to native window behavior. Option-arrow editing and IME composition
+  stay with text input. The terminal cursor follows Reduce Motion changes
+  without restarting its shell. Drawer closing restores its trigger when
+  appropriate and respects a later focus choice.
+
+## Review freshness and recovery
+
+Keep markers identify the file revision actually shown. A content change
+invalidates file and hunk markers; legacy path-only marks do not attest to a
+current revision. Task-owned request generations reject stale list/detail
+responses, including navigation and undo races. Undo All revalidates whole-file
+Keep marks before deciding what to undo. Rejected, busy and no-op undo paths
+replace an interrupted detail read without overwriting a later valid selection.
+Keep remains a review marker, not a disk write or Git staging operation.
+
+## Apple Silicon and local-runtime reliability
+
+- **Native packaging and Metal resources.** Packaging prefers arm64 on Apple
+  Silicon even from a Rosetta shell. The bundled llama.cpp Metal runtime requires
+  its compiled `default.metallib`, and sets the shader-resource path at runtime.
+  Doctor reports processor/Rosetta identity and shader availability. Metal is
+  existing macOS support, not a newly introduced backend; Linux packages support
+  Vulkan/CPU and the Windows package uses CPU execution.
+- **Shared-memory accounting.** Correct speculative-page accounting and recheck
+  fresh estimated headroom before allocation on positively identified Apple
+  Metal hardware, with a 2 GiB reserve. CPU retries use the same shared-memory
+  check after the previous child exits. Unknown or inconsistent telemetry is
+  not a hard refusal; estimates neither reserve memory nor guarantee allocation.
+- **Bounded cache policy.** Disable the audited pinned runtime's extra host
+  prompt cache with revision-gated arguments. The active KV cache is unchanged.
+  This bounds one allocation source; it is not a speed improvement claim and
+  can increase recomputation across requests.
+- **Cancellation that stays truthful.** Cancel pending model preparation from
+  Local models. Readiness waits can be interrupted and their child cleaned up.
+  If cancellation is refused, the UI continues tracking the original load until
+  it settles instead of incorrectly reporting an unloaded model.
+- **Mac developer tools and readable commands.** Allow required system-temp
+  metadata access for Apple developer tools when using an external temp folder,
+  while retaining restrictions on unrelated temp contents and writes. Darwin
+  temp-folder identifiers are no longer mistaken for high-entropy secrets on
+  command cards.
+
+## Validation and scope
+
+The frozen implementation passed:
+
+| Check | Result |
+| --- | --- |
+| UI unit tests | 906 passed in 157 files |
+| Full Chromium suite | 154 passed |
+| Focused WebKit suite | 35 passed |
+| Native core unit tests | 677 passed; 8 ignored |
+| Native review/API integration | 9 passed |
+| Native local-engine integration | 33 passed; 3 ignored |
+| TypeScript, rustfmt, workspace Clippy and production test-fixture isolation | Passed |
+
+Browser automation uses deterministic service fixtures. Geometry checks include
+800/1160/1440-pixel viewports at 100/125/175% CSS zoom with the sidebar enabled
+and disabled; focus tests hold terminal listing pending while another editing
+surface takes focus. These results include the final palette focus correction.
+
+A bounded Qwen3-0.6B-Q8_0 service check on an Apple Silicon Mac completed load,
+a short response, same-model reuse, unload, reload, and cleanup after an injected
+failure. This establishes that lifecycle for the tested small model. It is not
+a performance benchmark, coding-quality assessment, large-model qualification,
+or proof of observed Metal layer offload. Device discovery and requested GPU
+placement remain distinct from measured execution. No percentage speed claim
+is made.
+
+Native VoiceOver, non-US physical keyboards, broad hardware coverage and
+sustained memory-pressure behavior are outside these results. The verified
+ARM64 development app is ad-hoc signed; development-build and browser results do
+not by themselves qualify a distribution installer or establish notarization.
+Vendor CLIs still require their own installation/sign-in unless an explicit
+Install & connect path is offered; there is no vendor-password form.
+
+See the [implementation and qualification record](https://github.com/ShadowfetchStudio/ShadowCode/blob/main/docs/MAC_FLAGSHIP_UPGRADE.md),
+[local-model documentation](https://github.com/ShadowfetchStudio/ShadowCode/blob/main/docs/LOCAL_MODELS.md),
+and [user guide](https://github.com/ShadowfetchStudio/ShadowCode/blob/main/docs/USER_GUIDE.md).
+Version-specific assets and installation instructions belong to their verified
+[GitHub release](https://github.com/ShadowfetchStudio/ShadowCode/releases);
+source version numbers alone do not establish published download availability.
 
 # ShadowCode 2.3.3
 

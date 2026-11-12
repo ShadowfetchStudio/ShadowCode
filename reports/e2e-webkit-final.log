@@ -1,0 +1,56 @@
+[WebServer] (node:6250) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin vite:reporter] 
+[WebServer] (!) /Users/shadowfetch/Projects/ShadowCode/ui/src/lib/keyring.ts is dynamically imported by /Users/shadowfetch/Projects/ShadowCode/ui/src/components/settings/EndpointsCard.tsx but also statically imported by /Users/shadowfetch/Projects/ShadowCode/ui/src/components/ProviderConnect.tsx, dynamic import will not move module into another chunk.
+[WebServer] 
+[WebServer] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[WebServer] (node:6254) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:6275) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 35 tests using 1 worker
+
+(node:6284) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [webkit] › e2e/appearance.spec.ts:54:1 › Ctrl+=, Ctrl+- and Ctrl+0 zoom the window, say the size and keep it (3.0s)
+  ✓   2 [webkit] › e2e/appearance.spec.ts:109:1 › Settings › Appearance shows theme and text size as they are picked, and only Save keeps them (2.2s)
+  ✓   3 [webkit] › e2e/appearance.spec.ts:203:1 › the command palette reaches every theme and the text size (1.5s)
+  ✓   4 [webkit] › e2e/appearance.spec.ts:254:1 › zoomed with CSS, the terminal and the editor put the pointer on the right text (2.2s)
+  ✓   5 [webkit] › e2e/flagship.spec.ts:33:1 › workspace tools open the real panels and split width survives closing and reload (586ms)
+  ✓   6 [webkit] › e2e/flagship.spec.ts:87:1 › workspace stays readable, accessible and within the window in both themes (3.5s)
+  ✓   7 [webkit] › e2e/flagship.spec.ts:142:1 › start cards prepare a task without sending it or changing permission mode (304ms)
+  ✓   8 [webkit] › e2e/flagship.spec.ts:165:1 › a compact workspace can reveal navigation without losing its draft (364ms)
+  ✓   9 [webkit] › e2e/flagship.spec.ts:182:1 › docking keeps a file, conversation and the same terminal available together (1.1s)
+  ✓  10 [webkit] › e2e/flagship.spec.ts:224:1 › docked terminal commands preserve dirty Files and restore focus without another shell (1.2s)
+  ✓  11 [webkit] › e2e/flagship.spec.ts:310:1 › docked terminal bottom rows and compact controls stay inside unobstructed geometry (1.5s)
+  ✓  12 [webkit] › e2e/flagship.spec.ts:431:1 › closing a drawer restores its opener without overriding a later focus choice (1.2s)
+  ✓  13 [webkit] › e2e/flagship.spec.ts:480:1 › run a check is available before the first model turn and preserves its draft (547ms)
+  ✓  14 [webkit] › e2e/flagship.spec.ts:509:1 › project-scoped creation cannot override a later conversation selection (317ms)
+  ✓  15 [webkit] › e2e/flagship.spec.ts:564:3 › delayed dock readiness honors the current editor focus intent (1.7s)
+  ✓  16 [webkit] › e2e/flagship.spec.ts:564:3 › delayed dock readiness honors the current composer focus intent (1.2s)
+  ✓  17 [webkit] › e2e/flagship.spec.ts:564:3 › delayed dock readiness honors the current terminal focus intent (1.6s)
+  ✓  18 [webkit] › e2e/flagship.spec.ts:660:1 › a visible dock workspace remount does not claim composer focus (1.3s)
+  ✓  19 [webkit] › e2e/flagship.spec.ts:718:1 › CSS zoom uses effective split breakpoints and keeps actual dock geometry reachable (4.2s)
+  ✓  20 [webkit] › e2e/macInteraction.spec.ts:19:1 › Mac palette describes the usable model and terminal shortcuts (623ms)
+  ✓  21 [webkit] › e2e/macInteraction.spec.ts:36:1 › terminal cursor follows reduced motion changes without restarting the shell (643ms)
+  ✓  22 [webkit] › e2e/macInteraction.spec.ts:56:1 › the palette terminal command transfers focus after closing its dialog (620ms)
+  ✓  23 [webkit] › e2e/parallel.spec.ts:49:1 › a paused task keeps new conversations in the same checkout queued (3.5s)
+  ✓  24 [webkit] › e2e/parallel.spec.ts:86:1 › runs a second task in a new worktree beside a running one and applies it (3.2s)
+  ✓  25 [webkit] › e2e/parallel.spec.ts:157:1 › a new worktree task can start from another branch (394ms)
+  ✓  26 [webkit] › e2e/parallel.spec.ts:181:1 › a conflicting apply lists the files and keeps the worktree; discard removes it (2.3s)
+  ✓  27 [webkit] › e2e/parallel.spec.ts:203:1 › badges show approvals, running and unread; shortcuts move between conversations (2.2s)
+  ✓  28 [webkit] › e2e/parallel.spec.ts:271:1 › the context & cost chip follows usage and opens a breakdown (662ms)
+  ✓  29 [webkit] › e2e/tools.spec.ts:43:1 › terminals keep running across tabs, the drawer and several shells (1.4s)
+  ✓  30 [webkit] › e2e/tools.spec.ts:94:1 › suggests a commit message, then commits the edited text (1.3s)
+  ✓  31 [webkit] › e2e/tools.spec.ts:125:1 › creates a branch and a draft pull request, then shows its checks (1.3s)
+  ✓  32 [webkit] › e2e/tools.spec.ts:190:1 › without a signed-in gh, explains sign-in and opens the compare page (1.5s)
+  ✓  33 [webkit] › e2e/tools.spec.ts:226:1 › goals, processes and worktrees moved from Settings to the drawer (1.6s)
+  ✓  34 [webkit] › e2e/tools.spec.ts:284:1 › a staged secret is shown before the commit and the push, and goes only when chosen (1.3s)
+  ✓  35 [webkit] › e2e/tools.spec.ts:320:1 › the Worktrees tab saves what each new worktree task gets (688ms)
+
+  35 passed (1.0m)

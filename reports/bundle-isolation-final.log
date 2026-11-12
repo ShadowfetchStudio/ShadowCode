@@ -1,0 +1,13 @@
+
+> shadow-agent-ui@2.4.0 check:bundle
+> node e2e/check-bundle.mjs
+
+[plugin vite:reporter] 
+(!) /Users/shadowfetch/Projects/ShadowCode/ui/src/lib/keyring.ts is dynamically imported by /Users/shadowfetch/Projects/ShadowCode/ui/src/components/settings/EndpointsCard.tsx but also statically imported by /Users/shadowfetch/Projects/ShadowCode/ui/src/components/ProviderConnect.tsx, dynamic import will not move module into another chunk.
+
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+Production bundle check: no test transport or fake engine code.

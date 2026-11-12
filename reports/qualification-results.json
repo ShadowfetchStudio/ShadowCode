@@ -1,0 +1,253 @@
+{
+  "schema": "shadowcode.mac-upgrade.qualification.v1",
+  "date": "2026-11-11",
+  "baseline": "82c60ee6a8bb8174c617d92aae0c8d5b14bc82a0",
+  "branch": "cursor/apple-silicon-t3-ux-610c",
+  "delivery": "Implemented and verified local development upgrade",
+  "source_sha256": {
+    "native/core/src/local_engine.rs": "7da326028d1ed68e5c3f692c1484ef5a821833868546ff49c64172c5dba060d0",
+    "native/core/src/local_runtime.rs": "b8274e7e16cde3dc1e6c651aaa34dc301bae060ea1d289e9eaae9f6d94475757",
+    "native/core/src/review.rs": "a5cd5c84013e8bb943cb889bca984441174c4a81e82ecc29503aebb991d18e4e",
+    "native/core/src/sandbox.rs": "7c547a44fdef9305602bacfa47a5374b11b9309b4e249c1053ef605e94bc038d",
+    "native/core/src/sandbox/seatbelt.rs": "461ce0634b32827e28679e7e4eca9a0a8fdbda3b76ba7bfa765097936e11946d",
+    "native/core/src/service/inspection.rs": "f49df43f46972a8b1a7935ff990ee303bbe8b4970ad1cc9f94db929fc7c6371c",
+    "native/core/tests/local_engine.rs": "a4c515b5904f57c2dd72e1a48f16c6bddeaa97e560cdf3bb8f038b45a2444f77",
+    "ui/e2e/fakeBackend.ts": "2b23aeeefe2a528a880880990c231693b15fa8d1b5acbb70e8812c8856e71db6",
+    "ui/e2e/firstRun.spec.ts": "3037e475f7012d3e15760fced24f25cb5d7cb7edaee33f05da7e6445d4957b55",
+    "ui/e2e/parallel.spec.ts": "0c571fef0e5224d21e01a217d974c44ec90bd7002916d46762694fe66ecb0786",
+    "ui/src/App.tsx": "9cce6b278a1b242655179658c04f1a853401bee5a9b6b7c957599d2d23164837",
+    "ui/src/api.ts": "d9556b0c95046eed6ffdffc79c9acb6c49543a577b96712f0f48a7b0fc52088e",
+    "ui/src/components/Drawer.tsx": "f5bf03b42dc3aa6a17e155a0d52f48cfc25ade6e9fec0ed6fc8b0980a55071f9",
+    "ui/src/components/ReviewView.opinion.test.tsx": "8e702859d196a58c419c8ab2647b8d13e5f9dfa7090ba06d38dc3c590f90d1a1",
+    "ui/src/components/ReviewView.test.tsx": "ed7ddd65ce22200bea7ec952c9d7519fe93223a102b5b08cfcd188db59b33c8e",
+    "ui/src/components/RunCheck.tsx": "6b8ea0172363047621596b9d34bc998678a6dd14c9dead8985bfda40e24216d6",
+    "ui/src/components/Sidebar.tsx": "7561a63d890fb71939da3f34b94e6047d9c012cc78db5e0b8194d5309af941c3",
+    "ui/src/components/TerminalPanel.tsx": "c2bb36e573111c5724eac92443a986212cf151a88caa04a0196d148ca375ecdf",
+    "ui/src/components/TerminalView.tsx": "ca0877329712cb06a4c99a2a30ecea7a2e690aba2e36724c44354e9f41abbfb7",
+    "ui/src/components/WelcomeBanner.tsx": "b36c105d3721517481d69a83371eadf1f5c6a0cfa543b75e28fab5c95115e79a",
+    "ui/src/components/overlays.tsx": "75586d7bf268f48386082eca8eb74ef246c17e21d9ea661ac6a5f814f525d867",
+    "ui/src/components/settings/LocalModelsPage.tsx": "52fd8c59d9e81584b229e3d52065da01040ff45bfea199bfc1379031543fe7b7",
+    "ui/src/components/shell/Stage.tsx": "9061e0693f2306834b5ea56990a31e856a22455291b7d63893489f0a1e48cf94",
+    "ui/src/components/shell/TopBar.tsx": "1760eb94af04bc1b39eb6be8688fa649ff2b18839c3365934a42986c29083663",
+    "ui/src/components/shell/palette.ts": "944432dc78af943ea2f755285c0f01c9e3b08ff3c156d1179aa4719f3ff42b4b",
+    "ui/src/hooks/useNavigation.ts": "5242d0593a0f242fdfdda5d7160c932809922dac9a6a57b0bd1f7f2d0903e4ea",
+    "ui/src/hooks/useReview.ts": "9f7ce4d409a663c73b3cf0b97a954e2e7f8f8f095ccaa9568a8a7078a25ced87",
+    "ui/src/hooks/useShortcuts.test.ts": "f4d4477d0a5875d3cfe4e42c1d72949c4be019f678ed6515e2250645de7d7f23",
+    "ui/src/hooks/useShortcuts.ts": "3acd7ea8d886724d5b7d0c90229137ae9fb0b70ef022a17b1626ea92e351d171",
+    "ui/src/lib/shortcuts.test.ts": "fc42969fe0ca075f18e30fe4c027ffa78dff3513cad7de8b0ec06b2e971dfb27",
+    "ui/src/lib/shortcuts.ts": "53485a403d6bed24934133a2b424266b24b6363535b98218a28589730f5b816a",
+    "ui/src/main.tsx": "4d5dc219e12669b06f1c14a04d1714aa3ef67202f2a00f720a80c7d0adea1ea4",
+    "native/core/examples/qualification_local_lifecycle.rs": "55ed3de087bba18c0b4f185f4380c7f370dbdae8561470c121147eb206d7e1fe",
+    "ui/e2e/flagship.spec.ts": "0140a4891e87a7ce357ee0c90a545e593785e04f117c83992be4e58759585913",
+    "ui/e2e/macInteraction.spec.ts": "66399354f4af06869dafc058b728579c63e3bc456e14ffa3b66b5df151e0d22f",
+    "ui/src/components/settings/LocalModelsPage.test.tsx": "886a7ee49f6775c95dfd14458fd1e0387c8bcf45c1cda2a2a96e6194c7562ede",
+    "ui/src/components/shell/PanelResizeHandle.tsx": "0fa93a6821824eeedc9e3b0e7affe180381342384b3c2519b2d9a88eeda3fb50",
+    "ui/src/components/shell/WorkspaceContextBar.tsx": "b4b163ca38fbc850e3318a97cd86cb4bc13c0194b54d93a5f16c7f1301e933a3",
+    "ui/src/flagship.css": "c496a5614dc088d1dc5db6bd8d3bf1a35feb14a2657150e108aeec8639658c24",
+    "ui/src/hooks/useTerminalFocus.ts": "96e4136eeabf0e3151d4624b3dc4222cd061ab8f7d04c4aab435c0be30feca2c",
+    "ui/src/hooks/useWorkspaceLayout.ts": "8b41df39e99e32e149cdac38f6a2b5a4913a625a0e9e17f7f9adf53aa2126c9c"
+  },
+  "evidence": [
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/typecheck-final.log",
+      "bytes": 51,
+      "sha256": "81e65e611b58c22f0405079c0dea847a1ac30f9b75f2fceee8c5c5f0ab099e6c"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/ui-final.log",
+      "bytes": 576,
+      "sha256": "67db3da0f26f3abf69c5bf064498ae575121d854b6a2cf2d5ff3f6474b50d5f0"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/e2e-full-chromium-final.log",
+      "bytes": 19504,
+      "sha256": "83ffaaa0d39408269d6bf133e070136d41ada6e192e398dc2ca72cab3db8dd79"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/native-core-lib-final.log",
+      "bytes": 57908,
+      "sha256": "0b9fb559ab5cd629bc5dd70f813c3896195e21b610da6446ab15e359b7c65a91"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/native-review-contract.log",
+      "bytes": 1837,
+      "sha256": "228bdaf7d5a2b2b05201d1e67c6dfb1a0a65b5c64c11e97c181a0d8ea92bd5e5"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/clippy-final.log",
+      "bytes": 252,
+      "sha256": "d810201af5925c2753fea8f36e95042c054f31a9904d97cbf21849e7e5d25d8e"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/rustfmt-final.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/mac-app-build-final.log",
+      "bytes": 6589,
+      "sha256": "c493a27d497a8db533e12ca8e2d2036be2d4eecc39dbfe53d455a958b8d35b07"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/review-recovery.log",
+      "bytes": 210,
+      "sha256": "4feb849680e9466f242cd81132cc5e0098d638c2bb6498ee5ffc062b22054eca"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/e2e-webkit-final.log",
+      "bytes": 6192,
+      "sha256": "810f32f2f9bf950f0932f99b7a2b64045c82c22f4994f00900b3699145810c96"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/bundle-isolation-final.log",
+      "bytes": 830,
+      "sha256": "7c7b84787778a2e26e70e4e4013451f56eba4a79d345d3d6e8ecd1ed44b068fa"
+    }
+  ],
+  "native_evidence": [
+    {
+      "path": "/Volumes/NVME1TB/Development/ShadowCode-build/silicon-validation/local-lifecycle.json",
+      "bytes": 19105,
+      "sha256": "5a7e50f7776469a89b7bf34c34805536d48e669b08fdf10b48dd266d414e04b7"
+    },
+    {
+      "path": "/Volumes/NVME1TB/Development/ShadowCode-build/silicon-validation/local-lifecycle-failure-cleanup.json",
+      "bytes": 8593,
+      "sha256": "410571bf08469f53d6f311bfaec92a2284dbea976a0ca0a08fbed839450cf5cf"
+    },
+    {
+      "path": "/Volumes/NVME1TB/Development/ShadowCode-build/silicon-validation/local-lifecycle-verification.json",
+      "bytes": 706,
+      "sha256": "58bc689d793a7094a37ef155a0b17c4af568fe1c729c2efa680f4dd10037c537"
+    },
+    {
+      "path": "/Volumes/NVME1TB/Development/ShadowCode-build/silicon-validation/desktop-review/checks-final.json",
+      "bytes": 1585,
+      "sha256": "09968de72a8f7272b41c04877191d49d8878c1c7e53a6e8a25b9ef4f4068246a"
+    }
+  ],
+  "app_binary": {
+    "path": "/Volumes/NVME1TB/Development/ShadowCode-build/debug/bundle/macos/ShadowCode.app/Contents/MacOS/shadowcode",
+    "bytes": 152865104,
+    "sha256": "c47771bd4b3591bf6359d88c72169955987247352e34163e33ce3eaae1b45e6f"
+  },
+  "review_launcher": {
+    "path": "/Volumes/NVME1TB/Development/ShadowCode-build/silicon-validation/desktop-review/Open ShadowCode Review.command",
+    "bytes": 332,
+    "sha256": "b5eb1ab73f29467dd2503dd7bd0db7b1fba138364b2459eb5ba219284c9a8d52"
+  },
+  "visuals": [
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/visuals/final-chromium/flagship-code-and-terminal.png",
+      "bytes": 123514,
+      "sha256": "8c3995b6bde78d05ca6220d789ca72e734e348466120ae0e34da2d1ff2273ac5"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/visuals/final-chromium/flagship-dark-1024.png",
+      "bytes": 99475,
+      "sha256": "ab40092574a509ec49bcc143c9dec601a1bbeeedd1c82d0586af75a38447cd02"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/visuals/final-chromium/flagship-dark-1440.png",
+      "bytes": 119377,
+      "sha256": "43ebd3c7a6a5960e361bbaebb6a6c5b7fcbe5a5749c40e0ab3710889a3abf30e"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/visuals/final-chromium/flagship-dark-520.png",
+      "bytes": 34135,
+      "sha256": "97cdf8955b414bc35613db4932013ad3bb258b9c817fdb6298e315bd5de0cf80"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/visuals/final-chromium/flagship-dark-760.png",
+      "bytes": 61992,
+      "sha256": "95ffff73ee6ea7e9646c1286e047425d2dea0e61d07e201f80f79e64d35a6740"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/visuals/final-chromium/flagship-light-1024.png",
+      "bytes": 98379,
+      "sha256": "1be16356919f4a611efa97550a76f9f862c3e1188caa6927c85b427bda1d0084"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/visuals/final-chromium/flagship-light-1440.png",
+      "bytes": 118482,
+      "sha256": "ed3576fbe4551de0016d786e0233e1d967b5380d7a60e72a7e39bb231333b9f2"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/visuals/final-chromium/flagship-light-520.png",
+      "bytes": 34609,
+      "sha256": "da0ac830ed8fe93bf82eb1153f94dc4b806eb5202e3277142b7d73d4ec8ee5bf"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/visuals/final-chromium/flagship-light-760.png",
+      "bytes": 62319,
+      "sha256": "0b6c3ed997b92fced1d045248711288ba04daad8497e2bcafde5fc2709f55f20"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/visuals/final-chromium/flagship-terminal-fixed-1440.png",
+      "bytes": 119081,
+      "sha256": "b4199a9c38051f88489300ff518a78150bc40e64ec042be074d70f1660584381"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/visuals/final-chromium/flagship-terminal-fixed-520.png",
+      "bytes": 42164,
+      "sha256": "c4128217d68114cddd680512cfd11c50267402ac078d58bf196c83dee4837553"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/visuals/final-chromium/flagship-zoom-1160-175.png",
+      "bytes": 109802,
+      "sha256": "fc8da486b5704cd61e073da75b5cbe7133ff77d1d5bae087b7ee9a8bc32957dd"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/visuals/final-chromium/flagship-zoom-1440-175.png",
+      "bytes": 127832,
+      "sha256": "d89a0c7dd9973bfbec5b76371bebccbc7b8d19b78c9c271f23ece468de94b65e"
+    },
+    {
+      "path": "/Users/shadowfetch/Projects/ShadowCode/reports/visuals/final-chromium/flagship-zoom-800-175.png",
+      "bytes": 74452,
+      "sha256": "64c88a240a8adca1c5b37a1d867315cd624ed4c50a0105b3ba0a85df1800fd7d"
+    }
+  ],
+  "results": {
+    "ui_units": {
+      "passed": 906,
+      "files": 157
+    },
+    "chromium_full": {
+      "passed": 154
+    },
+    "webkit_focused": {
+      "passed": 35
+    },
+    "native_core_units": {
+      "passed": 677,
+      "ignored": 8
+    },
+    "native_review_api_integration": {
+      "passed": 9
+    },
+    "native_local_integration": {
+      "passed": 33,
+      "ignored": 3
+    },
+    "typecheck": "pass",
+    "rustfmt": "pass",
+    "clippy_workspace_all_targets_deny_warnings": "pass",
+    "production_bundle_isolation": "pass",
+    "packaged_signature": "pass, ad-hoc",
+    "packaged_doctor": "pass with no model configured; model response not checked",
+    "packaged_python_fixture": {
+      "passed": 2
+    },
+    "real_model_lifecycle": "passed",
+    "injected_failure_cleanup": "passed; failure exit expected"
+  },
+  "limits": [
+    "Debug ARM64 development app, not a notarized distribution installer",
+    "No native-window, VoiceOver or non-US physical keyboard qualification",
+    "Browser automation uses deterministic service fixtures",
+    "Local-model probe is lifecycle validation, not coding quality or a performance benchmark",
+    "Metal device discovery and requested placement do not prove observed layer offload",
+    "No GitHub push or website deployment in this upgrade"
+  ]
+}

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { shortcutModifier } from "../lib/shortcuts";
 
 /** What is open, in the order Escape closes it. */
 export type ShortcutContext = {
@@ -41,11 +42,13 @@ export function shortcutFor(
   e: Pick<
     KeyboardEvent,
     "key" | "ctrlKey" | "metaKey" | "shiftKey" | "target"
-  > & { altKey?: boolean },
+  > & { altKey?: boolean; isComposing?: boolean },
   open: ShortcutContext,
 ): ShortcutAction | null {
+  if (e.isComposing) return null;
   const key = e.key.toLowerCase();
   const mod = e.ctrlKey || e.metaKey;
+  const mac = shortcutModifier() === "⌘";
   const target = e.target instanceof Element ? e.target : null;
   const editable = target?.closest("[contenteditable]");
   const inField =
@@ -59,7 +62,11 @@ export function shortcutFor(
   const inTerminal = Boolean(
     (e.target as HTMLElement | null)?.closest?.("[data-terminal]"),
   );
-  const toggleTerminal = mod && (e.key === "`" || e.key === "Dead");
+  const toggleTerminal =
+    (mac ? e.ctrlKey && !e.metaKey : mod) &&
+    !e.altKey &&
+    !e.shiftKey &&
+    (e.key === "`" || e.key === "Dead");
   if (inTerminal) return toggleTerminal && !open.overlay ? "terminal" : null;
   // Keys pressed inside a modal dialog (a confirmation, Settings, Compare…)
   // belong to it: the dialog closes itself on Escape, and no shortcut acts
@@ -88,7 +95,8 @@ export function shortcutFor(
   if (mod && key === ",") return "settings";
   if (mod && key === "p") return "project";
   if (mod && key === "n") return "new";
-  if (mod && key === "m") return "model";
+  if (mod && !e.altKey && key === "m" && (!mac || !e.metaKey || e.shiftKey))
+    return "model";
   if (mod && key === "l") return "focus";
   if (mod && key === ".") return "stop";
   if (mod && e.shiftKey && key === "e") return "export";
@@ -97,8 +105,10 @@ export function shortcutFor(
   if (mod && !e.shiftKey && !e.altKey && key === "f") return "find";
   // Conversations: Alt+↑/↓ previous/next in the sidebar, Ctrl+Tab the one
   // opened before this one.
-  if (e.altKey && !mod && key === "arrowup") return "previous-conversation";
-  if (e.altKey && !mod && key === "arrowdown") return "next-conversation";
+  if (e.altKey && !mod && !inField && key === "arrowup")
+    return "previous-conversation";
+  if (e.altKey && !mod && !inField && key === "arrowdown")
+    return "next-conversation";
   if (e.ctrlKey && !e.shiftKey && e.key === "Tab") return "recent-conversation";
   if (key === "?" && !inField) return "help";
   return null;

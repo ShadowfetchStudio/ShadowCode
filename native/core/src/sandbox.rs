@@ -1882,6 +1882,119 @@ mod tests {
         drop(listener);
     }
 
+    /// Keep both granted roots outside Darwin's per-user temp directory. If
+    /// either is below it, ancestor metadata permission can mask this defect.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn seatbelt_external_workspace_allows_developer_cache_but_not_siblings() {
+        let user_temp = seatbelt::user_temp().expect("Darwin user temp directory");
+        let usual_temp = std::env::temp_dir().canonical().unwrap();
+        let base = if usual_temp.starts_with(&user_temp) {
+            Path::new("/private/tmp")
+        } else {
+            usual_temp.as_path()
+        };
+        let root = tempfile::tempdir_in(base).unwrap();
+        let root = root.path().canonical().unwrap();
+        let workspace = root.join("workspace");
+        let scratch = root.join("scratch");
+        fs::create_dir(&workspace).unwrap();
+        fs::create_dir(&scratch).unwrap();
+        assert!(!workspace.starts_with(&user_temp));
+        assert!(!scratch.starts_with(&user_temp));
+        let layout = HomeLayout::build(None, &[], &workspace);
+        let home = seatbelt::make_home(&scratch, &layout).unwrap();
+        let developer = seatbelt::developer_dir();
+        let profile = seatbelt::Profile {
+            workspace: &workspace,
+            scratch: &scratch,
+            layout: &layout,
+            net: Net::Off,
+            proxy_port: None,
+            read: developer.iter().map(|p| real(p)).collect(),
+            user_temp: Some(user_temp.clone()),
+        }
+        .text();
+        // Only our own disposable fixtures are used to test denied content.
+        let sibling = tempfile::Builder::new()
+            .prefix("shadowcode-private-cache-")
+            .tempfile_in(&user_temp)
+            .unwrap();
+        fs::write(sibling.path(), "private-cache-sentinel").unwrap();
+        let cache = tempfile::Builder::new()
+            .prefix("xcrun_db-shadowcode-test-")
+            .tempfile_in(&user_temp)
+            .unwrap();
+        let run = |script: &str, path: &Path| {
+            let mut command = Command::new(seatbelt::PROGRAM);
+            command
+                .args(["-p", &profile, "/bin/sh", "-c", script, "qualification"])
+                .arg(path)
+                .current_dir(&workspace)
+                .env_clear()
+                .env("PATH", "/usr/bin:/bin:/usr/sbin:/sbin")
+                .env("HOME", &home)
+                .env("TMPDIR", scratch.join("tmp"))
+                .stdin(Stdio::null());
+            if let Some(developer) = &developer {
+                command.env("DEVELOPER_DIR", developer);
+            }
+            let output = command.output().unwrap();
+            let text = format!(
+                "{}{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr)
+            );
+            (output.status.success(), text)
+        };
+        let (ok, text) = run("/usr/bin/stat -f '%HT' \"$1\"", &user_temp);
+        assert!(ok && text.trim() == "Directory", "temp metadata: {text}");
+        let (ok, text) = run(
+            "/bin/rm \"$1\" && echo cache > \"$1\" && /bin/cat \"$1\"",
+            cache.path(),
+        );
+        assert!(
+            ok && text.trim() == "cache",
+            "xcrun cache create/read/write: {text}"
+        );
+        let (ok, text) = run("git init -q . && git status --short && cc --version && make --version && python3 -c 'print(6*7)'", &user_temp);
+        assert!(ok && text.contains("42"), "developer tools: {text}");
+        assert!(
+            !text.contains("xcrun")
+                && !text.contains("xcodebuild")
+                && !text.contains("Operation not permitted"),
+            "developer tools emitted sandbox errors: {text}"
+        );
+        for (script, path) in [
+            ("/bin/ls \"$1\"", user_temp.as_path()),
+            ("/bin/cat \"$1\"", sibling.path()),
+            ("/usr/bin/stat \"$1\"", sibling.path()),
+            ("echo overwritten > \"$1\"", sibling.path()),
+            ("/bin/rm \"$1\"", sibling.path()),
+        ] {
+            let (ok, text) = run(script, path);
+            assert!(!ok, "unexpected access via {script}: {text}");
+            assert!(
+                !text.contains("private-cache-sentinel"),
+                "sibling contents leaked"
+            );
+        }
+        assert_eq!(
+            fs::read_to_string(sibling.path()).unwrap(),
+            "private-cache-sentinel"
+        );
+        let denied_new = user_temp.join(format!("shadowcode-denied-{}", uuid::Uuid::new_v4()));
+        let (ok, text) = run("echo forbidden > \"$1\"", &denied_new);
+        let created = denied_new.exists();
+        if created {
+            fs::remove_file(&denied_new).unwrap();
+        }
+        assert!(
+            !ok && !created,
+            "unrelated temp file creation allowed: {text}"
+        );
+    }
+
     #[cfg(target_os = "macos")]
     #[test]
     fn apple_developer_tools_run_cleanly_in_the_seatbelt() {

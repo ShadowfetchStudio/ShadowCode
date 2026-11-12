@@ -12,7 +12,13 @@ export type RunCheckAction = {
 /** A fresh, explicit check. Historical receipt text may be redacted and is
  * never copied into an executable command. Keep the origin frozen while
  * the dialog is open, including across conversation navigation. */
-export function RunCheck({ action }: { action: RunCheckAction }) {
+export function RunCheck({
+  action,
+  label = "Run a check…",
+}: {
+  action: RunCheckAction;
+  label?: string;
+}) {
   const [origin, setOrigin] = useState<RunCheckAction | null>(null);
   const [command, setCommand] = useState("");
   const [busy, setBusy] = useState(false);
@@ -66,7 +72,7 @@ export function RunCheck({ action }: { action: RunCheckAction }) {
           setError("");
         }}
       >
-        Run a check…
+        {label}
       </button>
       {origin && (
         <Dialog label="Run a check" onClose={close}>
