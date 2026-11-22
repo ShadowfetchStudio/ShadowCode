@@ -1,16 +1,20 @@
 import { useEffect, useRef, useState } from "react";
-import { Gauge } from "lucide-react";
+import { Gauge, Minimize2 } from "lucide-react";
 import { breakdownRows, contextChip, type ChipInput } from "../lib/usageChip";
 import type { Transcript } from "../lib/transcript";
 
 /** "42% · 38k / 128k · $0.12": context use and cost for the open
- * conversation. Clicking opens the token and cost breakdown. */
+ * conversation. Clicking opens the interactive context budget HUD. */
 export function ContextChip({
   input,
   compaction,
+  onCompact,
+  busy = false,
 }: {
   input: ChipInput;
   compaction?: Transcript["compaction"];
+  onCompact?: () => void;
+  busy?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLSpanElement>(null);
@@ -59,11 +63,33 @@ export function ContextChip({
       </button>
       {open && (
         <div
-          className="ctx-breakdown"
+          className="ctx-breakdown ctx-hud"
           role="dialog"
           aria-label="Context and cost breakdown"
         >
-          <strong>This conversation</strong>
+          <div className="ctx-hud-head">
+            <strong>Context budget</strong>
+            {chip.percent !== null && (
+              <span className={`ctx-hud-pct ctx-${chip.level}`}>
+                {chip.percent}% used
+              </span>
+            )}
+          </div>
+          {chip.percent !== null && (
+            <div
+              className="ctx-hud-meter"
+              role="progressbar"
+              aria-label="Context window usage"
+              aria-valuenow={chip.percent}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <span
+                className={`ctx-hud-meter-fill ctx-${chip.level}`}
+                style={{ width: `${Math.min(100, chip.percent)}%` }}
+              />
+            </div>
+          )}
           <dl>
             {breakdownRows(input, compaction).map(([label, value]) => (
               <div key={label}>
@@ -72,6 +98,22 @@ export function ContextChip({
               </div>
             ))}
           </dl>
+          {onCompact && (
+            <div className="ctx-hud-actions">
+              <button
+                type="button"
+                className="mini"
+                disabled={busy}
+                onClick={() => {
+                  setOpen(false);
+                  onCompact();
+                }}
+              >
+                <Minimize2 size={12} aria-hidden="true" />
+                Compact context
+              </button>
+            </div>
+          )}
         </div>
       )}
     </span>

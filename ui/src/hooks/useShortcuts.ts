@@ -23,6 +23,8 @@ export type ShortcutAction =
   | "terminal"
   | "settings"
   | "project"
+  | "quick-open"
+  | "mission"
   | "new"
   | "model"
   | "focus"
@@ -93,6 +95,8 @@ export function shortcutFor(
   if (mod && e.shiftKey && key === "b") return "changes";
   if (toggleTerminal) return "terminal";
   if (mod && key === ",") return "settings";
+  if (mod && !e.shiftKey && !e.altKey && key === "o") return "quick-open";
+  if (mod && e.shiftKey && !e.altKey && key === "d") return "mission";
   if (mod && key === "p") return "project";
   if (mod && key === "n") return "new";
   if (mod && !e.altKey && key === "m" && (!mac || !e.metaKey || e.shiftKey))

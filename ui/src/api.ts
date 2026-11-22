@@ -236,6 +236,23 @@ export type EmbeddingModel = {
     error?: string | null;
   } | null;
 };
+export type CodeSearchHit = {
+  path: string;
+  start_line: number;
+  end_line: number;
+  score: number;
+  preview: string;
+  symbols?: string;
+  bm25?: number;
+  similarity?: number;
+};
+export type CodeSearchResponse = {
+  ok: boolean;
+  query: string;
+  mode: "hybrid" | "bm25";
+  count: number;
+  hits: CodeSearchHit[];
+};
 export type CodeIntelStatus = {
   config: CodeIntelSettings;
   config_error?: string | null;
@@ -2028,6 +2045,12 @@ export const api = {
   setIndexFocus: (focus: string | null) =>
     send<unknown>("/api/code-intel/index/focus", "POST", { focus }),
   clearIndex: () => send<unknown>("/api/code-intel/index/clear", "POST", {}),
+  codeSearch: (query: string, maxHits = 14, path = "") =>
+    send<CodeSearchResponse>("/api/code-intel/search", "POST", {
+      query,
+      path,
+      max_hits: maxHits,
+    }),
   scheduledResume: (sessionId: string) =>
     get<{ resume: ScheduledResume | null; scheduler: boolean }>(
       `/api/sessions/${encodeURIComponent(sessionId)}/scheduled-resume`,

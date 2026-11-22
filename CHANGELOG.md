@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.5.0: Mission Control, Quick Open, Split Diff & Context HUD
+
+- **Mission Control (`Cmd/Ctrl+Shift+D`).** Live multi-agent command center in the main workspace with KPI summary cards (active agents, pending approvals, queued tasks, worktrees, background processes), one-click Allow/Deny approval triage, filterable execution deck with task cancellation, and direct worktree/process management.
+- **Quick Open (`Cmd/Ctrl+O`).** Instant fuzzy file jump across the workspace plus hybrid semantic + BM25 code and symbol search (prefix `#` or switch to *Code & Symbols*) powered by `/api/code-intel/search`, jumping directly to the file and line in the Files editor or attaching to chat with `Shift+Enter`.
+- **IDE-grade Changes & Editor.** Upgraded the Changes tab to syntax-highlighted Unified and Split diffs with line numbers alongside per-hunk Stage, Discard, and Ask Agent controls. Added selection tracking in `CodeEditor` and a one-click **Ask agent (L…)** action in `FileEditor` to queue selected lines straight into the composer.
+- **Interactive Context Budget HUD.** Clicking the status-bar context chip now opens a live context utilization meter (`role="progressbar"`), token/cost breakdown, and a one-click **Compact context** action.
+- **Visual & accessibility polish.** Refined card elevation and hover transitions respecting `prefers-reduced-motion`, with WCAG AA contrast preserved across both light and dark themes.
+
 ## 2.4.1: Short-window controls and reliable startup
 
 - Prevent the composer from painting over terminal dock controls at larger zoom levels in short windows.

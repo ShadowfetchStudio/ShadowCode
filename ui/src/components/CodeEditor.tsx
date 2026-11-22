@@ -34,11 +34,19 @@ export function hasMixedLineEndings(value: string): boolean {
   return lineSeparator(value) === null;
 }
 
+export type EditorSelection = {
+  fromLine: number;
+  toLine: number;
+  text: string;
+};
+
 export type CodeEditorProps = {
   value: string;
   onChange: (value: string) => void;
   onSave: (value: string) => void;
   onEscape: () => void;
+  onSelectionChange?: (selection: EditorSelection | null) => void;
+  revealLine?: { line: number; seq: number } | null;
   disabled?: boolean;
   /** Keep open-file history while the parent displays its plain editor. */
   suspended?: boolean;
@@ -138,6 +146,7 @@ export function CodeEditor(props: CodeEditorProps) {
   const active = useRef<BufferState | null>(null);
   const callbacks = useRef(props);
   const languageRequest = useRef(0);
+  const revealedSeq = useRef(0);
   const [languageUnavailable, setLanguageUnavailable] = useState(false);
 
   function createBuffer(): BufferState {
@@ -196,6 +205,20 @@ export function CodeEditor(props: CodeEditorProps) {
           entry.state = update.state;
           if (update.docChanged)
             callbacks.current.onChange(update.state.sliceDoc());
+          if (update.selectionSet || update.docChanged) {
+            const cb = callbacks.current.onSelectionChange;
+            if (cb) {
+              const range = update.state.selection.main;
+              if (range.empty) {
+                cb(null);
+              } else {
+                const fromLine = update.state.doc.lineAt(range.from).number;
+                const toLine = update.state.doc.lineAt(range.to).number;
+                const text = update.state.sliceDoc(range.from, range.to);
+                cb({ fromLine, toLine, text });
+              }
+            }
+          }
         }),
       ],
     });
@@ -289,6 +312,23 @@ export function CodeEditor(props: CodeEditorProps) {
       entry.disabled = disabled;
       view.current?.dispatch({
         effects: entry.settings.reconfigure(settings(entry.path, disabled)),
+      });
+    }
+    if (
+      props.revealLine &&
+      props.revealLine.seq !== revealedSeq.current &&
+      view.current &&
+      active.current === entry
+    ) {
+      revealedSeq.current = props.revealLine.seq;
+      const lineNo = Math.max(
+        1,
+        Math.min(props.revealLine.line, view.current.state.doc.lines),
+      );
+      const line = view.current.state.doc.line(lineNo);
+      view.current.dispatch({
+        selection: { anchor: line.from },
+        effects: EditorView.scrollIntoView(line.from, { y: "center" }),
       });
     }
   });

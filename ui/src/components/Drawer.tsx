@@ -80,6 +80,8 @@ export function Drawer({
   busy,
   toast,
   onAskAgent,
+  onQuickOpen,
+  fileTarget,
   onOpenProject,
   memory,
   onMemory,
@@ -106,6 +108,8 @@ export function Drawer({
   busy: boolean;
   toast: Toast;
   onAskAgent?: (prompt: string) => void;
+  onQuickOpen?: () => void;
+  fileTarget?: { path: string; line?: number; seq: number } | null;
   onOpenProject?: (path: string) => void;
   memory: DrawerMemory;
   onMemory: DrawerMemoryUpdate;
@@ -282,6 +286,9 @@ export function Drawer({
               onMemory={onMemory}
               onDiscardFileDraft={onDiscardFileDraft}
               onResolveFileDraftConflict={onResolveFileDraftConflict}
+              onAskAgent={onAskAgent}
+              onQuickOpen={onQuickOpen}
+              openTarget={fileTarget}
               toast={toast}
               onShowDiff={(p) => {
                 onDiffPath(p);

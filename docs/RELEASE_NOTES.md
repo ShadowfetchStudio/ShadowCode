@@ -1,3 +1,45 @@
+# ShadowCode 2.5.0
+
+ShadowCode 2.5.0 brings a flagship workspace upgrade centered on multi-agent
+visibility, instant code navigation, IDE-grade diff review, and live context
+budget control.
+
+## Mission Control (`Cmd/Ctrl+Shift+D`)
+
+- Open **Mission Control** from the top bar, command palette, or keyboard
+  shortcut to monitor active agents, pending approvals, queued tasks, managed
+  worktrees, and background processes in one view.
+- Triage pending tool approvals directly with **Allow / Deny** or jump straight
+  into the waiting thread.
+- Filter the execution deck by status (`All`, `Working`, `Needs approval`,
+  `Queued`, `Completed`, `Stopped / Failed`) and cancel active jobs cleanly.
+
+## Quick Open (`Cmd/Ctrl+O`)
+
+- Jump to any file in the workspace with instant fuzzy matching, or attach it to
+  the composer with `Shift+Enter`.
+- Switch to **Code & Symbols** (or prefix `#`) to run hybrid semantic + BM25
+  search across indexed code and jump directly to the matching file and line in
+  the Files editor.
+
+## IDE-Grade Changes & Editor
+
+- **Syntax-highlighted Unified & Split diffs** in the Changes drawer with line
+  numbers and per-hunk Stage, Discard, and Ask Agent controls.
+- **Ask agent about selection**: highlight lines in the Files editor to queue
+  the file path, line range, and snippet directly into the composer.
+
+## Interactive Context Budget HUD
+
+- Click the status-bar context/cost chip to view a color-coded utilization
+  meter, token/cost breakdown, and a one-click **Compact context** action.
+
+The source release trust ceiling is extended to 2.5.0 using the existing Linux
+signing key. Model backends, command permissions, and sandbox policies are
+unchanged.
+
+---
+
 # ShadowCode 2.4.1
 
 This patch addresses a layout defect found while qualifying the public 2.4.0

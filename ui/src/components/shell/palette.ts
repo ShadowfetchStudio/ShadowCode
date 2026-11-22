@@ -7,6 +7,8 @@ export type PaletteActions = {
   newTask: () => void;
   chooseModel: () => void;
   openProject: () => void;
+  quickOpen?: () => void;
+  mission?: () => void;
   panel: (tab: DrawerTab) => void;
   compare: () => void;
   comparisons: () => void;
@@ -39,6 +41,26 @@ export function paletteItems(a: PaletteActions): PaletteItem[] {
       hint: shortcutHint("P"),
       run: a.openProject,
     },
+    ...(a.quickOpen
+      ? [
+          {
+            id: "quick-open",
+            label: "Quick Open file or symbol…",
+            hint: shortcutHint("O"),
+            run: a.quickOpen,
+          },
+        ]
+      : []),
+    ...(a.mission
+      ? [
+          {
+            id: "mission",
+            label: "Mission Control · live agents, approvals & worktrees",
+            hint: shortcutHint("Shift+D"),
+            run: a.mission,
+          },
+        ]
+      : []),
     {
       id: "find",
       label: "Find in conversation",

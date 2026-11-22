@@ -29,6 +29,9 @@
     <binary>shadowcode</binary>
   </provides>
   <releases>
+    <release version="2.5.0" date="2026-11-22">
+      <description><p>Flagship workspace upgrade introducing Mission Control for live multi-agent and approval triage, Quick Open for instant fuzzy file and hybrid semantic/BM25 code search, syntax-highlighted split diffs in Changes, Ask Agent from code editor selections, and an interactive Context Budget HUD with one-click compaction.</p></description>
+    </release>
     <release version="2.4.1" date="2026-11-12">
       <description><p>Fixes composer and terminal dock clipping in short windows and at larger text sizes. Corrects Windows workspace folder labels and improves terminal visibility and workspace interaction reliability.</p></description>
     </release>

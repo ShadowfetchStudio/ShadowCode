@@ -8,7 +8,7 @@ import {
 } from "../hooks/useDrawerMemory";
 import { Empty } from "./cards";
 import { notifyWorkspaceFilesChanged } from "../lib/workspaceChanges";
-import { CodeEditor, hasMixedLineEndings } from "./CodeEditor";
+import { CodeEditor, hasMixedLineEndings, type EditorSelection } from "./CodeEditor";
 import { plainEditorEdit, plainEditorRange } from "../lib/plainEditorEdit";
 
 type Toast = (text: string, kind?: "ok" | "err" | "info") => void;
@@ -22,6 +22,9 @@ export function FileEditor({
   onDiscardFileDraft,
   onResolveFileDraftConflict,
   onShowDiff,
+  onAskAgent,
+  onQuickOpen,
+  openTarget,
   toast,
 }: {
   workspace: string;
@@ -33,6 +36,9 @@ export function FileEditor({
     choice: "mine" | "saved",
   ) => Promise<void>;
   onShowDiff: (path: string) => void;
+  onAskAgent?: (prompt: string) => void;
+  onQuickOpen?: () => void;
+  openTarget?: { path: string; line?: number; seq: number } | null;
   toast: Toast;
 }) {
   const [dir, setDir] = remembered(memory, onMemory, "filesDir");
@@ -43,6 +49,9 @@ export function FileEditor({
   const [saving, setSaving] = useState(false);
   const [discarding, setDiscarding] = useState(false);
   const [resolving, setResolving] = useState(false);
+  const [selection, setSelection] = useState<EditorSelection | null>(null);
+  const [revealLine, setRevealLine] = useState<{ line: number; seq: number } | null>(null);
+  const handledTargetSeq = useRef(0);
   const exitEditor = useRef<HTMLButtonElement>(null);
   const openRequest = useRef(0);
   const savingRevision = useRef<{ path: string; hash: string } | null>(null);
@@ -74,8 +83,18 @@ export function FileEditor({
   function selectFile(path: string | null) {
     ++openRequest.current;
     setLoading(null);
+    setSelection(null);
     setActive(path);
   }
+
+  useEffect(() => {
+    if (!openTarget || openTarget.seq === handledTargetSeq.current) return;
+    handledTargetSeq.current = openTarget.seq;
+    const { path, line, seq } = openTarget;
+    void open(path).then(() => {
+      if (line && line > 0) setRevealLine({ line, seq });
+    });
+  }, [openTarget]);
 
   useEffect(() => {
     let cancelled = false;
@@ -449,6 +468,16 @@ export function FileEditor({
           {workspace.split("/").pop()}
           {dir === "." ? "" : `/${dir}`}
         </span>
+        {onQuickOpen && (
+          <button
+            type="button"
+            className="mini"
+            onClick={onQuickOpen}
+            title="Quick Open file or symbol"
+          >
+            Quick Open
+          </button>
+        )}
       </div>
       <div className="list">
         {files.length === 0 && <Empty title="Empty folder" />}
@@ -512,6 +541,35 @@ export function FileEditor({
             >
               Diff
             </button>
+            {onAskAgent && (
+              <button
+                type="button"
+                className="mini"
+                onClick={() => {
+                  if (selection && selection.text.trim()) {
+                    const range =
+                      selection.fromLine === selection.toLine
+                        ? `L${selection.fromLine}`
+                        : `L${selection.fromLine}-L${selection.toLine}`;
+                    const snippet =
+                      selection.text.length > 1800
+                        ? `${selection.text.slice(0, 1800)}\n…`
+                        : selection.text;
+                    onAskAgent(
+                      `In \`${buffer.path}\` (${range}):\n\`\`\`\n${snippet}\n\`\`\`\n`,
+                    );
+                    toast(`Selection ${range} queued in composer`, "info");
+                  } else {
+                    onAskAgent(`Regarding \`${buffer.path}\`: `);
+                    toast("File reference queued in composer", "info");
+                  }
+                }}
+              >
+                {selection && selection.text.trim()
+                  ? `Ask agent (L${selection.fromLine}${selection.toLine !== selection.fromLine ? `–${selection.toLine}` : ""})`
+                  : "Ask agent"}
+              </button>
+            )}
             <button
               type="button"
               className="mini"
@@ -707,6 +765,8 @@ export function FileEditor({
             openPaths={Object.keys(memory.filesBuffers)}
             value={buffer.draft}
             disabled={discarding || resolving}
+            onSelectionChange={setSelection}
+            revealLine={revealLine}
             onChange={(draft) =>
               updateBuffer(buffer.path, (current) => ({ ...current, draft }))
             }

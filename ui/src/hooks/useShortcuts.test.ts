@@ -41,6 +41,10 @@ it("maps the documented shortcuts", () => {
     "changes",
   );
   expect(shortcutFor(key(",", ctrl), closed)).toBe("settings");
+  expect(shortcutFor(key("o", ctrl), closed)).toBe("quick-open");
+  expect(shortcutFor(key("D", { ...ctrl, shiftKey: true }), closed)).toBe(
+    "mission",
+  );
   expect(shortcutFor(key("p", ctrl), closed)).toBe("project");
   expect(shortcutFor(key("n", ctrl), closed)).toBe("new");
   expect(shortcutFor(key("m", ctrl), closed)).toBe("model");

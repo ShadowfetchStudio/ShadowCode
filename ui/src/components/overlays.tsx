@@ -21,6 +21,8 @@ const SHORTCUT_GROUPS: { label: string; rows: [string, string][] }[] = [
     label: "Navigation",
     rows: [
       ["Ctrl+K", "Command palette"],
+      ["Ctrl+O", "Quick Open file or symbol…"],
+      ["Ctrl+Shift+D", "Mission Control"],
       ["Ctrl+B", "Toggle sidebar"],
       ["Ctrl+Shift+B", "Toggle the Changes drawer"],
       ["Ctrl+`", "Open or focus the Terminal"],

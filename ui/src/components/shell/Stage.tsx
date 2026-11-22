@@ -109,6 +109,7 @@ export function Stage({
   extras,
   roles,
   reviewPanel,
+  missionPanel,
   worktreeBar,
   tryOn,
   onTryOnModel,
@@ -179,6 +180,8 @@ export function Stage({
   roles?: Roles;
   /** The full-width Review view, shown instead of the conversation. */
   reviewPanel?: ReactNode;
+  /** The full-width Mission Control command center, shown instead of the conversation. */
+  missionPanel?: ReactNode;
   /** The open conversation's worktree (Apply / Keep as branch / Discard). */
   worktreeBar?: ReactNode;
   /** "Try on…" is choosing a model to continue a stopped task. */
@@ -200,7 +203,8 @@ export function Stage({
     pickerOpen,
   );
   const view = compare.view;
-  const chatHidden = view === "compare" || Boolean(reviewPanel);
+  const chatHidden =
+    view === "compare" || Boolean(reviewPanel) || Boolean(missionPanel);
   const find = useFind({
     open: findRequest > 0,
     hidden: chatHidden,
@@ -327,9 +331,9 @@ export function Stage({
           />
         </Suspense>
       )}
-      {view !== "compare" && reviewPanel}
+      {view !== "compare" && (missionPanel || reviewPanel)}
       <ChatView
-        hidden={view === "compare" || Boolean(reviewPanel)}
+        hidden={chatHidden}
         streamRef={scroll.streamRef}
         onScroll={scroll.onScroll}
         empty={empty}
@@ -558,7 +562,19 @@ export function Stage({
         allowanceOpen={allowanceOpen}
         onAllowance={onAllowance}
         context={
-          <ContextChip input={chip} compaction={transcript.compaction} />
+          <ContextChip
+            input={chip}
+            compaction={transcript.compaction}
+            busy={busy || submitting || commandWaiting}
+            onCompact={
+              sessionId
+                ? () => {
+                    setTask("/compact");
+                    promptRef.current?.focus();
+                  }
+                : undefined
+            }
+          />
         }
         update={noticeVersion(updates)}
         onUpdate={() => openSettings("about")}

@@ -3,6 +3,7 @@ import type { LimitsConfig, Project, Session } from "../../api";
 import { AllowancePanel, PlanLimitControl } from "../Allowance";
 import type { CompareDialog as CompareDialogComponent } from "../CompareDialog";
 import { ConsentDialog } from "../ConsentDialog";
+import { QuickOpen } from "../QuickOpen";
 import {
   Help,
   Palette,
@@ -19,7 +20,14 @@ import type { useAllowance } from "../../hooks/useCatalog";
 import type { Consent } from "../../hooks/useTaskActions";
 
 export type Overlay =
-  "" | "settings" | "help" | "palette" | "project" | "allowance" | "compare";
+  | ""
+  | "settings"
+  | "help"
+  | "palette"
+  | "project"
+  | "quick-open"
+  | "allowance"
+  | "compare";
 
 const Settings = lazy(() =>
   import("../Settings").then((module) => ({ default: module.Settings })),
@@ -57,6 +65,8 @@ export function AppDialogs({
   projects,
   workspace,
   onPickProject,
+  onOpenFile,
+  onAttachFile,
   sessions,
   onOpenSession,
 }: {
@@ -89,6 +99,8 @@ export function AppDialogs({
   projects: Project[];
   workspace: string;
   onPickProject: (path: string) => void;
+  onOpenFile?: (path: string, line?: number) => void;
+  onAttachFile?: (path: string) => void;
   /** Conversations the palette can open, as the sidebar lists them. */
   sessions: Session[];
   /** Opens a conversation as choosing it in the sidebar does. */
@@ -187,6 +199,14 @@ export function AppDialogs({
           current={workspace}
           onClose={close}
           onPick={onPickProject}
+        />
+      )}
+      {overlay === "quick-open" && onOpenFile && (
+        <QuickOpen
+          workspace={workspace}
+          onOpenFile={onOpenFile}
+          onAttachFile={onAttachFile}
+          onClose={close}
         />
       )}
     </>

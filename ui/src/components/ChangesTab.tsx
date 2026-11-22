@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { api, type DiffHunk } from "../api";
 import { Empty } from "./cards";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { DiffHunk as DiffHunkView, LayoutToggle, type DiffLayout } from "./DiffView";
+import { languageOf } from "../lib/diff";
 import { useCommitGuard } from "../hooks/useCommitGuard";
 import {
   remembered,
@@ -56,6 +58,7 @@ export function ChangesTab({
     ReturnType<typeof api.gitDiff>
   > | null>(null);
   const [view, setView] = useState<"unstaged" | "staged">("unstaged");
+  const [layout, setLayout] = useState<DiffLayout>("unified");
   const [discard, setDiscard] = useState<DiffHunk | null>(null);
   const guard = useCommitGuard(toast);
 
@@ -157,21 +160,26 @@ export function ChangesTab({
           <div className="crumb">
             <span>{selected}</span>
           </div>
-          <div className="seg">
-            <button
-              type="button"
-              className={view === "unstaged" ? "on" : ""}
-              onClick={() => setView("unstaged")}
-            >
-              Unstaged
-            </button>
-            <button
-              type="button"
-              className={view === "staged" ? "on" : ""}
-              onClick={() => setView("staged")}
-            >
-              Staged
-            </button>
+          <div className="changes-controls">
+            <div className="seg" role="group" aria-label="Change scope">
+              <button
+                type="button"
+                className={view === "unstaged" ? "on" : ""}
+                aria-pressed={view === "unstaged"}
+                onClick={() => setView("unstaged")}
+              >
+                Unstaged
+              </button>
+              <button
+                type="button"
+                className={view === "staged" ? "on" : ""}
+                aria-pressed={view === "staged"}
+                onClick={() => setView("staged")}
+              >
+                Staged
+              </button>
+            </div>
+            <LayoutToggle layout={layout} onLayout={setLayout} />
           </div>
           {review?.binary && (
             <p className="hint">Binary file. Text preview is unavailable.</p>
@@ -207,65 +215,67 @@ export function ChangesTab({
             0 && <p className="hint">No {view} text changes for this file.</p>}
           {(view === "unstaged" ? hunks : review?.staged_hunks || []).map(
             (h, i) => (
-              <div key={i} className="hunk">
-                <header>
-                  <span>{h.header}</span>
-                  {view === "unstaged" &&
-                    !review?.untracked &&
-                    !review?.truncated && (
-                      <span className="row">
+              <DiffHunkView
+                key={i}
+                hunk={{
+                  header: h.header,
+                  lines: h.lines.map((line) => ({
+                    kind:
+                      line.kind === "add" ||
+                      line.kind === "del" ||
+                      line.kind === "meta"
+                        ? line.kind
+                        : "ctx",
+                    text: line.text,
+                  })),
+                }}
+                layout={layout}
+                language={languageOf(selected)}
+                actions={
+                  view === "unstaged" &&
+                  !review?.untracked &&
+                  !review?.truncated ? (
+                    <>
+                      <button
+                        type="button"
+                        className="mini"
+                        disabled={busy}
+                        onClick={() => void act(h, "accept")}
+                      >
+                        Stage
+                      </button>
+                      <button
+                        type="button"
+                        className="mini danger-text"
+                        disabled={busy}
+                        onClick={() => setDiscard(h)}
+                      >
+                        Discard
+                      </button>
+                      {onAskAgent && (
                         <button
                           type="button"
                           className="mini"
-                          disabled={busy}
-                          onClick={() => void act(h, "accept")}
+                          onClick={() => {
+                            const body = h.lines
+                              .map(
+                                (line) =>
+                                  `${line.kind === "add" ? "+" : line.kind === "del" ? "-" : " "}${line.text}`,
+                              )
+                              .join("");
+                            onAskAgent(
+                              `Review this hunk in ${selected}:\n${h.header}\n${body}\nAdjust or explain as needed.`,
+                            );
+                            toast("Hunk queued in composer", "info");
+                          }}
                         >
-                          Stage
+                          Ask agent
                         </button>
-                        <button
-                          type="button"
-                          className="mini danger-text"
-                          disabled={busy}
-                          onClick={() => setDiscard(h)}
-                        >
-                          Discard
-                        </button>
-                        {onAskAgent && (
-                          <button
-                            type="button"
-                            className="mini"
-                            onClick={() => {
-                              const body = h.lines
-                                .map(
-                                  (line) =>
-                                    `${line.kind === "add" ? "+" : line.kind === "del" ? "-" : " "}${line.text}`,
-                                )
-                                .join("");
-                              onAskAgent(
-                                `Review this hunk in ${selected}:\n${h.header}\n${body}\nAdjust or explain as needed.`,
-                              );
-                              toast("Hunk queued in composer", "info");
-                            }}
-                          >
-                            Ask agent
-                          </button>
-                        )}
-                      </span>
-                    )}
-                </header>
-                {h.lines.map((line, j) => (
-                  <div
-                    key={j}
-                    className={`diff-line ${line.kind === "add" ? "diff-add" : line.kind === "del" ? "diff-del" : "diff-ctx"}`}
-                  >
-                    {(line.kind === "add"
-                      ? "+"
-                      : line.kind === "del"
-                        ? "-"
-                        : " ") + line.text}
-                  </div>
-                ))}
-              </div>
+                      )}
+                    </>
+                  ) : undefined
+                }
+              />
             ),
           )}
         </div>

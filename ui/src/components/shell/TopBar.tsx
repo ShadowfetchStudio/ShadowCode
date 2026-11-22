@@ -3,6 +3,7 @@ import {
   FolderOpen,
   GitCompareArrows,
   GitPullRequest,
+  LayoutGrid,
   PanelLeft,
   Search,
   Files,
@@ -22,6 +23,9 @@ export function TopBar({
   title,
   comparing,
   onComparisons,
+  mission = false,
+  onMission,
+  missionCount = 0,
   changesOpen,
   onChanges,
   changeCount,
@@ -37,6 +41,9 @@ export function TopBar({
   title: string;
   comparing: boolean;
   onComparisons: () => void;
+  mission?: boolean;
+  onMission?: () => void;
+  missionCount?: number;
   changesOpen: boolean;
   onChanges: () => void;
   changeCount: number;
@@ -68,9 +75,9 @@ export function TopBar({
         <span>{projectPath.split("/").pop() || "Open project"}</span>
       </button>
       <ChevronRight size={13} className="dim" aria-hidden="true" />
-      {/* The page's one level-one heading: the open task (or Comparisons). */}
+      {/* The page's one level-one heading: the open task (or Comparisons / Mission Control). */}
       <h1 className="top-title" title={title}>
-        {comparing ? "Comparisons" : title}
+        {mission ? "Mission Control" : comparing ? "Comparisons" : title}
       </h1>
       <div className="top-right">
         {onPanel && (
@@ -106,6 +113,20 @@ export function TopBar({
               );
             })}
           </nav>
+        )}
+        {onMission && (
+          <button
+            type="button"
+            className={`top-action mission-action ${mission ? "on" : ""}`}
+            aria-label="Mission Control"
+            aria-pressed={mission}
+            title={`Mission Control (${shortcutHint("Shift+D")})`}
+            onClick={onMission}
+          >
+            <LayoutGrid size={15} aria-hidden="true" />
+            <span>Mission</span>
+            {missionCount > 0 && <span className="count">{missionCount}</span>}
+          </button>
         )}
         <button
           type="button"

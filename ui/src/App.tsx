@@ -87,6 +87,11 @@ const ReviewView = lazy(() =>
     default: module.ReviewView,
   })),
 );
+const MissionControl = lazy(() =>
+  import("./components/MissionControl").then((module) => ({
+    default: module.MissionControl,
+  })),
+);
 
 /** The window. Behaviour lives in `hooks/` (navigation, the approvals and
  * jobs feed, the conversation stream, sending, Compare, shortcuts, theme);
@@ -128,6 +133,12 @@ export default function App() {
   const layout = useWorkspaceLayout();
   const compactWorkspace = layout.compact;
   const [diffPath, setDiffPath] = useState("");
+  const [missionOpen, setMissionOpen] = useState(false);
+  const [fileTarget, setFileTarget] = useState<{
+    path: string;
+    line?: number;
+    seq: number;
+  } | null>(null);
   const [overlay, setOverlay] = useState<Overlay>("");
   /** Find in conversation: 0 while closed, bumped by each Ctrl+F. */
   const [find, setFind] = useState(0);
@@ -587,7 +598,15 @@ export default function App() {
     terminal: () => setPanel((p) => (p === "terminal" ? null : "terminal")),
     settings: () => openSettings(),
     project: () => setOverlay("project"),
-    new: () => void nav.newSession(),
+    "quick-open": () => setOverlay("quick-open"),
+    mission: () => {
+      compare.setView("chat");
+      setMissionOpen((v) => !v);
+    },
+    new: () => {
+      setMissionOpen(false);
+      void nav.newSession();
+    },
     model: () => setPickerOpen(true),
     focus: () => promptRef.current?.focus(),
     stop: () => void controls.stop(),
@@ -740,17 +759,37 @@ export default function App() {
   const view = compare.view;
   /** Choosing a conversation in the sidebar or the command palette. */
   const openConversation = (id: string) => {
+    setMissionOpen(false);
     compare.setView("chat");
     void nav.openSession(id);
   };
+  const openFileFromQuickOpen = (path: string, line?: number) => {
+    setFileTarget((prev) => ({ path, line, seq: (prev?.seq ?? 0) + 1 }));
+    setPanel("files");
+  };
+  const missionBadgeCount =
+    jobs.filter(
+      (j) =>
+        j.status === "running" ||
+        j.status === "paused" ||
+        j.status === "queued",
+    ).length + Math.max(approvals.length, feed.waiting.length);
   const currentSession = sessions.find((s) => s.id === sessionId);
   const latestTask = [...transcript.items]
     .reverse()
     .find((item) => item.kind === "summary")?.taskId;
   const palette = paletteItems({
-    newTask: () => void nav.newSession(),
+    newTask: () => {
+      setMissionOpen(false);
+      void nav.newSession();
+    },
     chooseModel: () => setPickerOpen(true),
     openProject: () => setOverlay("project"),
+    quickOpen: () => setOverlay("quick-open"),
+    mission: () => {
+      compare.setView("chat");
+      setMissionOpen((v) => !v);
+    },
     panel: (next) => {
       // Finish the palette's focus restoration before assigning a new owner.
       // Later user choices still revoke the request while the shell loads.
@@ -828,9 +867,17 @@ export default function App() {
         onProject={() => setOverlay("project")}
         title={currentSession?.title || compare.laneOf?.title || "New task"}
         comparing={view === "compare"}
-        onComparisons={() =>
-          view === "compare" ? compare.setView("chat") : compare.openList()
-        }
+        onComparisons={() => {
+          setMissionOpen(false);
+          if (view === "compare") compare.setView("chat");
+          else compare.openList();
+        }}
+        mission={missionOpen && view !== "compare"}
+        onMission={() => {
+          compare.setView("chat");
+          setMissionOpen((v) => !v);
+        }}
+        missionCount={missionBadgeCount}
         changesOpen={panel === "changes"}
         onChanges={() => setPanel(panel === "changes" ? null : "changes")}
         changeCount={git.count}
@@ -923,6 +970,35 @@ export default function App() {
         issueOffer={issueOffer}
         extras={extras}
         roles={roles}
+        missionPanel={
+          missionOpen ? (
+            <Suspense fallback={<p role="status">Opening Mission Control…</p>}>
+              <MissionControl
+                workspace={workspace}
+                sessions={sessions}
+                jobs={jobs}
+                approvals={approvals}
+                waitingSessions={feed.waiting}
+                onOpenSession={openConversation}
+                onNewTask={() => {
+                  setMissionOpen(false);
+                  void nav.newSession();
+                }}
+                onDecide={onDecide}
+                onCancelJob={async (jobId) => {
+                  await api.cancelJob(jobId);
+                  await refresh();
+                }}
+                onOpenPanel={(tab) => {
+                  setMissionOpen(false);
+                  setPanel(tab);
+                }}
+                onClose={() => setMissionOpen(false)}
+                toast={toast}
+              />
+            </Suspense>
+          ) : undefined
+        }
         reviewPanel={
           review.target ? (
             <Suspense fallback={<p role="status">Opening review…</p>}>
@@ -1003,6 +1079,8 @@ export default function App() {
             setPanel(null);
             promptRef.current?.focus();
           }}
+          onQuickOpen={() => setOverlay("quick-open")}
+          fileTarget={fileTarget}
           onOpenProject={(path) => void nav.pickProject(path)}
           memory={memory.memory}
           onMemory={memory.update}
@@ -1158,6 +1236,12 @@ export default function App() {
         projects={listedProjects}
         workspace={workspace}
         onPickProject={(path) => void nav.pickProject(path)}
+        onOpenFile={openFileFromQuickOpen}
+        onAttachFile={(path) => {
+          extras.addMention({ path, kind: "file" });
+          toast(`Attached ${path}`, "info");
+          promptRef.current?.focus();
+        }}
         sessions={sessions}
         onOpenSession={openConversation}
       />
