@@ -1124,3 +1124,12 @@
 }
 .mission-search-tools input { flex: 1 1 180px; min-width: 0; }
 .mission-search-tools span { color: var(--text-2); font-size: 12px; }
+.mission-search-tools select,
+.mission-search-tools input,
+.changes-filter {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+}
