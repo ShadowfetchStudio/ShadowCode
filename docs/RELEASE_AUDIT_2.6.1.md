@@ -1,5 +1,21 @@
 # ShadowCode 2.6.1 release audit
 
+## Product assessment
+
+**77/100 for a developer who wants a local-first AI coding workspace.** This editorial score weights five areas equally. Coding reliability draws on the paired runs below. The other ratings reflect the audited source, test results and distribution process.
+
+| Area | Points | What earned and cost points |
+|---|---:|---|
+| Local models and provider choice | 18/20 | Supports local GGUF models, an OpenAI-compatible server and vendor agents. Model memory estimates still require judgment on the target machine. |
+| Editing, review and user control | 17/20 | Job-specific approvals, change review, checkpoints and a verification history give users a way to examine agent work. Read-only behavior depends on vendor capabilities. |
+| Coding reliability | 12/20 | The last paired round passed two of three external acceptance checks. One correct edit ended with an error and the failed diagnosis returned exit code zero. |
+| Engineering and dependency health | 17/20 | Unit, browser and protocol tests exercise distinct failure modes. Both npm audits are clean. Eleven native packages still have maintenance notices. |
+| Desktop distribution | 13/20 | Linux has package and repository signatures. The release candidate adds GitHub build attestations for each platform. Direct macOS and Windows distribution still lacks verified platform publisher credentials. |
+
+**Compared with Aider**, ShadowCode combines model setup, task approvals, file review and verification in its desktop UI. Aider's terminal workflow supports automatic linting and configurable test runs after edits. It solved the failing-test diagnosis in each of our three rounds. [Aider lint and test documentation](https://aider.chat/docs/usage/lint-test.html)
+
+**Compared with VS Code's agent workflow**, both offer approvals, worktrees and change review. VS Code also documents remote and cloud sessions and a large extension ecosystem. ShadowCode's case for a local-first user is the bundled GGUF runtime and the ability to work with several agents in one desktop workspace. This is a documented feature comparison. We did not run VS Code through the paired fixtures. [VS Code agent documentation](https://code.visualstudio.com/docs/agents/overview)
+
 ## Dependency findings
 
 On November 26, 2026, the full UI npm audit and the independent MCP peer test project each returned zero advisories. The second project initially had nine flagged package entries and was outside the original UI audit.

@@ -1828,6 +1828,10 @@ pub fn schemas_tiered(tier: DescriptionTier) -> Vec<Value> {
         DescriptionTier::Short => "Approved shell; cwd '.' = workspace root.",
         DescriptionTier::Full => "Run a shell command after approval in the platform sandbox when available (empty home, writable project, network per settings). Omit cwd or use '.' for the project root; otherwise use a workspace-relative subdirectory. Changed files are checkpointed for rewind. Output and runtime are bounded.",
     };
+    let read_description = match tier {
+        DescriptionTier::Short => "Read text, offset starts at 1. Follow next_offset if truncated.",
+        DescriptionTier::Full => "Read UTF-8 text starting at line 1 by default. Follow next_offset when truncated by the range or byte budget; do not assume omitted lines.",
+    };
     let read_params = match tier {
         DescriptionTier::Short => json!({"path":s,"offset":n,"limit":n}),
         DescriptionTier::Full => {
@@ -1837,7 +1841,7 @@ pub fn schemas_tiered(tier: DescriptionTier) -> Vec<Value> {
     let specs=vec![
         ("system_info","Inspect OS and connected displays. Read-only.",json!({}),vec![]),
         ("list_files","List direct children of a workspace directory.",json!({"path":s,"max_entries":n}),vec![]),
-        ("read_file","Read text, offset starts at 1. Follow next_offset when truncated.",read_params,vec!["path"]),
+        ("read_file",read_description,read_params,vec!["path"]),
         ("search_files","Find filenames by substring; respects ignore rules.",json!({"query":s,"path":s}),vec!["query"]),
         ("search_text","Search text; literal by default, optional regex and file glob.",json!({"query":s,"path":s,"regex":b,"glob":s,"max_hits":n}),vec!["query"]),
         ("search_symbol","Find likely symbol definitions by name (regex heuristic).",json!({"query":s,"path":s}),vec!["query"]),
