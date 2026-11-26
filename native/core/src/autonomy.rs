@@ -1002,6 +1002,8 @@ pub(crate) fn looks_like_success_claim(text: &str) -> bool {
     let lower = text.to_ascii_lowercase();
     lower.contains("tests passed")
         || lower.contains("all tests pass")
+        || lower.contains("correctly passes the test")
+        || lower.contains("the test will pass")
         || lower.contains("verified")
         || lower.contains("build succeeded")
         || lower.contains("correctly implemented")
@@ -1709,6 +1711,14 @@ mod tests {
         assert_eq!(report["claim"], "model_claim");
         assert_eq!(report["verified"], false);
         assert_eq!(report["unverified_claim"], true);
+        for claim in [
+            "The current implementation correctly passes the test case.",
+            "The test will pass with the current code.",
+        ] {
+            let evidence = classify_verification(claim, &[], true);
+            assert_eq!(evidence["claim"], "model_claim");
+            assert_eq!(evidence["unverified_claim"], true);
+        }
         let observed = classify_verification(
             "Looks good",
             &[json!({"command":"ls","success":true})],
