@@ -3,7 +3,8 @@
     "resources": {
       "../packaging/llama.cpp/bin/": "llama.cpp/",
       "../packaging/busybox-w32/bin/": "busybox/",
-      "../packaging/windows/crt/": "."
+      "../packaging/windows/crt/": ".",
+      "../artifacts/desktop-notices/notices.zip": "notices.zip"
     }
   }
 }

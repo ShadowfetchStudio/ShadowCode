@@ -365,8 +365,7 @@ export async function applicationNotices(
   );
   const manifest = {
     schema: 1,
-    scope:
-      "Resolved Cargo graph for the build target (including build/test dependencies), production npm dependency graph, Rust standard library, and the managed llama.cpp runtime in usr/lib/shadowcode. This deliberately includes dependencies eliminated by the linker or JavaScript bundler.",
+    scope: "Resolved Cargo graph for the build target (including build/test dependencies), production npm dependencies and Rust standard library." + (managedRuntime ? " Includes the managed llama.cpp runtime in usr/lib/shadowcode." : " The bundled runtime carries its own NOTICES directory."),
     target,
     projectLicense,
     projectNotice,
@@ -378,7 +377,7 @@ export async function applicationNotices(
   );
   await writeFile(
     path.join(destination, "README.txt"),
-    "ShadowCode dependency notices\n\napplication.json lists application dependency versions, source locations, and notice hashes.\nThe original license and copyright texts are retained in the referenced files.\nAppImage system libraries and helpers have a separate system.json inventory.\nThe application uses dynamic system libraries in Debian packages.\nThe managed llama.cpp runtime in /usr/lib/shadowcode is listed in application.json (ecosystem managed-runtime); its license texts are also in /usr/lib/shadowcode/NOTICES.\nCorresponding-source release artifacts are tracked separately from this notice inventory.\n",
+    "ShadowCode dependency notices\n\napplication.json lists application dependency versions, source locations, and notice hashes.\nThe original license and copyright texts are retained in the referenced files.\nAppImage system libraries and helpers have a separate system.json inventory.\nThe application uses dynamic system libraries in Debian packages.\nThe bundled llama.cpp runtime carries its own NOTICES directory.\nCorresponding-source release artifacts are tracked separately from this notice inventory.\n",
   );
   console.log(
     `Collected notices for ${packages.length} application dependencies (${target})`,

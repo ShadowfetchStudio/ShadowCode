@@ -1,7 +1,8 @@
 {
   "bundle": {
     "resources": {
-      "../packaging/llama.cpp/bin/": "llama.cpp/"
+      "../packaging/llama.cpp/bin/": "llama.cpp/",
+      "../artifacts/desktop-notices/notices.zip": "notices.zip"
     }
   }
 }

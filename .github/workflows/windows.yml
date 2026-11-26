@@ -154,6 +154,8 @@ jobs:
           ls packaging/llama.cpp/bin
           packaging/llama.cpp/bin/llama-server.exe --version
           packaging/llama.cpp/bin/llama-server.exe --list-devices
+      - name: Package third-party notices
+        run: bash scripts/build-desktop-notices.sh
       - name: Stage app-local Microsoft CRT
         shell: powershell
         run: ./scripts/stage-windows-crt.ps1

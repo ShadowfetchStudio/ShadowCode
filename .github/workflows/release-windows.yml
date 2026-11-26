@@ -107,6 +107,8 @@ jobs:
           bash scripts/build-llama.cpp.sh --no-user-install
           test -s packaging/llama.cpp/bin/ggml-vulkan.dll
           grep -Fx 'backend=vulkan+cpu' packaging/llama.cpp/bin/COMMIT
+      - name: Package third-party notices
+        run: bash scripts/build-desktop-notices.sh
       - name: Stage app-local Microsoft CRT
         shell: powershell
         run: ./scripts/stage-windows-crt.ps1
