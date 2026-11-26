@@ -304,6 +304,8 @@ async fn edit_tools_carry_new_errors_and_lsp_tools_answer() {
     .unwrap();
     let read = call(&tools, "read_file", json!({"path": "app.py"})).await;
     assert!(read.success, "{}", read.error);
+    let warm = call(&tools, "get_diagnostics", json!({"path": "app.py"})).await;
+    assert!(warm.success, "{}", warm.error);
     let edit = call(
         &tools,
         "edit_file",
