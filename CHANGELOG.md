@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.6.0 — Project navigation and draft review
+
+Project pins and recent files, line-addressed Quick Open, Markdown draft preview, filtered Git review with diff totals, and searchable, sortable Mission Control on all desktop platforms. See the [2.6.0 release notes](docs/RELEASE_NOTES.md#shadowcode-260).
+
 ## 2.5.0: Mission Control, Quick Open, Split Diff & Context HUD
 
 - **Mission Control (`Cmd/Ctrl+Shift+D`).** Live multi-agent command center in the main workspace with KPI summary cards (active agents, pending approvals, queued tasks, worktrees, background processes), one-click Allow/Deny approval triage, filterable execution deck with task cancellation, and direct worktree/process management.

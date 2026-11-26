@@ -82,6 +82,7 @@ export function Drawer({
   onAskAgent,
   onQuickOpen,
   fileTarget,
+  onFileTargetHandled,
   onOpenProject,
   memory,
   onMemory,
@@ -109,6 +110,7 @@ export function Drawer({
   toast: Toast;
   onAskAgent?: (prompt: string) => void;
   onQuickOpen?: () => void;
+  onFileTargetHandled?: (seq: number) => void;
   fileTarget?: { path: string; line?: number; seq: number } | null;
   onOpenProject?: (path: string) => void;
   memory: DrawerMemory;
@@ -281,6 +283,7 @@ export function Drawer({
         {tab === "files" && (
           <Suspense fallback={<p role="status">Opening the file editor…</p>}>
             <FileEditor
+              key={workspace}
               workspace={workspace}
               memory={memory}
               onMemory={onMemory}
@@ -289,6 +292,7 @@ export function Drawer({
               onAskAgent={onAskAgent}
               onQuickOpen={onQuickOpen}
               openTarget={fileTarget}
+              onTargetHandled={onFileTargetHandled}
               toast={toast}
               onShowDiff={(p) => {
                 onDiffPath(p);
@@ -300,6 +304,7 @@ export function Drawer({
         {tab === "changes" && (
           <Suspense fallback={<PanelFallback />}>
             <ChangesTab
+              key={workspace}
               path={diffPath}
               busy={busy}
               toast={toast}

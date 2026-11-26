@@ -213,7 +213,7 @@ export function CodeEditor(props: CodeEditorProps) {
                 cb(null);
               } else {
                 const fromLine = update.state.doc.lineAt(range.from).number;
-                const toLine = update.state.doc.lineAt(range.to).number;
+                const toLine = update.state.doc.lineAt(range.to - 1).number;
                 const text = update.state.sliceDoc(range.from, range.to);
                 cb({ fromLine, toLine, text });
               }

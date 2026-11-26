@@ -1,16 +1,22 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Code2, FileCode2, Folder, Search, Sparkles } from "lucide-react";
-import { api, type CodeSearchHit } from "../api";
+import { useEffect, useId, useRef, useState } from "react";
+import { Bookmark, Code2, FileCode2, History, Search } from "lucide-react";
+import { api } from "../api";
+import {
+  clearRecentFiles,
+  togglePinnedFile,
+  useFilePlaces,
+} from "../lib/filePlaces";
 import { Dialog } from "./Dialog";
 
-type QuickMode = "files" | "code";
-
-type FileMatch = {
+type Mode = "files" | "code" | "pinned";
+type Match = {
   path: string;
-  kind: "file" | "dir";
+  line?: number;
+  end?: number;
+  symbols?: string;
+  preview?: string;
 };
 
-/** Instant fuzzy file finder and hybrid BM25/semantic code search dialog. */
 export function QuickOpen({
   workspace,
   onOpenFile,
@@ -23,287 +29,296 @@ export function QuickOpen({
   onClose: () => void;
 }) {
   const [query, setQuery] = useState("");
-  const [mode, setMode] = useState<QuickMode>("files");
-  const [files, setFiles] = useState<FileMatch[]>([]);
-  const [hits, setHits] = useState<CodeSearchHit[]>([]);
-  const [searchMode, setSearchMode] = useState<"hybrid" | "bm25" | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [mode, setMode] = useState<Mode>("files");
   const [index, setIndex] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const effectiveMode: QuickMode = query.startsWith("#") ? "code" : mode;
-  const cleanQuery = query.startsWith("#") ? query.slice(1).trim() : query.trim();
-
+  const listId = useId();
+  const input = useRef<HTMLInputElement>(null);
+  const places = useFilePlaces(workspace);
+  const effectiveMode = query.startsWith("#") ? "code" : mode;
+  const term = (query.startsWith("#") ? query.slice(1) : query).trim();
+  const target = effectiveMode !== "code" && /^(.+):([1-9]\d*)$/.exec(term);
+  const line =
+    target && Number.isSafeInteger(Number(target[2]))
+      ? Number(target[2])
+      : undefined;
+  const search = target && line ? target[1] : term;
+  const requestKey = JSON.stringify([workspace, effectiveMode, search]);
+  const [result, setResult] = useState<{
+    key: string;
+    items: Match[];
+    engine?: string;
+    error?: string;
+  }>();
+  const fetchResults =
+    effectiveMode === "files" || (effectiveMode === "code" && !!search);
   useEffect(() => {
+    if (!fetchResults) return;
     let cancelled = false;
-    setError("");
-
-    if (effectiveMode === "files") {
-      setLoading(true);
-      const timer = setTimeout(() => {
-        void api
-          .mentions(cleanQuery, 24)
-          .then((res) => {
-            if (cancelled) return;
-            setFiles(
-              (res.items || []).filter((item) => item.kind === "file"),
-            );
-            setIndex(0);
-          })
-          .catch((err) => {
-            if (!cancelled) setError(String(err));
-          })
-          .finally(() => {
-            if (!cancelled) setLoading(false);
-          });
-      }, cleanQuery ? 80 : 0);
-      return () => {
-        cancelled = true;
-        clearTimeout(timer);
-      };
-    }
-
-    if (!cleanQuery) {
-      setHits([]);
-      setSearchMode(null);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    const timer = setTimeout(() => {
-      void api
-        .codeSearch(cleanQuery, 14)
-        .then((res) => {
-          if (cancelled) return;
-          setHits(res.hits || []);
-          setSearchMode(res.mode || "bm25");
-          setIndex(0);
-        })
-        .catch((err) => {
-          if (!cancelled) setError(String(err));
-        })
-        .finally(() => {
-          if (!cancelled) setLoading(false);
-        });
-    }, 150);
-
+    const timer = setTimeout(
+      async () => {
+        try {
+          let items: Match[];
+          let engine: string | undefined;
+          if (effectiveMode === "code") {
+            const response = await api.codeSearch(search, 14);
+            engine =
+              response.mode === "hybrid"
+                ? "Hybrid semantic + BM25"
+                : "BM25 index";
+            items = response.hits.map((hit) => ({
+              path: hit.path,
+              line: hit.start_line,
+              end: hit.end_line,
+              symbols: hit.symbols,
+              preview: hit.preview?.split("\n")[0]?.trim(),
+            }));
+          } else {
+            const response = await api.mentions(search, 24);
+            items = response.items.filter((item) => item.kind === "file");
+          }
+          if (!cancelled) setResult({ key: requestKey, items, engine });
+        } catch (reason) {
+          if (!cancelled)
+            setResult({ key: requestKey, items: [], error: String(reason) });
+        }
+      },
+      !search ? 0 : effectiveMode === "code" ? 150 : 80,
+    );
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [effectiveMode, cleanQuery, workspace]);
+  }, [requestKey, fetchResults, search, effectiveMode]);
 
-  const count = effectiveMode === "files" ? files.length : hits.length;
-
+  const current = result?.key === requestKey ? result : undefined;
+  const local =
+    effectiveMode === "pinned"
+      ? places.pinned.filter((path) =>
+          path.toLowerCase().includes(search.toLowerCase()),
+        )
+      : effectiveMode === "files" && !search
+        ? [...new Set([...places.pinned, ...places.recent])]
+        : [];
+  const items: Match[] = [
+    ...local.map((path) => ({ path })),
+    ...(current?.items ?? []).filter((item) => !local.includes(item.path)),
+  ];
+  const selected = Math.min(index, Math.max(0, items.length - 1));
+  const itemId = (i: number) => `${listId}-${i}`;
+  const activeId = items.length ? itemId(selected) : undefined;
   useEffect(() => {
-    if (index >= count) setIndex(0);
-  }, [count, index]);
+    if (activeId)
+      document.getElementById(activeId)?.scrollIntoView?.({ block: "nearest" });
+  }, [activeId]);
 
-  const folderName = useMemo(
-    () => workspace.split("/").pop() || workspace || "workspace",
-    [workspace],
-  );
-
-  function activate(at: number, attachOnly = false) {
-    if (effectiveMode === "files") {
-      const item = files[at];
-      if (!item) return;
-      if (attachOnly && onAttachFile) {
-        onAttachFile(item.path);
-      } else {
-        onOpenFile(item.path);
-      }
-      onClose();
-      return;
-    }
-    const hit = hits[at];
-    if (!hit) return;
-    if (attachOnly && onAttachFile) {
-      onAttachFile(hit.path);
-    } else {
-      onOpenFile(hit.path, hit.start_line);
-    }
+  function activate(item: Match | undefined, attach: boolean) {
+    if (!item) return;
+    if (attach && onAttachFile) onAttachFile(item.path);
+    else if (item.line || line) onOpenFile(item.path, item.line || line);
+    else onOpenFile(item.path);
     onClose();
   }
-
+  const folder =
+    workspace.split(/[\\/]/).filter(Boolean).at(-1) || workspace || "workspace";
+  const nextMode = (value: Mode) => {
+    setMode(value);
+    setIndex(0);
+    if (query.startsWith("#")) setQuery(query.slice(1));
+    input.current?.focus();
+  };
   return (
     <Dialog
       label="Quick Open"
       className="modal modal-md quick-open-modal"
       onClose={onClose}
     >
-      <div className="quick-open-header">
-        <div className="quick-open-input-wrap">
-          <Search size={15} className="quick-open-icon" aria-hidden="true" />
-          <input
-            ref={inputRef}
-            autoFocus
-            type="search"
-            className="quick-open-input"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "ArrowDown") {
-                e.preventDefault();
-                if (count > 0) setIndex((i) => (i + 1) % count);
-              } else if (e.key === "ArrowUp") {
-                e.preventDefault();
-                if (count > 0) setIndex((i) => (i - 1 + count) % count);
-              } else if (e.key === "Enter" && count > 0) {
-                e.preventDefault();
-                activate(index, e.shiftKey);
-              }
-            }}
-            aria-label="Search files or symbols"
-            placeholder={
-              effectiveMode === "files"
-                ? `Jump to file in ${folderName}… (prefix # for code & symbols)`
-                : `Search symbols and code in ${folderName}…`
-            }
-          />
-        </div>
-        <div className="seg quick-open-mode" role="group" aria-label="Search mode">
-          <button
-            type="button"
-            className={effectiveMode === "files" ? "on" : ""}
-            aria-pressed={effectiveMode === "files"}
-            onClick={() => {
-              setMode("files");
-              if (query.startsWith("#")) setQuery(query.slice(1));
-              inputRef.current?.focus();
-            }}
-          >
-            Files
-          </button>
-          <button
-            type="button"
-            className={effectiveMode === "code" ? "on" : ""}
-            aria-pressed={effectiveMode === "code"}
-            onClick={() => {
-              setMode("code");
-              inputRef.current?.focus();
-            }}
-          >
-            Code &amp; Symbols
-          </button>
-        </div>
+      <div className="places-heading">
+        <h2>Quick Open</h2>
+        <span title={workspace}>{folder}</span>
       </div>
-
-      {error && (
+      <div className="quick-open-input-wrap">
+        <Search size={16} className="quick-open-icon" aria-hidden="true" />
+        <input
+          ref={input}
+          autoFocus
+          type="search"
+          role="combobox"
+          aria-expanded="true"
+          aria-controls={listId}
+          aria-activedescendant={activeId}
+          aria-autocomplete="list"
+          aria-label="Search files or symbols"
+          className="quick-open-input"
+          value={query}
+          placeholder={
+            effectiveMode === "code"
+              ? "Search symbols or code…"
+              : effectiveMode === "pinned"
+                ? "Filter pinned paths…"
+                : "Search files, file:line or #symbol…"
+          }
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setIndex(0);
+          }}
+          onKeyDown={(e) => {
+            if (e.nativeEvent.isComposing) return;
+            if (
+              items.length &&
+              (e.key === "ArrowDown" || e.key === "ArrowUp")
+            ) {
+              e.preventDefault();
+              setIndex(
+                (selected + (e.key === "ArrowDown" ? 1 : -1) + items.length) %
+                  items.length,
+              );
+            } else if (e.key === "Enter") {
+              e.preventDefault();
+              activate(items[selected], e.shiftKey);
+            }
+          }}
+        />
+      </div>
+      <div
+        className="seg quick-open-mode"
+        role="group"
+        aria-label="Search mode"
+      >
+        {(["files", "code", "pinned"] as const).map((value) => (
+          <button
+            type="button"
+            key={value}
+            aria-pressed={effectiveMode === value}
+            className={effectiveMode === value ? "on" : ""}
+            onClick={() => nextMode(value)}
+          >
+            {value === "files"
+              ? "Files"
+              : value === "code"
+                ? "Code & Symbols"
+                : "Pinned"}
+          </button>
+        ))}
+      </div>
+      {current?.error && (
         <p className="quick-open-status error" role="alert">
-          {error}
+          {current.error}
         </p>
       )}
-
-      <div
-        className="quick-open-results"
-        role="listbox"
-        aria-label={
-          effectiveMode === "files" ? "Matching files" : "Matching code and symbols"
-        }
-      >
-        {loading && count === 0 && (
-          <p className="quick-open-status" role="status">
-            Searching {folderName}…
-          </p>
-        )}
-
-        {!loading && effectiveMode === "files" && files.length === 0 && !error && (
-          <p className="quick-open-status">
-            {cleanQuery
-              ? `No files matching “${cleanQuery}”.`
-              : "Type a file name to jump straight into the editor."}
-          </p>
-        )}
-
-        {!loading && effectiveMode === "code" && hits.length === 0 && !error && (
-          <p className="quick-open-status">
-            {cleanQuery
-              ? `No indexed code or symbol matches for “${cleanQuery}”.`
-              : "Type a function name, symbol, or phrase to search indexed code."}
-          </p>
-        )}
-
-        {effectiveMode === "files" &&
-          files.map((item, i) => {
-            const parts = item.path.split("/");
-            const name = parts.pop() || item.path;
-            const dir = parts.join("/");
-            const selected = i === index;
+      <div className="places-list">
+        <div
+          id={listId}
+          role="listbox"
+          aria-label={
+            effectiveMode === "code"
+              ? "Matching code and symbols"
+              : "Matching files"
+          }
+        >
+          {items.map((item, i) => {
+            const parts = item.path.split(/[\\/]/);
+            const name = parts.pop();
+            const pinned = places.pinned.includes(item.path);
+            const recent = local.includes(item.path);
+            const Icon = item.line
+              ? Code2
+              : pinned
+                ? Bookmark
+                : recent
+                  ? History
+                  : FileCode2;
             return (
               <button
-                key={item.path}
                 type="button"
                 role="option"
-                aria-selected={selected}
-                className={`quick-open-item ${selected ? "selected" : ""}`}
+                id={itemId(i)}
+                key={JSON.stringify([item.path, item.line, i])}
+                aria-selected={selected === i}
+                tabIndex={-1}
+                className={`quick-open-item ${selected === i ? "selected" : ""}`}
                 onMouseEnter={() => setIndex(i)}
-                onClick={() => activate(i)}
+                onClick={(e) => activate(item, e.shiftKey)}
               >
-                {item.kind === "dir" ? (
-                  <Folder size={15} className="quick-open-item-icon" aria-hidden="true" />
-                ) : (
-                  <FileCode2 size={15} className="quick-open-item-icon" aria-hidden="true" />
-                )}
+                <Icon
+                  size={16}
+                  className="quick-open-item-icon"
+                  aria-hidden="true"
+                />
                 <span className="quick-open-item-text">
-                  <strong>{name}</strong>
-                  {dir && <span className="quick-open-dir">{dir}</span>}
-                </span>
-              </button>
-            );
-          })}
-
-        {effectiveMode === "code" &&
-          hits.map((hit, i) => {
-            const selected = i === index;
-            const firstLine = (hit.preview || "").split("\n")[0]?.trim() || "";
-            return (
-              <button
-                key={`${hit.path}:${hit.start_line}:${i}`}
-                type="button"
-                role="option"
-                aria-selected={selected}
-                className={`quick-open-item quick-open-hit ${selected ? "selected" : ""}`}
-                onMouseEnter={() => setIndex(i)}
-                onClick={() => activate(i)}
-              >
-                <Code2 size={15} className="quick-open-item-icon" aria-hidden="true" />
-                <span className="quick-open-item-text">
-                  <span className="quick-open-hit-head">
-                    <strong>{hit.path}</strong>
-                    <span className="quick-open-lines">
-                      L{hit.start_line}–{hit.end_line}
-                    </span>
-                    {hit.symbols && (
-                      <span className="quick-open-symbols">{hit.symbols}</span>
-                    )}
-                  </span>
-                  {firstLine && (
-                    <code className="quick-open-preview">{firstLine}</code>
+                  <strong>{item.line ? item.path : name}</strong>
+                  {item.line ? (
+                    <>
+                      <span className="quick-open-lines">
+                        L{item.line}–{item.end}
+                      </span>
+                      {item.symbols && (
+                        <span className="quick-open-symbols">
+                          {item.symbols}
+                        </span>
+                      )}
+                      {item.preview && (
+                        <code className="quick-open-preview">
+                          {item.preview}
+                        </code>
+                      )}
+                    </>
+                  ) : (
+                    parts.length > 0 && (
+                      <span className="quick-open-dir">{parts.join("/")}</span>
+                    )
                   )}
                 </span>
+                {!item.line && (pinned || recent || line) && (
+                  <span className="place-label">
+                    {line ? `L${line}` : pinned ? "Pinned" : "Recent"}
+                  </span>
+                )}
               </button>
             );
           })}
+        </div>
+        {items.length === 0 && !current?.error && (
+          <p className="quick-open-status" role="status">
+            {fetchResults && !current
+              ? `Searching ${folder}…`
+              : effectiveMode === "pinned" && !search
+                ? "Pin a file in the editor to find it here."
+                : effectiveMode === "code" && !search
+                  ? "Enter a symbol or phrase to search indexed code."
+                  : "No matching files or symbols."}
+          </p>
+        )}
       </div>
-
       <footer className="quick-open-footer">
         <span>
-          <kbd>↑↓</kbd> navigate · <kbd>Enter</kbd> open
+          <kbd>↑↓</kbd> navigate · <kbd>Enter</kbd> open{" "}
           {onAttachFile && (
             <>
-              {" "}
-              · <kbd>Shift+Enter</kbd> attach to chat
+              · <kbd>Shift+Enter</kbd> attach
             </>
           )}
         </span>
-        {effectiveMode === "code" && searchMode && (
-          <span className="quick-open-engine">
-            <Sparkles size={12} aria-hidden="true" />
-            {searchMode === "hybrid" ? "Hybrid semantic + BM25" : "BM25 index"}
-          </span>
+        {current?.engine && (
+          <span className="quick-open-engine">{current.engine}</span>
+        )}
+        {effectiveMode === "files" && !search && places.recent.length > 0 && (
+          <button
+            type="button"
+            className="mini"
+            onClick={() => clearRecentFiles(workspace)}
+          >
+            Clear recent files
+          </button>
+        )}
+        {effectiveMode === "pinned" && items[selected] && (
+          <button
+            type="button"
+            className="mini"
+            aria-label={`Unpin ${items[selected].path}`}
+            onClick={() => togglePinnedFile(workspace, items[selected].path)}
+          >
+            Unpin selected
+          </button>
         )}
       </footer>
     </Dialog>

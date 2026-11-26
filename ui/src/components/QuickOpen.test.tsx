@@ -1,6 +1,12 @@
 import "@testing-library/jest-dom/vitest";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { QuickOpen } from "./QuickOpen";
 import { api } from "../api";
 
@@ -34,7 +40,9 @@ describe("QuickOpen", () => {
       expect(screen.getByText("App.tsx")).toBeInTheDocument();
     });
 
-    const input = screen.getByRole("searchbox", { name: "Search files or symbols" });
+    const input = screen.getByRole("combobox", {
+      name: "Search files or symbols",
+    });
     fireEvent.keyDown(input, { key: "ArrowDown" });
     fireEvent.keyDown(input, { key: "Enter" });
 
@@ -43,7 +51,10 @@ describe("QuickOpen", () => {
   });
 
   it("switches to hybrid code search when typing # prefix and jumps to line", async () => {
-    vi.spyOn(api, "mentions").mockResolvedValue({ items: [], truncated: false });
+    vi.spyOn(api, "mentions").mockResolvedValue({
+      items: [],
+      truncated: false,
+    });
     const searchSpy = vi.spyOn(api, "codeSearch").mockResolvedValue({
       ok: true,
       query: "shortcutFor",
@@ -72,7 +83,9 @@ describe("QuickOpen", () => {
       />,
     );
 
-    const input = screen.getByRole("searchbox", { name: "Search files or symbols" });
+    const input = screen.getByRole("combobox", {
+      name: "Search files or symbols",
+    });
     fireEvent.change(input, { target: { value: "#shortcutFor" } });
 
     await waitFor(() => {
@@ -86,4 +99,35 @@ describe("QuickOpen", () => {
     expect(onOpenFile).toHaveBeenCalledWith("src/hooks/useShortcuts.ts", 41);
     expect(onClose).toHaveBeenCalledOnce();
   });
+});
+
+it("searches the filename without its line suffix and drops stale matches while typing", async () => {
+  const mentions = vi
+    .spyOn(api, "mentions")
+    .mockResolvedValueOnce({
+      items: [{ path: "old.md", kind: "file" }],
+      truncated: false,
+    })
+    .mockResolvedValue({
+      items: [{ path: "docs/Guide.md", kind: "file" }],
+      truncated: false,
+    });
+  const open = vi.fn();
+  render(
+    <QuickOpen
+      workspace="C:\\work\\demo"
+      onOpenFile={open}
+      onClose={vi.fn()}
+    />,
+  );
+  expect(await screen.findByText("old.md")).toBeVisible();
+  const input = screen.getByRole("combobox");
+  fireEvent.change(input, { target: { value: "Guide:17" } });
+  fireEvent.keyDown(input, { key: "Enter" });
+  expect(open).not.toHaveBeenCalled();
+  expect(await screen.findByText("Guide.md")).toBeVisible();
+  expect(mentions).toHaveBeenLastCalledWith("Guide", 24);
+  expect(screen.getByText("demo")).toBeVisible();
+  fireEvent.keyDown(input, { key: "Enter" });
+  expect(open).toHaveBeenCalledWith("docs/Guide.md", 17);
 });
