@@ -10,6 +10,8 @@ Pin files in the editor and reopen them from **Quick Open**. Enter `filename:42`
 
 Filter the **Changes** list by path and see exactly how many lines each visible diff adds and removes. In **Mission Control**, search tasks by project, prompt or model and sort by activity. These controls are shared across every desktop build. [2.6 release notes](docs/RELEASE_NOTES.md#shadowcode-260)
 
+![Quick Open in the ShadowCode 2.6 demo workspace, with README pinned above three project files](docs/images/quick-open-2.6.png)
+
 ### An open-source project by Shadowfetch
 
 ShadowCode is a free, local-first AI coding agent for Windows, macOS and Linux.
@@ -38,7 +40,7 @@ The code is open source; the Shadowfetch and ShadowCode product identity is cove
 
 ![ShadowCode workspace — native Linux 2.3.3](docs/images/workspace-light.png)
 
-*The screenshots in this README are from native Linux 2.3.3. They retain that provenance and do not depict the new 2.4 Mac workspace.*
+*The full workspace image above shows native Linux 2.3.3. The Quick Open image under New in 2.6 comes from the shared interface running the demo project.*
 
 - **One picker.** The composer lists **Subscriptions** (or **Vendor CLIs** when billing is unconfirmed), **On this computer**
   and **API keys** in one menu. Each row shows whether it is ready, whether it
