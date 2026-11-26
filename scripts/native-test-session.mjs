@@ -244,7 +244,8 @@ export async function inspectPrivateActivations(session, { io = linuxProc, ignor
       if (!['EACCES', 'EPERM'].includes(error.code)) throw error;
       // Linux may revoke environ access during exit after the live basic read.
       // Disregard only a proven exit; unreadable live or reused PIDs still fail.
-      const current = await (io.basic ? io.basic(pid) : io.identity(pid));
+      const identity = () => io.basic ? io.basic(pid) : io.identity(pid);
+      let current = await identity();
       if (!current || (current.pid === info.pid && current.start === info.start
         && current.uid === info.uid && ['Z', 'X'].includes(current.state))) return;
       // Live and unreadable: skip it only when its branch of the process tree
@@ -257,6 +258,17 @@ export async function inspectPrivateActivations(session, { io = linuxProc, ignor
           if (again && again.pid === info.pid && again.start === info.start && again.uid === info.uid) {
             ignored.push({ pid, start: info.start, reason: `environment unreadable (${error.code}); its process branch predates the private bus` });
             return;
+          }
+        } else {
+          // A task in do_exit can lose its environment and exe before stat
+          // changes to Z. Observe only this PID for up to 100 ms. A reused
+          // PID or an unreadable process that stays live still fails below.
+          for (let attempt = 0; attempt < 4; attempt++) {
+            await io.delay(25);
+            current = await identity();
+            if (!current) return;
+            if (current.pid !== info.pid || current.start !== info.start || current.uid !== info.uid) break;
+            if (!alive(current)) return;
           }
         }
       }
