@@ -1828,10 +1828,16 @@ pub fn schemas_tiered(tier: DescriptionTier) -> Vec<Value> {
         DescriptionTier::Short => "Approved shell; cwd '.' = workspace root.",
         DescriptionTier::Full => "Run a shell command after approval in the platform sandbox when available (empty home, writable project, network per settings). Omit cwd or use '.' for the project root; otherwise use a workspace-relative subdirectory. Changed files are checkpointed for rewind. Output and runtime are bounded.",
     };
+    let read_params = match tier {
+        DescriptionTier::Short => json!({"path":s,"offset":n,"limit":n}),
+        DescriptionTier::Full => {
+            json!({"path":s,"offset":{"type":"integer","minimum":1,"maximum":4_000_001,"default":1},"limit":{"type":"integer","minimum":1,"maximum":20_000,"default":400}})
+        }
+    };
     let specs=vec![
         ("system_info","Inspect OS and connected displays. Read-only.",json!({}),vec![]),
         ("list_files","List direct children of a workspace directory.",json!({"path":s,"max_entries":n}),vec![]),
-        ("read_file","Read UTF-8 text with 1-based offset/limit. Returns truncated=true and next_offset when the range or byte budget is exceeded; do not assume omitted lines.",json!({"path":s,"offset":{"type":"integer","minimum":1,"maximum":4_000_001,"default":1},"limit":{"type":"integer","minimum":1,"maximum":20_000,"default":400}}),vec!["path"]),
+        ("read_file","Read text, offset starts at 1. Follow next_offset when truncated.",read_params,vec!["path"]),
         ("search_files","Find filenames by substring; respects ignore rules.",json!({"query":s,"path":s}),vec!["query"]),
         ("search_text","Search text; literal by default, optional regex and file glob.",json!({"query":s,"path":s,"regex":b,"glob":s,"max_hits":n}),vec!["query"]),
         ("search_symbol","Find likely symbol definitions by name (regex heuristic).",json!({"query":s,"path":s}),vec!["query"]),

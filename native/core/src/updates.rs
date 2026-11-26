@@ -422,6 +422,7 @@ pub enum InstallKind {
     Flatpak,
     /// ShadowCode.app on macOS (the .dmg or the macOS installer).
     MacApp,
+    WindowsInstaller,
     /// Under /usr or /opt without the bundler's package marker: a
     /// distribution's own build or another package format.
     System,
@@ -437,6 +438,7 @@ impl InstallKind {
             Self::Deb => "Debian package",
             Self::Flatpak => "Flatpak",
             Self::MacApp => "macOS app",
+            Self::WindowsInstaller => "Windows installer",
             Self::System => "System package",
             Self::Source => "Built from source",
             Self::Unknown => "Unknown",
@@ -483,7 +485,12 @@ pub fn detect_install(probe: &InstallProbe) -> InstallKind {
     }
     if matches!(
         probe.bundle,
-        Some(InstallKind::Appimage | InstallKind::Deb | InstallKind::MacApp)
+        Some(
+            InstallKind::Appimage
+                | InstallKind::Deb
+                | InstallKind::MacApp
+                | InstallKind::WindowsInstaller
+        )
     ) {
         return probe.bundle.unwrap_or(InstallKind::Unknown);
     }
@@ -504,6 +511,16 @@ pub fn detect_install(probe: &InstallProbe) -> InstallKind {
         .windows(2)
         .any(|pair| pair[0] == "target" && matches!(pair[1].as_ref(), "debug" | "release"))
     {
+        return InstallKind::Source;
+    }
+    // Cargo also builds into custom target directories. The fingerprint
+    // directory distinguishes a real profile from an installed "release" folder.
+    if exe.ancestors().skip(1).take(2).any(|dir| {
+        matches!(
+            dir.file_name().and_then(|name| name.to_str()),
+            Some("debug" | "release")
+        ) && dir.join(".fingerprint").is_dir()
+    }) {
         return InstallKind::Source;
     }
     if (exe.starts_with("/usr") && !exe.starts_with("/usr/local")) || exe.starts_with("/opt") {
@@ -749,6 +766,11 @@ fn next_step_for(
             "text": "Update through your package manager or your distribution's software updates. If you installed the .deb from GitHub yourself, download the new .deb and its four signature files, verify them, then install it with apt.",
             "command": null,
             "link": readme("debian-package"),
+        }),
+        InstallKind::WindowsInstaller => json!({
+            "text": format!("Download ShadowCode_{version}_x64-setup.exe from the release page. Verify its GitHub build attestation, then run the installer to update your existing installation."),
+            "command": null,
+            "link": readme("windows"),
         }),
         InstallKind::MacApp => json!({
             "text": format!("Run the macOS installer again: it downloads ShadowCode_{version}_{}.dmg, checks it against the release's checksums and replaces the app, keeping your settings. Or download the .dmg from the release page and drag ShadowCode into Applications.", dmg_arch(arch)),
@@ -1224,6 +1246,8 @@ mod tests {
             }),
             InstallKind::MacApp
         );
+        let windows = next_step(InstallKind::WindowsInstaller, &open, Some(&release));
+        assert!(windows["text"].as_str().unwrap().contains("_x64-setup.exe"));
         let deb = next_step(InstallKind::Deb, &open, Some(&release));
         assert!(deb["text"]
             .as_str()

@@ -1432,6 +1432,7 @@ export type InstallInfo = {
     | "appimage"
     | "deb"
     | "flatpak"
+    | "windows_installer"
     | "mac_app"
     | "system"
     | "source"

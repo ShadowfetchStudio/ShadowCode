@@ -18,8 +18,9 @@ OSV queries covered every registry package and exact version in both native lock
 
 - A task-specific approval marks only its active job. A session-only signal with several plausible jobs gets a single session row. The tab badge counts the rows it exposes.
 - Cursor and Grok read-only tasks require plan-mode acknowledgement before their prompt is sent. Test cases exercise absent, rejected and acknowledged mode changes.
+- The Windows updater recognizes the NSIS package and names the correct setup executable. Custom Cargo target directories are recognized as source builds.
 - The Windows build checks the pinned Vulkan SDK digest and requires the dynamic GPU module alongside CPU backends. Mac and Windows packaging collect the host Cargo graph and production JavaScript dependency notices.
-- The real-model runs exposed an empty turn and a promise to read a file. The engine retries one empty turn within its existing limits and detects the observed unfinished-work phrasing. File-read schemas now specify valid numeric ranges and defaults. The tool validates ranges before recording an observation.
+- The real-model runs exposed an empty turn and a promise to read a file. The engine retries one empty turn within its existing limits and detects the observed unfinished-work phrasing. Full file-read schemas now specify valid numeric ranges and defaults. Small-context models get the compact 1-based form, which preserves the tested 4,096-token route. The tool validates ranges before recording an observation.
 
 ## Matched coding outcomes
 
@@ -39,6 +40,6 @@ ShadowCode used its native tools with approved actions in disposable fixture rep
 | After read-range and completion fixes | multi-file | Pass / 11.40 / 0 | Fail / 9.99 / 0 |
 | After read-range and completion fixes | test-diagnosis | Fail / 11.17 / 0 | Pass / 6.98 / 0 |
 
-In the final round both products passed two of three acceptance checks. ShadowCode fixed the percentage helper but then exited with an empty model reply. Its diagnosis task left the original function untouched and the verification record correctly showed that no check had run. Aider missed the required unknown-unit behavior on the multi-file task. The results do not establish general model quality.
+In the third round (source fbeaa9f) both products passed two of three acceptance checks. ShadowCode fixed the percentage helper but then exited with an empty model reply. Its diagnosis task left the original function untouched and the verification record correctly showed that no check had run. Aider missed the required unknown-unit behavior on the multi-file task. The results do not establish general model quality.
 
 Reproduce with [the fixture runner](../scripts/qualification/coding-outcomes.py), an isolated output directory, a local OpenAI-compatible model endpoint and both client executables. Run the script with `--help` for arguments.

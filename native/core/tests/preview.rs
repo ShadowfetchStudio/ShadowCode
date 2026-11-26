@@ -96,7 +96,7 @@ async fn finds_background_urls_and_project_listeners_but_not_others() {
     let project = service.workspace().unwrap();
     // A project process listening on loopback (like `vite` in a subfolder).
     fs::create_dir(project.join("web")).unwrap();
-    let (_inside, inside_port) = dev_server(&project.join("web"));
+    let (inside_server, inside_port) = dev_server(&project.join("web"));
     // The same outside the project: not this project's server.
     let elsewhere = root.path().join("elsewhere");
     fs::create_dir(&elsewhere).unwrap();
@@ -135,9 +135,14 @@ async fn finds_background_urls_and_project_listeners_but_not_others() {
     assert_eq!(inside["source"], "process");
     assert_eq!(inside["listening"], true);
     assert_eq!(inside["url"], format!("http://localhost:{inside_port}/"));
-    // The executable's own name: python3 on Linux, python3.13 (say) on macOS.
+    // Match the listener we started. Python framework builds can report the process as Python.
+    assert_eq!(inside["pid"], inside_server.0.id());
     assert!(
-        inside["process"].as_str().unwrap().starts_with("python3"),
+        inside["process"]
+            .as_str()
+            .unwrap()
+            .to_ascii_lowercase()
+            .starts_with("python"),
         "{inside}"
     );
     let printed = by_port(printed_port).unwrap();
