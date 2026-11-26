@@ -8,9 +8,9 @@ name: Windows
 on:
   push:
     branches: [main]
-    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml', 'scripts/build-llama.cpp.sh', 'scripts/stage-windows-crt.ps1', 'scripts/test-windows-installed-runtime.ps1', 'tools/llama.cpp.pin', 'scripts/build-busybox-w32.sh', 'tools/busybox-w32.pin', 'tools/busybox-w32-patches/**', 'packaging/windows/**']
+    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml', 'scripts/build-llama.cpp.sh', 'scripts/setup-windows-vulkan.ps1', 'scripts/stage-windows-crt.ps1', 'scripts/test-windows-installed-runtime.ps1', 'tools/llama.cpp.pin', 'scripts/build-busybox-w32.sh', 'tools/busybox-w32.pin', 'tools/busybox-w32-patches/**', 'packaging/windows/**']
   pull_request:
-    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml', 'scripts/build-llama.cpp.sh', 'scripts/stage-windows-crt.ps1', 'scripts/test-windows-installed-runtime.ps1', 'tools/llama.cpp.pin', 'scripts/build-busybox-w32.sh', 'tools/busybox-w32.pin', 'tools/busybox-w32-patches/**', 'packaging/windows/**']
+    paths: ['native/**', 'src-tauri/**', 'ui/**', 'Cargo.toml', 'Cargo.lock', '.github/workflows/windows.yml', 'scripts/build-llama.cpp.sh', 'scripts/setup-windows-vulkan.ps1', 'scripts/stage-windows-crt.ps1', 'scripts/test-windows-installed-runtime.ps1', 'tools/llama.cpp.pin', 'scripts/build-busybox-w32.sh', 'tools/busybox-w32.pin', 'tools/busybox-w32-patches/**', 'packaging/windows/**']
 permissions:
   contents: read
 concurrency:
@@ -141,9 +141,14 @@ jobs:
         with:
           name: busybox-w32
           path: packaging/busybox-w32/bin
-      # The pinned llama.cpp (CPU variants, clang-cl), bundled as llama.cpp\.
-      - name: Build the local model runtime
-        run: bash scripts/build-llama.cpp.sh --no-user-install --cpu-only
+      - name: Install pinned Vulkan build tools
+        shell: pwsh
+        run: ./scripts/setup-windows-vulkan.ps1
+      - name: Build and verify the GPU and CPU runtime modules
+        run: |
+          bash scripts/build-llama.cpp.sh --no-user-install
+          test -s packaging/llama.cpp/bin/ggml-vulkan.dll
+          grep -Fx 'backend=vulkan+cpu' packaging/llama.cpp/bin/COMMIT
       - name: The runtime starts and reports its version
         run: |
           ls packaging/llama.cpp/bin

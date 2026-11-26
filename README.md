@@ -49,8 +49,7 @@ The code is open source; the Shadowfetch and ShadowCode product identity is cove
   says *Usage unavailable* and gives the reason. ShadowCode never makes up a
   figure.
 - **Local models run on your hardware.** A bundled, pinned llama.cpp supports
-  Metal/CPU on macOS, Vulkan/CPU in the Linux packages, and CPU in the
-  Windows package. A short list of free, Apache-2.0 models (Granite,
+  Metal/CPU on macOS and Vulkan/CPU in the Linux and Windows packages. A short list of free, Apache-2.0 models (Granite,
   Gemma 4, gpt-oss, Qwen3.6) downloads on request, with a recommendation for
   your memory and graphics card. Models already in an Ollama store can be
   imported by reference without copying.
@@ -126,6 +125,9 @@ validation is summarized under [Tests](#tests).
 
 ## Install
 
+From 2.6.1, GitHub Actions signs build provenance for each desktop download. After downloading a package, verify it with `gh attestation verify <downloaded-file> --repo ShadowfetchStudio/ShadowCode --source-ref refs/tags/v2.6.1`. The result identifies the repository and release workflow. The Linux publisher signatures and APT checks below also apply. macOS Gatekeeper and Windows Authenticode use their own publisher identities.
+
+
 Linux releases target x86_64 Linux with glibc 2.39 or newer (Ubuntu 24.04 or later).
 From 2.1.0, aarch64 (64-bit ARM) packages are built and qualified too:
 `ShadowCode_VERSION_aarch64.AppImage` and `ShadowCode_VERSION_arm64.deb`.
@@ -141,10 +143,10 @@ From 2.2.0 each release also carries Flatpak bundles for both architectures
 checked with `ShadowCode_VERSION_flatpak.sha256`; see [Flatpak](docs/FLATPAK.md))
 and macOS disk images (see [macOS](#macos)).
 Check [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases)
-for published versions. The 2.6.0 x86_64 Linux packages and checksums are:
+for published versions. The 2.6.1 x86_64 Linux packages and checksums are:
 
-- `ShadowCode_2.6.0_amd64.AppImage`
-- `ShadowCode_2.6.0_amd64.deb`
+- `ShadowCode_2.6.1_amd64.AppImage`
+- `ShadowCode_2.6.1_amd64.deb`
 - `SHA256SUMS`, `RELEASE-MANIFEST.json`, `RELEASE-AUTH` and
   `RELEASE-AUTH.sig` (download these beside the package; the installer checks
   the publisher's signature before running anything)
@@ -178,13 +180,13 @@ cmake.
 
 ### Windows
 
-The Windows 2.6.0 release provides `ShadowCode_2.6.0_x64-setup.exe` for
+The Windows 2.6.1 release provides `ShadowCode_2.6.1_x64-setup.exe` for
 64-bit Windows 10 (version 1809 or later) and 11, with its SHA-256 checksum in
-`ShadowCode_2.6.0_windows.sha256`. It installs for your user only (no
+`ShadowCode_2.6.1_windows.sha256`. It installs for your user only (no
 administrator rights) and includes llama.cpp for local models (CPU) and the
 shell used by the Windows sandbox (busybox-w32, GPL-2.0; its complete source
 is published beside the installer as
-`ShadowCode_2.6.0_busybox-w32-source.tar.gz`).
+`ShadowCode_2.6.1_busybox-w32-source.tar.gz`).
 
 Install or update with one command in PowerShell; it checks the installer
 against the release's checksums, installs it for the current user and adds
@@ -214,7 +216,7 @@ The installer requires signed release packages. Published 0.32.0
 assets are checksum-only and cannot be installed by this new entry point; use
 the instructions shipped with that released version for those existing assets.
 The 0.33.0 release attempt failed before signing and publication. Its tag stays
-unchanged. Version 0.33.1 was the first signed release. The 2.6.0 source trust policy authorizes 0.33.0 through 2.6.0, retaining the same key, epoch, targets and historical floor. The 2.4.0 tag retains its original ceiling. Public signature verification is recorded in [release authentication](docs/RELEASE_AUTHENTICATION.md#published-linux-release-241); a policy range alone does not establish signing, publication or qualification. An independently trusted installer bundle whose policy ends below 2.6.0 will reject 2.6.0. Obtain and independently authenticate a reviewed bundle with the updated policy before installing; do not replace trust files with copies from the downloaded release.
+unchanged. Version 0.33.1 was the first signed release. The 2.6.1 source trust policy authorizes 0.33.0 through 2.6.1, retaining the same key, epoch, targets and historical floor. The 2.4.0 tag retains its original ceiling. Public signature verification is recorded in [release authentication](docs/RELEASE_AUTHENTICATION.md#published-linux-release-241); a policy range alone does not establish signing, publication or qualification. An independently trusted installer bundle whose policy ends below 2.6.1 will reject 2.6.1. Obtain and independently authenticate a reviewed bundle with the updated policy before installing; do not replace trust files with copies from the downloaded release.
 For development, use [Build from source](#build-from-source).
 
 Obtain an independently authenticated installer bundle as described below,
@@ -228,7 +230,7 @@ bundle and bootstrap requirements.
 From that independently authenticated installer bundle, run:
 
 ```bash
-bash /path/to/trusted-bundle/scripts/install-appimage.sh /path/to/downloads/ShadowCode_2.6.0_amd64.AppImage
+bash /path/to/trusted-bundle/scripts/install-appimage.sh /path/to/downloads/ShadowCode_2.6.1_amd64.AppImage
 ```
 
 The installer takes the AppImage path (or `--recover`), resolves its own trusted
@@ -274,7 +276,7 @@ as `--trust-dir` are not installer options.
   cannot corrupt it.
 
 After obtaining and verifying the intended package, run the AppImage without installing it:
-`./ShadowCode_2.6.0_amd64.AppImage --appimage-extract-and-run`. FUSE is not
+`./ShadowCode_2.6.1_amd64.AppImage --appimage-extract-and-run`. FUSE is not
 required.
 
 ### Debian package
@@ -322,16 +324,16 @@ installed. The repository is published by the release workflow only; nothing
 in ShadowCode adds or contacts it by itself.
 
 To install one release by hand instead, verify the Debian artifact using the independently trusted verifier bundle.
-`verified-deb-2.6.0` must not already exist; install the verified snapshot:
+`verified-deb-2.6.1` must not already exist; install the verified snapshot:
 
 ```bash
 bash /path/to/trusted-bundle/scripts/verify-native-release.sh \
   --bundle-dir /path/to/downloads \
   --trust-dir /path/to/trusted-bundle/release/trust \
-  --artifact ShadowCode_2.6.0_amd64.deb \
-  --stage-dir ./verified-deb-2.6.0 \
-  --expect-version 2.6.0
-sudo apt install ./verified-deb-2.6.0/ShadowCode_2.6.0_amd64.deb
+  --artifact ShadowCode_2.6.1_amd64.deb \
+  --stage-dir ./verified-deb-2.6.1 \
+  --expect-version 2.6.1
+sudo apt install ./verified-deb-2.6.1/ShadowCode_2.6.1_amd64.deb
 ```
 
 A `.deb` installed by hand this way gets no updates and none of the APT
@@ -659,8 +661,7 @@ loaded model, your models, free models to download, and GGUF files you add
   doesn't need the Ollama daemon. The store is found through `OLLAMA_MODELS`,
   the Ollama systemd user unit, or `~/.ollama/models`.
 - **Metal, Vulkan or CPU.** macOS bundles llama.cpp with Metal and compiled
-  shaders, Linux packages support Vulkan and CPU execution, and the Windows
-  package uses CPU execution. GPU placement is requested according to hardware
+  shaders. Linux and Windows packages include a loadable Vulkan module and CPU backends. GPU placement is requested according to hardware
   and memory estimates; detected support or requested placement is not proof
   of observed layer offload. A failed GPU start may retry once on CPU when
   admission permits, with the fallback identified separately. Only one model

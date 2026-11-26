@@ -9,6 +9,8 @@ try {
             if (!(Test-Path (Join-Path $directory $dll))) { throw "Missing app-local CRT: $directory\$dll" }
         }
     }
+    $vulkan = Join-Path $AppDirectory 'llama.cpp\ggml-vulkan.dll'
+    if (!(Test-Path $vulkan)) { throw "Missing installed Vulkan backend: $vulkan" }
     # Do not accidentally satisfy package dependencies from Git, OpenSSL,
     # Python or a build toolchain installed on the qualification machine.
     $env:Path = "$env:SystemRoot\System32;$env:SystemRoot"

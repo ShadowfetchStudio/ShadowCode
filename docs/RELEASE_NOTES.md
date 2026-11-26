@@ -1,3 +1,11 @@
+# ShadowCode 2.6.1
+
+- Mission Control attributes pending approvals to the matching active job. Older session-only signals appear once. The approval filter counts the rows it displays.
+- The model picker explains vendor sandbox boundaries and flags Grok and Cursor read-only limitations before selection.
+- Windows packages include Vulkan and CPU backends. The bundled Vulkan module needs a compatible driver. CPU execution remains available.
+- Updated the bundled SQLite library, MCP transport, Rust TLS and certificate dependencies, and frontend and interoperability test tools.
+- Verify any installer with GitHub CLI: `gh attestation verify <file> --repo ShadowfetchStudio/ShadowCode --source-ref refs/tags/v2.6.1`. Linux packages also retain the studio's Ed25519 signatures and the APT repository's OpenPGP signature.
+
 # ShadowCode 2.6.0
 
 The Windows, macOS and Linux desktops share these workspace improvements.

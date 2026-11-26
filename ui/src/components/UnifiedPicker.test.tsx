@@ -238,7 +238,7 @@ it("shows 'Choose a model' until a row is chosen and groups both sources", () =>
     /Local · Ready · Runs on this computer · No subscription quota/,
   );
   // Unknown usage is not repeated on every row; it stays in the details.
-  expect(text(/Cursor/)).toMatch(/Cloud · Sign in$/);
+  expect(text(/Cursor/)).toMatch(/Cloud · Sign in · Read-only depends on CLI plan support$/);
   expect(text(/Cursor/)).not.toMatch(/%/);
   expect(text(/gpt-oss/)).toMatch(/Local · Setup required/);
   // Capability badges only when verified.

@@ -145,14 +145,43 @@ export function MissionControl({
     return () => { ++request.current; };
   }, [loadInfra, workspace]);
 
-  const waitingSet = useMemo(() => new Set(waitingSessions), [waitingSessions]);
-
   const rows = useMemo<MissionRow[]>(() => {
     const bySession = new Map<string, Session>();
     for (const s of sessions) bySession.set(s.id, s);
 
     const seenSessions = new Set<string>();
     const list: MissionRow[] = [];
+
+    const activeByTask = new Map<string, Job>();
+    const activeBySession = new Map<string, Job[]>();
+    for (const job of jobs) {
+      if (!ACTIVE_STATUSES.has(job.status)) continue;
+      if (job.task_id) activeByTask.set(job.task_id, job);
+      const group = activeBySession.get(job.session_id) ?? [];
+      group.push(job);
+      activeBySession.set(job.session_id, group);
+    }
+
+    const waitingJobs = new Set<string>();
+    const waitingAtSession = new Set<string>();
+    const sessionsWithRequests = new Set<string>();
+    function markSession(sessionId: string) {
+      const candidates = activeBySession.get(sessionId);
+      if (candidates?.length === 1) waitingJobs.add(candidates[0].id);
+      else waitingAtSession.add(sessionId);
+    }
+    for (const approval of approvals) {
+      const job = approval.task_id ? activeByTask.get(approval.task_id) : undefined;
+      const sessionId = approval.session_id || job?.session_id;
+      if (!sessionId) continue;
+      sessionsWithRequests.add(sessionId);
+      if (!approval.task_id) markSession(sessionId);
+      else if (job?.session_id === sessionId) waitingJobs.add(job.id);
+      else waitingAtSession.add(sessionId);
+    }
+    for (const id of waitingSessions) {
+      if (!sessionsWithRequests.has(id)) markSession(id);
+    }
 
     for (const j of jobs) {
       const s = bySession.get(j.session_id);
@@ -166,27 +195,24 @@ export function MissionControl({
         model: j.model || "",
         task: j.task || "",
         updatedAt: j.finished_at || j.started_at || 0,
-        needsApproval:
-          waitingSet.has(j.session_id) ||
-          approvals.some((a) => a.session_id === j.session_id),
+        needsApproval: waitingJobs.has(j.id),
         jobId: j.id,
       });
     }
 
-    for (const s of sessions) {
-      if (seenSessions.has(s.id)) continue;
+    for (const sessionId of new Set([...bySession.keys(), ...waitingAtSession])) {
+      if (seenSessions.has(sessionId) && !waitingAtSession.has(sessionId)) continue;
+      const s = bySession.get(sessionId);
       list.push({
-        id: `session:${s.id}`,
-        sessionId: s.id,
-        title: s.title || "New task",
-        workspace: s.workspace || workspace,
-        status: s.status || "idle",
+        id: `session:${sessionId}`,
+        sessionId,
+        title: s?.title || "New task",
+        workspace: s?.workspace || workspace,
+        status: seenSessions.has(sessionId) ? "idle" : s?.status || "idle",
         model: "",
         task: "",
-        updatedAt: s.updated_at || 0,
-        needsApproval:
-          waitingSet.has(s.id) ||
-          approvals.some((a) => a.session_id === s.id),
+        updatedAt: s?.updated_at || 0,
+        needsApproval: waitingAtSession.has(sessionId),
       });
     }
 
@@ -200,7 +226,7 @@ export function MissionControl({
     };
 
     return list.sort((a, b) => rank(a) - rank(b) || b.updatedAt - a.updatedAt);
-  }, [jobs, sessions, approvals, waitingSet, workspace]);
+  }, [jobs, sessions, approvals, waitingSessions, workspace]);
 
   const counts = useMemo(() => {
     let active = 0;
@@ -213,7 +239,7 @@ export function MissionControl({
       else if ((r.status === "completed" || r.status === "done")) done++;
       else if (FAILED_STATUSES.has(r.status)) failed++;
     }
-    const approvalCount = Math.max(approvals.length, waitingSet.size);
+    const approvalCount = rows.filter((r) => r.needsApproval).length;
     return {
       all: rows.length,
       active,
@@ -222,7 +248,7 @@ export function MissionControl({
       done,
       failed,
     };
-  }, [rows, approvals.length, waitingSet.size]);
+  }, [rows]);
 
   const byStatus = useMemo(() => {
     if (filter === "all") return rows;

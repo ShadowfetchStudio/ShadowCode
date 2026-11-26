@@ -219,7 +219,7 @@ a closed HTTP request is not a request to cancel an already submitted job. Use
 This development server uses the fixed project and asynchronous owned jobs;
 map saving is explicit, and diagnostics do not perform automatic repairs.
 The protocol is exercised with the official Rust SDK, the independent TypeScript
-SDKs 1.30.0 and 2.0.0, and real executable probes. See the
+SDKs 1.32.2 and 2.4.0, and real executable probes. See the
 [recorded verification](archive/NATIVE_VERIFICATION.md) for the tested scope. Named-app
 registration syntax is checked against their documentation; it is not a claim
 that every release of those host applications has been exercised.
@@ -329,12 +329,11 @@ ShadowCode's file tools.
 
 ## Stdio client foundation
 
-`native/core/src/mcp.rs` uses the official Rust SDK, pinned to `rmcp` 3.4.0.
-Its [upstream source](https://github.com/modelcontextprotocol/rust-sdk/tree/fd7811fdaa9fefa1c8034534b4d7a31c97204f89)
+`native/core/src/mcp.rs` uses the official Rust SDK, pinned to `rmcp` 3.11.0.
+Its [upstream source](https://github.com/modelcontextprotocol/rust-sdk/tree/165f8fd514afb8f6d1be3e86260ee9abfce58541)
 supplies negotiation, request correlation, capabilities and protocol models.
 ShadowCode supplies a bounded newline transport and process ownership.
-The omitted crate license is retained from that same commit in
-`licenses/native/rmcp-3.4.0/`, with a checked digest in the notice manifest.
+The crate includes its upstream LICENSE in the published source archive.
 
 The low-level `Client::connect` API starts only the literal command supplied by
 its caller, in a canonical project directory. It does not discover or activate

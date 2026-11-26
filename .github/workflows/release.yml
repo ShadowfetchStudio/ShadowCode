@@ -299,6 +299,8 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: write
+      attestations: write
+      id-token: write
       # actions: write starts the macOS and Flatpak workflows after publishing.
       actions: write
     steps:
@@ -326,6 +328,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node scripts/publish-native-release.mjs "$RUNNER_TEMP/signed-download/x86_64" release/trust "$RUNNER_TEMP/signed-download/aarch64"
+      - name: Attest the authenticated Linux packages
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: |
+            ${{ runner.temp }}/signed-download/*/*.AppImage
+            ${{ runner.temp }}/signed-download/*/*.deb
       # A release this job publishes with GITHUB_TOKEN does not trigger other
       # workflows' `release: published`; a dispatch does. They build from the
       # tag and attach the macOS images, Flatpak bundles and Windows installer.

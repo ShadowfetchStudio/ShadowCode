@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MissionControl } from "./MissionControl";
-import { api } from "../api";
+import { api, type Approval, type Job } from "../api";
 
 afterEach(() => {
   cleanup();
@@ -10,6 +10,30 @@ afterEach(() => {
 });
 
 describe("MissionControl", () => {
+  it.each([
+    { name: "task-specific approvals", request: {task_id: "t1"}, active: 2, expected: "First change" },
+    { name: "legacy session signal", request: undefined, active: 1, expected: "First change" },
+    { name: "ambiguous session signal", request: undefined, active: 2, expected: "Session summary" },
+    { name: "unlisted task", request: {task_id: "other"}, active: 1, expected: "Session summary" },
+  ])("attributes $name once and keeps completed work out of the queue", async ({request, active, expected}) => {
+    vi.spyOn(api, "worktrees").mockResolvedValue({ workspace: "/repo", worktrees: [] });
+    vi.spyOn(api, "background").mockResolvedValue({ tasks: [] });
+    const jobs: Job[] = ["Old change", "First change", "Second change"].slice(0, active + 1)
+      .map((task, i) => ({id: `j${i}`, task_id: `t${i}`, session_id: "s", workspace: "/repo",
+        event_cursor: 0, started_at: i, status: i ? "running" : "completed", task}));
+    const approvals: Approval[] = request ? ["a", "b"].map(id => ({ id, session_id: "s", ...request })) : [];
+    render(<MissionControl workspace="/repo" sessions={[{id: "s", title: "Session summary", workspace: "/repo", status: "running", updated_at: 1}]}
+      jobs={jobs} approvals={approvals} waitingSessions={["s"]}
+      onOpenSession={vi.fn()} onNewTask={vi.fn()} onDecide={vi.fn()} onOpenPanel={vi.fn()}
+      onClose={vi.fn()} toast={vi.fn()} />);
+    fireEvent.click(screen.getByRole("tab", {name: /Needs approval\s*1/}));
+    const [card] = await screen.findAllByRole("article");
+    expect(screen.getAllByRole("article")).toHaveLength(1);
+    expect(card).toHaveTextContent(expected);
+    expect(card).not.toHaveTextContent("Old change");
+    if (expected === "Session summary") expect(card).not.toHaveTextContent("First change");
+  });
+
   it("renders KPI summary, triages pending approvals, filters tasks, and displays infrastructure", async () => {
     vi.spyOn(api, "worktrees").mockResolvedValue({
       workspace: "/work/demo",
