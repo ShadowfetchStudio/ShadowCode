@@ -208,14 +208,19 @@ async fn a_signed_out_cli_and_other_forges_are_explained() {
     let error = get(&service, "/api/issues/12").await.unwrap_err();
     assert!(format!("{error:#}").contains("Sign in"), "{error:#}");
 
-    let (_root, _, other) = setup("https://codeberg.org/octo/demo.git");
-    let listed = get(&other, "/api/issues").await.unwrap();
+    let (_root, _, forgejo) = setup("https://codeberg.org/octo/demo.git");
+    let listed = get(&forgejo, "/api/issues").await.unwrap();
     assert_eq!(listed["ready"], false);
-    assert_eq!(listed["provider"], "other");
+    assert_eq!(listed["provider"], "forgejo");
     assert!(listed["reason"]
         .as_str()
         .unwrap()
         .contains("GitHub and GitLab"));
+
+    let (_root, _, other) = setup("https://git.example.org/octo/demo.git");
+    let listed = get(&other, "/api/issues").await.unwrap();
+    assert_eq!(listed["ready"], false);
+    assert_eq!(listed["provider"], "other");
 }
 
 #[tokio::test]
