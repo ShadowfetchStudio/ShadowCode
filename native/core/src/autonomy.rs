@@ -465,7 +465,7 @@ fn has_unperformed_action(text: &str, commands_only: bool) -> bool {
     static CURRENT: LazyLock<regex::Regex> = LazyLock::new(|| {
         // Explicit first-person status, not arbitrary progressive narration.
         // Targets and quote/conditional/negative exclusions still apply below.
-        regex::Regex::new(r"\bi(?:'m| am)\s+(?:now|currently)\s+(making|applying|editing|modifying|patching|fixing|repairing|updating|rewriting|implementing|creating|deleting|removing|renaming|running|executing|invoking|launching|rerunning|inspecting|reading|opening|searching|examining|checking|verifying|testing)\b")
+        regex::Regex::new(r"\b(?:i(?:'m| am)\s+(?:now|currently)|let me try)\s+(making|applying|editing|modifying|patching|fixing|repairing|updating|rewriting|implementing|creating|deleting|removing|renaming|running|executing|invoking|launching|rerunning|inspecting|reading|opening|searching|examining|checking|verifying|testing)\b")
             .expect("current action status regex")
     });
     static RUNNING_COMMAND: LazyLock<regex::Regex> = LazyLock::new(|| {
@@ -1002,6 +1002,8 @@ pub(crate) fn looks_like_success_claim(text: &str) -> bool {
     let lower = text.to_ascii_lowercase();
     lower.contains("tests passed")
         || lower.contains("all tests pass")
+        || lower.contains("correctly passes the test")
+        || lower.contains("the test will pass")
         || lower.contains("verified")
         || lower.contains("build succeeded")
         || lower.contains("correctly implemented")
@@ -1228,6 +1230,7 @@ mod tests {
             "I am now inspecting the files and applying the necessary fixes according to the requirements provided. Please wait while I make the changes.",
             "I'm currently editing helpers.py.",
             "I am now running the tests.",
+            "Let me try reading the file in smaller chunks.",
         ] {
             assert!(promises_tool_action(text), "{text}");
         }
@@ -1708,6 +1711,14 @@ mod tests {
         assert_eq!(report["claim"], "model_claim");
         assert_eq!(report["verified"], false);
         assert_eq!(report["unverified_claim"], true);
+        for claim in [
+            "The current implementation correctly passes the test case.",
+            "The test will pass with the current code.",
+        ] {
+            let evidence = classify_verification(claim, &[], true);
+            assert_eq!(evidence["claim"], "model_claim");
+            assert_eq!(evidence["unverified_claim"], true);
+        }
         let observed = classify_verification(
             "Looks good",
             &[json!({"command":"ls","success":true})],

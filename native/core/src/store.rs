@@ -1637,11 +1637,7 @@ fn task_verification_on(db: &Connection, tid: &str) -> Result<Value> {
 
 fn query_rows(db: &Connection, sql: &str, args: impl Params) -> Result<Vec<Value>> {
     let mut statement = db.prepare(sql)?;
-    let columns: Vec<String> = statement
-        .column_names()
-        .iter()
-        .map(|s| (*s).into())
-        .collect();
+    let columns: Vec<String> = statement.column_names().map(str::to_owned).collect();
     let rows = statement
         .query_map(args, |row| {
             let mut out = Map::new();

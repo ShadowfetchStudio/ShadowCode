@@ -59,7 +59,13 @@ async fn done(service: &Service, id: &Value) -> String {
 
 #[tokio::test]
 async fn dropping_an_owner_cancels_queued_jobs_without_waiting_for_an_unrelated_task() {
-    let model = support::server(|_, _| (json!({}), Duration::from_secs(60))).await;
+    let request_started = std::sync::Arc::new(tokio::sync::Notify::new());
+    let signal = request_started.clone();
+    let model = support::server(move |_, _| {
+        signal.notify_one();
+        (json!({}), Duration::from_secs(60))
+    })
+    .await;
     let (_root, service) = setup(&model.endpoint);
     let workspace = service.workspace().unwrap();
     let unrelated = service
@@ -76,6 +82,9 @@ async fn dropping_an_owner_cancels_queued_jobs_without_waiting_for_an_unrelated_
         })
         .await
         .unwrap();
+    tokio::time::timeout(Duration::from_secs(4), request_started.notified())
+        .await
+        .expect("the unrelated foreground request reached the model");
     let server = Server::start(service.clone()).unwrap();
     let client = server.endpoint().client(workspace, None);
     let owner = client.own_jobs().await.unwrap();

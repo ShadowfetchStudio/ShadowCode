@@ -58,7 +58,7 @@ sandbox or grant device access.
 | Engine connection | Unix socket | Named pipe restricted to the user |
 | API keys | Secret Service, Keychain | Windows Credential Manager |
 | Settings and history | XDG folders, `~/Library` | Settings in `%APPDATA%\ShadowCode\config` (they roam with the account); history, models and caches in `%LOCALAPPDATA%\ShadowCode` |
-| Local models | Vulkan, Metal | Bundled CPU build of llama.cpp; Windows GPU acceleration is not qualified for this release |
+| Local models | Vulkan, Metal | Bundled Vulkan module and CPU variants; GPU offload requires a compatible driver and enough memory |
 | Installer and updates | AppImage, deb, Flatpak, dmg | Per-user NSIS `.exe` from Tauri, with app-local Microsoft runtime DLLs; the update notice names it |
 
 ## Progress

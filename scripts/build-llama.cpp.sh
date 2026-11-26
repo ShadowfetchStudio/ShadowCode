@@ -235,7 +235,10 @@ if [[ "$WINDOWS" == "1" ]]; then
   # The Vulkan SDK brings the headers, loader library and glslc together.
   EXTRA_FLAGS=(-DGGML_OPENMP=OFF)
   if [[ "$WANT_VULKAN" == "1" && -n "${VULKAN_SDK:-}" && -x "$(cygpath -u "$VULKAN_SDK")/Bin/glslc.exe" ]]; then
-    VULKAN_FLAGS=(-DGGML_VULKAN=ON)
+    fetch_spirv_headers
+    install_spirv_headers
+    WIN_SPIRV_PREFIX="$(cygpath -m "$SPIRV_PREFIX")"
+    VULKAN_FLAGS=(-DGGML_VULKAN=ON "-DCMAKE_PREFIX_PATH=$WIN_SPIRV_PREFIX" "-DCMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES=$WIN_SPIRV_PREFIX/include")
     BACKEND="vulkan+cpu"
   else
     [[ "$WANT_VULKAN" == "1" ]] && echo "No Vulkan SDK (VULKAN_SDK with glslc); building a CPU-only runtime." >&2

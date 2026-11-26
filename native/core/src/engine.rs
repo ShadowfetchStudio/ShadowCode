@@ -2793,6 +2793,7 @@ impl Engine {
         // Cumulative across this task, including intervening tool calls. A
         // harmless observation must not reset an unfinished-action loop.
         let mut action_retries = 0;
+        let mut retried_empty_response = false;
         if let Some(path) = context::requested_file(&job.task, &running.workspace) {
             let call = crate::models::ToolCall {
                 id: crate::id(),
@@ -3265,10 +3266,22 @@ impl Engine {
                     !running.cancel.is_cancelled(),
                     "Task cancelled before completion"
                 );
-                ensure!(
-                    !response.text.trim().is_empty(),
-                    "Model returned an empty response without a tool call"
-                );
+                if response.text.trim().is_empty() {
+                    // A successful stream can close without text or calls. Give the
+                    // provider one fresh turn, inside the normal step and cost limits.
+                    ensure!(
+                        !retried_empty_response && running.config.agent.max_fix_retries > 0,
+                        "Model returned an empty response without a tool call"
+                    );
+                    retried_empty_response = true;
+                    events.emit(
+                        "completion.retry",
+                        json!({"reason":"empty_response","attempt":1,"max_attempts":1}),
+                    )?;
+                    messages.push(json!({"role":"system","content":"The previous model turn ended without text or a tool call. Continue from the recorded tool results. Return the next permitted action or a final answer."}));
+                    self.save_tape(&job.id, &messages).await?;
+                    continue;
+                }
                 if job.mode == "code"
                     && running.config.permissions.level != PermissionLevel::ReadOnly
                     && autonomy::promises_tool_action(&response.text)

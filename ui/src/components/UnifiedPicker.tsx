@@ -165,6 +165,7 @@ export function UnifiedPicker({
     const subscriptions = {
       id: "subscriptions",
       title: mixedVendorBilling ? "Vendor CLIs" : "Subscriptions",
+      note: "Each CLI controls its own tools and sandbox.",
       items: build(all.subscriptions),
       empty: query
         ? mixedVendorBilling
@@ -743,6 +744,9 @@ function Row({
             {availabilityLabel(target)}
           </span>
           {billingWarning(target) && ` · ${billingWarning(target)}`}
+          {target.group === "subscriptions" && vendorKey(target) === "grok" && " · Plan/Review requires CLI plan support"}
+          {target.group === "subscriptions" && vendorKey(target) === "cursor" && " · Read-only requires CLI plan support"}
+          {isLocal(target) && target.local?.fits === "cpu" && " · Estimated to fit in system RAM"}
           {/* Rows show allowance only when the provider reports one; the
               "Usage unavailable" explanation stays in the details panel. */}
           {target.usage?.state !== "unavailable" &&

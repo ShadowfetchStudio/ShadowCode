@@ -1,5 +1,9 @@
 # Physical-machine platform qualification
 
+## 2.6.1 coding qualification
+
+The [release audit](RELEASE_AUDIT_2.6.1.md) records matched real-model tasks, acceptance outcomes, timing and dependency triage.
+
 ## 2.4.1 public release
 
 [ShadowCode 2.4.1](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.4.1), release `442808765`, was published on **November 12, 2026 at 10:46:44 UTC**. Immutable tag `v2.4.1` resolves to release source `a3b09eca6333c2befda3504850f357f09cc25542`.

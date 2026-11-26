@@ -1572,6 +1572,48 @@ async fn thinking_channel_markup_is_hidden_from_transcript_events() {
 }
 
 #[tokio::test]
+async fn empty_model_turn_gets_one_bounded_retry() {
+    for recover in [true, false] {
+        let server = support::server(move |_, body| {
+            let retried = body["messages"].as_array().unwrap().iter().any(|m| {
+                m["content"]
+                    .as_str()
+                    .is_some_and(|s| s.contains("previous model turn ended without text"))
+            });
+            (
+                response(
+                    if recover && retried {
+                        "Here is my answer."
+                    } else {
+                        ""
+                    },
+                    json!([]),
+                ),
+                Duration::ZERO,
+            )
+        })
+        .await;
+        let (root, engine) = setup(&server.endpoint);
+        let job = engine
+            .start(request(root.path(), "Say hello", None))
+            .await
+            .unwrap();
+        let result = wait(&engine, &job.id).await;
+        assert_eq!(result.status, if recover { "completed" } else { "failed" });
+        let events = engine.store().recent_events(&job.session_id, 200).unwrap();
+        assert_eq!(
+            events
+                .iter()
+                .filter(|e| e["type"] == "completion.retry"
+                    && e["payload"]["reason"] == "empty_response")
+                .count(),
+            1
+        );
+        engine.shutdown().await.unwrap();
+    }
+}
+
+#[tokio::test]
 async fn prose_command_without_tool_is_nudged_then_pauses() {
     let server = support::server(|_, _| {
         (

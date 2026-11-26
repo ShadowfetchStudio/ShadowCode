@@ -362,6 +362,7 @@ fn run() -> Result<()> {
         use tauri::utils::{config::BundleType, platform::bundle_type};
         match bundle_type() {
             Some(BundleType::AppImage) => set_bundle(InstallKind::Appimage),
+            Some(BundleType::Nsis) => set_bundle(InstallKind::WindowsInstaller),
             Some(BundleType::Deb) => set_bundle(InstallKind::Deb),
             Some(BundleType::App | BundleType::Dmg) => set_bundle(InstallKind::MacApp),
             _ => {}

@@ -84,6 +84,8 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: write
+      attestations: write
+      id-token: write
     env:
       TAG: ${{ github.event.release.tag_name || inputs.tag }}
       GH_TOKEN: ${{ github.token }}
@@ -93,6 +95,12 @@ jobs:
           pattern: flatpak-*
           path: flatpak
           merge-multiple: true
+      - name: Require the workflow tag to match the build
+        run: test "$GITHUB_REF" = "refs/tags/$TAG"
+      - name: Attest the qualified installer bytes
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: flatpak/*.flatpak
       - name: Attach the bundles and their checksums without replacing anything
         run: |
           version="${TAG#v}"

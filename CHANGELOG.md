@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.6.1 — Release audit fixes
+
+Mission Control attributes approvals to tasks, the model picker describes vendor safeguards, and all platform packages gain GitHub build attestations. Windows gains a loadable Vulkan backend. The UI and MCP test tools, SQLite, TLS and MCP transports receive dependency fixes.
+
 ## 2.6.0 — Project navigation and draft review
 
 Project pins and recent files, line-addressed Quick Open, Markdown draft preview, filtered Git review with diff totals, and searchable, sortable Mission Control on all desktop platforms. See the [2.6.0 release notes](docs/RELEASE_NOTES.md#shadowcode-260).

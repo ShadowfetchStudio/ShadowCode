@@ -24,6 +24,7 @@ on:
       - 'scripts/build-busybox-w32.sh'
       - 'scripts/build-llama.cpp.sh'
       - 'scripts/install-windows.ps1'
+      - 'scripts/setup-windows-vulkan.ps1'
       - 'scripts/stage-windows-crt.ps1'
       - 'scripts/test-windows-installed-runtime.ps1'
       - 'packaging/windows/**'
@@ -98,8 +99,16 @@ jobs:
         with:
           name: busybox-w32
           path: packaging/busybox-w32/bin
-      - name: Build the local model runtime (llama.cpp, CPU)
-        run: bash scripts/build-llama.cpp.sh --no-user-install --cpu-only
+      - name: Install pinned Vulkan build tools
+        shell: pwsh
+        run: ./scripts/setup-windows-vulkan.ps1
+      - name: Build and verify the GPU and CPU runtime modules
+        run: |
+          bash scripts/build-llama.cpp.sh --no-user-install
+          test -s packaging/llama.cpp/bin/ggml-vulkan.dll
+          grep -Fx 'backend=vulkan+cpu' packaging/llama.cpp/bin/COMMIT
+      - name: Package third-party notices
+        run: bash scripts/build-desktop-notices.sh
       - name: Stage app-local Microsoft CRT
         shell: powershell
         run: ./scripts/stage-windows-crt.ps1
@@ -150,6 +159,8 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: write
+      attestations: write
+      id-token: write
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
@@ -161,6 +172,12 @@ jobs:
         with:
           name: windows-release-source
           path: windows
+      - name: Require the workflow tag to match the build
+        run: test "$GITHUB_REF" = "refs/tags/$TAG"
+      - name: Attest the qualified installer bytes
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: windows/*-setup.exe
       - name: Attach the installer, the busybox source and their checksums without replacing anything
         run: |
           version="${TAG#v}"

@@ -29,6 +29,9 @@
     <binary>shadowcode</binary>
   </provides>
   <releases>
+    <release version="2.6.1" date="2026-11-26T13:48:59Z">
+      <description><p>Mission Control attributes approvals to individual tasks. The model picker describes vendor permissions and the local CPU route. Native transport, database and UI dependencies have been updated.</p></description>
+    </release>
     <release version="2.6.0" date="2026-11-26">
       <description><p>Pin project files, reopen recent paths, jump to a line and preview Markdown drafts in the editor. Filter changed files, see per-file diff totals and search or sort tasks in Mission Control.</p></description>
     </release>

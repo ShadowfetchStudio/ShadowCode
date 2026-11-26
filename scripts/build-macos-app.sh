@@ -38,6 +38,7 @@ fi
 # CI=true keeps the DMG step from scripting Finder (which needs a desktop
 # session and Automation permission); the image is the same.
 cd "$ROOT"
+bash "$ROOT/scripts/build-desktop-notices.sh"
 CI=true "$ROOT/ui/node_modules/.bin/tauri" build --bundles app,dmg \
   --config "$ROOT/packaging/macos/bundle-runtime.conf.json"
 TARGET="${CARGO_TARGET_DIR:-$ROOT/target}"

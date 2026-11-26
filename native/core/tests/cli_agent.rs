@@ -765,6 +765,63 @@ for raw in sys.stdin:
 "#;
 
 #[test]
+fn cursor_withholds_read_only_prompt_until_mode_confirmation() {
+    for outcome in ["missing", "refused", "confirmed"] {
+        let root = tempfile::tempdir().unwrap();
+        let mut adapter = adapter_for(Vendor::Cursor, false);
+        adapter.on_start(&LaunchOptions {
+            read_only: true,
+            model: "auto".into(),
+            ..launch(root.path())
+        });
+        adapter.prompt("Review the file", &[]).unwrap();
+        feed(
+            &mut *adapter,
+            &[
+                &rpc_result(
+                    1,
+                    json!({"protocolVersion":1,"authMethods":[{"id":"cursor_login"}]}),
+                ),
+                &rpc_result(2, json!({})),
+            ],
+        );
+        let modes = if outcome == "missing" {
+            json!([])
+        } else {
+            json!([{"id":"plan"}])
+        };
+        let started = adapter.on_line(&rpc_result(
+            3,
+            json!({"sessionId":"session","modes":{"availableModes":modes}}),
+        ));
+        if outcome == "missing" {
+            assert!(started.is_err());
+            continue;
+        }
+        let step = started.unwrap();
+        assert_eq!(step.send.len(), 1);
+        let mode: Value = serde_json::from_str(&step.send[0]).unwrap();
+        assert_eq!(mode["method"], "session/set_mode");
+        let id = mode["id"].as_u64().unwrap();
+        if outcome == "refused" {
+            assert!(adapter
+                .on_line(
+                    &json!({"jsonrpc":"2.0","id":id,"error":{"code":-1,"message":"unavailable"}})
+                        .to_string()
+                )
+                .is_err());
+        } else {
+            assert!(adapter
+                .on_line(&rpc_result(id, json!({})))
+                .unwrap()
+                .send
+                .iter()
+                .any(|line| line.contains("session/prompt")));
+        }
+    }
+}
+
+#[test]
 fn cursor_acp_command_and_cancel() {
     let root = tempfile::tempdir().unwrap();
     let mut adapter = adapter_for(Vendor::Cursor, false);

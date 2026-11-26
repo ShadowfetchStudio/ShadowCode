@@ -4,7 +4,7 @@
   "type": "module",
   "description": "Independent MCP clients for development verification; never shipped in ShadowCode",
   "devDependencies": {
-    "@modelcontextprotocol/client": "2.0.0",
-    "@modelcontextprotocol/sdk": "1.30.0"
+    "@modelcontextprotocol/client": "2.4.0",
+    "@modelcontextprotocol/sdk": "1.32.2"
   }
 }

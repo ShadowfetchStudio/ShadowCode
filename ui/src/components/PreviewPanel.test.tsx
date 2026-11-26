@@ -119,6 +119,9 @@ it("opens a detected server and only trusts its own frame", async () => {
     if (!found) throw new Error("no frame yet");
     return found;
   });
+  // Give Happy DOM a local child document. Network frame loading stays disabled.
+  frame.srcdoc = "<p>Demo</p>";
+  expect(frame.contentWindow).toBeTruthy();
   expect(frame.getAttribute("src")).toBe("about:blank");
   expect(frame.getAttribute("sandbox")).not.toContain("allow-top-navigation");
   const pick = () =>

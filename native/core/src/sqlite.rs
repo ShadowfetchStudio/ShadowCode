@@ -269,10 +269,10 @@ fn query_inner(
     // `parent` outlives this connection. Do not use immutable=1: live WAL
     // writers must retain SQLite's normal transaction and locking semantics.
     #[cfg(unix)]
-    let connection = Connection::open_with_flags_and_vfs(uri.as_str(), flags, vfs::NAME)
+    let mut connection = Connection::open_with_flags_and_vfs(uri.as_str(), flags, vfs::NAME)
         .context("Cannot open this project database read-only")?;
     #[cfg(windows)]
-    let connection = Connection::open_with_flags(uri.as_str(), flags)
+    let mut connection = Connection::open_with_flags(uri.as_str(), flags)
         .context("Cannot open this project database read-only")?;
     let finished = CancellationToken::new();
     let _finish_guard = finished.clone().drop_guard();
@@ -337,11 +337,7 @@ fn query_inner(
             statement.column_count() <= 128,
             "Query returns more than 128 columns; select an explicit subset"
         );
-        let columns: Vec<String> = statement
-            .column_names()
-            .iter()
-            .map(|v| (*v).to_owned())
-            .collect();
+        let columns: Vec<String> = statement.column_names().map(str::to_owned).collect();
         ensure!(
             columns.iter().collect::<HashSet<_>>().len() == columns.len(),
             "Duplicate result column names; use AS aliases to keep every value"
