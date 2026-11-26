@@ -1,3 +1,10 @@
+# ShadowCode 2.7.0
+
+- **Multi-forge source control.** Git remote detection, pull-request compare URLs, and PR URL extraction now support **Bitbucket**, **Azure DevOps**, and **Forgejo / Codeberg / Gitea** alongside GitHub and GitLab.
+- **Phone PWA ergonomics.** Remote web access adds 44 px minimum touch targets on approval and composer controls plus `env(safe-area-inset-bottom)` safe-area padding for standalone iOS and Android home-screen installs.
+- **Package manager manifests.** Ships a multi-arch **Homebrew Cask** (`packaging/homebrew/shadowcode.rb` for Apple Silicon and Intel Macs) and **WinGet** manifests (`packaging/winget/`), documented in `docs/PACKAGE_MANAGERS.md`.
+- **Streamlined Quick Install & provenance.** Updated `README.md` with a scannable platform install matrix. Verify any 2.7.0 download with `gh attestation verify <file> --repo ShadowfetchStudio/ShadowCode --source-ref refs/tags/v2.7.0`. The Linux trust policy ceiling is extended to `2.7.0` using the existing studio Ed25519 signing key.
+
 # ShadowCode 2.6.1
 
 - Mission Control attributes pending approvals to the matching active job. Older session-only signals appear once. The approval filter counts the rows it displays.

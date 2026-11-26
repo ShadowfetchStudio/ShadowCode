@@ -41,7 +41,7 @@ pub struct RemoteInfo {
     /// `owner/repo` (GitLab: `group/subgroup/repo`).
     pub path: String,
     pub web_url: String,
-    /// `github`, `gitlab`, or `other`.
+    /// `github`, `gitlab`, `bitbucket`, `azure_devops`, `forgejo`, or `other`.
     pub kind: &'static str,
 }
 
@@ -94,6 +94,15 @@ pub fn parse_remote(url: &str) -> Option<RemoteInfo> {
         "github"
     } else if lower.contains("gitlab") {
         "gitlab"
+    } else if lower.contains("bitbucket") {
+        "bitbucket"
+    } else if lower == "dev.azure.com" || lower.ends_with(".visualstudio.com") {
+        "azure_devops"
+    } else if lower == "codeberg.org"
+        || lower.contains("forgejo")
+        || lower.contains("gitea")
+    {
+        "forgejo"
     } else {
         "other"
     };
@@ -136,6 +145,24 @@ pub fn compare_url(remote: &RemoteInfo, base: &str, head: &str) -> Option<String
             remote.web_url,
             encode(head),
             encode(base)
+        )),
+        "bitbucket" => Some(format!(
+            "{}/pull-requests/new?source={}&dest={}",
+            remote.web_url,
+            encode(head),
+            encode(base)
+        )),
+        "azure_devops" => Some(format!(
+            "{}/pullrequestcreate?sourceRef={}&targetRef={}",
+            remote.web_url,
+            encode(head),
+            encode(base)
+        )),
+        "forgejo" => Some(format!(
+            "{}/compare/{}...{}",
+            remote.web_url,
+            encode(base),
+            encode(head)
         )),
         _ => None,
     }
@@ -1648,7 +1675,11 @@ pub fn find_request_url(text: &str) -> Option<String> {
         .rev()
         .find(|word| {
             word.starts_with("https://")
-                && (word.contains("/pull/") || word.contains("/merge_requests/"))
+                && (word.contains("/pull/")
+                    || word.contains("/pulls/")
+                    || word.contains("/pull-requests/")
+                    || word.contains("/pullrequest/")
+                    || word.contains("/merge_requests/"))
         })
         .map(|word| word.trim_end_matches(['.', ',', ')']).to_owned())
 }
@@ -1689,6 +1720,24 @@ mod tests {
         assert!(compare_url(&lab, "main", "x")
             .unwrap()
             .ends_with("merge_requests/new?merge_request%5Bsource_branch%5D=x&merge_request%5Btarget_branch%5D=main"));
+        let bb = parse_remote("git@bitbucket.org:team/app.git").unwrap();
+        assert_eq!(bb.kind, "bitbucket");
+        assert_eq!(
+            compare_url(&bb, "main", "feat/x").unwrap(),
+            "https://bitbucket.org/team/app/pull-requests/new?source=feat/x&dest=main"
+        );
+        let azdo = parse_remote("https://dev.azure.com/org/proj/_git/repo").unwrap();
+        assert_eq!(azdo.kind, "azure_devops");
+        assert_eq!(
+            compare_url(&azdo, "main", "feat/x").unwrap(),
+            "https://dev.azure.com/org/proj/_git/repo/pullrequestcreate?sourceRef=feat/x&targetRef=main"
+        );
+        let cb = parse_remote("git@codeberg.org:shadow/app.git").unwrap();
+        assert_eq!(cb.kind, "forgejo");
+        assert_eq!(
+            compare_url(&cb, "main", "feat/x").unwrap(),
+            "https://codeberg.org/shadow/app/compare/main...feat/x"
+        );
         assert!(compare_url(&parse_remote("https://example.org/a/b").unwrap(), "m", "x").is_none());
     }
 

@@ -29,6 +29,9 @@
     <binary>shadowcode</binary>
   </provides>
   <releases>
+    <release version="2.7.0" date="2026-11-26">
+      <description><p>Multi-forge pull-request compare links for Bitbucket, Azure DevOps, and Forgejo/Codeberg alongside GitHub and GitLab; mobile standalone PWA touch and safe-area polish for remote phone approvals; and ready-to-use Homebrew Cask and WinGet package manager manifests.</p></description>
+    </release>
     <release version="2.6.1" date="2026-11-26T13:48:59Z">
       <description><p>Mission Control attributes approvals to individual tasks. The model picker describes vendor permissions and the local CPU route. Native transport, database and UI dependencies have been updated.</p></description>
     </release>

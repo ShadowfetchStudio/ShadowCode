@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.7.0 — Multi-forge support, mobile PWA polish & package manager manifests
+
+- Added Bitbucket, Azure DevOps, and Forgejo/Codeberg/Gitea remote parsing, PR compare URL generation, and PR URL extraction alongside GitHub and GitLab.
+- Improved standalone mobile PWA touch ergonomics (44 px approval/composer targets and safe-area bottom insets) for remote phone control over Tailscale or LAN.
+- Added multi-arch Homebrew Cask (`packaging/homebrew/shadowcode.rb`), WinGet manifests (`packaging/winget/`), and `docs/PACKAGE_MANAGERS.md`.
+- Extended the Linux release trust policy ceiling to `2.7.0` using the existing Ed25519 signing key.
+
 ## 2.6.1 — Release audit fixes
 
 Mission Control attributes approvals to tasks, the model picker describes vendor safeguards, and all platform packages gain GitHub build attestations. Windows gains a loadable Vulkan backend. The UI and MCP test tools, SQLite, TLS and MCP transports receive dependency fixes.

@@ -1,0 +1,20 @@
+PackageIdentifier: ShadowfetchStudio.ShadowCode
+PackageVersion: 2.7.0
+PackageLocale: en-US
+Publisher: Shadowfetch
+PublisherUrl: https://shadowfetch.com
+PublisherSupportUrl: https://github.com/ShadowfetchStudio/ShadowCode/issues
+PackageName: ShadowCode
+PackageUrl: https://shadowcode.org
+License: Apache-2.0
+LicenseUrl: https://github.com/ShadowfetchStudio/ShadowCode/blob/main/LICENSE
+ShortDescription: Local-first AI coding workspace with bundled llama.cpp, coding agents, and OS sandboxing.
+Tags:
+  - ai
+  - coding-agent
+  - ide
+  - llama-cpp
+  - local-llm
+ReleaseNotesUrl: https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.7.0
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

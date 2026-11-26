@@ -145,3 +145,18 @@
     height: auto;
   }
 }
+
+/* Mobile standalone PWA & phone-width touch ergonomics (iOS / Android) ------- */
+@media (max-width: 600px) {
+  .approval-actions button,
+  .mc-approval-actions button,
+  .composer-actions button,
+  .remote-gate button {
+    min-height: 44px;
+    padding-inline: 14px;
+  }
+  .composer-dock,
+  .remote-gate {
+    padding-bottom: max(14px, env(safe-area-inset-bottom));
+  }
+}
