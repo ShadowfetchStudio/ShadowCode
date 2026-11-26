@@ -106,6 +106,11 @@ describe("MissionControl", () => {
     fireEvent.click(screen.getByRole("button", { name: "Allow" }));
     expect(onDecide).toHaveBeenCalledWith("a1", { decision: "approve" });
 
+    const search = screen.getByRole("searchbox", {name: "Search execution deck"});
+    fireEvent.change(search, {target: {value: "demo qwen"}});
+    expect(screen.getByRole("heading", { name: "Refactor CSS" })).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "Fix login race" })).toBeNull();
+    fireEvent.change(search, {target: {value: ""}});
     fireEvent.click(screen.getByRole("tab", { name: /Completed/i }));
     expect(screen.getByText("Refactor CSS")).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "Fix login race" })).not.toBeInTheDocument();

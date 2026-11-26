@@ -162,6 +162,22 @@ function unreadable(f, pid) {
     throw Object.assign(new Error('fixture environment denied'), { code: 'EACCES' });
   };
 }
+test('a process that finishes exiting after its environment becomes unreadable gets no signal', async () => {
+  const f = fixture();
+  const session = await capturePrivateSession({ address, io: f.io });
+  f.rows.set(22, { ...f.proc(22, 2, 14, '/fixture/exiting'), state: 'D' });
+  unreadable(f, 22);
+  const advance = f.io.delay;
+  let polls = 0;
+  f.io.delay = async ms => {
+    await advance(ms);
+    if (++polls === 2) f.rows.get(22).state = 'Z';
+  };
+  const result = await session.cleanup();
+  assert.equal(result.ok, true, JSON.stringify(result.failures));
+  assert.deepEqual(f.signals, [{ pid: 4, signal: 'SIGTERM' }]);
+});
+
 test('unreadable activation diagnostics include identity but not environment or executable data', async () => {
   const f = fixture(); const session = await capturePrivateSession({ address, io: f.io });
   f.rows.set(22, { ...f.proc(22, 2, 14, '/private/executable-path'), secret: 'private-fixture-value' });

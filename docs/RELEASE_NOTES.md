@@ -1,3 +1,13 @@
+# ShadowCode 2.6.0
+
+The Windows, macOS and Linux desktops share these workspace improvements.
+
+- **Return to a file.** Quick Open shows pinned and recently opened files for the current project. Use **Pin file** in the editor, manage pins in Quick Open, and clear recent history from the Files search. Paths stay on this computer.
+- **Jump to a line.** Press Cmd+O on Mac or Ctrl+O on Windows and Linux. Enter a filename followed by a line number, such as `README.md:42`. Arrow keys select a result, Enter opens it, and Shift+Enter attaches the file to the composer.
+- **Preview a draft.** Open a Markdown file and choose **Markdown preview**. The preview follows unsaved edits, renders tables and fenced code, and uses the same link and image handling as chat.
+- **Review a larger change.** Filter changed paths by filename or folder. The selected file shows hunk, addition and removal counts for the active staged or unstaged view. The drawer remembers your diff layout. Refresh retries failed reads, and late responses stay associated with their original file.
+- **Find a task.** Search titles, prompts, projects and model names in Mission Control, combine terms with a status filter, and sort by priority or activity date. A failed worktree or process query now offers a retry through Refresh.
+
 # ShadowCode 2.5.0
 
 ShadowCode 2.5.0 brings a flagship workspace upgrade centered on multi-agent

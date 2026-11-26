@@ -2390,6 +2390,7 @@ export const api = {
       log: string;
       diff: string;
       porcelain?: string;
+      truncated?: boolean;
       files?: { path: string; label: string }[];
       repo?: boolean;
     }>("/api/workspace/git"),

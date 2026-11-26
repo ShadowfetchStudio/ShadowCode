@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   ArrowLeft,
@@ -106,6 +106,10 @@ export function MissionControl({
   toast: (text: string, kind?: "ok" | "err" | "info") => void;
 }) {
   const [filter, setFilter] = useState<MissionFilter>("all");
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("priority");
+  const request = useRef(0);
+  const [infraErrors, setInfraErrors] = useState({ worktrees: false, background: false });
   const [worktrees, setWorktrees] = useState<ManagedWorktree[]>([]);
   const [bgTasks, setBgTasks] = useState<BackgroundTask[]>([]);
   const [loadingInfra, setLoadingInfra] = useState(true);
@@ -113,12 +117,15 @@ export function MissionControl({
   const [stoppingBg, setStoppingBg] = useState<string | null>(null);
 
   const loadInfra = useCallback(async () => {
+    const generation = ++request.current;
     setLoadingInfra(true);
     try {
       const [wtResult, bgResult] = await Promise.allSettled([
         api.worktrees(),
         api.background(),
       ]);
+      if (generation !== request.current) return;
+      setInfraErrors({ worktrees: wtResult.status === "rejected", background: bgResult.status === "rejected" });
       if (wtResult.status === "fulfilled") {
         setWorktrees(wtResult.value.worktrees || []);
       }
@@ -126,12 +133,16 @@ export function MissionControl({
         setBgTasks(bgResult.value.tasks || []);
       }
     } finally {
-      setLoadingInfra(false);
+      if (generation === request.current) setLoadingInfra(false);
     }
   }, []);
 
   useEffect(() => {
+    setWorktrees([]);
+    setBgTasks([]);
+    setInfraErrors({ worktrees: false, background: false });
     void loadInfra();
+    return () => { ++request.current; };
   }, [loadInfra, workspace]);
 
   const waitingSet = useMemo(() => new Set(waitingSessions), [waitingSessions]);
@@ -169,7 +180,7 @@ export function MissionControl({
         sessionId: s.id,
         title: s.title || "New task",
         workspace: s.workspace || workspace,
-        status: "idle",
+        status: s.status || "idle",
         model: "",
         task: "",
         updatedAt: s.updated_at || 0,
@@ -184,7 +195,7 @@ export function MissionControl({
       if (ACTIVE_STATUSES.has(row.status)) return 1;
       if (row.status === "queued") return 2;
       if (FAILED_STATUSES.has(row.status)) return 3;
-      if (row.status === "completed") return 4;
+      if ((row.status === "completed" || row.status === "done")) return 4;
       return 5;
     };
 
@@ -199,7 +210,7 @@ export function MissionControl({
     for (const r of rows) {
       if (ACTIVE_STATUSES.has(r.status)) active++;
       else if (r.status === "queued") queued++;
-      else if (r.status === "completed") done++;
+      else if ((r.status === "completed" || r.status === "done")) done++;
       else if (FAILED_STATUSES.has(r.status)) failed++;
     }
     const approvalCount = Math.max(approvals.length, waitingSet.size);
@@ -213,15 +224,23 @@ export function MissionControl({
     };
   }, [rows, approvals.length, waitingSet.size]);
 
-  const filtered = useMemo(() => {
+  const byStatus = useMemo(() => {
     if (filter === "all") return rows;
     if (filter === "active") return rows.filter((r) => ACTIVE_STATUSES.has(r.status));
     if (filter === "approval") return rows.filter((r) => r.needsApproval);
     if (filter === "queued") return rows.filter((r) => r.status === "queued");
-    if (filter === "done") return rows.filter((r) => r.status === "completed");
+    if (filter === "done") return rows.filter((r) => r.status === "completed" || r.status === "done");
     if (filter === "failed") return rows.filter((r) => FAILED_STATUSES.has(r.status));
     return rows;
   }, [rows, filter]);
+
+  const terms = search.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const filtered = byStatus.filter((row) => {
+    const text = [row.title, row.task, row.workspace, row.model].join(" ").toLowerCase();
+    return terms.every((term) => text.includes(term));
+  });
+  if (sort === "newest") filtered.sort((a, b) => b.updatedAt - a.updatedAt);
+  if (sort === "oldest") filtered.sort((a, b) => a.updatedAt - b.updatedAt);
 
   const runningBg = bgTasks.filter((t) => t.status === "running");
 
@@ -329,7 +348,7 @@ export function MissionControl({
             Worktrees · Procs
           </span>
           <strong className="mission-kpi-value">
-            {worktrees.length} · {runningBg.length}
+            {infraErrors.worktrees || loadingInfra ? "…" : worktrees.length} · {infraErrors.background || loadingInfra ? "…" : runningBg.length}
           </strong>
         </div>
       </div>
@@ -419,6 +438,15 @@ export function MissionControl({
           </div>
         </div>
 
+        <div className="mission-search-tools">
+          <input type="search" aria-label="Search execution deck" placeholder="Find a task, project or model…" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <select aria-label="Sort tasks" value={sort} onChange={(e) => setSort(e.target.value)}>
+            <option value="priority">Priority first</option>
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+          {search && <span role="status">{filtered.length} {filtered.length === 1 ? "match" : "matches"}</span>}
+        </div>
         {filtered.length === 0 ? (
           <div className="mission-empty">
             <p>No tasks match this filter.</p>
@@ -427,7 +455,7 @@ export function MissionControl({
           <div className="mission-deck">
             {filtered.map((row) => {
               const meta = statusMeta(row.status, row.needsApproval);
-              const folder = row.workspace.split("/").pop() || row.workspace;
+              const folder = row.workspace.split(/[\\/]/).filter(Boolean).at(-1) || row.workspace;
               const isActive =
                 ACTIVE_STATUSES.has(row.status) || row.status === "queued";
               return (
@@ -498,7 +526,7 @@ export function MissionControl({
           <div className="mission-section-head">
             <h3>
               <GitBranch size={15} aria-hidden="true" />
-              Worktrees ({worktrees.length})
+              Worktrees {!(loadingInfra || infraErrors.worktrees) && `(${worktrees.length})`}
             </h3>
             <button
               type="button"
@@ -508,7 +536,7 @@ export function MissionControl({
               Manage
             </button>
           </div>
-          {worktrees.length === 0 ? (
+          {infraErrors.worktrees ? <p role="status" className="mission-empty-inline">Worktrees unavailable. Refresh to retry.</p> : loadingInfra ? <p className="mission-empty-inline">Loading worktrees…</p> : worktrees.length === 0 ? (
             <p className="mission-empty-inline">
               No active isolated worktrees in this project.
             </p>
@@ -517,7 +545,7 @@ export function MissionControl({
               {worktrees.map((wt) => (
                 <li key={wt.path} className="mission-infra-item">
                   <div>
-                    <strong>{wt.branch || wt.path.split("/").pop()}</strong>
+                    <strong>{wt.branch || wt.path.split(/[\\/]/).filter(Boolean).at(-1)}</strong>
                     <span className="mission-infra-sub">{wt.path}</span>
                   </div>
                   <span className="mission-pill">{wt.state || "ready"}</span>
@@ -531,7 +559,7 @@ export function MissionControl({
           <div className="mission-section-head">
             <h3>
               <Terminal size={15} aria-hidden="true" />
-              Background processes ({runningBg.length} running)
+              Background processes {!(loadingInfra || infraErrors.background) && `(${runningBg.length} running)`}
             </h3>
             <button
               type="button"
@@ -541,7 +569,7 @@ export function MissionControl({
               Manage
             </button>
           </div>
-          {bgTasks.length === 0 ? (
+          {infraErrors.background ? <p role="status" className="mission-empty-inline">Process list unavailable. Refresh to retry.</p> : loadingInfra ? <p className="mission-empty-inline">Loading processes…</p> : bgTasks.length === 0 ? (
             <p className="mission-empty-inline">
               No background dev servers or watchers running.
             </p>

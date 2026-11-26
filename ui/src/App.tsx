@@ -134,7 +134,9 @@ export default function App() {
   const compactWorkspace = layout.compact;
   const [diffPath, setDiffPath] = useState("");
   const [missionOpen, setMissionOpen] = useState(false);
+  const fileTargetSeq = useRef(0);
   const [fileTarget, setFileTarget] = useState<{
+    workspace: string;
     path: string;
     line?: number;
     seq: number;
@@ -764,7 +766,7 @@ export default function App() {
     void nav.openSession(id);
   };
   const openFileFromQuickOpen = (path: string, line?: number) => {
-    setFileTarget((prev) => ({ path, line, seq: (prev?.seq ?? 0) + 1 }));
+    setFileTarget({ workspace, path, line, seq: ++fileTargetSeq.current });
     setPanel("files");
   };
   const missionBadgeCount =
@@ -974,6 +976,7 @@ export default function App() {
           missionOpen ? (
             <Suspense fallback={<p role="status">Opening Mission Control…</p>}>
               <MissionControl
+                key={workspace}
                 workspace={workspace}
                 sessions={sessions}
                 jobs={jobs}
@@ -1080,7 +1083,8 @@ export default function App() {
             promptRef.current?.focus();
           }}
           onQuickOpen={() => setOverlay("quick-open")}
-          fileTarget={fileTarget}
+          fileTarget={fileTarget?.workspace === workspace ? fileTarget : null}
+          onFileTargetHandled={(seq) => setFileTarget((current) => current?.seq === seq ? null : current)}
           onOpenProject={(path) => void nav.pickProject(path)}
           memory={memory.memory}
           onMemory={memory.update}

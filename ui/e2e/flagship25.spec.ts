@@ -43,7 +43,7 @@ test("Quick Open jumps directly to a file in the Files drawer editor", async ({
   page,
 }) => {
   await page.keyboard.press("Control+o");
-  const search = page.getByRole("searchbox", {
+  const search = page.getByRole("combobox", {
     name: "Search files or symbols",
   });
   await expect(search).toBeVisible();
@@ -59,4 +59,34 @@ test("Quick Open jumps directly to a file in the Files drawer editor", async ({
     "# Demo\n",
   );
   await expect(drawer.getByRole("button", { name: "Ask agent" })).toBeVisible();
+});
+
+test("previews an unsaved Markdown draft and restores its pinned path after reload", async ({page}) => {
+  const open = async () => {
+    await page.keyboard.press("Control+o");
+    return page.getByRole("dialog", {name:"Quick Open"});
+  };
+  const dialog = await open();
+  await dialog.getByRole("combobox").fill("README:2");
+  await dialog.getByRole("option", { name: /README.md/ }).click();
+  const editor = page.getByRole("textbox", {name:"Edit README.md"});
+  await expectEditorText(editor, "# Demo\n");
+  await page.getByRole("button", {name:"Pin file", exact:true}).click();
+  await page.getByRole("button", {name:"Markdown preview"}).click();
+  const preview = page.getByRole("region", {name:"Markdown preview"});
+  await expect(preview.getByRole("heading", {name:"Demo"})).toBeVisible();
+  await editor.fill("# Updated draft");
+  await expect(preview.getByRole("heading", {name:"Updated draft"})).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Mission Control" })).toBeVisible();
+  await open();
+  await dialog.getByRole("button", {name:"Pinned", exact:true}).click();
+  await expect(dialog.getByRole("option", {name:/README.md/})).toBeVisible();
+  for (const theme of ["light", "dark"]) {
+    await page.evaluate((value) => { document.documentElement.dataset.theme = value; }, theme);
+    const axe = await new AxeBuilder({page}).include(".quick-open-modal").analyze();
+    expect(axe.violations).toEqual([]);
+  }
+  await dialog.getByRole("button", {name:"Unpin README.md"}).click();
+  await expect(dialog.getByRole("option")).toHaveCount(0);
 });

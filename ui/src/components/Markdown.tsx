@@ -154,8 +154,10 @@ function LongMarkdown({ text }: { text: string }) {
 // Streaming one response must not reparse every earlier message.
 export const Markdown = memo(function Markdown({
   children,
+  source = "response",
 }: {
   children: string;
+  source?: "response" | "draft";
 }) {
   const [expanded, setExpanded] = useState(false);
   const abbreviated = children.length > MARKDOWN_PREVIEW_LIMIT && !expanded;
@@ -175,15 +177,14 @@ export const Markdown = memo(function Markdown({
       {abbreviated && (
         <div className="markdown-preview" role="status">
           <p className="hint">
-            Showing the first 512 KiB of this response. The complete response is
-            retained in task history and JSON export.
+            {source === "draft" ? "Showing the first 512 KiB of this draft." : "Showing the first 512 KiB of this response. The complete response is retained in task history and JSON export."}
           </p>
           <button
             type="button"
             className="mini"
             onClick={() => setExpanded(true)}
           >
-            Show full response
+            Show full {source}
           </button>
         </div>
       )}

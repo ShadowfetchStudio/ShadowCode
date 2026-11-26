@@ -383,11 +383,11 @@
     },
     {
       "name": "zstd",
-      "version": "1.5.6-r2",
-      "aportsCommit": "5c2ddf18f193dafdd25ae7391d96c7e30766eecd",
+      "version": "1.6.0-r1",
+      "aportsCommit": "830652b9a76f070b8a2dd05979fe7e7475418a17",
       "license": "BSD-3-Clause OR GPL-2.0-or-later",
-      "archive": "zstd-1.5.6.tar.gz",
-      "sourceDirectory": "zstd-1.5.6",
+      "archive": "zstd-1.6.0.tar.gz",
+      "sourceDirectory": "zstd-1.6.0",
       "notices": [
         "LICENSE",
         "COPYING"
@@ -395,13 +395,18 @@
       "files": [
         {
           "file": "APKBUILD",
-          "url": "https://raw.githubusercontent.com/alpinelinux/aports/5c2ddf18f193dafdd25ae7391d96c7e30766eecd/main/zstd/APKBUILD",
-          "sha512": "941d306259e657ef799d36ab2a77fd6cc03dcaed6c0b6e532cc5d6977982d1dc6f5a0d2d28949abd055e7b62d22314bc64afe3bf380d68b75a6bc057890c539f"
+          "url": "https://raw.githubusercontent.com/alpinelinux/aports/830652b9a76f070b8a2dd05979fe7e7475418a17/main/zstd/APKBUILD",
+          "sha512": "ccbcf21427093b26093fb3ec1a8f7d2b0ecdc46ab35c98a610d38c20a6f8b4799eda96929aa08fa80c40de8b6b9f86108a66a49f48010d2d1ab8f8aa98617fd5"
         },
         {
-          "file": "zstd-1.5.6.tar.gz",
-          "url": "https://github.com/facebook/zstd/archive/v1.5.6.tar.gz",
-          "sha512": "ca12dffd86618ca008e1ecc79056c1129cb4e61668bf13a3cd5b2fa5c93bc9c92c80f64c1870c68b9c20009d9b3a834eac70db72242d5106125a1c53cccf8de8"
+          "file": "zstd-1.6.0.tar.gz",
+          "url": "https://github.com/facebook/zstd/archive/v1.6.0.tar.gz",
+          "sha512": "da2c039eae103c6c4d1be89601af5a097b46d1598d4b749fe10903b78c5eb797c820869eaa2ef4f4694e70d5f01a44621cd2a0a12050ef69b3e0e4b7e3fcc309"
+        },
+        {
+          "file": "fix-32bit-multithread-tests_patch",
+          "url": "https://raw.githubusercontent.com/alpinelinux/aports/830652b9a76f070b8a2dd05979fe7e7475418a17/main/zstd/fix-32bit-multithread-tests_patch",
+          "sha512": "0dd23197fb6a4b4b64473e5a550e99dd4524117816cb084576c0e799d3dc947697e1966064c49c37e570c74b04691ac8c425610f087370ec0fca4db997dea97b"
         }
       ]
     }

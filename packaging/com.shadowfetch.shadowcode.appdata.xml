@@ -29,6 +29,9 @@
     <binary>shadowcode</binary>
   </provides>
   <releases>
+    <release version="2.6.0" date="2026-11-26">
+      <description><p>Pin project files, reopen recent paths, jump to a line and preview Markdown drafts in the editor. Filter changed files, see per-file diff totals and search or sort tasks in Mission Control.</p></description>
+    </release>
     <release version="2.5.0" date="2026-11-22">
       <description><p>Flagship workspace upgrade introducing Mission Control for live multi-agent and approval triage, Quick Open for instant fuzzy file and hybrid semantic/BM25 code search, syntax-highlighted split diffs in Changes, Ask Agent from code editor selections, and an interactive Context Budget HUD with one-click compaction.</p></description>
     </release>

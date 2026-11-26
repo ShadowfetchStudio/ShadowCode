@@ -6,9 +6,20 @@ import {
   type DrawerMemoryUpdate,
   type FileBuffer,
 } from "../hooks/useDrawerMemory";
+import { Bookmark, BookOpen } from "lucide-react";
+import { Markdown } from "./Markdown";
+import {
+  rememberFile,
+  togglePinnedFile,
+  useFilePlaces,
+} from "../lib/filePlaces";
 import { Empty } from "./cards";
 import { notifyWorkspaceFilesChanged } from "../lib/workspaceChanges";
-import { CodeEditor, hasMixedLineEndings, type EditorSelection } from "./CodeEditor";
+import {
+  CodeEditor,
+  hasMixedLineEndings,
+  type EditorSelection,
+} from "./CodeEditor";
 import { plainEditorEdit, plainEditorRange } from "../lib/plainEditorEdit";
 
 type Toast = (text: string, kind?: "ok" | "err" | "info") => void;
@@ -25,6 +36,7 @@ export function FileEditor({
   onAskAgent,
   onQuickOpen,
   openTarget,
+  onTargetHandled,
   toast,
 }: {
   workspace: string;
@@ -38,6 +50,7 @@ export function FileEditor({
   onShowDiff: (path: string) => void;
   onAskAgent?: (prompt: string) => void;
   onQuickOpen?: () => void;
+  onTargetHandled?: (seq: number) => void;
   openTarget?: { path: string; line?: number; seq: number } | null;
   toast: Toast;
 }) {
@@ -50,8 +63,13 @@ export function FileEditor({
   const [discarding, setDiscarding] = useState(false);
   const [resolving, setResolving] = useState(false);
   const [selection, setSelection] = useState<EditorSelection | null>(null);
-  const [revealLine, setRevealLine] = useState<{ line: number; seq: number } | null>(null);
-  const handledTargetSeq = useRef(0);
+  const [revealLine, setRevealLine] = useState<{
+    line: number;
+    seq: number;
+  } | null>(null);
+  const places = useFilePlaces(workspace);
+  const [previewPath, setPreviewPath] = useState<string | null>(null);
+  const plainInput = useRef<HTMLTextAreaElement>(null);
   const exitEditor = useRef<HTMLButtonElement>(null);
   const openRequest = useRef(0);
   const savingRevision = useRef<{ path: string; hash: string } | null>(null);
@@ -85,15 +103,16 @@ export function FileEditor({
     setLoading(null);
     setSelection(null);
     setActive(path);
+    setRevealLine(null);
+    if (path) rememberFile(workspace, path);
   }
 
   useEffect(() => {
-    if (!openTarget || openTarget.seq === handledTargetSeq.current) return;
-    handledTargetSeq.current = openTarget.seq;
+    if (!openTarget) return;
+    let active = true;
     const { path, line, seq } = openTarget;
-    void open(path).then(() => {
-      if (line && line > 0) setRevealLine({ line, seq });
-    });
+    void open(path, line ? { line, seq } : null).then(() => { if (active) onTargetHandled?.(seq); });
+    return () => { active = false; };
   }, [openTarget]);
 
   useEffect(() => {
@@ -215,12 +234,32 @@ export function FileEditor({
     // Reopening an already-held draft must check its disk revision immediately.
   }, [active, buffer?.hash, onMemory, workspace]);
 
-  async function open(path: string) {
+  useEffect(() => {
+    const input = plainInput.current;
+    if (!plainEditing || !input || !revealLine) return;
+    const lines = input.value.split("\n");
+    const row = Math.min(Math.max(1, revealLine.line), lines.length) - 1;
+    const offset = lines
+      .slice(0, row)
+      .reduce((sum, text) => sum + text.length + 1, 0);
+    input.setSelectionRange(offset, offset);
+    input.scrollTop = Math.max(
+      0,
+      row * parseFloat(getComputedStyle(input).lineHeight) -
+        input.clientHeight / 2,
+    );
+  }, [active, plainEditing, revealLine]);
+
+  async function open(
+    path: string,
+    target: { line: number; seq: number } | null = null,
+  ) {
     const request = ++openRequest.current;
     setError("");
     if (memory.filesBuffers[path]) {
       setLoading(null);
-      setActive(path);
+      selectFile(path);
+      setRevealLine(target);
       return;
     }
     setLoading(path);
@@ -242,7 +281,8 @@ export function FileEditor({
               },
             },
       );
-      setActive(path);
+      selectFile(path);
+      setRevealLine(target);
     } catch (reason) {
       if (request === openRequest.current) setError(String(reason));
     } finally {
@@ -465,7 +505,7 @@ export function FileEditor({
           ↑
         </button>
         <span>
-          {workspace.split("/").pop()}
+          {workspace.split(/[\\/]/).filter(Boolean).at(-1) || workspace}
           {dir === "." ? "" : `/${dir}`}
         </span>
         {onQuickOpen && (
@@ -583,6 +623,40 @@ export function FileEditor({
               ×
             </button>
           </div>
+          <div className="file-places-toolbar">
+            <button
+              type="button"
+              className="mini"
+              aria-pressed={places.pinned.includes(buffer.path)}
+              disabled={
+                !places.pinned.includes(buffer.path) &&
+                places.pinned.length >= 50
+              }
+              title={
+                places.pinned.length >= 50
+                  ? "Up to 50 files can be pinned per project"
+                  : "Keep this file in Quick Open"
+              }
+              onClick={() => togglePinnedFile(workspace, buffer.path)}
+            >
+              <Bookmark size={13} aria-hidden="true" />{" "}
+              {places.pinned.includes(buffer.path) ? "Pinned file" : "Pin file"}
+            </button>
+            {/\.(md|markdown|mdown|mkd)$/i.test(buffer.path) && (
+              <button
+                type="button"
+                className="mini"
+                aria-pressed={previewPath === buffer.path}
+                onClick={() =>
+                  setPreviewPath(
+                    previewPath === buffer.path ? null : buffer.path,
+                  )
+                }
+              >
+                <BookOpen size={13} aria-hidden="true" /> Markdown preview
+              </button>
+            )}
+          </div>
           <div className="file-editor-toolbar">
             <span role="status">
               {buffer.disk !== undefined
@@ -664,6 +738,42 @@ export function FileEditor({
               ) : (
                 <p>The other saved copy was removed.</p>
               )}
+              <div className="file-places-toolbar">
+                <button
+                  type="button"
+                  className="mini"
+                  aria-pressed={places.pinned.includes(buffer.path)}
+                  disabled={
+                    !places.pinned.includes(buffer.path) &&
+                    places.pinned.length >= 50
+                  }
+                  title={
+                    places.pinned.length >= 50
+                      ? "Up to 50 files can be pinned per project"
+                      : "Keep this file in Quick Open"
+                  }
+                  onClick={() => togglePinnedFile(workspace, buffer.path)}
+                >
+                  <Bookmark size={13} aria-hidden="true" />{" "}
+                  {places.pinned.includes(buffer.path)
+                    ? "Pinned file"
+                    : "Pin file"}
+                </button>
+                {/\.(md|markdown|mdown|mkd)$/i.test(buffer.path) && (
+                  <button
+                    type="button"
+                    className="mini"
+                    aria-pressed={previewPath === buffer.path}
+                    onClick={() =>
+                      setPreviewPath(
+                        previewPath === buffer.path ? null : buffer.path,
+                      )
+                    }
+                  >
+                    <BookOpen size={13} aria-hidden="true" /> Markdown preview
+                  </button>
+                )}
+              </div>
               <div className="file-editor-toolbar">
                 <button
                   type="button"
@@ -713,6 +823,42 @@ export function FileEditor({
                   <pre>{buffer.disk.content}</pre>
                 </details>
               )}
+              <div className="file-places-toolbar">
+                <button
+                  type="button"
+                  className="mini"
+                  aria-pressed={places.pinned.includes(buffer.path)}
+                  disabled={
+                    !places.pinned.includes(buffer.path) &&
+                    places.pinned.length >= 50
+                  }
+                  title={
+                    places.pinned.length >= 50
+                      ? "Up to 50 files can be pinned per project"
+                      : "Keep this file in Quick Open"
+                  }
+                  onClick={() => togglePinnedFile(workspace, buffer.path)}
+                >
+                  <Bookmark size={13} aria-hidden="true" />{" "}
+                  {places.pinned.includes(buffer.path)
+                    ? "Pinned file"
+                    : "Pin file"}
+                </button>
+                {/\.(md|markdown|mdown|mkd)$/i.test(buffer.path) && (
+                  <button
+                    type="button"
+                    className="mini"
+                    aria-pressed={previewPath === buffer.path}
+                    onClick={() =>
+                      setPreviewPath(
+                        previewPath === buffer.path ? null : buffer.path,
+                      )
+                    }
+                  >
+                    <BookOpen size={13} aria-hidden="true" /> Markdown preview
+                  </button>
+                )}
+              </div>
               <div className="file-editor-toolbar">
                 {buffer.disk && buffer.disk.content !== null ? (
                   <>
@@ -782,6 +928,7 @@ export function FileEditor({
           />
           {plainEditing && (
             <textarea
+              ref={plainInput}
               className="file-editor-input"
               aria-label={`Edit ${buffer.path}`}
               disabled={discarding || resolving}
@@ -795,6 +942,17 @@ export function FileEditor({
               }
               onKeyDown={editKey}
             />
+          )}
+          {previewPath === buffer.path && (
+            <section
+              className="file-markdown-preview"
+              aria-label="Markdown preview"
+            >
+              <h3>Draft preview</h3>
+              <Markdown key={buffer.path} source="draft">
+                {buffer.draft}
+              </Markdown>
+            </section>
           )}
           <p className="file-editor-hint">
             {plainEditing && "Mixed line endings · plain editing · "}
