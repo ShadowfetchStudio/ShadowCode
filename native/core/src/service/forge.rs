@@ -98,10 +98,7 @@ pub fn parse_remote(url: &str) -> Option<RemoteInfo> {
         "bitbucket"
     } else if lower == "dev.azure.com" || lower.ends_with(".visualstudio.com") {
         "azure_devops"
-    } else if lower == "codeberg.org"
-        || lower.contains("forgejo")
-        || lower.contains("gitea")
-    {
+    } else if lower == "codeberg.org" || lower.contains("forgejo") || lower.contains("gitea") {
         "forgejo"
     } else {
         "other"
