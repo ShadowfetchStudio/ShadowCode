@@ -465,7 +465,7 @@ fn has_unperformed_action(text: &str, commands_only: bool) -> bool {
     static CURRENT: LazyLock<regex::Regex> = LazyLock::new(|| {
         // Explicit first-person status, not arbitrary progressive narration.
         // Targets and quote/conditional/negative exclusions still apply below.
-        regex::Regex::new(r"\bi(?:'m| am)\s+(?:now|currently)\s+(making|applying|editing|modifying|patching|fixing|repairing|updating|rewriting|implementing|creating|deleting|removing|renaming|running|executing|invoking|launching|rerunning|inspecting|reading|opening|searching|examining|checking|verifying|testing)\b")
+        regex::Regex::new(r"\b(?:i(?:'m| am)\s+(?:now|currently)|let me try)\s+(making|applying|editing|modifying|patching|fixing|repairing|updating|rewriting|implementing|creating|deleting|removing|renaming|running|executing|invoking|launching|rerunning|inspecting|reading|opening|searching|examining|checking|verifying|testing)\b")
             .expect("current action status regex")
     });
     static RUNNING_COMMAND: LazyLock<regex::Regex> = LazyLock::new(|| {
@@ -1228,6 +1228,7 @@ mod tests {
             "I am now inspecting the files and applying the necessary fixes according to the requirements provided. Please wait while I make the changes.",
             "I'm currently editing helpers.py.",
             "I am now running the tests.",
+            "Let me try reading the file in smaller chunks.",
         ] {
             assert!(promises_tool_action(text), "{text}");
         }

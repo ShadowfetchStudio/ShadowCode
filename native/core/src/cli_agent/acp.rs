@@ -247,6 +247,7 @@ pub struct AcpAdapter {
     auth_id: Option<u64>,
     session_load_id: Option<u64>,
     session_new_id: Option<u64>,
+    plan_mode_id: Option<u64>,
     set_model_id: Option<u64>,
     /// `session/set_config_option` for the reasoning effort, not answered yet.
     effort_id: Option<u64>,
@@ -306,6 +307,7 @@ impl AcpAdapter {
             auth_id: None,
             session_load_id: None,
             session_new_id: None,
+            plan_mode_id: None,
             set_model_id: None,
             effort_id: None,
             turn_text: String::new(),
@@ -450,11 +452,18 @@ impl AcpAdapter {
                     .is_some_and(|modes| modes.iter().any(|m| m["id"] == "plan"))
             {
                 let mode_id = self.id();
+                self.plan_mode_id = Some(mode_id);
+                self.switching = true;
                 step.send.push(request(
                     mode_id,
                     "session/set_mode",
                     json!({"sessionId":session,"modeId":"plan"}),
                 ));
+            } else if options.read_only && matches!(self.vendor, Vendor::Cursor | Vendor::Grok) {
+                bail!(
+                    "{} did not offer a read-only plan mode. Choose another model for this task.",
+                    self.vendor.product_label()
+                );
             }
             let picked =
                 !options.model.is_empty() && options.model != "default" && options.model != "auto";
@@ -524,7 +533,7 @@ impl AcpAdapter {
     /// once none is outstanding.
     fn switch_answered(&mut self) -> Result<Step> {
         let mut step = Step::default();
-        if self.set_model_id.is_none() && self.effort_id.is_none() {
+        if self.plan_mode_id.is_none() && self.set_model_id.is_none() && self.effort_id.is_none() {
             self.switching = false;
             if let Some((prompt, images)) = self.pending_prompt.take() {
                 step.send.extend(self.start_prompt(&prompt, &images)?);
@@ -538,6 +547,12 @@ impl AcpAdapter {
                 .as_str()
                 .or_else(|| err["message"].as_str())
                 .unwrap_or("unknown error");
+            if Some(id) == self.plan_mode_id {
+                bail!(
+                    "{} rejected read-only plan mode ({text}). The prompt was withheld.",
+                    self.vendor.product_label()
+                );
+            }
             if Some(id) == self.session_load_id {
                 // The stored session is gone; start a new one and let the
                 // caller supply handoff context.
@@ -678,6 +693,10 @@ impl AcpAdapter {
             self.session_id = Some(session.clone());
             self.phase = Phase::Session;
             return self.after_session(&session, res);
+        }
+        if Some(id) == self.plan_mode_id {
+            self.plan_mode_id = None;
+            return self.switch_answered();
         }
         if Some(id) == self.set_model_id {
             // The model is in place; the queued prompt follows.

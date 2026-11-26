@@ -1173,13 +1173,13 @@ impl ToolExecutor {
                 if self.workspace.is_secret_target(path) {
                     return Ok(crate::redaction::secret_file_refusal(path));
                 }
+                let offset = integer(args, "offset", 1, 1, 4_000_001)?;
+                let limit = integer(args, "limit", 400, 1, 20_000)?;
                 let file = self.workspace.read(path)?;
                 self.observed
                     .lock()
                     .map_err(|_| anyhow::anyhow!("Read history lock poisoned"))?
                     .insert(file.path.clone(), file.hash.clone());
-                let offset = integer(args, "offset", 1, 1, 4_000_001)?;
-                let limit = integer(args, "limit", 400, 1, 20_000)?;
                 let total = file.content.lines().count();
                 let content = file
                     .content
@@ -1831,7 +1831,7 @@ pub fn schemas_tiered(tier: DescriptionTier) -> Vec<Value> {
     let specs=vec![
         ("system_info","Inspect OS and connected displays. Read-only.",json!({}),vec![]),
         ("list_files","List direct children of a workspace directory.",json!({"path":s,"max_entries":n}),vec![]),
-        ("read_file","Read UTF-8 text with 1-based offset/limit. Returns truncated=true and next_offset when the range or byte budget is exceeded; do not assume omitted lines.",json!({"path":s,"offset":n,"limit":n}),vec!["path"]),
+        ("read_file","Read UTF-8 text with 1-based offset/limit. Returns truncated=true and next_offset when the range or byte budget is exceeded; do not assume omitted lines.",json!({"path":s,"offset":{"type":"integer","minimum":1,"maximum":4_000_001,"default":1},"limit":{"type":"integer","minimum":1,"maximum":20_000,"default":400}}),vec!["path"]),
         ("search_files","Find filenames by substring; respects ignore rules.",json!({"query":s,"path":s}),vec!["query"]),
         ("search_text","Search text; literal by default, optional regex and file glob.",json!({"query":s,"path":s,"regex":b,"glob":s,"max_hits":n}),vec!["query"]),
         ("search_symbol","Find likely symbol definitions by name (regex heuristic).",json!({"query":s,"path":s}),vec!["query"]),

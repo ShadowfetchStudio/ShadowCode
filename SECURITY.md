@@ -223,8 +223,8 @@ What each vendor runtime enforces (from `permissions.rs`, shown in
 | --- | --- |
 | Codex | Codex's own sandbox: `workspace-write`, or `read-only` for Plan/Review, with `approvalPolicy: on-request`. Codex decides which actions ask. The `codex exec` fallback has no approval channel. It is used only if app-server fails before a turn starts, and only when shell commands are set not to ask (`permissions.approve_shell: false`). With the defaults of both modes, it never runs |
 | Claude Code | Permission prompts come to ShadowCode (`--permission-prompts host`). Plan/Review uses `--permission-mode plan`. Claude's own settings — including a trusted project's `.claude/settings.json` and `.mcp.json` — can pre-approve tools, run hooks or start MCP servers that ShadowCode never sees. Trust a project only if you trust that content |
-| Cursor | ACP permission requests come to ShadowCode. Plan/Review uses Cursor's plan mode when offered |
-| Grok | ACP permission requests come to ShadowCode. Grok has no read-only mode, so Plan/Review is not enforced by Grok |
+| Cursor | ACP permission requests come to ShadowCode. Plan/Review requires Cursor to confirm plan mode |
+| Grok | ACP permission requests come to ShadowCode. Plan/Review stops before sending the prompt unless the CLI confirms plan mode |
 | Antigravity | Asks through ACP `session/request_permission`, like Cursor and Grok. In Plan/Review ShadowCode denies its requests |
 
 In read-only tasks, ShadowCode denies vendor approval requests automatically.

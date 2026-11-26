@@ -431,7 +431,7 @@ no evidence.
 | Claude Code | `claude -p --output-format stream-json --input-format stream-json --permission-prompts host` | `claude auth login` | Claude Code's own model list (SDK `initialize`): *Default*, aliases and full model names | Yes (image blocks) | Yes, through `--permission-prompts host`. Claude's own settings can pre-approve tools without asking | 5-hour and weekly plan windows and reset times, reported during tasks |
 | Cursor | `cursor-agent acp` (Agent Client Protocol) | `cursor-agent login` | ACP session models, with exact IDs | When ACP `initialize` advertises image support | Yes, through ACP permission requests | *Usage unavailable*: Cursor reports its plan tier, not the remaining allowance |
 | Antigravity | Google's ACP agent server `agy_acp_server.par` (installed from Accounts) | Google sign-in through the server's `authenticate` | The `model` config option of the ACP session | Yes (ACP image support) | Yes, through ACP permission requests | *Usage unavailable*: the server reports no plan usage |
-| Grok | `grok agent stdio` (ACP) | `grok login` | ACP session models (falls back to `grok models`) | No: ACP reports `image: false` | Yes, through ACP. Grok has no read-only mode, so Plan/Review is not enforced by Grok | *Usage unavailable*: Grok reports token counts per task only |
+| Grok | `grok agent stdio` (ACP) | `grok login` | ACP session models (falls back to `grok models`) | No: ACP reports `image: false` | Yes, through ACP. Plan/Review stops before sending the prompt unless the CLI confirms plan mode | *Usage unavailable*: Grok reports token counts per task only |
 
 - **API keys are never used.** Vendor CLIs start with provider API-key
   variables such as `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` removed from their

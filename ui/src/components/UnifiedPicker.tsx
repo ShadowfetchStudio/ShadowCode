@@ -744,9 +744,9 @@ function Row({
             {availabilityLabel(target)}
           </span>
           {billingWarning(target) && ` · ${billingWarning(target)}`}
-          {target.group === "subscriptions" && vendorKey(target) === "grok" && " · Plan/Review allows writes"}
-          {target.group === "subscriptions" && vendorKey(target) === "cursor" && " · Read-only depends on CLI plan support"}
-          {isLocal(target) && target.local?.fits === "cpu" && " · CPU inference"}
+          {target.group === "subscriptions" && vendorKey(target) === "grok" && " · Plan/Review requires CLI plan support"}
+          {target.group === "subscriptions" && vendorKey(target) === "cursor" && " · Read-only requires CLI plan support"}
+          {isLocal(target) && target.local?.fits === "cpu" && " · Estimated to fit in system RAM"}
           {/* Rows show allowance only when the provider reports one; the
               "Usage unavailable" explanation stays in the details panel. */}
           {target.usage?.state !== "unavailable" &&

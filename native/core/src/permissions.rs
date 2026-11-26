@@ -286,8 +286,8 @@ pub fn vendor_notes(config: &Config) -> Value {
         "native": format!("{mode}: enforced by ShadowCode for every tool call. Shell commands always ask; sudo/su/pkexec/doas are blocked; network commands follow the network setting; read-only tasks cannot change files."),
         "codex": "Codex runs in its own sandbox: workspace-write for tasks (read-only for Plan/Review) with its approval requests shown here. ShadowCode cannot enforce 'Ask before actions' for edits inside that sandbox; Codex decides which actions need approval.",
         "claude": "Claude Code permission prompts are routed to ShadowCode and you answer them here; Plan/Review uses Claude's plan mode. Claude's own settings files can pre-approve tools that ShadowCode never sees.",
-        "cursor": "Cursor sends ACP permission requests that ShadowCode shows for approval; Plan/Review uses Cursor's plan mode when the agent offers it. Actions Cursor does not ask about are outside ShadowCode's control.",
-        "grok": "Grok sends ACP permission requests that ShadowCode shows for approval. Grok advertises no read-only mode, so Plan/Review is not enforced by the runtime.",
+        "cursor": "Cursor sends ACP permission requests that ShadowCode shows for approval; Plan/Review waits for Cursor to confirm plan mode. Actions Cursor does not ask about are outside ShadowCode's control.",
+        "grok": "Grok sends ACP permission requests that ShadowCode shows for approval. Plan/Review requires the CLI to offer and confirm a read-only plan mode. Choose another model if it is unavailable.",
         "antigravity": "Antigravity runs through Google's ACP agent server and asks ShadowCode before running commands or editing files, as Cursor and Grok do.",
         "network": "Network limits, the shell sandbox and the sudo block apply to ShadowCode's own tools only. Vendor CLIs use their own network access and sandbox; their file changes are still checkpointed for Rewind."
     })

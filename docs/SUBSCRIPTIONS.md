@@ -91,7 +91,7 @@ the `agy` CLI's print mode could not do.
 | Reasoning effort | `turn/start.effort` (plus `-c model_reasoning_effort` for new threads) | `--effort <level>`, for models that report effort support; a Claude Code without `--effort` gets the `MAX_THINKING_TOKENS` budget | Part of Cursor's model IDs; no separate control | Part of the model IDs (`…-low`, `…-high`) | The session's `reasoning_effort` option (`session/set_config_option`) |
 | Image input | Yes (`localImage`), for models that accept images | Yes (base64 image blocks) | When ACP `initialize` reports image support | Yes: ACP `initialize` reports image support | No: ACP reports `image: false` |
 | Approvals reach ShadowCode | Yes: command and file-change requests | Yes: `can_use_tool` control requests | Yes: `session/request_permission` | Yes: `session/request_permission` (questions it asks are skipped with a note) | Yes: `session/request_permission` |
-| Plan/Review (read-only) | `sandbox: read-only` | `--permission-mode plan` | ACP mode `plan`, when offered | ShadowCode denies its requests | Not enforced by Grok |
+| Plan/Review (read-only) | `sandbox: read-only` | `--permission-mode plan` | Requires confirmed ACP mode `plan` | ShadowCode denies its requests | Unavailable unless the CLI offers and confirms `plan` |
 | Resume | `thread/resume` | `--resume <session>` | `session/load` | `session/load` | `session/load` |
 | Usage shown | Plan rate-limit windows per quota pool | 5-hour and weekly plan windows, reported during tasks | *Usage unavailable* | *Usage unavailable* | *Usage unavailable* (token counts per task) |
 
