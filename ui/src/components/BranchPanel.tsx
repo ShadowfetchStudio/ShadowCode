@@ -209,6 +209,10 @@ export function BranchPanel({
     Boolean(overview.branch) &&
     !onBase;
 
+  const forgeName = status?.provider === "forgejo"
+    ? status.remote_info?.host || "Forgejo"
+    : FORGE[status?.provider || ""] || "remote";
+
   return (
     <div className="git-panel">
       <section className="git-section" aria-label="Branch">
@@ -747,7 +751,7 @@ export function BranchPanel({
                 >
                   <ExternalLink size={12} aria-hidden="true" />{" "}
                   {canCreate ? "Open compare page in browser" :
-                    `Open ${status.provider === "gitlab" ? "merge" : "pull"} request on ${status.remote_info?.host || FORGE[status.provider || ""] || "remote"}`}
+                    `Open ${status.provider === "gitlab" ? "merge" : "pull"} request on ${forgeName}`}
                 </button>
               )}
               {status?.provider &&

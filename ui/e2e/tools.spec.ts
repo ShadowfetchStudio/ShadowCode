@@ -203,7 +203,7 @@ test("without a signed-in gh, explains sign-in and opens the compare page", asyn
     panel.getByRole("button", { name: "Create pull request" }),
   ).toHaveCount(0);
   await panel
-    .getByRole("button", { name: /Open compare page in browser/ })
+    .getByRole("button", { name: "Open pull request on GitHub" })
     .click();
   await expect
     .poll(async () =>

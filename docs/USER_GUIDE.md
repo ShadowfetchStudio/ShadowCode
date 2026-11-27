@@ -492,7 +492,7 @@ staged changes to a pull request:
   **Create pull request**. The branch is pushed first when needed. This uses
   the GitHub CLI (`gh`) when it is installed and signed in (`glab` for
   GitLab). Without it the tab explains how to install and sign in, and
-  **Open compare page in browser** opens the same page on the website.
+  **Open compare page in browser** opens the forge website. When direct creation is unavailable, choose **Open pull request on** the named forge (or **Open merge request on GitLab**).
 - After the pull request opens, its link and CI checks appear. Checks refresh
   every minute while the tab is visible, or at once with the refresh button.
 

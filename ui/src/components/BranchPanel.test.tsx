@@ -222,6 +222,19 @@ it("explains how to sign in and offers the compare page when gh is not ready", a
   ).toBeTruthy();
 });
 
+it.each([
+  ["azure_devops", "ssh.dev.azure.com", "Azure DevOps"],
+  ["bitbucket", "bitbucket.org", "Bitbucket"],
+  ["forgejo", "codeberg.org", "codeberg.org"],
+] as const)("names the browser action for %s", async (provider, host, label) => {
+  vi.mocked(forgeApi.prStatus).mockResolvedValue({
+    ...ready, provider, remote_info: { kind: provider, host, path: "team/repo", web_url: "https://" + host },
+    cli: { ...ready.cli, name: null, installed: false, authenticated: false },
+  });
+  mount();
+  expect(await screen.findByRole("button", { name: "Open pull request on " + label })).toBeTruthy();
+});
+
 it("waits for the agent before switching branches or committing", async () => {
   mount(true);
   await screen.findByText(/wait until the agent finishes/);
