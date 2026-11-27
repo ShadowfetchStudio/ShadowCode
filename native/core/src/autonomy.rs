@@ -355,9 +355,8 @@ pub fn public_assistant_text(text: &str) -> String {
         regex::Regex::new(r"(?is)\A[ \t]*(?:thought|thinking)[ \t]*(?:\n+|\z)")
             .expect("leading scratch label regex")
     });
-    let blank_lines = BLANK_LINES.get_or_init(|| {
-        regex::Regex::new(r"\n{3,}").expect("blank collapse regex")
-    });
+    let blank_lines =
+        BLANK_LINES.get_or_init(|| regex::Regex::new(r"\n{3,}").expect("blank collapse regex"));
 
     let mut out = paired_block.replace_all(text, "").into_owned();
     out = stray_tag.replace_all(&out, "").into_owned();
@@ -1584,7 +1583,9 @@ mod tests {
         );
         // Ordinary prose containing "thought" or "Analysis:" must not be corrupted.
         assert_eq!(
-            public_assistant_text("I thought the bug was in auth.rs.\n\nAnalysis: the race is in store.rs."),
+            public_assistant_text(
+                "I thought the bug was in auth.rs.\n\nAnalysis: the race is in store.rs."
+            ),
             "I thought the bug was in auth.rs.\n\nAnalysis: the race is in store.rs."
         );
         assert_eq!(

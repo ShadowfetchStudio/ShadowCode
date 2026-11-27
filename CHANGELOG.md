@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **Assistant prose preservation & performance:** Fixed `public_assistant_text` so thinking/channel scratch stripping no longer removes the word `"thought"` mid-sentence or deletes lines starting with `"Analysis:"` / `"Reasoning:"`, and cached the compiled regexes with `OnceLock`.
+- **Crash-recovery hardening:** Removed unchecked `.unwrap()` calls in worktree cleanup recovery (`worktrees/cleanup.rs`) and job result finalization (`engine.rs`).
+- **Multi-cursor editor selection (`Cmd+D` / `Ctrl+D`):** Enabled `allowMultipleSelections` and `selectNextOccurrence` in `CodeEditor` across macOS, Windows, and Linux.
+- **Documentation & hygiene:** Updated `ARCHITECTURE.md` (2.7 series), `TRADEMARKS.md` (macOS, Windows, and Linux), and removed a personal path from `redaction.rs` test fixtures.
+
 ## 2.7.0 — Multi-forge support, mobile PWA polish & package manager manifests
 
 - Added Bitbucket, Azure DevOps, and Forgejo/Codeberg/Gitea remote parsing, PR compare URL generation, and PR URL extraction alongside GitHub and GitLab.
