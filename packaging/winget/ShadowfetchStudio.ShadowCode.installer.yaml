@@ -1,11 +1,11 @@
 PackageIdentifier: ShadowfetchStudio.ShadowCode
-PackageVersion: 2.7.0
+PackageVersion: 2.7.1
 InstallerType: nullsoft
 Scope: user
 UpgradeBehavior: install
 Installers:
   - Architecture: x64
-    InstallerUrl: https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.7.0/ShadowCode_2.7.0_x64-setup.exe
-    InstallerSha256: 994ABC139A477602AE8CFF6BF1FA364B810D54C6114C9538E5B65F587F2E0392
+    InstallerUrl: https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v2.7.1/ShadowCode_2.7.1_x64-setup.exe
+    InstallerSha256: 1402479FA1BF7BF1017D9427A6354A6E5B051901FC42D376102889340B9B1173
 ManifestType: installer
 ManifestVersion: 1.6.0

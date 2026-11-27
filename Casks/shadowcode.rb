@@ -1,9 +1,9 @@
 cask "shadowcode" do
   arch arm: "aarch64", intel: "x64"
 
-  version "2.7.0"
-  sha256 arm: "475e584a77dbc4228157643b3b5f89f4b8cd42b37ba437467a635d6929db855a",
-         intel: "73c37a5cf65ee6930bff441b495e6d22bf86b58f695748acec0c027801568793"
+  version "2.7.1"
+  sha256 arm: "d6a5624543d068bbfa19f3e1cf80c8a913bae1b27e1daf99eda667fa45315cf0",
+         intel: "e4f1c3804be074638504a34a9b8f7ae438a382230481cd0b31571c6c0fb85864"
 
   url "https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v#{version}/ShadowCode_#{version}_#{arch}.dmg"
   name "ShadowCode"

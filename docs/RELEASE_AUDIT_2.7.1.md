@@ -49,3 +49,29 @@ On November 27, 2026, npm reported zero advisories for the locked UI dependency 
 The project controls two useful starting points. Its YAML configuration uses `serde_yaml_ng`, which brings in unmaintained `unsafe-libyaml`. A parser migration should test saved configurations, old profiles and round-trip output. The native core also uses the D-Bus 5.x stack alongside Tauri and notification plugins. Moving the core alone would leave the older wire-format dependencies in the package. Coordinate the migration with the desktop plugins. [RustSec YAML advisory](https://rustsec.org/advisories/RUSTSEC-2024-0449.html) · [RustSec D-Bus migration](https://rustsec.org/advisories/RUSTSEC-2026-0370.html)
 
 The remaining notices concern Chrono, a procedural-macro helper and the UNIC Unicode crates. The audit found Dependabot alerts and automated security updates disabled. Both settings were enabled on November 27 and verified through the GitHub API. The initial open-alert list was empty. Secret scanning and push protection were already enabled. [RustSec Chrono advisory](https://rustsec.org/advisories/RUSTSEC-2026-0543.html)
+
+## Published release verification
+
+GitHub published [2.7.1](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.7.1) at 2026-11-27T22:46:53Z from `f42063df307c81d2e3fa03daea46062379512680`. The [release workflow](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/46070735729) completed. Independent readback matched all 27 release asset digests and checked GitHub provenance on all nine installers. Both Linux studio signatures and both APT architectures were verified. The Homebrew and WinGet pins match the public installer bytes.
+
+The Apple Silicon and Intel disk images were mounted and checked. The Intel iMac ran the packaged command, Pop!_OS executed the x86_64 AppImage and Flatpak, and the Windows laptop ran the application extracted from the public NSIS installer. The hosted Windows workflow separately exercised installation.
+
+## Score after publication
+
+Using the same five equally weighted criteria, the verified 2.7.1 release scores **86/100**, up from **79/100** for 2.7.0.
+
+| Area | 2.7.0 | 2.7.1 | Evidence for the change |
+|---|---:|---:|---|
+| Model choice and local operation | 18 | 18 | This patch preserves the existing model choices. |
+| Review and verification | 17 | 18 | The task outcome now shows whether its check still applies to the current workspace. |
+| Desktop and remote interaction | 15 | 16 | Browser tests measured the send and approval controls on three phone widths. |
+| Installation and release integrity | 14 | 17 | All nine installers passed provenance verification, package-manager pins matched their bytes, and the macOS rollback fixture preserved the previous app. Apple notarization and Windows Authenticode remain outstanding. |
+| Reliability and privacy | 15 | 17 | Regression tests cover incomplete reasoning channels and token-bearing remote URLs. Dependency alerts and automated security fixes are enabled. |
+
+These scores reflect engineering review of the tested workflows. The comparison includes no head-to-head coding accuracy, latency or first-time-user benchmark.
+
+The Apple Silicon DMG ran Qwen3-0.6B-Q8_0.gguf on Metal. The runtime offloaded 1/29 layers to GPU and generated 4 tokens. The Windows installer runtime ran gemma-4-E4B_q4_0-it.gguf through Vulkan and generated 4 tokens. These short generations verified hardware execution.
+
+## Remote UI performance opportunity
+
+The production build for the reviewed PR has 5 JavaScript and CSS files in its initial static import graph, totaling 1,037,591 bytes. Compressing each file independently with gzip produced 312,710 bytes. The Markdown bundle accounts for 62,378 of those compressed bytes. Measure time to the first usable approval on a phone over a cold remote connection before deciding whether to defer Markdown rendering. These build sizes exclude icons, dynamic imports and API traffic. Actual transfer and interaction time depend on the serving path, connection and cache. Six focused WebKit browser cases passed across About, model-specific composer layouts and phone approval targets.

@@ -1,5 +1,5 @@
 PackageIdentifier: ShadowfetchStudio.ShadowCode
-PackageVersion: 2.7.0
+PackageVersion: 2.7.1
 PackageLocale: en-US
 Publisher: Shadowfetch
 PublisherUrl: https://shadowfetch.com
@@ -15,6 +15,6 @@ Tags:
   - ide
   - llama-cpp
   - local-llm
-ReleaseNotesUrl: https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.7.0
+ReleaseNotesUrl: https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.7.1
 ManifestType: defaultLocale
 ManifestVersion: 1.6.0
