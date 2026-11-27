@@ -37,8 +37,6 @@ must not imply official sponsorship or endorsement where none exists.
 
 Official project: https://github.com/ShadowfetchStudio/ShadowCode
 
-Official website: https://shadowcode.org
-
 Publisher: https://shadowfetch.com
 
 For a proposed use outside this policy or permission to use the names or logos

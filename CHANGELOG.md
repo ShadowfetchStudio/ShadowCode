@@ -8,6 +8,7 @@ The macOS updater stages each installation in a unique directory and restores th
 
 The tag workflow qualifies all nine platform installers before publishing. Each release includes a Homebrew cask and three WinGet manifests with pins derived from the release files. Linux packages retain studio signatures.
 
+- The About page and package listings now open the official project overview. The previous website address redirected to an unrelated catalog.
 - Git remote metadata now omits HTTP query parameters and fragments, including token-bearing URLs.
 - **Assistant prose preservation & performance:** Fixed `public_assistant_text` so thinking/channel scratch stripping no longer removes the word `"thought"` mid-sentence or deletes lines starting with `"Analysis:"` / `"Reasoning:"`, and cached the compiled regexes with `OnceLock`.
 - **Crash-recovery hardening:** Removed unchecked `.unwrap()` calls in worktree cleanup recovery (`worktrees/cleanup.rs`) and job result finalization (`engine.rs`).

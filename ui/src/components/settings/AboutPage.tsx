@@ -129,8 +129,8 @@ export function AboutPage({
           <a href={about.links.publisher}>{about.publisher}</a>
         </div>
         <div>
-          <span>Official website</span>
-          <a href={about.links.website}>{about.links.website}</a>
+          <span>Project overview</span>
+          <a href={about.links.website}>ShadowCode README</a>
         </div>
         <div>
           <span>GitHub repository</span>

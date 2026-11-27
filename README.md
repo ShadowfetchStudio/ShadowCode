@@ -2,7 +2,7 @@
 
 **One harness. All models.**
 
-[Download ShadowCode for Windows, macOS and Linux](https://github.com/ShadowfetchStudio/ShadowCode/releases/latest) · [Website](https://shadowcode.org)
+[Download ShadowCode for Windows, macOS and Linux](https://github.com/ShadowfetchStudio/ShadowCode/releases/latest) · [User guide](docs/USER_GUIDE.md)
 
 ## New in 2.7
 
@@ -41,8 +41,6 @@ Licensed under Apache 2.0.
 Official project: https://github.com/ShadowfetchStudio/ShadowCode
 
 Publisher: https://shadowfetch.com
-
-Official website: https://shadowcode.org
 
 The code is open source; the Shadowfetch and ShadowCode product identity is covered by the [trademark and branding policy](TRADEMARKS.md).
 

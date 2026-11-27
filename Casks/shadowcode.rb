@@ -8,7 +8,7 @@ cask "shadowcode" do
   url "https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v#{version}/ShadowCode_#{version}_#{arch}.dmg"
   name "ShadowCode"
   desc "Local-first AI coding workspace with bundled llama.cpp, coding agents, and OS sandboxing"
-  homepage "https://shadowcode.org"
+  homepage "https://github.com/ShadowfetchStudio/ShadowCode#readme"
 
   livecheck do
     url :url

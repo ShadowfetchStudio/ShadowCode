@@ -38,10 +38,14 @@ Linux qualification found stale Alpine builder pins for libffi on both targets a
 The strongest distribution opportunity is operating-system publisher trust. The current studio key and GitHub attestations support release verification. Apple Developer ID and notarization, and a Windows Authenticode identity, require their respective credentials. The current release process can operate from one authorized GitHub account without copying a studio private key to each build machine.
 
 
+## Project links
+
+The project website linked from GitHub, the app and its package listings redirected to CompatWiki, a hardware compatibility catalog. The project overview now points to the repository README, and the download link points to the latest GitHub release. A check across 74 Markdown files found no missing relative file targets or unresolved heading links in the links examined. The publisher’s separate downloads page still listed 2.4.1 when reviewed. [Publisher downloads](https://www.shadowfetch.com/downloads#shadowcode)
+
 ## Dependency maintenance
 
 On November 27, 2026, npm reported zero advisories for the locked UI dependency tree. An OSV query for all 663 registry package/version entries in the Rust lockfile returned 11 unmaintained-crate notices. Source and path dependencies, including the vendored GLib backport, fall outside that registry query. A clean package scan alone cannot establish application security.
 
 The project controls two useful starting points. Its YAML configuration uses `serde_yaml_ng`, which brings in unmaintained `unsafe-libyaml`. A parser migration should test saved configurations, old profiles and round-trip output. The native core also uses the D-Bus 5.x stack alongside Tauri and notification plugins. Moving the core alone would leave the older wire-format dependencies in the package. Coordinate the migration with the desktop plugins. [RustSec YAML advisory](https://rustsec.org/advisories/RUSTSEC-2024-0449.html) · [RustSec D-Bus migration](https://rustsec.org/advisories/RUSTSEC-2026-0370.html)
 
-The remaining notices concern Chrono, a procedural-macro helper and the UNIC Unicode crates. GitHub reported that Dependabot alerts and automated security updates were disabled, while secret scanning and push protection were enabled. Enabling dependency alerts would surface later advisories between manual audits. [RustSec Chrono advisory](https://rustsec.org/advisories/RUSTSEC-2026-0543.html)
+The remaining notices concern Chrono, a procedural-macro helper and the UNIC Unicode crates. The audit found Dependabot alerts and automated security updates disabled. Both settings were enabled on November 27 and verified through the GitHub API. The initial open-alert list was empty. Secret scanning and push protection were already enabled. [RustSec Chrono advisory](https://rustsec.org/advisories/RUSTSEC-2026-0543.html)
