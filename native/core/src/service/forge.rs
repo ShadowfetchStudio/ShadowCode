@@ -57,6 +57,13 @@ pub fn parse_remote(url: &str) -> Option<RemoteInfo> {
             return None;
         }
         let (authority, path) = rest.split_once('/')?;
+        // Remote metadata and compare links are public. HTTP query parameters
+        // and fragments are transport details and can contain credentials.
+        let path = if matches!(scheme.as_str(), "https" | "http") {
+            path.split(['?', '#']).next()?
+        } else {
+            path
+        };
         let authority = authority.rsplit('@').next()?;
         let (host, port) = match authority.rsplit_once(':') {
             Some((host, port)) if port.bytes().all(|b| b.is_ascii_digit()) => {
@@ -1713,6 +1720,10 @@ mod tests {
         let https = parse_remote("https://user:secret-token@github.com/octo/demo").unwrap();
         assert_eq!(https.web_url, "https://github.com/octo/demo");
         assert!(!format!("{https:?}").contains("secret"));
+        let query = parse_remote("https://example.org/team/tool.git?access_token=fixture#fragment")
+            .unwrap();
+        assert_eq!(query.web_url, "https://example.org/team/tool");
+        assert!(!format!("{query:?}").contains("fixture"));
         let lab = parse_remote("ssh://git@gitlab.example.com:2222/group/sub/repo.git").unwrap();
         assert_eq!(lab.kind, "gitlab");
         assert_eq!(lab.path, "group/sub/repo");

@@ -138,8 +138,9 @@ async function main() {
   const [bundle, trustDir, aarch64Bundle, platforms] = process.argv.slice(2);
   assert(bundle && trustDir && aarch64Bundle && platforms && process.argv.length === 6,
     'Usage: node publish-native-release.mjs X86_64_BUNDLE TRUST_DIR AARCH64_BUNDLE PLATFORM_BUNDLES');
-  const context = { repo: process.env.GITHUB_REPOSITORY, tag: process.env.GITHUB_REF_NAME, commit: process.env.GITHUB_SHA, runId: process.env.GITHUB_RUN_ID, runAttempt: process.env.GITHUB_RUN_ATTEMPT };
+  const context = { repo: process.env.GITHUB_REPOSITORY, tag: process.env.GITHUB_REF_NAME, commit: process.env.GITHUB_SHA, runId: process.env.GITHUB_RUN_ID, runAttempt: process.env.SIGNED_RUN_ATTEMPT };
   const version = validateContext(context);
+  assert(BigInt(context.runAttempt) <= BigInt(process.env.GITHUB_RUN_ATTEMPT), 'Invalid signed handoff attempt');
   const load = async (directory, target) => ({ target, files: await requireTransportLayout(directory, version, true, target), verification: await readReceipts(directory) });
   const bundles = [await load(bundle, IDENTITY.target)];
   if (aarch64Bundle) bundles.push(await load(aarch64Bundle, 'aarch64-unknown-linux-gnu'));

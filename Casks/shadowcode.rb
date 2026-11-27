@@ -15,7 +15,7 @@ cask "shadowcode" do
     strategy :github_latest
   end
 
-  depends_on macos: ">= :monterey"
+  depends_on macos: :monterey
 
   app "ShadowCode.app"
   binary "#{appdir}/ShadowCode.app/Contents/MacOS/shadowcode"
