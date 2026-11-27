@@ -23,6 +23,8 @@ Reviewed November 27, 2026. The public baseline was 2.7.0. The findings below in
 | An unrelated, unreadable process could fail Linux qualification | The X11 test uses a separate POSIX session. The harness can recognize another pre-existing session, verifies process identity and retains refusal for ambiguous processes. |
 | A failed Mac update could strand the previous app, while Windows local installation could choose the wrong version | A Mac fixture fails the final move and checks restoration plus preservation of neighboring files. Windows checks ambiguous local input before opening an installer. |
 
+A clean Windows runner also exposed a packaging timeout. The notice generator stopped Cargo after two minutes while it was downloading locked sources. The patch gives this operation ten minutes and continues to require the complete resolved dependency list and notice archive.
+
 ## Comparison and opportunities
 
 **Aider** integrates automatic linting after edits and supports a configured test command. ShadowCode already tracks whether a configured check still applies to the current files. Making that verdict visible beside the task outcome gives the user a reason to trust it or rerun the check. A next experiment is to measure time from a clean checkout to the first passing project check. [Aider linting and testing](https://aider.chat/docs/usage/lint-test.html)
