@@ -1,4 +1,4 @@
-# ShadowCode architecture (2.4 series)
+# ShadowCode architecture (2.7 series)
 
 ```text
 React window (ui/)                 shadowcode CLI / TUI / MCP clients

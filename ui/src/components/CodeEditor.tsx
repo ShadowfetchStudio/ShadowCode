@@ -13,7 +13,11 @@ import {
   indentUnit,
   syntaxHighlighting,
 } from "@codemirror/language";
-import { closeSearchPanel, searchPanelOpen } from "@codemirror/search";
+import {
+  closeSearchPanel,
+  searchPanelOpen,
+  selectNextOccurrence,
+} from "@codemirror/search";
 import { tags } from "@lezer/highlight";
 import { loadEditorLanguage } from "../lib/editorLanguage";
 
@@ -163,6 +167,8 @@ export function CodeEditor(props: CodeEditorProps) {
             // CodeMirror's Windows default is Ctrl+Y. Keep that binding and
             // also accept the cross-platform Shift+Mod+Z shortcut.
             { key: "Mod-Shift-z", run: redo, preventDefault: true },
+            // Multi-cursor next occurrence (Cmd+D on macOS, Ctrl+D on Windows/Linux).
+            { key: "Mod-d", run: selectNextOccurrence, preventDefault: true },
             {
               key: "Mod-s",
               scope: "editor search-panel",
@@ -189,6 +195,7 @@ export function CodeEditor(props: CodeEditorProps) {
           ]),
         ),
         basicSetup,
+        EditorState.allowMultipleSelections.of(true),
         highlighting,
         editorTheme,
         indentUnit.of("  "),

@@ -1818,25 +1818,23 @@ impl Engine {
                 job.summary = format!("Unverified: {}", job.summary);
             }
         }
-        job.result = Some(
-            json!({"success":success,"cancelled":cancelled,"summary":job.summary,"plan":plan,"usage":job.usage,"usage_is_estimated":job.usage_is_estimated,"verification":verification}),
-        );
-        job.result.as_mut().unwrap()["timings"] = json!(job.timings);
+        let mut result = json!({"success":success,"cancelled":cancelled,"summary":job.summary,"plan":plan,"usage":job.usage,"usage_is_estimated":job.usage_is_estimated,"verification":verification});
+        result["timings"] = json!(job.timings);
         if let Some(run) = &job.run {
-            job.result.as_mut().unwrap()["run"] = json!(run);
+            result["run"] = json!(run);
         }
         if let Some(limit) = limit {
-            job.result.as_mut().unwrap()["limit_reached"] = limit;
+            result["limit_reached"] = limit;
         }
         if let Some(memory) = out_of_memory {
-            job.result.as_mut().unwrap()["local_out_of_memory"] = memory;
+            result["local_out_of_memory"] = memory;
         }
         // Heads-ups: tests skipped or removed, CI changed, checks switched
         // off (`crate::honesty`), from this task's recorded changes.
         if job.mode == "code" && running.child.is_none() {
             let flags = crate::honesty::for_task(&self.0.store, &running.workspace, &job.task_id);
             if let Some(summary) = crate::honesty::summary(&flags) {
-                job.result.as_mut().unwrap()["honesty"] = summary.clone();
+                result["honesty"] = summary.clone();
                 if let Err(error) =
                     self.record_event(&job.session_id, Some(&job.task_id), "task.flags", &summary)
                 {
@@ -1844,6 +1842,7 @@ impl Engine {
                 }
             }
         }
+        job.result = Some(result);
         if job.mode == "command" {
             if let Some(event) = self
                 .0

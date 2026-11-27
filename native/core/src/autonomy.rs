@@ -5,6 +5,7 @@ use crate::{context, permissions, tools};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::sync::OnceLock;
 
 /// Notice repeated inspection of files already read in full during a code task.
 /// This only adds a process note; it never hides a tool result or grants edits.
@@ -329,28 +330,39 @@ pub fn runaway_action(repeats: usize) -> RunawayAction {
 }
 
 /// Collapse Gemma/Ollama thinking-channel markup so the transcript keeps the
-/// answer and hides private scratch (`thought`, `<channel|>`, analysis tags).
+/// answer and hides private scratch (`<think>`, `<channel|>`, leading `thought`
+/// headers) without corrupting ordinary prose containing words like "thought"
+/// or lines starting with "Analysis:" / "Reasoning:".
 pub fn public_assistant_text(text: &str) -> String {
-    let mut out = text.to_owned();
-    // XML-ish channel / thinking wrappers and bare close tags.
-    let tag = regex::Regex::new(
-        r"(?is)</?(?:\|)?(?:channel|think(?:ing)?|redacted[_-]?reasoning|analysis|reasoning)(?:\|)?[^>\n]*>",
-    )
-    .expect("thinking tag regex");
-    out = tag.replace_all(&out, "").into_owned();
-    // Standalone channel markers that never formed a closed tag.
-    let bare = regex::Regex::new(r"(?i)<\|?channel\|?>").expect("bare channel regex");
-    out = bare.replace_all(&out, "").into_owned();
-    // Line-leading thinking labels dumped into content by local models.
-    let labeled =
-        regex::Regex::new(r"(?im)^[ \t]*(?:thought|thinking|analysis|reasoning)\b[^\n]*\n?")
-            .expect("thinking label regex");
-    out = labeled.replace_all(&out, "").into_owned();
-    // Inline "thought …" prefixes before the real sentence.
-    let inline = regex::Regex::new(r"(?i)\bthought\b[ \t]*").expect("inline thought regex");
-    out = inline.replace_all(&out, "").into_owned();
-    let blank = regex::Regex::new(r"\n{3,}").expect("blank collapse regex");
-    blank.replace_all(out.trim(), "\n\n").into_owned()
+    static PAIRED_BLOCK: OnceLock<regex::Regex> = OnceLock::new();
+    static STRAY_TAG: OnceLock<regex::Regex> = OnceLock::new();
+    static LEADING_SCRATCH: OnceLock<regex::Regex> = OnceLock::new();
+    static BLANK_LINES: OnceLock<regex::Regex> = OnceLock::new();
+
+    let paired_block = PAIRED_BLOCK.get_or_init(|| {
+        regex::Regex::new(
+            r"(?is)<\|?(?:channel\|?>.*?</\|?channel\|?>|think>.*?</think>|thinking>.*?</thinking>|redacted[_-]?reasoning>.*?</redacted[_-]?reasoning>|analysis>.*?</analysis>|reasoning>.*?</reasoning>)",
+        )
+        .expect("paired thinking block regex")
+    });
+    let stray_tag = STRAY_TAG.get_or_init(|| {
+        regex::Regex::new(
+            r"(?is)</?(?:\|)?(?:channel|think(?:ing)?|redacted[_-]?reasoning|analysis|reasoning)(?:\|)?[^>\n]*>",
+        )
+        .expect("stray thinking tag regex")
+    });
+    let leading_scratch = LEADING_SCRATCH.get_or_init(|| {
+        regex::Regex::new(r"(?is)\A[ \t]*(?:thought|thinking)[ \t]*(?:\n+|\z)")
+            .expect("leading scratch label regex")
+    });
+    let blank_lines = BLANK_LINES.get_or_init(|| {
+        regex::Regex::new(r"\n{3,}").expect("blank collapse regex")
+    });
+
+    let mut out = paired_block.replace_all(text, "").into_owned();
+    out = stray_tag.replace_all(&out, "").into_owned();
+    out = leading_scratch.replace(&out, "").into_owned();
+    blank_lines.replace_all(out.trim(), "\n\n").into_owned()
 }
 
 fn normalize_loop_unit(text: &str) -> String {
@@ -1569,6 +1581,15 @@ mod tests {
         assert_eq!(
             public_assistant_text("Fixed the typo in main.rs."),
             "Fixed the typo in main.rs."
+        );
+        // Ordinary prose containing "thought" or "Analysis:" must not be corrupted.
+        assert_eq!(
+            public_assistant_text("I thought the bug was in auth.rs.\n\nAnalysis: the race is in store.rs."),
+            "I thought the bug was in auth.rs.\n\nAnalysis: the race is in store.rs."
+        );
+        assert_eq!(
+            public_assistant_text("<think>internal scratchpad</think>\nDone."),
+            "Done."
         );
     }
 

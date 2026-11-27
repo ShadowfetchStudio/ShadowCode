@@ -518,7 +518,10 @@ impl Session {
             "Cleanup requires unlocked Git administration with its original index"
         );
         let container = self.container();
-        paths::private_directory(container.parent().unwrap())?;
+        let container_parent = container
+            .parent()
+            .context("Cleanup quarantine path has no parent directory")?;
+        paths::private_directory(container_parent)?;
         #[cfg_attr(not(unix), allow(unused_mut))]
         let mut builder = fs::DirBuilder::new();
         #[cfg(unix)]
@@ -526,7 +529,7 @@ impl Session {
         builder
             .create(&container)
             .context("Cleanup quarantine already exists; preserve it for review")?;
-        paths::sync_directory(container.parent().unwrap())?;
+        paths::sync_directory(container_parent)?;
         let intent = Intent {
             version: 1,
             id: self.record.id.clone(),
@@ -585,15 +588,24 @@ impl Session {
                     exists(&intent.path)?,
                     "Original checkout disappeared before quarantine; preserve recovery material"
                 );
-                let origin_parent = directory(intent.path.parent().unwrap())?;
+                let origin_parent = directory(
+                    intent
+                        .path
+                        .parent()
+                        .context("Worktree checkout path has no parent directory")?,
+                )?;
                 let container = directory(&self.container())?;
                 ensure!(
                     identity(&container.dir_metadata()?) == intent.container_identity,
                     "Cleanup quarantine container changed"
                 );
+                let checkout_name = intent
+                    .path
+                    .file_name()
+                    .context("Worktree checkout path has no file name")?;
                 rename_noreplace(
                     &origin_parent,
-                    intent.path.file_name().unwrap(),
+                    checkout_name,
                     &container,
                     std::ffi::OsStr::new("checkout"),
                 )?;

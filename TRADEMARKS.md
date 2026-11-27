@@ -1,7 +1,7 @@
 # Shadowfetch and ShadowCode trademark and branding policy
 
 SHADOWFETCH is the parent brand, publisher, and original creator of ShadowCode.
-ShadowCode by Shadowfetch is a free and open-source AI coding agent for Linux.
+ShadowCode by Shadowfetch is a free and open-source AI coding agent for macOS, Windows, and Linux.
 The Shadowfetch and ShadowCode names and logos identify the official project
 and its publisher.
 

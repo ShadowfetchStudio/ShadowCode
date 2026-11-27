@@ -675,7 +675,7 @@ mod tests {
             "/private/var/folders/qq/twswrb793xqgdr954yy4t1dc0000gn/T/.tmpAb3dEf/project",
             // Real Darwin TMPDIR names are often 32+ mixed alnum/`_` chars.
             "/var/folders/zz/zyxvpxvq6csfxvn_n0000000000000gn/T/.tmpAb3dEf/project",
-            "/Users/Robert/Projects/ShadowCode2026/native/core/src/redaction.rs",
+            "/Users/dev/Projects/ShadowCode2026/native/core/src/redaction.rs",
             "/home/dev/work/Project-2026_v2/src/main.rs",
             "file:///private/var/folders/qq/twswrb793xqgdr954yy4t1dc0000gn/T/.tmpX1/team.git",
         ] {

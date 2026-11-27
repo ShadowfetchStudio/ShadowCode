@@ -9,6 +9,7 @@ import {
 import { EditorState, Facet, type Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { insertNewline, undo, undoDepth } from "@codemirror/commands";
+import { selectNextOccurrence } from "@codemirror/search";
 import { loadEditorLanguage } from "../lib/editorLanguage";
 import { CodeEditor, type CodeEditorProps } from "./CodeEditor";
 
@@ -439,3 +440,16 @@ it.each(["\n", "\r\n", "\r"])(
     expect(initial.onChange).toHaveBeenLastCalledWith(value);
   },
 );
+
+it("supports multi-cursor selection via selectNextOccurrence", () => {
+  const initial = props({ value: "foo bar foo baz foo" });
+  render(<CodeEditor {...initial} />);
+  const view = editor();
+  act(() => {
+    view.dispatch({ selection: { anchor: 0, head: 3 } });
+    expect(selectNextOccurrence(view)).toBe(true);
+  });
+  expect(view.state.selection.ranges).toHaveLength(2);
+  expect(view.state.selection.ranges[0]).toMatchObject({ from: 0, to: 3 });
+  expect(view.state.selection.ranges[1]).toMatchObject({ from: 8, to: 11 });
+});
