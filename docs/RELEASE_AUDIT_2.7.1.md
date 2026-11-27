@@ -25,7 +25,7 @@ Reviewed November 27, 2026. The public baseline was 2.7.0. The findings below in
 
 A clean Windows runner also exposed a packaging timeout. The notice generator stopped Cargo after two minutes while it was downloading locked sources. The patch gives this operation ten minutes and continues to require the complete resolved dependency list and notice archive.
 
-Linux qualification found stale Alpine builder pins for libffi on both targets and libxml2 on ARM64. The runtime recipe pins each available version exactly, and native CI now checks both official package indexes before compiling.
+Linux qualification found stale Alpine builder pins for libffi on both targets and libxml2 on ARM64. The runtime recipe pins each available version exactly, and native CI now checks both official package indexes before compiling. The musl upstream timed out on the ARM builder. The runtime now accepts Alpine’s distribution copy only when it matches the existing SHA-512, and both jobs build the pinned runtime early.
 
 ## Comparison and opportunities
 
