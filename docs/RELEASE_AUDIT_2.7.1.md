@@ -52,7 +52,7 @@ The remaining notices concern Chrono, a procedural-macro helper and the UNIC Uni
 
 ## Published release verification
 
-GitHub published [2.7.1](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.7.1) at 2026-11-27T22:46:53Z from `f42063df307c81d2e3fa03daea46062379512680`. The [release workflow](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/46070735729) completed. Independent readback matched all 27 release asset digests and checked GitHub provenance on all nine installers. Both Linux studio signatures and both APT architectures were verified. The Homebrew and WinGet pins match the public installer bytes.
+GitHub published [2.7.1](https://github.com/ShadowfetchStudio/ShadowCode/releases/tag/v2.7.1) at 2026-11-27T22:46:53Z from `f42063df307c81d2e3fa03daea46062379512680`. The [release workflow](https://github.com/ShadowfetchStudio/ShadowCode/actions/runs/46070735729) completed. Independent readback matched all 27 release asset digests and checked GitHub provenance on all nine installers. Both Linux studio signatures and both APT architectures were verified. The Homebrew and WinGet pins match the public installer bytes. A fresh Homebrew 7 checkout exposed a missing cask trust step in the installation guide. After trusting the ShadowCode cask in a disposable configuration, Homebrew fetched both public DMGs and their SHA-256 digests matched GitHub. WinGet on the Windows laptop validated the published manifests.
 
 The Apple Silicon and Intel disk images were mounted and checked. The Intel iMac ran the packaged command, Pop!_OS executed the x86_64 AppImage and Flatpak, and the Windows laptop ran the application extracted from the public NSIS installer. The hosted Windows workflow separately exercised installation.
 

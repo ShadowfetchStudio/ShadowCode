@@ -12,12 +12,15 @@ ShadowCode ships native installers for macOS, Windows, and Linux alongside ready
 
 ## Homebrew
 
-Register this repository as a tap, then install the cask. Homebrew selects the disk image and verifies its checksum for the Mac's architecture.
+Register this repository as a tap. Homebrew 7 requires you to trust the ShadowCode cask before it can load the install instructions. You can review the [cask](../Casks/shadowcode.rb) first. Homebrew selects the disk image and checks its SHA-256 for your Mac's architecture.
 
 ```bash
 brew tap shadowfetchstudio/shadowcode https://github.com/ShadowfetchStudio/ShadowCode
+brew trust --cask shadowfetchstudio/shadowcode/shadowcode
 brew install --cask shadowfetchstudio/shadowcode/shadowcode
 ```
+
+On older Homebrew versions that lack the `trust` command, skip that line.
 
 Run `brew update` and `brew upgrade --cask shadowfetchstudio/shadowcode/shadowcode` to upgrade. The tap tracks the last published, checksum-pinned release. Each new release includes its version-specific cask as `shadowcode.rb`.
 
