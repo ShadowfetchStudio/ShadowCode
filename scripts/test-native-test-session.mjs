@@ -206,6 +206,18 @@ test('an unreadable live process in an older, unrelated branch is ignored and re
   assert.deepEqual(result.ignored.map(entry => entry.pid), [22], 'reported once although both inventories saw it');
   assert.match(result.ignored[0].reason, /predates the private bus/);
 });
+test('a helper in a different pre-existing POSIX session receives no signal', async () => {
+  const f = fixture();
+  f.rows.get(2).sessionId = 2;
+  f.rows.set(20, { ...f.proc(20, 0, 5, '/runner/leader'), sessionId: 20 });
+  f.rows.set(22, { ...f.proc(22, 99, 14, '/runner/helper'), sessionId: 20 });
+  unreadable(f, 22);
+  const session = await capturePrivateSession({ address, io: f.io });
+  const result = await session.cleanup();
+  assert.equal(result.ok, true, JSON.stringify(result.failures));
+  assert.match(result.ignored[0].reason, /POSIX session/);
+  assert.deepEqual(f.signals, [{ pid: 4, signal: 'SIGTERM' }]);
+});
 for (const [name, setup] of [
   ['a child of the private daemon', f => f.rows.set(22, f.proc(22, 2, 14, '/fixture/hidden-service'))],
   ['a grandchild of the private daemon', f => { f.rows.set(21, f.proc(21, 2, 13, '/fixture/service')); f.rows.set(22, f.proc(22, 21, 14, '/fixture/hidden-helper')); }],

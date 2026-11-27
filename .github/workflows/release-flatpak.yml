@@ -1,16 +1,14 @@
 name: Flatpak release
-# ShadowCode_<version>_x86_64.flatpak and ShadowCode_<version>_aarch64.flatpak
-# (GNOME Platform, bundled llama.cpp with the Vulkan module), built from the
-# release tag inside the SDK on each architecture, installed and started, then
-# attached to the published GitHub release with
-# ShadowCode_<version>_flatpak.sha256. Pull requests already build the
-# Flatpak in ci.yml; this runs only for releases.
-# release.yml dispatches this after it publishes (its GITHUB_TOKEN-made
-# release does not trigger `release: published`); a release published by
-# hand still does.
+# Build and qualify the flatpak artifacts for the coordinated release.
 on:
-  release:
-    types: [published]
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
+    outputs:
+      artifact-id:
+        value: ${{ jobs.attach.outputs.artifact-id }}
   workflow_dispatch:
     inputs:
       tag:
@@ -19,7 +17,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: release-flatpak-${{ github.event.release.tag_name || inputs.tag }}
+  group: release-flatpak-${{ inputs.tag }}
   cancel-in-progress: false
 jobs:
   build:
@@ -35,7 +33,7 @@ jobs:
     timeout-minutes: 240
     env:
       RUSTUP_TOOLCHAIN: '1.95.0'
-      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      TAG: ${{ inputs.tag }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -79,15 +77,17 @@ jobs:
           compression-level: 0
           retention-days: 7
   attach:
+    outputs:
+      artifact-id: ${{ steps.qualified.outputs.artifact-id }}
     needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
-      contents: write
+      contents: read
       attestations: write
       id-token: write
     env:
-      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      TAG: ${{ inputs.tag }}
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
@@ -101,7 +101,7 @@ jobs:
         uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
         with:
           subject-path: flatpak/*.flatpak
-      - name: Attach the bundles and their checksums without replacing anything
+      - name: Check required files and calculate their digests
         run: |
           version="${TAG#v}"
           cd flatpak
@@ -110,13 +110,11 @@ jobs:
           test -f "ShadowCode_${version}_aarch64.flatpak"
           sha256sum "ShadowCode_${version}_x86_64.flatpak" "ShadowCode_${version}_aarch64.flatpak" > "ShadowCode_${version}_flatpak.sha256"
           cat "ShadowCode_${version}_flatpak.sha256"
-          existing="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets -q '.assets[].name')"
-          for file in "ShadowCode_${version}_x86_64.flatpak" "ShadowCode_${version}_aarch64.flatpak" "ShadowCode_${version}_flatpak.sha256"; do
-            if grep -Fxq "$file" <<<"$existing"; then
-              # Never overwrite a published file: an existing one must match.
-              gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$file" --output "existing-$file"
-              cmp -s "$file" "existing-$file" || { echo "$file on the release differs from this build; not replacing it" >&2; exit 1; }
-            else
-              gh release upload "$TAG" "$file" --repo "$GITHUB_REPOSITORY"
-            fi
-          done
+      - id: qualified
+        name: Retain the qualified release files
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: qualified-flatpak-${{ github.run_attempt }}
+          path: flatpak/
+          if-no-files-found: error
+          compression-level: 0

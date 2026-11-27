@@ -208,7 +208,7 @@ it("explains how to sign in and offers the compare page when gh is not ready", a
     null,
   );
   expect(
-    screen.getByRole("button", { name: /Open compare page in browser/ }),
+    screen.getByRole("button", { name: /Open pull request on/ }),
   ).toBeTruthy();
   vi.mocked(forgeApi.prStatus).mockResolvedValue({
     ...ready,

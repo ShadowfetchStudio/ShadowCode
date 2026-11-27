@@ -45,12 +45,7 @@ bash /path/to/trusted-bundle/scripts/verify-native-release.sh \
   --stage-dir ./verified-deb-VERSION
 ```
 
-The Flatpak bundles are attached after publication by
-`.github/workflows/release-flatpak.yml` (from 2.2.0), with SHA-256 checksums
-in `ShadowCode_VERSION_flatpak.sha256` rather than publisher signatures; the
-macOS disk images likewise (`release-macos.yml`, `ShadowCode_VERSION_macos.sha256`),
-and the Windows installer (from 2.3.0), with the complete source of its bundled
-busybox-w32 (`release-windows.yml`, `ShadowCode_VERSION_windows.sha256`).
+Beginning with 2.7.1, the tag workflow collects both macOS images, both Flatpaks, the Windows installer and its busybox-w32 source before promoting the release. Each platform supplies a checksum list. The publisher checks the GitHub provenance for all nine installers against the tag, commit and expected workflow. It generates the Homebrew and WinGet files from the qualified installers, reads back every uploaded asset and verifies its SHA-256 before making the draft public. APT indexing follows publication.
 
 Releases before 2.1.0 have no aarch64 packages; build them from source (below)
 on an aarch64 machine. Cross-building is not supported: each architecture is built

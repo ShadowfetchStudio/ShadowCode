@@ -8,7 +8,7 @@ export type RemoteInfo = {
   host: string;
   path: string;
   web_url: string;
-  kind: "github" | "gitlab" | "other";
+  kind: "github" | "gitlab" | "bitbucket" | "azure_devops" | "forgejo" | "other";
 };
 
 export type GitOverview = {
@@ -62,7 +62,7 @@ export type PullRequest = {
 
 export type PrStatus = {
   remote: string | null;
-  provider: "github" | "gitlab" | "other" | null;
+  provider: RemoteInfo["kind"] | null;
   remote_info?: RemoteInfo;
   cli: ForgeCli;
   base?: string;

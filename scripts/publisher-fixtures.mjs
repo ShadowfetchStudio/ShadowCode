@@ -71,7 +71,7 @@ export async function fixture(run, publish, { targets = [IDENTITY.target] } = {}
         assert(!state.assets.has(path.basename(args[3])));
         state.assets.set(path.basename(args[3]), state.corruptUpload ? Buffer.from('corrupt upload') : readFileSync(args[3])); break;
       case 'download': writeFileSync(args[args.indexOf('--output') + 1], state.assets.get(args[args.indexOf('--pattern') + 1])); break;
-      case 'edit': assert.equal(state.assets.size, assetCount); state.release.draft = false; break;
+      case 'edit': assert.equal(state.assets.size, state.expectedAssets ?? assetCount); state.release.draft = false; break;
       default: throw new Error(`Unexpected command: ${args}`);
     }
     return '';

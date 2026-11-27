@@ -29,6 +29,9 @@
     <binary>shadowcode</binary>
   </provides>
   <releases>
+    <release version="2.7.1" date="2026-11-27">
+      <description><p>Improved handling of interrupted assistant replies, phone approval controls, Azure DevOps SSH remotes and desktop installer updates.</p></description>
+    </release>
     <release version="2.7.0" date="2026-11-26T21:10:00Z">
       <description><p>Multi-forge pull-request compare links for Bitbucket, Azure DevOps, and Forgejo/Codeberg alongside GitHub and GitLab; mobile standalone PWA touch and safe-area polish for remote phone approvals; and ready-to-use Homebrew Cask and WinGet package manager manifests.</p></description>
     </release>

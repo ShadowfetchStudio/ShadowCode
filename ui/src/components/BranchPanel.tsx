@@ -62,6 +62,9 @@ type Toast = (text: string, kind?: "ok" | "err" | "info") => void;
 const FORGE: Record<string, string> = {
   github: "GitHub",
   gitlab: "GitLab",
+  bitbucket: "Bitbucket",
+  azure_devops: "Azure DevOps",
+  forgejo: "Forgejo",
 };
 
 function sourceText(s: Suggestion, action = "commit") {
@@ -734,15 +737,17 @@ export function BranchPanel({
               {status?.compare_url && (
                 <button
                   type="button"
-                  className="mini"
+                  className={canCreate ? "mini" : "mini primary-mini"}
+                  disabled={onBase}
                   onClick={() =>
                     void openExternal(status.compare_url!).catch((e) =>
                       toast(String(e), "err"),
                     )
                   }
                 >
-                  <ExternalLink size={12} aria-hidden="true" /> Open compare
-                  page in browser
+                  <ExternalLink size={12} aria-hidden="true" />{" "}
+                  {canCreate ? "Open compare page in browser" :
+                    `Open ${status.provider === "gitlab" ? "merge" : "pull"} request on ${status.remote_info?.host || FORGE[status.provider || ""] || "remote"}`}
                 </button>
               )}
               {status?.provider &&

@@ -1,8 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { writeFile, readFile } from 'node:fs/promises';
+import { writeFile, readFile, mkdir, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { publish } from './publish-native-release.mjs';
 
 import { fixture as signedFixture, ARM } from './publisher-fixtures.mjs';
@@ -164,3 +165,48 @@ test('an aarch64 bundle is authenticated for its own target before any release o
   await assert.rejects(execute(), /Checksums|digest|Verification package/);
   assert.equal(state.calls.length, 0);
 }));
+
+test('all nine qualified installers and their version-pinned manifests publish together', () =>
+  signedFixture(async ({ root, execute, state, gh }) => {
+    const platforms = path.join(root, 'platforms');
+    await mkdir(platforms);
+    const write = (suffix, bytes) => writeFile(path.join(platforms, 'ShadowCode_1.0.0_' + suffix), bytes);
+    const hashes = {};
+    for (const [group, names] of Object.entries({
+      macos: ['aarch64.dmg', 'x64.dmg'], flatpak: ['x86_64.flatpak', 'aarch64.flatpak'],
+      windows: ['x64-setup.exe', 'busybox-w32-source.tar.gz'],
+    })) {
+      const sums = [];
+      for (const name of names) {
+        await write(name, name);
+        hashes[name] = createHash('sha256').update(name).digest('hex');
+        sums.push(hashes[name] + '  ShadowCode_1.0.0_' + name);
+      }
+      await write(group + '.sha256', sums.join('\n') + '\n');
+    }
+    const attestations = new Set();
+    let refuse = true;
+    const options = { platforms, gh(args) {
+      if (args[0] !== 'attestation') return gh(args);
+      assert.equal(args[args.indexOf('--source-ref') + 1], 'refs/tags/v1.0.0');
+      assert.equal(args[args.indexOf('--source-digest') + 1], 'a'.repeat(40));
+      if (refuse) throw Error('missing provenance');
+      attestations.add(path.basename(args[2]));
+    } };
+    await assert.rejects(execute(options), /missing provenance/);
+    refuse = false;
+    await write('x64-setup.exe', 'wrong bytes');
+    await assert.rejects(execute(options), /Invalid windows checksum/);
+    await rm(path.join(platforms, 'ShadowCode_1.0.0_x64-setup.exe'));
+    await assert.rejects(execute(options), /missing platform release files/);
+    assert.equal(state.release, null);
+    await write('x64-setup.exe', 'x64-setup.exe');
+    state.expectedAssets = 27;
+    assert.equal((await execute(options)).status, 'published');
+    assert.equal(attestations.size, 9);
+    assert(state.assets.get('shadowcode.rb').includes(hashes['aarch64.dmg']));
+    assert(state.assets.get('ShadowfetchStudio.ShadowCode.installer.yaml').includes(hashes['x64-setup.exe'].toUpperCase()));
+    assert.equal((await execute(options)).status, 'already-published');
+    state.assets.set('ShadowCode_1.0.0_x64.dmg', Buffer.from('changed'));
+    await assert.rejects(execute(options), /Content mismatch/);
+  }, publish, { targets: ['x86_64-unknown-linux-gnu', ARM] }));

@@ -54,28 +54,9 @@ pub struct Parsed {
     pub note: String,
 }
 
-/// Remove `<think>…</think>` style reasoning. An unclosed tag loses only the
-/// tag itself, never the answer after it.
+/// Review templates may supply the opening tag themselves.
 pub fn strip_reasoning(text: &str) -> String {
-    let mut text = text.to_owned();
-    for (open, close) in [
-        ("<think>", "</think>"),
-        ("<thinking>", "</thinking>"),
-        ("<reasoning>", "</reasoning>"),
-    ] {
-        while let Some(start) = text.find(open) {
-            match text[start..].find(close) {
-                Some(end) => text.replace_range(start..start + end + close.len(), ""),
-                None => text.replace_range(start..start + open.len(), ""),
-            }
-        }
-        // A reply that starts inside a reasoning block (the opening tag was
-        // part of the prompt template) ends it with a lone closing tag.
-        if let Some(end) = text.find(close) {
-            text.replace_range(..end + close.len(), "");
-        }
-    }
-    text.trim().to_owned()
+    crate::autonomy::review_assistant_text(text)
 }
 
 pub fn clip(text: &str, limit: usize) -> String {
@@ -761,9 +742,9 @@ mod tests {
     }
 
     #[test]
-    fn reasoning_blocks_are_removed_but_unclosed_tags_keep_the_answer() {
+    fn reasoning_blocks_stay_private_when_interrupted() {
         assert_eq!(strip_reasoning("<think>a</think>answer"), "answer");
-        assert_eq!(strip_reasoning("<think>answer only"), "answer only");
+        assert_eq!(strip_reasoning("<think>private draft"), "");
         assert_eq!(strip_reasoning("hidden</think>visible"), "visible");
     }
 }

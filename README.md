@@ -6,11 +6,13 @@
 
 ## New in 2.7
 
+The 2.7.1 patch improves streaming privacy, installation recovery, mobile approvals and check results. [Patch details](docs/RELEASE_NOTES.md#shadowcode-271)
+
 ShadowCode 2.7 brings **multi-forge PR compare support** (GitHub, GitLab, Bitbucket, Azure DevOps, Forgejo / Codeberg / Gitea), **phone-friendly standalone PWA touch & safe-area polish** for approving tasks over Tailscale or LAN, and ready-to-use **Homebrew Cask** and **WinGet** manifests (`docs/PACKAGE_MANAGERS.md`). [2.7 release notes](docs/RELEASE_NOTES.md#shadowcode-270)
 
 | Platform | Quick install |
 |---|---|
-| **macOS** (Apple Silicon & Intel) | `curl -fsSL https://raw.githubusercontent.com/ShadowfetchStudio/ShadowCode/main/scripts/install-macos.sh \| bash` *(or `brew install --cask packaging/homebrew/shadowcode.rb`)* |
+| **macOS** (Apple Silicon & Intel) | `curl -fsSL https://raw.githubusercontent.com/ShadowfetchStudio/ShadowCode/main/scripts/install-macos.sh \| bash` ([Homebrew tap instructions](docs/PACKAGE_MANAGERS.md#homebrew)) |
 | **Windows** (x64) | `irm https://raw.githubusercontent.com/ShadowfetchStudio/ShadowCode/main/scripts/install-windows.ps1 \| iex` *(WinGet manifests in `packaging/winget/`)* |
 | **Linux** (`amd64`, `arm64`) | Signed APT repo (`shadowfetchstudio.github.io/ShadowCode/apt`), signed AppImage, or Flatpak — see [Install](#install) |
 
@@ -135,7 +137,7 @@ validation is summarized under [Tests](#tests).
 
 ## Install
 
-From 2.6.1 onward, GitHub Actions signs build provenance for each desktop download. After downloading a 2.7.0 package, verify it with `gh attestation verify <downloaded-file> --repo ShadowfetchStudio/ShadowCode --source-ref refs/tags/v2.7.0`. The result identifies the repository and release workflow. The Linux publisher signatures and APT checks below also apply. macOS Gatekeeper and Windows Authenticode use their own publisher identities.
+From 2.6.1 onward, GitHub Actions signs build provenance for each desktop download. After downloading a 2.7.1 package, verify it with `gh attestation verify <downloaded-file> --repo ShadowfetchStudio/ShadowCode --source-ref refs/tags/v2.7.1`. The result identifies the repository and release workflow. The Linux publisher signatures and APT checks below also apply. macOS Gatekeeper and Windows Authenticode use their own publisher identities.
 
 
 Linux releases target x86_64 Linux with glibc 2.39 or newer (Ubuntu 24.04 or later).
@@ -153,10 +155,10 @@ From 2.2.0 each release also carries Flatpak bundles for both architectures
 checked with `ShadowCode_VERSION_flatpak.sha256`; see [Flatpak](docs/FLATPAK.md))
 and macOS disk images (see [macOS](#macos)).
 Check [GitHub releases](https://github.com/ShadowfetchStudio/ShadowCode/releases)
-for published versions. The 2.7.0 x86_64 Linux packages and checksums are:
+for published versions. The 2.7.1 x86_64 Linux packages and checksums are:
 
-- `ShadowCode_2.7.0_amd64.AppImage`
-- `ShadowCode_2.7.0_amd64.deb`
+- `ShadowCode_2.7.1_amd64.AppImage`
+- `ShadowCode_2.7.1_amd64.deb`
 - `SHA256SUMS`, `RELEASE-MANIFEST.json`, `RELEASE-AUTH` and
   `RELEASE-AUTH.sig` (download these beside the package; the installer checks
   the publisher's signature before running anything)
@@ -190,13 +192,13 @@ cmake.
 
 ### Windows
 
-The Windows 2.7.0 release provides `ShadowCode_2.7.0_x64-setup.exe` for
+The Windows 2.7.1 release provides `ShadowCode_2.7.1_x64-setup.exe` for
 64-bit Windows 10 (version 1809 or later) and 11, with its SHA-256 checksum in
-`ShadowCode_2.7.0_windows.sha256`. It installs for your user only (no
+`ShadowCode_2.7.1_windows.sha256`. It installs for your user only (no
 administrator rights) and includes llama.cpp for local models (Vulkan/CPU) and the
 shell used by the Windows sandbox (busybox-w32, GPL-2.0; its complete source
 is published beside the installer as
-`ShadowCode_2.7.0_busybox-w32-source.tar.gz`).
+`ShadowCode_2.7.1_busybox-w32-source.tar.gz`).
 
 Install or update with one command in PowerShell; it checks the installer
 against the release's checksums, installs it for the current user and adds
@@ -226,7 +228,7 @@ The installer requires signed release packages. Published 0.32.0
 assets are checksum-only and cannot be installed by this new entry point; use
 the instructions shipped with that released version for those existing assets.
 The 0.33.0 release attempt failed before signing and publication. Its tag stays
-unchanged. Version 0.33.1 was the first signed release. The 2.7.0 source trust policy authorizes 0.33.0 through 2.7.0, retaining the same key, epoch, targets and historical floor. The 2.4.0 tag retains its original ceiling. Public signature verification is recorded in [release authentication](docs/RELEASE_AUTHENTICATION.md#published-linux-release-241); a policy range alone does not establish signing, publication or qualification. An independently trusted installer bundle whose policy ends below 2.7.0 will reject 2.7.0. Obtain and independently authenticate a reviewed bundle with the updated policy before installing; do not replace trust files with copies from the downloaded release.
+unchanged. Version 0.33.1 was the first signed release. The 2.7.1 source trust policy authorizes 0.33.0 through 2.7.1, retaining the same key, epoch, targets and historical floor. The 2.4.0 tag retains its original ceiling. Public signature verification is recorded in [release authentication](docs/RELEASE_AUTHENTICATION.md#published-linux-release-241); a policy range alone does not establish signing, publication or qualification. An independently trusted installer bundle whose policy ends below 2.7.1 will reject 2.7.1. Obtain and independently authenticate a reviewed bundle with the updated policy before installing; do not replace trust files with copies from the downloaded release.
 For development, use [Build from source](#build-from-source).
 
 Obtain an independently authenticated installer bundle as described below,
@@ -240,7 +242,7 @@ bundle and bootstrap requirements.
 From that independently authenticated installer bundle, run:
 
 ```bash
-bash /path/to/trusted-bundle/scripts/install-appimage.sh /path/to/downloads/ShadowCode_2.7.0_amd64.AppImage
+bash /path/to/trusted-bundle/scripts/install-appimage.sh /path/to/downloads/ShadowCode_2.7.1_amd64.AppImage
 ```
 
 The installer takes the AppImage path (or `--recover`), resolves its own trusted
@@ -286,7 +288,7 @@ as `--trust-dir` are not installer options.
   cannot corrupt it.
 
 After obtaining and verifying the intended package, run the AppImage without installing it:
-`./ShadowCode_2.7.0_amd64.AppImage --appimage-extract-and-run`. FUSE is not
+`./ShadowCode_2.7.1_amd64.AppImage --appimage-extract-and-run`. FUSE is not
 required.
 
 ### Debian package
@@ -334,16 +336,17 @@ installed. The repository is published by the release workflow only; nothing
 in ShadowCode adds or contacts it by itself.
 
 To install one release by hand instead, verify the Debian artifact using the independently trusted verifier bundle.
-`verified-deb-2.6.1` must not already exist; install the verified snapshot:
+The staging directory must not already exist; install the verified snapshot:
 
 ```bash
+version=2.7.1  # Set this to the release you downloaded.
 bash /path/to/trusted-bundle/scripts/verify-native-release.sh \
   --bundle-dir /path/to/downloads \
   --trust-dir /path/to/trusted-bundle/release/trust \
-  --artifact ShadowCode_2.6.1_amd64.deb \
-  --stage-dir ./verified-deb-2.6.1 \
-  --expect-version 2.6.1
-sudo apt install ./verified-deb-2.6.1/ShadowCode_2.6.1_amd64.deb
+  --artifact ShadowCode_${version}_amd64.deb \
+  --stage-dir ./verified-deb-$version \
+  --expect-version "$version"
+sudo apt install ./verified-deb-$version/ShadowCode_${version}_amd64.deb
 ```
 
 A `.deb` installed by hand this way gets no updates and none of the APT

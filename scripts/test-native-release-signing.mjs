@@ -138,20 +138,23 @@ test('release workflow separates untrusted build from protected signing and writ
   assert.match(publication, /publish-native-release\.mjs "\$RUNNER_TEMP\/signed-download\/x86_64" release\/trust "\$RUNNER_TEMP\/signed-download\/aarch64"/);
   assert.match(apt, /x86_64:amd64 aarch64:arm64/);
   assert.match(publication, /artifact-ids: \$\{\{ needs.sign.outputs.artifact-id \}\}/);
-  assert.match(publication, /needs: \[configuration, build, sign\]/); assert.match(publication, /contents: write/);
+  assert.match(publication, /needs: \[configuration, build, sign, macos, windows, flatpak\]/); assert.match(publication, /contents: write/);
   assert(!/SIGNING_KEY|secrets\./.test(publication));
-  // After publishing, the macOS images, Flatpak bundles and Windows installer are built from the tag.
-  assert.match(publication, /actions: write/);
-  assert.match(publication, /gh workflow run release-macos\.yml [^\n]*-f tag="\$GITHUB_REF_NAME"/);
-  assert.match(publication, /gh workflow run release-flatpak\.yml [^\n]*-f tag="\$GITHUB_REF_NAME"/);
-  assert.match(publication, /gh workflow run release-windows\.yml [^\n]*-f tag="\$GITHUB_REF_NAME"/);
+  for (const platform of ['macos', 'flatpak', 'windows']) {
+    assert(workflow.includes('uses: ./.github/workflows/release-' + platform + '.yml'));
+    assert(publication.includes('needs.' + platform + '.outputs.artifact-id'));
+  }
+  assert(!publication.includes('gh workflow run'));
   assert.equal([...workflow.matchAll(/secrets\.NATIVE_RELEASE_SIGNING_KEY_PEM/g)].length, 1);
   assert.match(apt, /needs: \[configuration, sign, publish\]/); assert.match(apt, /environment: \$\{\{ needs.configuration.outputs.environment \}\}/);
   assert.match(apt, /artifact-ids: \$\{\{ needs.sign.outputs.artifact-id \}\}/);
   assert.match(apt, /verify-native-release\.sh[\s\S]*build-apt-repo\.mjs/);
   assert.equal([...workflow.matchAll(/secrets\.NATIVE_APT_SIGNING_KEY\b/g)].length, 1);
   assert(!/NATIVE_RELEASE_SIGNING_KEY_PEM|npm |cargo |cache:/.test(apt));
-  for (const [, ref] of workflow.matchAll(/uses: ([^\s#]+)/g)) assert.match(ref, /@[a-f0-9]{40}$/);
+  for (const [, ref] of workflow.matchAll(/uses: ([^\s#]+)/g)) {
+    if (['macos', 'windows', 'flatpak'].some(platform => ref === './.github/workflows/release-' + platform + '.yml')) continue;
+    assert.match(ref, /@[a-f0-9]{40}$/);
+  }
 });
 test('workflow configuration fails closed without real provisioning; fixture-only inputs exercise its parser', () => testFixture(async f => {
   const workflow = await readFile(new URL('../.github/workflows/release.yml', import.meta.url), 'utf8');
