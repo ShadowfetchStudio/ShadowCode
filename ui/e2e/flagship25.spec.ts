@@ -39,6 +39,28 @@ test("Mission Control opens, filters tasks, returns to chat, and passes axe in b
   ).toBeVisible();
 });
 
+test("phone approval decisions have full touch targets", async ({ page }) => {
+  await page.getByRole("button", { name: "Mission Control" }).click();
+  await page.evaluate(() => {
+    const backend = (window as unknown as { __SHADOW_FAKE__: { requestApproval(r: object): void } }).__SHADOW_FAKE__;
+    backend.requestApproval({ tool: "read_file", reason: "Read README", preview: { path: "README.md" } });
+  });
+  const approvals = page.getByRole("region", { name: "Pending approvals" });
+  for (const width of [320, 390, 600]) {
+    await page.setViewportSize({ width, height: 844 });
+    for (const name of ["Allow", "Deny"]) {
+      const button = approvals.getByRole("button", { name, exact: true });
+      await button.scrollIntoViewIfNeeded();
+      await expect(button).toBeInViewport();
+      const box = await button.boundingBox();
+      expect(box?.width).toBeGreaterThanOrEqual(44);
+      expect(box?.height).toBeGreaterThanOrEqual(44);
+    }
+  }
+  await approvals.getByRole("button", { name: "Deny", exact: true }).click();
+  await expect(approvals).toHaveCount(0);
+});
+
 test("Quick Open jumps directly to a file in the Files drawer editor", async ({
   page,
 }) => {

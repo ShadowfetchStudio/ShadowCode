@@ -1,3 +1,11 @@
+# ShadowCode 2.7.1
+
+The shared desktop client keeps partial model reasoning out of streaming replies, interruption history and repeat warnings. The Git drawer recognizes Azure DevOps SSH remotes and offers named browser pull-request actions. Task summaries show the current check result next to the outcome. Send and approval controls have 44-pixel touch targets on phones.
+
+The macOS updater stages each installation in a unique directory and restores the prior app if the final move fails. Windows local installation asks for an explicit version when several installers are present.
+
+The tag workflow qualifies all nine platform installers before publishing. Each release includes a Homebrew cask and three WinGet manifests with pins derived from the release files. Linux packages retain studio signatures.
+
 # ShadowCode 2.7.0
 
 - **Multi-forge source control.** Git remote detection, pull-request compare URLs, and PR URL extraction now support **Bitbucket**, **Azure DevOps**, and **Forgejo / Codeberg / Gitea** alongside GitHub and GitLab.

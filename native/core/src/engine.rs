@@ -2924,6 +2924,7 @@ impl Engine {
                                 return;
                             }
                             partial.push_str(delta);
+                            let visible = autonomy::partial_assistant_text(&partial);
                             if autonomy::text_loop_stats(&partial).is_some_and(|(_, count)| {
                                 matches!(
                                     autonomy::runaway_action(count),
@@ -2935,7 +2936,6 @@ impl Engine {
                                 text_loop_hit = true;
                                 return;
                             }
-                            let visible = autonomy::public_assistant_text(&partial);
                             if visible.starts_with(&visible_emitted) {
                                 pending.push_str(&visible[visible_emitted.len()..]);
                                 visible_emitted = visible;
@@ -3004,12 +3004,7 @@ impl Engine {
                     Ok(mut response) => {
                         response.text = autonomy::public_assistant_text(&response.text);
                         if text_loop_hit {
-                            if let Some((unit, count)) =
-                                autonomy::text_loop_stats(if response.text.is_empty() {
-                                    &partial
-                                } else {
-                                    &response.text
-                                })
+                            if let Some((unit, count)) = autonomy::text_loop_stats(&visible_emitted)
                             {
                                 events.emit(
                                     "runaway.warning",
@@ -3073,7 +3068,7 @@ impl Engine {
                             continue;
                         }
                         if !partial.is_empty() {
-                            let interrupted = autonomy::public_assistant_text(&partial);
+                            let interrupted = autonomy::partial_assistant_text(&partial);
                             messages.push(json!({"role":"assistant","content":format!("{interrupted}\n[Response interrupted; no partial tool call was executed.]")}));
                             self.save_tape(&job.id, &messages).await?;
                         }

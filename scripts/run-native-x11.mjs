@@ -42,7 +42,7 @@ export async function runNativeX11(argv, {
     // This UI exercises no OpenGL surface. Some host NVIDIA EGL stacks crash
     // Xvfb while initializing GLX, leaving a display number but no X server.
     // Disabling GLX keeps the controlled UI session on software rendering.
-    'xvfb-run', '-a', '-s', '-screen 0 1440x1100x24 -extension GLX', 'dbus-run-session', '--', ...argv];
+    'setsid', '--wait', 'xvfb-run', '-a', '-s', '-screen 0 1440x1100x24 -extension GLX', 'dbus-run-session', '--', ...argv];
   const report = { schema: 1, scope: 'Controlled Xvfb/X11, private D-Bus/runtime; HOME and account config/data/state/cache roots preserved. Not physical Wayland/desktop or portal feature qualification.',
     argv, artifacts, runtime, runtime_mode: '0700', command_exit: null, output_complete: false, external_boundary: [], failures: [], ok: false };
   try {

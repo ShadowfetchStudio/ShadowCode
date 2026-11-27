@@ -48,7 +48,20 @@ SUMS="ShadowCode_${VERSION}_macos.sha256"
 BASE="https://github.com/$REPO/releases/download/v$VERSION"
 WORK="$(mktemp -d)"
 MOUNT=""
+STAGE=""
+LOCK=""
 cleanup() {
+  if [[ -n "$STAGE" ]]; then
+    if [[ ( -e "$STAGE/previous.app" || -L "$STAGE/previous.app" ) && ! -e "$APP" && ! -L "$APP" ]]; then
+      mv "$STAGE/previous.app" "$APP" || true
+    fi
+    if [[ -e "$STAGE/previous.app" || -L "$STAGE/previous.app" ]]; then
+      printf 'Previous installation retained in %s\n' "$STAGE" >&2
+    else
+      rm -rf "$STAGE"
+    fi
+  fi
+  if [[ -n "$LOCK" ]]; then rmdir "$LOCK" || true; fi
   if [[ -n "$MOUNT" ]]; then hdiutil detach -quiet "$MOUNT" 2>/dev/null || true; fi
   rm -rf "$WORK"
 }
@@ -75,12 +88,14 @@ APP="$DEST/ShadowCode.app"
 if pgrep -f "$APP/Contents/MacOS/shadowcode" >/dev/null 2>&1; then
   fail "ShadowCode is running; quit it (ShadowCode › Quit) and run the installer again."
 fi
-rm -rf "$APP.new" "$APP.previous"
-ditto "$MOUNT/ShadowCode.app" "$APP.new"
-if [[ -e "$APP" ]]; then mv "$APP" "$APP.previous"; fi
-mv "$APP.new" "$APP"
-rm -rf "$APP.previous"
-xattr -dr com.apple.quarantine "$APP" 2>/dev/null || true
+mkdir "$DEST/.shadowcode-install.lock" 2>/dev/null || fail "check for an installation already in progress in $DEST."
+LOCK="$DEST/.shadowcode-install.lock"
+STAGE="$(mktemp -d "$DEST/.shadowcode-install.XXXXXXXX")"
+ditto "$MOUNT/ShadowCode.app" "$STAGE/new.app"
+[[ -x "$STAGE/new.app/Contents/MacOS/shadowcode" ]] || fail "the staged app is incomplete."
+if [[ -e "$APP" || -L "$APP" ]]; then mv "$APP" "$STAGE/previous.app"; fi
+mv "$STAGE/new.app" "$APP"
+rm -rf "$STAGE/previous.app"
 
 mkdir -p "$HOME/.local/bin"
 ln -sf "$APP/Contents/MacOS/shadowcode" "$HOME/.local/bin/shadowcode"

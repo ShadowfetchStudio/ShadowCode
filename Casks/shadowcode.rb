@@ -8,14 +8,14 @@ cask "shadowcode" do
   url "https://github.com/ShadowfetchStudio/ShadowCode/releases/download/v#{version}/ShadowCode_#{version}_#{arch}.dmg"
   name "ShadowCode"
   desc "Local-first AI coding workspace with bundled llama.cpp, coding agents, and OS sandboxing"
-  homepage "https://shadowcode.org"
+  homepage "https://github.com/ShadowfetchStudio/ShadowCode#readme"
 
   livecheck do
     url :url
     strategy :github_latest
   end
 
-  depends_on macos: ">= :monterey"
+  depends_on macos: :monterey
 
   app "ShadowCode.app"
   binary "#{appdir}/ShadowCode.app/Contents/MacOS/shadowcode"

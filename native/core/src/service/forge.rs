@@ -57,6 +57,13 @@ pub fn parse_remote(url: &str) -> Option<RemoteInfo> {
             return None;
         }
         let (authority, path) = rest.split_once('/')?;
+        // Remote metadata and compare links are public. HTTP query parameters
+        // and fragments are transport details and can contain credentials.
+        let path = if matches!(scheme.as_str(), "https" | "http") {
+            path.split(['?', '#']).next()?
+        } else {
+            path
+        };
         let authority = authority.rsplit('@').next()?;
         let (host, port) = match authority.rsplit_once(':') {
             Some((host, port)) if port.bytes().all(|b| b.is_ascii_digit()) => {
@@ -90,6 +97,31 @@ pub fn parse_remote(url: &str) -> Option<RemoteInfo> {
         return None;
     }
     let lower = host.to_ascii_lowercase();
+    if matches!(
+        lower.as_str(),
+        "ssh.dev.azure.com" | "vs-ssh.visualstudio.com"
+    ) {
+        let mut parts = path.split('/');
+        let (Some("v3"), Some(org), Some(project), Some(repo), None) = (
+            parts.next(),
+            parts.next(),
+            parts.next(),
+            parts.next(),
+            parts.next(),
+        ) else {
+            return None;
+        };
+        if [org, project, repo].iter().any(|part| part.is_empty()) {
+            return None;
+        }
+        let path = format!("{org}/{project}/_git/{repo}");
+        return Some(RemoteInfo {
+            host,
+            web_url: format!("https://dev.azure.com/{path}"),
+            path,
+            kind: "azure_devops",
+        });
+    }
     let kind = if lower.contains("github") {
         "github"
     } else if lower.contains("gitlab") {
@@ -1611,13 +1643,7 @@ fn truncate_chars(text: &str, max: usize) -> String {
 
 /// Drop `<think>` blocks and code fences some models wrap replies in.
 pub fn strip_reasoning(text: &str) -> String {
-    let mut text = text.to_owned();
-    while let Some(start) = text.find("<think>") {
-        match text[start..].find("</think>") {
-            Some(end) => text.replace_range(start..start + end + "</think>".len(), ""),
-            None => text.truncate(start),
-        }
-    }
+    let text = crate::autonomy::public_assistant_text(text);
     let lines: Vec<&str> = text
         .lines()
         .filter(|line| !line.trim_start().starts_with("```"))
@@ -1694,6 +1720,10 @@ mod tests {
         let https = parse_remote("https://user:secret-token@github.com/octo/demo").unwrap();
         assert_eq!(https.web_url, "https://github.com/octo/demo");
         assert!(!format!("{https:?}").contains("secret"));
+        let query = parse_remote("https://example.org/team/tool.git?access_token=fixture#fragment")
+            .unwrap();
+        assert_eq!(query.web_url, "https://example.org/team/tool");
+        assert!(!format!("{query:?}").contains("fixture"));
         let lab = parse_remote("ssh://git@gitlab.example.com:2222/group/sub/repo.git").unwrap();
         assert_eq!(lab.kind, "gitlab");
         assert_eq!(lab.path, "group/sub/repo");
@@ -1729,6 +1759,20 @@ mod tests {
             compare_url(&azdo, "main", "feat/x").unwrap(),
             "https://dev.azure.com/org/proj/_git/repo/pullrequestcreate?sourceRef=feat/x&targetRef=main"
         );
+        for url in [
+            "git@ssh.dev.azure.com:v3/org/My%20Project/repo",
+            "ssh://git@ssh.dev.azure.com/v3/org/My%20Project/repo",
+            "org@vs-ssh.visualstudio.com:v3/org/My%20Project/repo",
+        ] {
+            let remote = parse_remote(url).unwrap();
+            let https = parse_remote("https://dev.azure.com/org/My%20Project/_git/repo").unwrap();
+            assert_eq!(remote.kind, https.kind);
+            assert_eq!(
+                compare_url(&remote, "main", "feat/x"),
+                compare_url(&https, "main", "feat/x")
+            );
+        }
+        assert!(parse_remote("git@ssh.dev.azure.com:v3/org//repo").is_none());
         let cb = parse_remote("git@codeberg.org:shadow/app.git").unwrap();
         assert_eq!(cb.kind, "forgejo");
         assert_eq!(

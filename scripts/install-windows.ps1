@@ -30,8 +30,9 @@ if (-not [Environment]::Is64BitOperatingSystem) { Fail 'ShadowCode needs 64-bit 
 $Version = $env:SHADOWCODE_VERSION
 $Local = $env:SHADOWCODE_SETUP_DIR
 if (-not $Version -and $Local) {
-    $found = Get-ChildItem -Path $Local -Filter 'ShadowCode_*_x64-setup.exe' | Select-Object -First 1
-    if ($found -and $found.Name -match '^ShadowCode_(.+)_x64-setup\.exe$') { $Version = $Matches[1] }
+    $found = @(Get-ChildItem -LiteralPath $Local -File -Filter 'ShadowCode_*_x64-setup.exe')
+    if ($found.Count -ne 1) { Fail 'set SHADOWCODE_VERSION when the local folder does not contain exactly one Windows installer.' }
+    if ($found[0].Name -match '^ShadowCode_(.+)_x64-setup\.exe$') { $Version = $Matches[1] }
 }
 if (-not $Version) {
     # The latest release's page redirects to its tag; no API token needed.
@@ -74,7 +75,7 @@ try {
 
     $App = Join-Path $env:LOCALAPPDATA 'ShadowCode'
     $running = Get-Process -Name 'shadowcode' -ErrorAction SilentlyContinue |
-        Where-Object { $_.Path -and $_.Path.StartsWith($App, [StringComparison]::OrdinalIgnoreCase) }
+        Where-Object { $_.Path -and [string]::Equals($_.Path, (Join-Path $App 'shadowcode.exe'), [StringComparison]::OrdinalIgnoreCase) }
     if ($running) { Fail 'ShadowCode is running; close it and run the installer again.' }
 
     Write-Host "Installing ShadowCode $Version..."

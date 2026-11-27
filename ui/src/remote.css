@@ -149,13 +149,14 @@
 /* Mobile standalone PWA & phone-width touch ergonomics (iOS / Android) ------- */
 @media (max-width: 600px) {
   .approval-actions button,
-  .mc-approval-actions button,
-  .composer-actions button,
+  .mission-approval-actions button,
+  .composer-footer > .submit-btn,
   .remote-gate button {
+    min-width: 44px;
     min-height: 44px;
     padding-inline: 14px;
   }
-  .composer-dock,
+  .composer-shell,
   .remote-gate {
     padding-bottom: max(14px, env(safe-area-inset-bottom));
   }

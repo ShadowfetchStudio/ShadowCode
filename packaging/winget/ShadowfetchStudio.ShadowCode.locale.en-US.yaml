@@ -5,7 +5,7 @@ Publisher: Shadowfetch
 PublisherUrl: https://shadowfetch.com
 PublisherSupportUrl: https://github.com/ShadowfetchStudio/ShadowCode/issues
 PackageName: ShadowCode
-PackageUrl: https://shadowcode.org
+PackageUrl: https://github.com/ShadowfetchStudio/ShadowCode#readme
 License: Apache-2.0
 LicenseUrl: https://github.com/ShadowfetchStudio/ShadowCode/blob/main/LICENSE
 ShortDescription: Local-first AI coding workspace with bundled llama.cpp, coding agents, and OS sandboxing.

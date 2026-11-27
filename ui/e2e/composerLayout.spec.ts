@@ -21,7 +21,7 @@ for (const model of ["qwen3:14b", "Codex · GPT-6-Astra"]) {
       .getByRole("textbox", { name: "Message ShadowCode" })
       .fill("Explain this project");
 
-    for (const width of [1360, 1440, 1280, 1024, 900, 760, 520]) {
+    for (const width of [1360, 1440, 1280, 1024, 900, 760, 600, 520, 390, 320]) {
       await page.setViewportSize({ width, height: 1000 });
       const controls = page.locator(
         ".composer-footer button:visible, .composer-footer select:visible",
@@ -73,6 +73,11 @@ for (const model of ["qwen3:14b", "Codex · GPT-6-Astra"]) {
       await expect(
         page.getByRole("button", { name: "Send task" }),
       ).toBeInViewport();
+      if (width <= 600) {
+        const send = await page.getByRole("button", { name: "Send task" }).boundingBox();
+        expect(send?.width).toBeGreaterThanOrEqual(44);
+        expect(send?.height).toBeGreaterThanOrEqual(44);
+      }
       if (width === 1360 || width === 520)
         await page.screenshot({
           path: `test-results/composer-${model.startsWith("qwen") ? "local" : "subscription"}-${width}.png`,

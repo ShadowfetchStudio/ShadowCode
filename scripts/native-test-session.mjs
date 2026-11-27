@@ -24,7 +24,7 @@ export const linuxProc = {
       const fields = raw.slice(raw.lastIndexOf(') ') + 2).split(' ');
       const ids = /^Uid:\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/m.exec(status);
       assert(ids && ids.slice(1).every(id => id === ids[1]), 'Unexpected process credential transition');
-      return { pid, parent: Number(fields[1]), start: fields[19], state: fields[0], uid: Number(ids[1]) };
+      return { pid, parent: Number(fields[1]), sessionId: Number(fields[3]), start: fields[19], state: fields[0], uid: Number(ids[1]) };
     } catch (error) { if (gone(error)) return null; throw error; }
   },
   async identity(pid) {
@@ -253,10 +253,16 @@ export async function inspectPrivateActivations(session, { io = linuxProc, ignor
       // process afterwards.
       if (current.pid === info.pid && current.start === info.start && current.uid === info.uid) {
         ancestors ??= await daemonAncestors(io, daemon);
-        if (await unrelatedBranch(io, current, daemon, ancestors)) {
+        // A child can create a POSIX session, but cannot join an existing one.
+        // A live leader of a different session older than the bus excludes activation.
+        const leader = current.sessionId && daemon.sessionId && current.sessionId !== daemon.sessionId
+          ? await (io.basic ? io.basic(current.sessionId) : io.identity(current.sessionId)) : null;
+        const independentSession = alive(leader) && leader.pid === leader.sessionId
+          && BigInt(leader.start) < BigInt(daemon.start);
+        if (independentSession || await unrelatedBranch(io, current, daemon, ancestors)) {
           const again = await (io.basic ? io.basic(pid) : io.identity(pid));
-          if (again && again.pid === info.pid && again.start === info.start && again.uid === info.uid) {
-            ignored.push({ pid, start: info.start, reason: `environment unreadable (${error.code}); its process branch predates the private bus` });
+          if (again && again.pid === info.pid && again.start === info.start && again.uid === info.uid && again.sessionId === current.sessionId) {
+            ignored.push({ pid, start: info.start, reason: `environment unreadable (${error.code}); its ${independentSession ? 'POSIX session' : 'process branch'} predates the private bus` });
             return;
           }
         } else {

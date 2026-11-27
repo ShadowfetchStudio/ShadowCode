@@ -152,7 +152,9 @@ export async function applicationNotices(
           "--format-version",
           "1",
         ],
-        options,
+        // A clean runner also downloads the locked registry sources here.
+        // Collecting license files later requires the full resolved metadata.
+        { ...options, timeout: 10 * 60_000 },
       )
     ).stdout,
   );

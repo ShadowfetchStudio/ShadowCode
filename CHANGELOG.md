@@ -1,7 +1,15 @@
 # Changelog
 
-## Unreleased
+## 2.7.1 — Streaming, installer recovery and release integrity
 
+The shared desktop client keeps partial model reasoning out of streaming replies, interruption history and repeat warnings. The Git drawer recognizes Azure DevOps SSH remotes and offers named browser pull-request actions. Task summaries show the current check result next to the outcome. Send and approval controls have 44-pixel touch targets on phones.
+
+The macOS updater stages each installation in a unique directory and restores the prior app if the final move fails. Windows local installation asks for an explicit version when several installers are present.
+
+The tag workflow qualifies all nine platform installers before publishing. Each release includes a Homebrew cask and three WinGet manifests with pins derived from the release files. Linux packages retain studio signatures.
+
+- The About page and package listings now open the official project overview. The previous website address redirected to an unrelated catalog.
+- Git remote metadata now omits HTTP query parameters and fragments, including token-bearing URLs.
 - **Assistant prose preservation & performance:** Fixed `public_assistant_text` so thinking/channel scratch stripping no longer removes the word `"thought"` mid-sentence or deletes lines starting with `"Analysis:"` / `"Reasoning:"`, and cached the compiled regexes with `OnceLock`.
 - **Crash-recovery hardening:** Removed unchecked `.unwrap()` calls in worktree cleanup recovery (`worktrees/cleanup.rs`) and job result finalization (`engine.rs`).
 - **Multi-cursor editor selection (`Cmd+D` / `Ctrl+D`):** Enabled `allowMultipleSelections` and `selectNextOccurrence` in `CodeEditor` across macOS, Windows, and Linux.

@@ -1,18 +1,14 @@
 name: Windows release
-# ShadowCode for 64-bit Windows as a per-user NSIS installer
-# (ShadowCode_<version>_x64-setup.exe), attached to a published GitHub
-# release with the complete source of the bundled busybox-w32 (GPL-2.0, the
-# sandbox's shell) and a SHA-256 checksum file
-# (ShadowCode_<version>_windows.sha256) that scripts/install-windows.ps1
-# checks. The installer is not code-signed: GitHub is the distribution
-# channel. On pull requests that touch Windows packaging this only builds,
-# installs and smoke-tests it (nothing is uploaded).
-# release.yml dispatches this after it publishes (its GITHUB_TOKEN-made
-# release does not trigger `release: published`); a release published by
-# hand still does.
+# Build and qualify the windows artifacts for the coordinated release.
 on:
-  release:
-    types: [published]
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
+    outputs:
+      artifact-id:
+        value: ${{ jobs.attach.outputs.artifact-id }}
   workflow_dispatch:
     inputs:
       tag:
@@ -24,6 +20,7 @@ on:
       - 'scripts/build-busybox-w32.sh'
       - 'scripts/build-llama.cpp.sh'
       - 'scripts/install-windows.ps1'
+      - 'scripts/test-install-windows.ps1'
       - 'scripts/setup-windows-vulkan.ps1'
       - 'scripts/stage-windows-crt.ps1'
       - 'scripts/test-windows-installed-runtime.ps1'
@@ -35,10 +32,10 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: release-windows-${{ github.event.release.tag_name || inputs.tag || github.ref }}
+  group: release-windows-${{ inputs.tag || github.ref }}
   cancel-in-progress: false
 env:
-  TAG: ${{ github.event.release.tag_name || inputs.tag || '' }}
+  TAG: ${{ inputs.tag || '' }}
 jobs:
   busybox:
     runs-on: ubuntu-24.04
@@ -117,6 +114,9 @@ jobs:
           SHADOWCODE_COMMIT: ${{ github.sha }}
           CARGO_PROFILE_RELEASE_DEBUG: '0'
         run: CI=true ui/node_modules/.bin/tauri build --bundles nsis --config packaging/windows/bundle-runtime.conf.json
+      - name: Check ambiguous local installer selection
+        shell: pwsh
+        run: ./scripts/test-install-windows.ps1
       - name: Install it silently and smoke-test the installed app
         run: |
           version="$(node -p "require('./src-tauri/tauri.conf.json').version")"
@@ -153,12 +153,14 @@ jobs:
           compression-level: 0
           retention-days: 7
   attach:
+    outputs:
+      artifact-id: ${{ steps.qualified.outputs.artifact-id }}
     needs: build
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
-      contents: write
+      contents: read
       attestations: write
       id-token: write
     env:
@@ -178,7 +180,7 @@ jobs:
         uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
         with:
           subject-path: windows/*-setup.exe
-      - name: Attach the installer, the busybox source and their checksums without replacing anything
+      - name: Check required files and calculate their digests
         run: |
           version="${TAG#v}"
           cd windows
@@ -190,13 +192,11 @@ jobs:
           test -f "$source"
           sha256sum "$setup" "$source" > "$sums"
           cat "$sums"
-          existing="$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets -q '.assets[].name')"
-          for file in "$setup" "$source" "$sums"; do
-            if grep -Fxq "$file" <<<"$existing"; then
-              # Never overwrite a published file: an existing one must match.
-              gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern "$file" --output "existing-$file"
-              cmp -s "$file" "existing-$file" || { echo "$file on the release differs from this build; not replacing it" >&2; exit 1; }
-            else
-              gh release upload "$TAG" "$file" --repo "$GITHUB_REPOSITORY"
-            fi
-          done
+      - id: qualified
+        name: Retain the qualified release files
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: qualified-windows-${{ github.run_attempt }}
+          path: windows/
+          if-no-files-found: error
+          compression-level: 0

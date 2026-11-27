@@ -340,6 +340,9 @@ export const TaskSummary = memo(function TaskSummary({
     >
       <header>
         <strong>{outcome}</strong>
+        {verification?.commands.length ? (
+          <span className="dim">{verificationLine(verification)}</span>
+        ) : null}
         {duration && (
           <span className="dim">
             <Timer size={12} aria-hidden="true" /> {duration}
@@ -404,7 +407,6 @@ export const TaskSummary = memo(function TaskSummary({
           </p>
         ) : verification?.commands.length ? (
           <>
-            <p className="dim">{verificationLine(verification)}</p>
             <ul>
               {verification.commands.map((c, i) => (
                 <li

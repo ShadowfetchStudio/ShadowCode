@@ -10,19 +10,18 @@ import { digest } from './native-release-verification.mjs';
 import { IDENTITY, TARGETS } from './native-release-auth.mjs';
 import { withReleaseSnapshot, validateContext, validateStagedRelease, readReceipts, requireTransportLayout } from './native-release-assets.mjs';
 
+import { platformAssets } from './platform-release-assets.mjs';
+
 export { digest } from './native-release-verification.mjs';
-// After publication, .github/workflows/release-macos.yml,
-// release-flatpak.yml and release-windows.yml attach the macOS disk images,
-// the Flatpak bundles, the Windows installer with its busybox-w32 source and
-// their checksums. They are outside this signed asset set: a
-// published-release retry leaves them alone; a draft never has them.
+// Historical Linux-only publications had platform files appended after promotion.
+// Only the legacy read-only retry may ignore those known additional files.
 const ATTACHED_LATER = /^ShadowCode_\d+\.\d+\.\d+_((x64|aarch64)\.dmg|(x86_64|aarch64)\.flatpak|x64-setup\.exe|busybox-w32-source\.tar\.gz|(macos|flatpak|windows)\.sha256)$/;
 const command = (args) => execFileSync('gh', args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
 
 // One release carries every target's signed bundle. Each bundle is snapshotted
 // and authenticated for its own target before any release operation; their
 // asset names are disjoint (non-x86_64 metadata carries a target suffix).
-export async function publish({ repo, tag, commit, files, verification, bundles, trustDir, runId, runAttempt, gh = command, sleep = delay }) {
+export async function publish({ repo, tag, commit, files, verification, bundles, trustDir, runId, runAttempt, platforms, gh = command, sleep = delay }) {
   const context = { repo, tag, commit, runId, runAttempt };
   const version = validateContext(context);
   bundles ??= [{ target: IDENTITY.target, files, verification }];
@@ -33,7 +32,25 @@ export async function publish({ repo, tag, commit, files, verification, bundles,
   assert(targets.includes(IDENTITY.target), 'The x86_64 release bundle is required');
   const expected = new Map();
   const stage = async index => {
-    if (index === bundles.length) return publishVerified({ repo, tag, commit, expected, gh, sleep });
+    if (index === bundles.length) {
+      if (!platforms) return publishVerified({ repo, tag, commit, expected, gh, sleep, legacy: true }); // Historical Linux-only bundles.
+      assert.equal(targets.length, Object.keys(TARGETS).length, 'Both signed Linux targets are required');
+      const verifyInstaller = (file, workflow) => gh(['attestation', 'verify', file, '--repo', repo,
+        '--source-ref', 'refs/tags/' + tag, '--source-digest', commit,
+        '--signer-workflow', repo + '/.github/workflows/' + workflow + '.yml', '--deny-self-hosted-runners']);
+      const output = await mkdtemp(path.join(tmpdir(), 'shadowcode-manifests-'));
+      try {
+        for (const [name, asset] of expected) {
+          if (name.endsWith('.deb') || name.endsWith('.AppImage')) verifyInstaller(asset.file, 'release');
+        }
+        const extra = await platformAssets({ directory: platforms, version, output, verifyInstaller });
+        for (const [name, asset] of extra) {
+          assert(!expected.has(name), 'Duplicate platform asset ' + name);
+          expected.set(name, asset);
+        }
+        return await publishVerified({ repo, tag, commit, expected, gh, sleep });
+      } finally { await rm(output, { recursive: true, force: true }); }
+    }
     const { target, files: bundleFiles, verification: receipts } = bundles[index];
     return withReleaseSnapshot({ files: bundleFiles, version, target }, async (directory, observed) => {
       await validateStagedRelease({ directory, observed, verification: receipts, context, trustDir, signed: true, target });
@@ -46,7 +63,7 @@ export async function publish({ repo, tag, commit, files, verification, bundles,
   };
   return stage(0);
 }
-async function publishVerified({ repo, tag, commit, expected, gh, sleep }) {
+async function publishVerified({ repo, tag, commit, expected, gh, sleep, legacy = false }) {
   const identity = JSON.parse(gh(['api', `repos/${repo}`]));
   assert.equal(String(identity.id), IDENTITY.repositoryId, 'Remote repository identity changed');
   assert.equal(String(identity.owner?.id), IDENTITY.ownerId, 'Remote repository owner changed');
@@ -92,7 +109,7 @@ async function publishVerified({ repo, tag, commit, expected, gh, sleep }) {
     const scratch = await mkdtemp(path.join(tmpdir(), 'shadowcode-release-'));
     try {
       for (const asset of record.assets) {
-        if (!record.draft && ATTACHED_LATER.test(asset.name)) continue;
+        if (legacy && !record.draft && ATTACHED_LATER.test(asset.name)) continue;
         assert(expected.has(asset.name), `Unexpected remote asset ${asset.name}; review the draft`);
         assert(!names.has(asset.name), `Duplicate remote asset ${asset.name}`);
         names.add(asset.name);
@@ -118,13 +135,15 @@ async function publishVerified({ repo, tag, commit, expected, gh, sleep }) {
 }
 
 async function main() {
-  const [bundle, trustDir, aarch64Bundle] = process.argv.slice(2);
-  assert(bundle && trustDir && (process.argv.length === 4 || (process.argv.length === 5 && aarch64Bundle)), 'Usage: node publish-native-release.mjs SIGNED_BUNDLE TRUST_DIR [AARCH64_SIGNED_BUNDLE]');
-  const context = { repo: process.env.GITHUB_REPOSITORY, tag: process.env.GITHUB_REF_NAME, commit: process.env.GITHUB_SHA, runId: process.env.GITHUB_RUN_ID, runAttempt: process.env.GITHUB_RUN_ATTEMPT };
+  const [bundle, trustDir, aarch64Bundle, platforms] = process.argv.slice(2);
+  assert(bundle && trustDir && aarch64Bundle && platforms && process.argv.length === 6,
+    'Usage: node publish-native-release.mjs X86_64_BUNDLE TRUST_DIR AARCH64_BUNDLE PLATFORM_BUNDLES');
+  const context = { repo: process.env.GITHUB_REPOSITORY, tag: process.env.GITHUB_REF_NAME, commit: process.env.GITHUB_SHA, runId: process.env.GITHUB_RUN_ID, runAttempt: process.env.SIGNED_RUN_ATTEMPT };
   const version = validateContext(context);
+  assert(BigInt(context.runAttempt) <= BigInt(process.env.GITHUB_RUN_ATTEMPT), 'Invalid signed handoff attempt');
   const load = async (directory, target) => ({ target, files: await requireTransportLayout(directory, version, true, target), verification: await readReceipts(directory) });
   const bundles = [await load(bundle, IDENTITY.target)];
   if (aarch64Bundle) bundles.push(await load(aarch64Bundle, 'aarch64-unknown-linux-gnu'));
-  console.log(await publish({ ...context, bundles, trustDir }));
+  console.log(await publish({ ...context, bundles, trustDir, platforms }));
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) await main();
